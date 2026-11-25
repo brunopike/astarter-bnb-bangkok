@@ -1,0 +1,209 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/market-hub.mjs": {
+      "maxDuration": 15
+    },
+    "api/unavailable.mjs": {
+      "maxDuration": 15
+    },
+    "api/wallet.mjs": {
+      "maxDuration": 30
+    },
+    "api/research.mjs": {
+      "maxDuration": 60
+    },
+    "api/workspace.mjs": {
+      "maxDuration": 30
+    },
+    "api/notifications.mjs": {
+      "maxDuration": 30
+    },
+    "api/wealth-market.mjs": {
+      "maxDuration": 15
+    },
+    "api/strategy-drafts.mjs": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-App-Mode",
+          "value": "simulation-only"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://coin-images.coingecko.com https://assets.coingecko.com https://cdn.dexscreener.com https://pbs.twimg.com https://avatars.githubusercontent.com https://api.web3modal.com https://api.web3modal.org; connect-src 'self' https://api.fxtwitter.com https://swolecharts.com https://api.routescan.io https://mempool.space https://www.tradingview-widget.com https://api.dexscreener.com https://api.coingecko.com https://api.llama.fi https://stablecoins.llama.fi https://api.alternative.me https://data-api.binance.vision wss://data-stream.binance.vision wss://fstream.binance.com wss://stream.bybit.com https://bsc-dataseed.binance.org https://rpc.walletconnect.com https://rpc.walletconnect.org https://relay.walletconnect.com https://relay.walletconnect.org wss://relay.walletconnect.com wss://relay.walletconnect.org https://api.web3modal.com https://api.web3modal.org; font-src 'self'; frame-src 'self' https://algoros.ai https://www.tradingview-widget.com https://verify.walletconnect.com https://verify.walletconnect.org; object-src 'none'; base-uri 'none'; frame-ancestors 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/api/v1/data/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/api/wallet/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/api/research/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/api/notifications/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/api/wealth/market",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/api/workspace/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/api/strategy-drafts/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/favicon.ico",
+      "destination": "/brand/astarter-icon-gradient-primary.svg"
+    },
+    {
+      "source": "/api/wallet/:route*",
+      "destination": "/api/wallet?route=:route*"
+    },
+    {
+      "source": "/api/research/:route*",
+      "destination": "/api/research?route=:route*"
+    },
+    {
+      "source": "/api/commerce/:path*",
+      "destination": "/api/unavailable"
+    },
+    {
+      "source": "/api/notifications/:route*",
+      "destination": "/api/notifications?route=:route*"
+    },
+    {
+      "source": "/api/workspace/:route*",
+      "destination": "/api/workspace?route=:route*"
+    },
+    {
+      "source": "/api/strategy-drafts/:route*",
+      "destination": "/api/strategy-drafts?route=:route*"
+    },
+    {
+      "source": "/api/local-sim/:path*",
+      "destination": "/api/unavailable"
+    },
+    {
+      "source": "/api/assistant/:path*",
+      "destination": "/api/unavailable"
+    },
+    {
+      "source": "/api/wealth/market",
+      "destination": "/api/wealth-market"
+    },
+    {
+      "source": "/api/wealth/:path*",
+      "destination": "/api/unavailable"
+    },
+    {
+      "source": "/api/v1/data/:path*",
+      "destination": "https://api.ipfund.art/v1/data/:path*"
+    },
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/unavailable"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+#product-page .trade-activity{--ta-buy:var(--chart-series-1,var(--accent-ink));--ta-sell:var(--chart-series-3,var(--muted));--ta-strategy:var(--chart-series-4,var(--muted));margin:24px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);overflow:hidden;min-width:0}
+#product-page .trade-activity-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 24px 0}
+#product-page .trade-activity-head>div:first-child{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+#product-page .trade-activity-head h2{margin:0;font-size:18px;font-weight:500;line-height:1.5}
+#product-page .trade-activity-head span{font-size:13px;line-height:1.6;color:var(--muted)}
+#product-page .trade-activity-controls{display:flex;align-items:center;gap:12px;flex-shrink:0}
+#product-page .trade-activity-controls>div{display:flex;gap:4px;border:1px solid var(--line);border-radius:8px;padding:3px}
+#product-page .trade-activity-controls button{min-width:44px;min-height:40px;border:0;border-radius:5px;background:transparent;color:var(--muted);font:500 13px var(--sans);padding:0 12px;cursor:pointer}
+#product-page .trade-activity-controls button[aria-pressed=true]{background:var(--surface-2);color:var(--text)}
+#product-page .trade-activity-controls button:hover{color:var(--text)}
+#product-page .trade-activity-stage{padding:4px 24px 0}
+#product-page .trade-activity-stage svg{display:block;width:100%;height:clamp(200px,20vw,280px);overflow:visible}
+#product-page [data-activity-kind=buy]{--ta-color:var(--ta-buy)}
+#product-page [data-activity-kind=sell]{--ta-color:var(--ta-sell)}
+#product-page [data-activity-kind=strategy]{--ta-color:var(--ta-strategy)}
+#product-page [data-activity-kind=other]{--ta-color:var(--muted)}
+#product-page [data-activity-cell]{cursor:pointer;outline:none}
+#product-page [data-activity-cell] path{fill:var(--ta-color);stroke:color-mix(in srgb,var(--ta-color),var(--text) 14%);stroke-width:.7;vector-effect:non-scaling-stroke;transition:fill 120ms}
+#product-page [data-activity-cell] [data-activity-face="0"]{fill:color-mix(in srgb,var(--ta-color),var(--surface) 23%)}
+#product-page [data-activity-cell] [data-activity-face="1"]{fill:color-mix(in srgb,var(--ta-color),var(--text) 24%)}
+#product-page [data-activity-cell]:is(:focus-visible,[data-active=true]) path{stroke:var(--text);stroke-width:1.4;filter:brightness(1.12)}
+#product-page .trade-activity-readout{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 24px;min-height:44px;font-size:13px;line-height:1.6}
+#product-page .trade-activity-readout strong{font-weight:500;min-width:0;overflow-wrap:anywhere}
+#product-page .trade-activity-readout>span{color:var(--muted);max-width:100%;text-wrap:pretty;font-size:12px}
+#product-page .trade-activity-legend{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;padding:12px 24px 20px;color:var(--muted);font-size:12px}
+#product-page .trade-activity-legend>span{display:flex;align-items:center;gap:7px}
+#product-page .trade-activity-legend i{width:9px;height:9px;background:var(--ta-color);border-radius:2px}
+#product-page .trade-activity-empty{padding:32px 24px;text-align:center;color:var(--muted);font-size:14px}
+#product-page .trade-activity-empty>span{display:grid;grid-template-columns:repeat(6,12px);gap:5px;justify-content:center;transform:skewY(-8deg)}
+#product-page .trade-activity-empty i{height:12px;border:1px solid var(--line);border-radius:2px}
+#product-page .trade-activity-empty p{margin:20px 0 0}
+@media(max-width:600px){#product-page .trade-activity{margin:16px 0}#product-page .trade-activity-head{align-items:flex-start;padding:16px 16px 0;flex-wrap:wrap;gap:10px}#product-page .trade-activity-head>div:first-child{gap:4px;flex-direction:column}#product-page .trade-activity-controls{margin-left:auto;gap:6px}#product-page .trade-activity-controls button{min-height:44px;padding:0 10px}#product-page .trade-activity-stage{padding:0 8px}#product-page .trade-activity-stage svg{height:230px}#product-page .trade-activity-readout{padding:0 16px;align-items:flex-start;flex-direction:column;gap:3px;min-height:58px}#product-page .trade-activity-legend{padding:10px 16px 16px;gap:16px}}
+@media(prefers-reduced-motion:reduce){#product-page [data-activity-cell] path{transition:none}}

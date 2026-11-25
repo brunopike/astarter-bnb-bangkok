@@ -1,0 +1,1 @@
+{"schema":"FixtureRegistry.v1","fixtures":{"determinism-probe-v1":{"label":"LOCAL QA FIXTURE","relative_path":"determinism-probe-v1","manifest_sha256":"f398f64a3dfae7bdc366a6b6bc686d392968478404b12f9c36ccae3af249b20e"},"local-qa-v1":{"label":"LOCAL QA FIXTURE","relative_path":"local-qa-v1","manifest_sha256":"38016eb42bd3d266843782bf500b82ceab277d47c5933c14a9519851180c8fac"}}}

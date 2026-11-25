@@ -1,0 +1,233 @@
+{
+  "contract": "trading-connection-v1",
+  "evidenceGrade": "SYNTHETIC_WIRE_ONLY",
+  "note": "Card A1 gate fallback. Synthetic wire examples only: no venue, account, credential or balance here is real, and none of them shows a connected account.",
+  "owners": {
+    "a": "wallet:56:0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "b": "wallet:56:0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "state": {
+    "schema": "trading-connections-v1",
+    "scope": "wallet:56:0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "revision": 4,
+    "updatedAt": 1794906000000,
+    "connections": [
+      {
+        "connectionId": "api-main",
+        "venue": "binance",
+        "venueType": "CEX",
+        "market": "spot",
+        "chain": "",
+        "label": "Main",
+        "permissions": ["read", "trade"],
+        "accountId": "SIM-01",
+        "status": "connected",
+        "checkedAt": 1794905400000,
+        "checkCode": null,
+        "checkSource": "synthetic",
+        "credentialRef": null
+      },
+      {
+        "connectionId": "api-perp",
+        "venue": "okx",
+        "venueType": "CEX",
+        "market": "perp",
+        "chain": "",
+        "label": "OKX perp",
+        "permissions": ["read"],
+        "accountId": "UNCONNECTED",
+        "status": "unchecked",
+        "checkedAt": null,
+        "checkCode": null,
+        "checkSource": null,
+        "credentialRef": null
+      },
+      {
+        "connectionId": "api-denied",
+        "venue": "bybit",
+        "venueType": "CEX",
+        "market": "spot",
+        "chain": "",
+        "label": "Bybit key",
+        "permissions": ["read", "trade"],
+        "accountId": "UNCONNECTED",
+        "status": "denied",
+        "checkedAt": 1794905400000,
+        "checkCode": "withdraw",
+        "checkSource": "synthetic",
+        "credentialRef": null
+      },
+      {
+        "connectionId": "wallet-arb",
+        "venue": "wallet",
+        "venueType": "DEX",
+        "market": "spot",
+        "chain": "42161",
+        "label": "Arbitrum wallet",
+        "permissions": ["read", "confirm"],
+        "accountId": "SIM-01",
+        "status": "connected",
+        "checkedAt": 1794905400000,
+        "checkCode": null,
+        "checkSource": "synthetic",
+        "credentialRef": null
+      },
+      {
+        "connectionId": "wallet-hl",
+        "venue": "hyperliquid",
+        "venueType": "DEX",
+        "market": "perp",
+        "chain": "42161",
+        "label": "HL wallet",
+        "permissions": ["read"],
+        "accountId": "SIM-01",
+        "status": "expired",
+        "checkedAt": 1794819600000,
+        "checkCode": null,
+        "checkSource": "synthetic",
+        "credentialRef": null
+      }
+    ],
+    "preferences": [
+      {"key": "cex-spot", "connectionId": "api-main"},
+      {"key": "dex-spot:42161", "connectionId": "wallet-arb"}
+    ],
+    "executionAuthority": "NONE"
+  },
+  "stateOtherOwner": {
+    "schema": "trading-connections-v1",
+    "scope": "wallet:56:0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "revision": 1,
+    "updatedAt": 1794906000000,
+    "connections": [
+      {
+        "connectionId": "api-main",
+        "venue": "okx",
+        "venueType": "CEX",
+        "market": "spot",
+        "chain": "",
+        "label": "Other owner key",
+        "permissions": ["read"],
+        "accountId": "UNCONNECTED",
+        "status": "unchecked",
+        "checkedAt": null,
+        "checkCode": null,
+        "checkSource": null,
+        "credentialRef": null
+      }
+    ],
+    "preferences": [],
+    "executionAuthority": "NONE"
+  },
+  "commands": {
+    "save": {
+      "requestId": "connection-save-0001",
+      "baseRevision": 4,
+      "action": "save",
+      "payload": {
+        "connectionId": "api-new",
+        "venue": "binance",
+        "venueType": "CEX",
+        "market": "perp",
+        "chain": "",
+        "label": "Perp key",
+        "permissions": ["read"]
+      }
+    },
+    "verify": {
+      "requestId": "connection-verify-0001",
+      "baseRevision": 4,
+      "action": "verify",
+      "payload": {"connectionId": "api-perp"}
+    },
+    "prefer": {
+      "requestId": "connection-prefer-0001",
+      "baseRevision": 4,
+      "action": "prefer",
+      "payload": {"key": "cex-perp", "connectionId": "api-perp"}
+    },
+    "disconnect": {
+      "requestId": "connection-disconnect-0001",
+      "baseRevision": 4,
+      "action": "disconnect",
+      "payload": {"connectionId": "api-main"}
+    }
+  },
+  "checks": {
+    "connected": {
+      "schema": "trading-connection-check-v1",
+      "connectionId": "api-perp",
+      "status": "connected",
+      "code": null,
+      "permissions": ["read"],
+      "withdrawalsEnabled": false,
+      "balances": [
+        {"asset": "USDT", "free": "1000", "locked": "0"},
+        {"asset": "BTC", "free": "0.05", "locked": "0"}
+      ],
+      "checkedAt": 1794906000000,
+      "source": "synthetic",
+      "executionAuthority": "NONE"
+    },
+    "withdraw": {
+      "schema": "trading-connection-check-v1",
+      "connectionId": "api-perp",
+      "status": "denied",
+      "code": "withdraw",
+      "permissions": ["read", "trade"],
+      "withdrawalsEnabled": true,
+      "balances": [],
+      "checkedAt": 1794906000000,
+      "source": "synthetic",
+      "executionAuthority": "NONE"
+    },
+    "permissions": {
+      "schema": "trading-connection-check-v1",
+      "connectionId": "api-perp",
+      "status": "denied",
+      "code": "permissions",
+      "permissions": [],
+      "withdrawalsEnabled": false,
+      "balances": [],
+      "checkedAt": 1794906000000,
+      "source": "synthetic",
+      "executionAuthority": "NONE"
+    },
+    "ip": {
+      "schema": "trading-connection-check-v1",
+      "connectionId": "api-perp",
+      "status": "denied",
+      "code": "ip",
+      "permissions": ["read"],
+      "withdrawalsEnabled": false,
+      "balances": [],
+      "checkedAt": 1794906000000,
+      "source": "synthetic",
+      "executionAuthority": "NONE"
+    },
+    "timeout": {
+      "schema": "trading-connection-check-v1",
+      "connectionId": "api-perp",
+      "status": "unchecked",
+      "code": "timeout",
+      "permissions": [],
+      "withdrawalsEnabled": null,
+      "balances": [],
+      "checkedAt": 1794906000000,
+      "source": "synthetic",
+      "executionAuthority": "NONE"
+    },
+    "unconfigured": {
+      "schema": "trading-connection-check-v1",
+      "connectionId": "api-perp",
+      "status": "unchecked",
+      "code": "unconfigured",
+      "permissions": [],
+      "withdrawalsEnabled": null,
+      "balances": [],
+      "checkedAt": 1794906000000,
+      "source": "synthetic",
+      "executionAuthority": "NONE"
+    }
+  }
+}

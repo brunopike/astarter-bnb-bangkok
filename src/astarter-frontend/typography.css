@@ -1,0 +1,27 @@
+@import url('/fonts/faces.css');
+
+/* Screen UI, regional CJK glyphs and fixed-width identifiers share one stack. */
+:root {
+  --font-cjk:'Noto Sans SC';
+  --font-ui:'Inter',var(--font-cjk),system-ui,sans-serif;
+  --sans:var(--font-ui);
+  --mono:'IBM Plex Mono',var(--font-cjk),monospace;
+  --font-mono:var(--mono);
+  --font:var(--sans);
+  font-optical-sizing:auto;
+  font-synthesis:none;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+:root:lang(ja) {--font-cjk:'Noto Sans JP'}
+:root:lang(ko) {--font-cjk:'Noto Sans KR'}
+body,button,input,select,textarea {font-family:var(--sans)}
+body {font-variant-numeric:tabular-nums}
+:is(:lang(zh),:lang(ja),:lang(ko)) :is(h1,h2,h3) {letter-spacing:0}
+
+/* Editable controls stay at iOS's no-zoom size without enlarging dense desktop data. */
+@media(max-width:700px){
+ body[data-page] :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,.workbench-console,.commerce-dialog,#membership-app)
+ :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea),
+ body[data-page] #observation-market{font-size:16px!important}
+}

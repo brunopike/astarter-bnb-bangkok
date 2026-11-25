@@ -1,0 +1,174 @@
+/* Reuse the product's Bento tokens; membership.css stays isolated by native @scope. */
+@scope (#membership-app, .commerce-dialog) {
+ :scope.membership-integrated{--bg:var(--b-bg);--surface:var(--b-panel);--raised:var(--b-soft);--text:var(--b-ink);--muted:var(--b-muted);--border:var(--b-line);--accent:var(--b-action);--accent-ink:var(--b-action-fg);--brand-ink:var(--b-accent-ink);--accent-soft:var(--b-violet-soft);--accent-tint:var(--b-soft);--danger:var(--b-down);--violet:var(--b-violet);font-family:var(--sans);font-size:14px;line-height:1.6;color:var(--text)}
+ :scope.membership-integrated main{padding:0;margin:0;max-width:none;min-height:0}
+ :scope.membership-integrated .page-head{margin:12px 0 26px;align-items:center}
+ .page-head h1{font-size:var(--b-heading,26px);font-weight:600;line-height:1.3;letter-spacing:0}.page-head p{font-size:14px;line-height:1.7}
+ :scope.membership-integrated :is(.account-status,.panel,.credit-vault,.topup-options,.topup-summary,.stake-scene,.stake-form,.billing-summary,.position,.table-wrap){border-radius:var(--b-radius,24px);box-shadow:var(--b-shadow)}
+ :scope.membership-integrated :is(input,select,.btn,.pay-choice>div,.pack-option){border-radius:var(--b-control,12px)}
+ :scope.membership-integrated .btn{font-size:14px;min-height:44px}:scope.membership-integrated :is(.field-label,.label,.fine,.balance-note,.task-scope){font-size:13px}
+ :scope#membership-app input[type=number],:scope#membership-app select{border:1px solid var(--border);background:var(--raised);color:var(--text);padding:11px 13px;min-height:44px;font:inherit;box-shadow:none}
+ :scope#membership-app select{appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%23857f77' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px}
+ :scope#membership-app :is(.amount-field,.custom-amount){display:flex;align-items:center;gap:12px;min-height:48px;padding:0 14px;border:1px solid var(--b-control-line);border-radius:var(--b-control-radius,8px);background:var(--b-panel)}
+ :scope#membership-app :is(.amount-field,.custom-amount):focus-within{outline:3px solid color-mix(in srgb,var(--b-violet) 35%,transparent);outline-offset:2px}
+ :scope#membership-app :is(.amount-field,.custom-amount) input{flex:1;min-width:0;height:46px;min-height:0;padding:0;border:0;background:transparent;box-shadow:none;border-radius:0;font:500 22px/28px var(--sans);font-variant-numeric:tabular-nums;outline:none}
+ :scope#membership-app .custom-amount input:placeholder-shown{font-size:14px;font-weight:400}
+ :scope#membership-app .amount-field>button{min-width:44px;min-height:44px;padding:0 6px;border:0;background:transparent;font:550 13px/20px var(--sans);color:var(--b-accent-ink)}
+ :scope.membership-integrated .account-status{padding:24px 28px}:scope.membership-integrated .account-period{border-color:var(--border)}
+ .membership-choice-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:30px 0 20px}.membership-choice-heading h2{font-size:18px}.membership-choice-heading p{font-size:13px;margin-top:4px}.membership-choice-heading .pay-choice{margin:0;flex-shrink:0}.membership-choice-heading .pay-choice>span{display:none}
+ .membership-tier-tabs{display:none}
+ .membership-tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+ .membership-tier{display:flex;flex-direction:column;padding:28px;border:1px solid var(--border);border-radius:var(--b-radius,20px);background:var(--surface);min-width:0}
+ .tier-recommended{border-color:var(--brand-ink);background:var(--surface)}
+ .tier-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.tier-heading h2{font-size:23px;letter-spacing:-.5px}.membership-tier>p{font-size:13px;margin-top:5px;min-height:42px}
+ .membership-tier-price{display:flex;align-items:baseline;gap:8px;margin-top:24px}.membership-tier-price strong{font-size:40px;letter-spacing:-1.5px;line-height:1.15}.membership-tier-price>span{color:var(--muted);font-size:12px}.tier-discount{display:flex;gap:9px;font-size:12px;min-height:25px;margin:9px 0 24px;color:var(--brand-ink)}.tier-discount s{color:var(--muted)}
+ .tier-allowance{display:flex;align-items:baseline;gap:9px;padding-top:23px;border-top:1px solid var(--border)}.tier-allowance>b{font-size:28px;letter-spacing:-.8px}.tier-allowance>span{font-size:12px;color:var(--muted)}
+ .tier-benefits{list-style:none;margin:18px 0 26px;padding:0;font-size:13px;display:grid;gap:13px;flex:1}.tier-benefits li{display:flex;align-items:flex-start;gap:8px}.tier-benefits svg{width:16px;height:20px;color:var(--brand-ink)}.membership-tier>.btn{width:100%}
+ .membership-bottom{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin:32px 0;padding:26px 4px;border-bottom:1px solid var(--border)}.membership-bottom h3{font-size:15px}.membership-bottom p{font-size:13px;line-height:1.8;margin:8px 0 12px}.membership-bottom .text-link{font-size:13px}
+ .membership-details{font-size:13px;color:var(--muted);margin:24px 0}.membership-details summary{font-weight:550;color:var(--text);cursor:pointer;min-height:34px}.membership-details p{max-width:800px;line-height:1.9;padding-top:12px}
+ :scope.membership-integrated .credit-layout{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px}:scope.membership-integrated .credit-workspace{gap:20px}:scope.membership-integrated .credit-vault{min-height:0}:scope.membership-integrated .vault-number{font-size:52px;margin:24px 0}:scope.membership-integrated .task-row>strong{font-size:22px}:scope.membership-integrated .task-row h3{font-size:14px}:scope.membership-integrated .task-row>div>span{font-size:12px}
+ :scope.membership-integrated .table-wrap{overflow:auto}:scope.membership-integrated .table-wrap table{min-width:560px}:scope.membership-integrated .table-wrap th,:scope.membership-integrated .table-wrap td{font-size:13px;padding:16px 20px}
+ .commerce-dialog:scope.membership-integrated{border-radius:24px;box-shadow:0 30px 90px #0004}.commerce-dialog:scope.membership-integrated .close{width:44px;height:44px;top:14px;right:14px;display:grid;place-items:center;padding:12px}.commerce-dialog:scope.membership-integrated .close svg{width:18px;height:18px}.commerce-dialog:scope.membership-integrated .payment{padding-top:62px}
+ @media(max-width:1080px){.membership-choice-heading{flex-direction:column;align-items:stretch;gap:14px}.membership-choice-heading .pay-choice{align-self:flex-end}.membership-tier{padding:23px}.membership-tier-price strong{font-size:35px}.tier-heading h2{font-size:21px}.tier-allowance{flex-direction:column;gap:2px}}
+ @media(max-width:760px){:scope.membership-integrated .page-head{margin-top:12px;gap:10px}.page-head h1{font-size:var(--b-heading,22px)}.page-head p{font-size:13px}:scope.membership-integrated .account-status{padding:20px}.membership-choice-heading .pay-choice{align-self:stretch}.membership-tiers{grid-template-columns:1fr}.membership-tier{padding:24px}.membership-tier>p{min-height:0}.membership-tier-price{margin-top:18px}.tier-allowance{flex-direction:row;align-items:baseline}.tier-benefits{grid-template-columns:1fr;gap:12px}.membership-bottom{grid-template-columns:1fr;gap:22px;margin-top:10px}:scope.membership-integrated .credit-layout,:scope.membership-integrated .credit-workspace{grid-template-columns:1fr}:scope.membership-integrated .vault-number{font-size:44px}.commerce-dialog:scope.membership-integrated{max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);border-radius:20px}.commerce-dialog:scope.membership-integrated .payment{padding-top:28px}}
+ @media(max-width:760px){
+  .membership-tier-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:5px;border:1px solid var(--border);border-radius:14px;background:var(--surface);margin-bottom:16px}
+  .membership-tier-tabs button{border:0;background:none;border-radius:10px;min-height:42px;font-size:13px;color:var(--muted)}.membership-tier-tabs button[aria-pressed=true]{background:var(--accent-soft);color:var(--brand-ink);font-weight:600}
+  .membership-tiers .membership-tier{display:none}.membership-tiers .membership-tier.is-selected{display:flex}
+  :scope.membership-integrated .account-status{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px 16px}
+  :scope.membership-integrated :is(.account-plan,.account-period,.account-balance){min-width:0;width:auto}
+  :scope.membership-integrated .account-balance{grid-row:2;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+  :scope.membership-integrated .account-balance>.label{width:100%;font-size:12px}
+  :scope.membership-integrated .account-balance>strong{font-size:28px}
+  :scope.membership-integrated .account-status>.text-link{grid-column:2;grid-row:2;align-self:end;justify-self:end;font-size:12px}
+  :scope.membership-integrated .page-head{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:12px}
+  :scope.membership-integrated .page-head>div:first-child{min-width:0;grid-column:1;grid-row:1}
+  :scope.membership-integrated .page-head>.mascot-pocket{grid-column:2;grid-row:1;justify-self:end;margin:0}
+  :scope.membership-integrated .page-head>.btn{grid-column:1/-1;grid-row:2;justify-self:start;width:auto}
+ }
+ @media(max-width:760px){
+  :scope#membership-app .payment-orders table{min-width:0;display:block}
+  .payment-orders thead{display:none}.payment-orders tbody{display:block}
+  .payment-orders tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,1fr);gap:5px 12px;padding:16px 18px;border-bottom:1px solid var(--border)}
+  :scope#membership-app .payment-orders td{display:block;min-width:0;padding:4px 0;border:0;white-space:normal;font-size:13px}
+  .payment-orders td:nth-child(2),.payment-orders td:nth-child(4){text-align:right}
+  .payment-orders td:nth-child(3){align-self:center}.payment-orders td small{font-size:11px;line-height:1.8}
+ }
+}
+/* Account work uses the same compact hierarchy as the trading workspace. */
+#membership-app.membership-integrated .page-head{display:flex;align-items:center;justify-content:flex-start;gap:16px;margin:0 0 22px;min-height:44px}
+#membership-app.membership-integrated .page-head>div:first-child{flex:1;min-width:0}
+#membership-app.membership-integrated .page-head h1{font-size:25px;font-weight:650;line-height:1.3;letter-spacing:-.5px;margin:0}
+#membership-app.membership-integrated .page-head p{font-size:13px;line-height:1.65;margin:7px 0 0;color:var(--b-muted)}
+#membership-app.membership-integrated .page-head>.btn{margin-left:auto;flex:none;min-height:40px}
+#membership-app.membership-integrated :is(.panel,.credit-vault,.topup-summary,.topup-options,.billing-summary,.table-wrap){border-radius:16px;border:1px solid var(--b-line);box-shadow:0 1px 2px #261e3a04;background:var(--b-panel)}
+#membership-app.membership-integrated .credit-layout{display:block;margin-bottom:20px}
+#membership-app.membership-integrated .credit-vault{padding:22px 24px;min-height:0;display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);gap:0 44px;background:linear-gradient(110deg,color-mix(in srgb,var(--b-violet-soft) 34%,var(--b-panel)),var(--b-panel) 65%)}
+#membership-app.membership-integrated .credit-vault>.section-top{grid-area:1/1;margin-bottom:6px}
+#membership-app.membership-integrated .credit-vault>.vault-number{grid-area:2/1;margin:0}
+#membership-app.membership-integrated .credit-vault>.credit-facts{grid-column:2;grid-row:1/3;align-self:center;margin:0}
+#membership-app.membership-integrated .credit-vault>.balance-note{grid-column:1/-1;margin:14px 0 0;padding-top:12px}
+#membership-app.membership-integrated .vault-number{font-size:44px;font-weight:600;line-height:1.2;letter-spacing:-1px;margin:18px 0 24px;font-variant-numeric:tabular-nums}
+#membership-app.membership-integrated .credit-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px}
+#membership-app.membership-integrated .credit-facts>span{font-size:12px;color:var(--b-muted);line-height:1.5}
+#membership-app.membership-integrated .credit-facts b{font-size:20px;color:var(--b-ink);font-weight:550;margin-top:7px}
+#membership-app.membership-integrated .balance-track{margin-top:auto;height:5px}
+#membership-app.membership-integrated .balance-note{font-size:12px;line-height:1.7;margin-top:16px;padding-top:15px;border-color:var(--b-line)}
+#membership-app.membership-integrated .budget-panel{padding:22px 24px}
+#membership-app.membership-integrated .section-top{min-height:26px;margin-bottom:16px}
+#membership-app.membership-integrated .section-top h2{font-size:15px;font-weight:600;line-height:1.5}
+#membership-app.membership-integrated .toggle-row{padding-block:12px;min-height:40px;font-size:14px}
+#membership-app.membership-integrated .toggle-row small{font-size:12px;line-height:1.6;margin-top:4px}
+#membership-app.membership-integrated .budget-used{margin:14px 0 12px}
+#membership-app.membership-integrated .budget-used strong{font-size:26px;line-height:1.3;letter-spacing:-.6px}
+#membership-app.membership-integrated .budget-used strong small{font-size:12px;letter-spacing:0}
+#membership-app.membership-integrated .budget-used>span{font-size:12px}
+#membership-app.membership-integrated .budget-remaining{font-size:12px;margin:9px 0 15px}
+#membership-app.membership-integrated .budget-fields{gap:12px;margin-bottom:14px}
+#membership-app.membership-integrated .budget-fields label{font-size:12px;line-height:1.5}
+#membership-app.membership-integrated :where(input:not([type=checkbox]):not([type=radio]),select){font-size:14px;min-height:44px;border-radius:9px;background:var(--b-panel);border-color:var(--b-control-line)}
+#membership-app.membership-integrated :is(input,select):disabled{background:var(--b-soft);color:var(--b-muted);opacity:.7}
+#membership-app.membership-integrated .fine{font-size:12px;line-height:1.65}
+#membership-app.membership-integrated .credit-workspace{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start;margin-top:20px}
+#membership-app.membership-integrated .credit-workspace>.cost-lab{grid-column:1;grid-row:1/3}
+#membership-app.membership-integrated .credit-workspace>.task-list{grid-column:2;grid-row:1}
+#membership-app.membership-integrated .credit-workspace>.budget-panel{grid-column:2;grid-row:2}
+#membership-app.membership-integrated .credit-budget-details>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:44px}
+#membership-app.membership-integrated .credit-budget-details>summary::-webkit-details-marker{display:none}
+#membership-app.membership-integrated .credit-budget-details>summary b{font-size:15px;font-weight:600}
+#membership-app.membership-integrated .credit-budget-details>summary span{font-size:12px;line-height:1.6;color:var(--b-muted);margin-left:auto}
+#membership-app.membership-integrated .credit-budget-details>summary:after{content:"›";font-size:20px;color:var(--b-muted);transition:transform 160ms ease}
+#membership-app.membership-integrated .credit-budget-details[open]>summary:after{transform:rotate(90deg)}
+#membership-app.membership-integrated .credit-budget-details[open]>.section-top{display:none}
+#membership-app.membership-integrated .credit-budget-details[open]>summary{margin-bottom:16px;border-bottom:1px solid var(--b-line);padding-bottom:12px}
+#membership-app.membership-integrated .credit-workspace>.panel{padding:24px}
+#membership-app.membership-integrated .task-row{padding-block:15px;gap:12px}
+#membership-app.membership-integrated .task-row h3{font-size:14px;font-weight:550;line-height:1.5}
+#membership-app.membership-integrated .task-row>div>span{font-size:12px;line-height:1.6}
+#membership-app.membership-integrated .task-row>strong{font-size:19px;font-weight:550;font-variant-numeric:tabular-nums}
+#membership-app.membership-integrated .task-row>strong small{font-size:11px;line-height:1.5}
+#membership-app.membership-integrated .btn{min-height:40px;font-size:14px;font-weight:550;border-radius:9px;padding:9px 15px}
+#membership-app.membership-integrated .btn.primary{background:var(--b-action);color:var(--b-action-fg);border-color:var(--b-action);box-shadow:inset 0 1px 0 #ffffff25,0 2px 5px #6550b41c}
+#membership-app.membership-integrated .btn.primary:hover{background:var(--b-action-hover)}
+#membership-app.membership-integrated :is(.segmented,.run-mode){border-radius:9px;background:var(--b-soft);border-color:var(--b-line);box-shadow:none}
+#membership-app.membership-integrated :is(.segmented,.run-mode) button{border-radius:6px;font-size:13px}
+#membership-app.membership-integrated .table-wrap th{font-size:12px;font-weight:500;background:var(--b-soft);color:var(--b-muted);white-space:nowrap}
+#membership-app.membership-integrated .table-wrap td{font-size:14px;padding-block:15px;font-variant-numeric:tabular-nums}
+@media(max-width:900px){
+ #membership-app.membership-integrated .page-head{gap:10px;flex-direction:row;align-items:center;margin-bottom:20px;padding-right:0}
+ #membership-app.membership-integrated .page-head h1{font-size:23px}
+ #membership-app.membership-integrated .page-head>.btn{font-size:13px;min-height:44px;padding:9px 12px;margin-left:0}
+ #membership-app.membership-integrated .credit-layout,#membership-app.membership-integrated .credit-workspace{grid-template-columns:1fr;gap:16px}
+ #membership-app.membership-integrated .credit-workspace>:is(.cost-lab,.task-list,.budget-panel){grid-column:auto;grid-row:auto}
+ #membership-app.membership-integrated .credit-vault{grid-template-columns:1fr;gap:0}
+ #membership-app.membership-integrated .credit-vault>.credit-facts{grid-column:1;grid-row:3;margin:18px 0 0;padding-top:16px;border-top:1px solid var(--b-line)}
+ #membership-app.membership-integrated .credit-vault>.balance-note{font-size:12px;padding-top:12px}
+ #membership-app.membership-integrated .credit-vault,#membership-app.membership-integrated .budget-panel,#membership-app.membership-integrated .credit-workspace>.panel{padding:20px}
+ #membership-app.membership-integrated .vault-number{font-size:39px;margin:16px 0 20px}
+ #membership-app.membership-integrated .credit-facts b{font-size:19px}
+ #membership-app.membership-integrated .btn{min-height:44px;font-size:14px}
+ #membership-app.membership-integrated :where(input:not([type=checkbox]):not([type=radio]),select){font-size:16px;min-height:44px}
+ #membership-app.membership-integrated .task-row{flex-wrap:wrap}
+}
+
+#membership-app.membership-integrated .toggle-row input{width:40px;height:24px;min-height:0;padding:0;border:0;border-radius:99px;background:var(--b-line-strong);box-shadow:none}
+#membership-app.membership-integrated .toggle-row input:after{width:18px;height:18px;top:3px;left:3px;background:var(--b-muted)}
+#membership-app.membership-integrated .toggle-row input:checked{background:var(--b-action)}
+#membership-app.membership-integrated .toggle-row input:checked:after{background:var(--b-action-fg);transform:translateX(16px)}
+#membership-app.membership-integrated .cost-lab>.toggle-row{margin-top:12px;padding-block:8px;min-height:44px}
+#membership-app.membership-integrated .cost-lab .field-label{margin:14px 0 7px}
+#membership-app.membership-integrated .task-scope{margin-top:12px;font-size:13px}
+#membership-app.membership-integrated .cost-breakdown{margin:12px 0 16px;padding:14px 16px;border-radius:12px}
+#membership-app.membership-integrated .cost-total:first-child{border:0;margin:0;padding:0}
+#membership-app.membership-integrated .cost-total strong{font-size:28px}
+
+@media(max-width:700px){
+ #membership-app.membership-integrated .page-head:has(>[data-action=export]){display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:12px 10px}
+ #membership-app.membership-integrated .page-head:has(>[data-action=export])>div:first-child{grid-area:1/1}
+ #membership-app.membership-integrated .page-head:has(>[data-action=export])>#hive-mascot{grid-area:1/2}
+ #membership-app.membership-integrated .page-head>[data-action=export]{grid-row:2;grid-column:1/-1;justify-self:start;margin:0;max-width:100%;white-space:normal;line-height:1.5;text-align:left}
+ #membership-app.membership-integrated .billing-summary>div:not(:first-child) strong{font-size:22px;line-height:1.4;letter-spacing:-.3px}
+ #membership-app.membership-integrated .segmented.small{display:flex;max-width:100%;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}
+ #membership-app.membership-integrated :is(.segmented.small,.run-mode) button{flex:none;white-space:nowrap;min-height:44px}
+}
+
+@scope (#membership-app) {
+ :scope:not(.membership-integrated) .credit-layout{grid-template-columns:1fr}
+ :scope:not(.membership-integrated) .credit-vault{min-height:0;padding:24px}
+}
+
+/* Vertex control and panel geometry, adapted to the existing simulated account. */
+@scope (#membership-app, .commerce-dialog) {
+ :scope.membership-integrated .btn{min-height:38px;border-radius:8px;font-size:14px;box-shadow:none;gap:8px}
+ .membership-tier{border-radius:12px;background:var(--surface);padding:26px;box-shadow:none}
+ .membership-tier.tier-recommended{border:1px solid var(--brand-ink);box-shadow:0 0 0 1px var(--brand-ink)}
+ .tier-heading h2{font-size:21px;font-weight:650;line-height:1.4}
+ .membership-tier-price strong{font-size:36px;font-weight:600;letter-spacing:-1px}
+ :scope.membership-integrated :is(.panel,.credit-vault,.topup-options,.topup-summary,.stake-scene,.stake-form,.billing-summary,.account-status){border-radius:12px;box-shadow:none}
+ :scope.membership-integrated :is(.field-label,.label,.fine,.balance-note,.task-scope){font-size:13px;line-height:1.6}
+ :scope.membership-integrated .table-wrap th{background:var(--raised);font-size:12px;font-weight:550}
+ :scope.membership-integrated .table-wrap td{font-size:14px;line-height:1.6}
+ :scope.membership-integrated :is(.pay-choice>div,.pack-option){border-radius:8px;box-shadow:none}
+ .commerce-dialog:scope.membership-integrated{border-radius:14px;box-shadow:0 24px 80px #0b102438}
+ @media(max-width:760px){:scope.membership-integrated .btn{min-height:44px}.membership-tier{padding:22px}.membership-tier-tabs{border-radius:9px;background:var(--raised);padding:3px}.membership-tier-tabs button{border-radius:6px}.membership-tier-tabs button[aria-pressed=true]{background:var(--surface);border:1px solid var(--border);color:var(--text)}}
+}

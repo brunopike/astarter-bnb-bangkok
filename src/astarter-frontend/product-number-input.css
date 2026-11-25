@@ -1,0 +1,7 @@
+input[data-number-input]{font-variant-numeric:tabular-nums;font-kerning:none}
+input[data-number-ready]:not(:focus){-webkit-text-fill-color:transparent}
+.number-presentation{position:absolute;z-index:2;display:flex;align-items:center;box-sizing:border-box;pointer-events:none;white-space:nowrap;font-variant-numeric:tabular-nums;font-kerning:none}
+.number-presentation[hidden],.number-presentation-digit[hidden]{display:none!important}
+.number-presentation-value{display:inline-flex;align-items:baseline;flex:none;white-space:pre}
+.number-presentation-digit{display:inline-block;flex:none;white-space:pre}
+.number-presentation-digit[data-ghost]{opacity:.28}

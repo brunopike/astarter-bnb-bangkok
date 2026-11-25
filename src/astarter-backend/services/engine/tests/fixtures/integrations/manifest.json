@@ -1,0 +1,15 @@
+{
+  "purpose": "OFFLINE_FIXTURE",
+  "origin": "Authored synthetic QA records; never observed market data or paid inference",
+  "license_scope": "Project-authored test data; no third-party account content",
+  "files": [
+    {
+      "name": "binance_spot_ticker.json",
+      "sha256": "cb6873ce77bebb7514b37683ff269cc5d7dd92b92f5c60ee259d214728c8dba8"
+    },
+    {
+      "name": "openrouter_research.json",
+      "sha256": "3bae5195e4a5cf371cffc14ffae3c3af3da9a143ed46659f769786ab969b6b20"
+    }
+  ]
+}

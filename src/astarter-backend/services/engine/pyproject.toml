@@ -1,0 +1,52 @@
+[project]
+name = "stark-trading-os-engine"
+version = "0.1.0"
+description = "Backtest-only engine for Stark Trading OS"
+requires-python = "==3.12.*"
+dependencies = [
+  "fastapi==0.141.1",
+  "httpx==0.28.1",
+  "nautilus_trader==2.0.0rc3",
+  "openai-agents==0.22.0",
+  "pandas==3.0.5",
+  "pydantic==2.13.4",
+  "uvicorn==0.52.4",
+]
+
+[project.optional-dependencies]
+postgres = [
+  "psycopg[binary]==3.3.7",
+  "psycopg-pool==3.3.3",
+]
+dev = [
+  "detect-secrets==1.5.0",
+  "mypy==2.3.1",
+  "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "ruff==0.16.5",
+]
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stark_trading_os"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = ["src"]
+files = ["src/stark_trading_os"]

@@ -1,0 +1,1001 @@
+{
+  "scope": "PURE_MEMORY_LEGACY_S02_CAPTURE_BEFORE_NEW_COST_GUARD",
+  "baseline": {
+    "bot-runtime.mjs": "879cdcf2efff15edf314ed6935fdf93dda5da78ffe6900963af46ffbdc605eeb",
+    "bot-runtime.test.mjs": "fbe5ba01f5f115bbdd814af9b92198031cd09e059d90aebbdf82c976b0ad4c54"
+  },
+  "fixtures": [
+    {
+      "label": "normal",
+      "plan": {
+        "id": "LEGACY-S02-normal",
+        "version": 1,
+        "riskVersion": 1,
+        "strategy": "S02",
+        "planVariant": "S02-SIM",
+        "environment": "DEMO",
+        "market": "BTC/USDT",
+        "executionRoute": {
+          "accountId": "SIM-01",
+          "connectionId": "local-fixture",
+          "venueId": "binance",
+          "profileId": "cex-spot",
+          "chainId": ""
+        },
+        "amount": 100,
+        "cap": 500,
+        "mode": "auto",
+        "protection": {
+          "id": "original",
+          "version": "strategy-original"
+        },
+        "simulationScenario": "normal",
+        "botParameters": {
+          "deviationPct": 2,
+          "sizeMultiplier": 1.5,
+          "maxEntries": 3,
+          "takeProfitPct": 0.05,
+          "stopLossPct": 8
+        }
+      },
+      "requestId": "LEGACY-APPROVAL-normal",
+      "cash": 500,
+      "state": {
+        "schema": 1,
+        "version": "paper-bot-v1",
+        "time": 3.0000000000000013,
+        "seq": 3,
+        "revision": 31,
+        "runs": [
+          {
+            "id": "BOT-000001",
+            "requestId": "LEGACY-APPROVAL-normal",
+            "tradeOwner": "STRATEGY_AGENT",
+            "recordedAt": 1794339825439,
+            "plan": {
+              "id": "LEGACY-S02-normal",
+              "version": 1,
+              "riskVersion": 1,
+              "strategy": "S02",
+              "planVariant": "S02-SIM",
+              "environment": "DEMO",
+              "market": "BTC/USDT",
+              "executionRoute": {
+                "accountId": "SIM-01",
+                "connectionId": "local-fixture",
+                "venueId": "binance",
+                "profileId": "cex-spot",
+                "chainId": "",
+                "market": "BTC/USDT"
+              },
+              "amount": 100,
+              "cap": 500,
+              "mode": "auto",
+              "protection": {
+                "id": "original",
+                "version": "strategy-original"
+              },
+              "botParameters": {
+                "deviationPct": 2,
+                "sizeMultiplier": 1.5,
+                "maxEntries": 3,
+                "takeProfitPct": 0.05,
+                "stopLossPct": 8
+              },
+              "simulationScenario": "normal"
+            },
+            "simVersion": "paper-bot-v1",
+            "environment": "DEMO",
+            "status": "running",
+            "createdAt": 0,
+            "updatedAt": 3.0000000000000013,
+            "startedAt": 0.1,
+            "endedAt": null,
+            "endIntent": null,
+            "endReason": null,
+            "cash": 399.9,
+            "initialAllocation": 500,
+            "allocated": 500,
+            "returned": 0,
+            "fees": 0.1,
+            "realizedPnl": 0,
+            "markPrice": 100000,
+            "priceSource": "INJECTED_PAPER_PRICE",
+            "clockKind": "synthetic",
+            "triggerDirection": "above",
+            "anchorPrice": 100000,
+            "entries": 1,
+            "slots": [],
+            "lots": [
+              {
+                "id": "LOT-BOT-ORD-000003",
+                "runId": "BOT-000001",
+                "orderId": "BOT-ORD-000003",
+                "slotId": null,
+                "qty": 0.001,
+                "costBasis": 100.1,
+                "buyPrice": 100000
+              }
+            ],
+            "orders": [
+              {
+                "id": "BOT-ORD-000003",
+                "runId": "BOT-000001",
+                "market": "BTC/USDT",
+                "side": "buy",
+                "price": 100000,
+                "qty": 0.001,
+                "filled": 1,
+                "fee": 0.1,
+                "feeRate": 0.001,
+                "at": 0.1,
+                "eligibleAt": 0.2,
+                "status": "filled",
+                "scenario": "normal",
+                "marketType": "SPOT",
+                "venueId": "binance",
+                "profileId": "cex-spot",
+                "currency": "USDT",
+                "connectionId": "local-fixture",
+                "priceSource": "INJECTED_PAPER_PRICE",
+                "entry": 0,
+                "intent": "open",
+                "planId": "PLAN-BOT-SIG-000002",
+                "admissionId": "ADM-BOT-SIG-000002",
+                "commandId": "CMD-BOT-ORD-000003",
+                "operationId": "OP-BOT-ORD-000003",
+                "idempotencyKey": "demo:SIM-01:BOT-SIG-000002:v1",
+                "clientOrderId": "HIVE-BOT-ORD-000003",
+                "accountId": "SIM-01",
+                "instrumentId": "binance:SPOT:BTC/USDT",
+                "environment": "DEMO",
+                "executionKind": "BOT",
+                "tradeOwner": "STRATEGY_AGENT",
+                "recordedAt": 1794339825440,
+                "planRef": {
+                  "id": "LEGACY-S02-normal",
+                  "version": 1
+                },
+                "mandateRef": null
+              }
+            ],
+            "events": [
+              {
+                "at": 0,
+                "kind": "created",
+                "reason": "批准方案已冻结；仅使用独立纸面价格钟。"
+              }
+            ],
+            "protectionState": {
+              "base": 500,
+              "dayBase": 500,
+              "day": 0,
+              "high": 500,
+              "lossDebit": 0,
+              "reserve": 0,
+              "settledHigh": 500,
+              "locked": null
+            },
+            "protectionDecision": null,
+            "quantity": 0.001,
+            "costBasis": 100.1,
+            "inventoryValue": 100,
+            "equity": 499.9,
+            "unrealizedPnl": -0.09999999999999432,
+            "freeCash": 399.9
+          }
+        ],
+        "requests": [
+          {
+            "requestId": "LEGACY-APPROVAL-normal",
+            "payload": "{\"amount\":100,\"botParameters\":{\"deviationPct\":2,\"maxEntries\":3,\"sizeMultiplier\":1.5,\"stopLossPct\":8,\"takeProfitPct\":0.05},\"cap\":500,\"environment\":\"DEMO\",\"executionRoute\":{\"accountId\":\"SIM-01\",\"chainId\":\"\",\"connectionId\":\"local-fixture\",\"market\":\"BTC/USDT\",\"profileId\":\"cex-spot\",\"venueId\":\"binance\"},\"id\":\"LEGACY-S02-normal\",\"market\":\"BTC/USDT\",\"mode\":\"auto\",\"planVariant\":\"S02-SIM\",\"protection\":{\"id\":\"original\",\"version\":\"strategy-original\"},\"riskVersion\":1,\"simulationScenario\":\"normal\",\"strategy\":\"S02\",\"version\":1}",
+            "runId": "BOT-000001",
+            "at": 0
+          }
+        ],
+        "actions": [],
+        "history": [
+          {
+            "runId": "BOT-000001",
+            "plan": {
+              "id": "LEGACY-S02-normal",
+              "version": 1,
+              "riskVersion": 1,
+              "strategy": "S02",
+              "planVariant": "S02-SIM",
+              "environment": "DEMO",
+              "market": "BTC/USDT",
+              "executionRoute": {
+                "accountId": "SIM-01",
+                "connectionId": "local-fixture",
+                "venueId": "binance",
+                "profileId": "cex-spot",
+                "chainId": "",
+                "market": "BTC/USDT"
+              },
+              "amount": 100,
+              "cap": 500,
+              "mode": "auto",
+              "protection": {
+                "id": "original",
+                "version": "strategy-original"
+              },
+              "botParameters": {
+                "deviationPct": 2,
+                "sizeMultiplier": 1.5,
+                "maxEntries": 3,
+                "takeProfitPct": 0.05,
+                "stopLossPct": 8
+              },
+              "simulationScenario": "normal"
+            },
+            "requestId": "LEGACY-APPROVAL-normal",
+            "createdAt": 0,
+            "status": "running",
+            "startedAt": 0.1,
+            "endedAt": null,
+            "endReason": null,
+            "allocated": 500,
+            "equity": 499.9,
+            "fees": 0.1,
+            "realizedPnl": 0,
+            "unrealizedPnl": -0.09999999999999432,
+            "returned": 0,
+            "events": [
+              {
+                "at": 0,
+                "kind": "created",
+                "reason": "批准方案已冻结；仅使用独立纸面价格钟。"
+              }
+            ]
+          }
+        ],
+        "flow": {
+          "schema": 1,
+          "revision": 12,
+          "signals": [
+            {
+              "id": "BOT-SIG-000002",
+              "side": "buy",
+              "intent": "open",
+              "revision": 1,
+              "state": "TRIGGERED",
+              "instanceId": "BOT-000001",
+              "market": "BTC/USDT",
+              "accountId": "SIM-01",
+              "environment": "DEMO"
+            }
+          ],
+          "plans": [
+            {
+              "id": "PLAN-BOT-SIG-000002",
+              "revision": 1,
+              "tradeOwner": "STRATEGY_AGENT",
+              "recordedAt": 1794339825440,
+              "signalId": "BOT-SIG-000002",
+              "instanceId": "BOT-000001",
+              "accountId": "SIM-01",
+              "venueId": "binance",
+              "environment": "DEMO",
+              "instrumentId": "binance:SPOT:BTC/USDT",
+              "market": "BTC/USDT",
+              "marketType": "SPOT",
+              "side": "buy",
+              "quantity": "0.001",
+              "price": "100000",
+              "strategyVersion": "S02-SIM@paper-bot-v1",
+              "riskVersion": 1,
+              "mandateId": "LEGACY-APPROVAL-normal",
+              "configurationHash": "fixture:SIM-01:BOT-000001:S02-SIM:100:500",
+              "executionKind": "BOT",
+              "planRef": {
+                "id": "LEGACY-S02-normal",
+                "version": 1
+              },
+              "mandateRef": null,
+              "createdAt": 0.1,
+              "protectionPrepared": true
+            }
+          ],
+          "admissions": [
+            {
+              "id": "ADM-BOT-SIG-000002",
+              "planId": "PLAN-BOT-SIG-000002",
+              "revision": 1,
+              "source": "LOCAL_FIXTURE",
+              "state": "DISPATCHABLE",
+              "configurationHash": "fixture:SIM-01:BOT-000001:S02-SIM:100:500",
+              "checks": [
+                {
+                  "key": "risk",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                },
+                {
+                  "key": "mandate",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                },
+                {
+                  "key": "configuration",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                },
+                {
+                  "key": "reservation",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                },
+                {
+                  "key": "protection",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                }
+              ],
+              "blockingReasons": [],
+              "evidenceId": "SIM-EVIDENCE-BOT-SIG-000002",
+              "reservationIds": [
+                "RES-BOT-ORD-000003"
+              ],
+              "checkedAt": 0.1,
+              "expiresAt": 45.1
+            }
+          ],
+          "commands": [
+            {
+              "id": "CMD-BOT-ORD-000003",
+              "revision": 1,
+              "planId": "PLAN-BOT-SIG-000002",
+              "signalId": "BOT-SIG-000002",
+              "idempotencyKey": "demo:SIM-01:BOT-SIG-000002:v1",
+              "clientOrderId": "HIVE-BOT-ORD-000003",
+              "accountId": "SIM-01",
+              "environment": "DEMO",
+              "state": "DISPATCHED",
+              "at": 0.1
+            }
+          ],
+          "operations": [
+            {
+              "id": "OP-BOT-ORD-000003",
+              "commandId": "CMD-BOT-ORD-000003",
+              "revision": 2,
+              "state": "SUCCEEDED",
+              "orderId": "BOT-ORD-000003",
+              "lastCheckedAt": null
+            }
+          ],
+          "fills": [
+            {
+              "id": "FILL-BOT-ORD-000003-5000",
+              "revision": 2,
+              "tradeOwner": "STRATEGY_AGENT",
+              "recordedAt": 1794339825441,
+              "venueFillId": "FIXTURE-FILL-BOT-ORD-000003-5000",
+              "orderId": "BOT-ORD-000003",
+              "accountId": "SIM-01",
+              "instrumentId": "binance:SPOT:BTC/USDT",
+              "quantity": "0.0005",
+              "price": "100000",
+              "notional": "50",
+              "side": "buy",
+              "marketType": "SPOT",
+              "venueId": "binance",
+              "currency": "USDT",
+              "feeRate": 0.001,
+              "intent": "open",
+              "executedAt": 1.4000000000000001,
+              "feeState": "CONFIRMED",
+              "feeAmount": "0.05",
+              "expectedFee": 0.05
+            },
+            {
+              "id": "FILL-BOT-ORD-000003-10000",
+              "revision": 2,
+              "tradeOwner": "STRATEGY_AGENT",
+              "recordedAt": 1794339825441,
+              "venueFillId": "FIXTURE-FILL-BOT-ORD-000003-10000",
+              "orderId": "BOT-ORD-000003",
+              "accountId": "SIM-01",
+              "instrumentId": "binance:SPOT:BTC/USDT",
+              "quantity": "0.0005",
+              "price": "100000",
+              "notional": "50",
+              "side": "buy",
+              "marketType": "SPOT",
+              "venueId": "binance",
+              "currency": "USDT",
+              "feeRate": 0.001,
+              "intent": "open",
+              "executedAt": 2.700000000000001,
+              "feeState": "CONFIRMED",
+              "feeAmount": "0.05",
+              "expectedFee": 0.05
+            }
+          ],
+          "ledger": [
+            {
+              "id": "LEDGER-BOT-ALLOCATION-BOT-000001",
+              "economicEventId": "BOT-ALLOCATION-BOT-000001",
+              "accountId": "SIM-01",
+              "type": "BOT_ALLOCATION",
+              "amount": "500",
+              "currency": "USDT",
+              "at": 0,
+              "recordedAt": 1794339825439,
+              "revision": 1,
+              "backfill": false
+            },
+            {
+              "id": "LEDGER-FILL-BOT-ORD-000003-5000-TRADE_CASH",
+              "revision": 1,
+              "economicEventId": "FIXTURE-FILL-BOT-ORD-000003-5000:TRADE_CASH",
+              "fillId": "FILL-BOT-ORD-000003-5000",
+              "orderId": "BOT-ORD-000003",
+              "accountId": "SIM-01",
+              "type": "TRADE_CASH",
+              "amount": "-50",
+              "currency": "USDT",
+              "at": 1.4000000000000001,
+              "recordedAt": 1794339825441,
+              "backfill": false
+            },
+            {
+              "id": "LEDGER-BOT-FEE-FILL-BOT-ORD-000003-5000",
+              "economicEventId": "BOT-FEE-FILL-BOT-ORD-000003-5000",
+              "orderId": "BOT-ORD-000003",
+              "fillId": "FILL-BOT-ORD-000003-5000",
+              "accountId": "SIM-01",
+              "type": "FEE",
+              "amount": "-0.05",
+              "currency": "USDT",
+              "at": 1.4000000000000001,
+              "recordedAt": 1794339825441,
+              "revision": 1,
+              "backfill": false
+            },
+            {
+              "id": "LEDGER-FILL-BOT-ORD-000003-10000-TRADE_CASH",
+              "revision": 1,
+              "economicEventId": "FIXTURE-FILL-BOT-ORD-000003-10000:TRADE_CASH",
+              "fillId": "FILL-BOT-ORD-000003-10000",
+              "orderId": "BOT-ORD-000003",
+              "accountId": "SIM-01",
+              "type": "TRADE_CASH",
+              "amount": "-50",
+              "currency": "USDT",
+              "at": 2.700000000000001,
+              "recordedAt": 1794339825441,
+              "backfill": false
+            },
+            {
+              "id": "LEDGER-BOT-FEE-FILL-BOT-ORD-000003-10000",
+              "economicEventId": "BOT-FEE-FILL-BOT-ORD-000003-10000",
+              "orderId": "BOT-ORD-000003",
+              "fillId": "FILL-BOT-ORD-000003-10000",
+              "accountId": "SIM-01",
+              "type": "FEE",
+              "amount": "-0.05",
+              "currency": "USDT",
+              "at": 2.700000000000001,
+              "recordedAt": 1794339825441,
+              "revision": 1,
+              "backfill": false
+            }
+          ],
+          "reservations": [
+            {
+              "id": "RES-BOT-ORD-000003",
+              "revision": 4,
+              "orderId": "BOT-ORD-000003",
+              "planId": "PLAN-BOT-SIG-000002",
+              "accountId": "SIM-01",
+              "unit": "USDT",
+              "amount": "0",
+              "state": "RELEASED",
+              "releaseEvidenceId": "SIM-TERMINAL-BOT-ORD-000003-filled"
+            },
+            {
+              "id": "ALLOC-BOT-000001",
+              "revision": 1,
+              "kind": "BOT_ALLOCATION",
+              "instanceId": "BOT-000001",
+              "accountId": "SIM-01",
+              "unit": "USDT",
+              "amount": "500",
+              "state": "HELD",
+              "releaseEvidenceId": null
+            }
+          ],
+          "protections": [],
+          "sourceEvents": [
+            "FIXTURE-FILL-BOT-ORD-000003-5000",
+            "FIXTURE-FILL-BOT-ORD-000003-10000"
+          ],
+          "venueReceipts": [
+            {
+              "id": "ACK-BOT-ORD-000003",
+              "operationId": "OP-BOT-ORD-000003",
+              "clientOrderId": "HIVE-BOT-ORD-000003",
+              "state": "ACCEPTED",
+              "at": 0.1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "partial-unknown",
+      "plan": {
+        "id": "LEGACY-S02-partial-unknown",
+        "version": 1,
+        "riskVersion": 1,
+        "strategy": "S02",
+        "planVariant": "S02-SIM",
+        "environment": "DEMO",
+        "market": "BTC/USDT",
+        "executionRoute": {
+          "accountId": "SIM-01",
+          "connectionId": "local-fixture",
+          "venueId": "binance",
+          "profileId": "cex-spot",
+          "chainId": ""
+        },
+        "amount": 100,
+        "cap": 500,
+        "mode": "auto",
+        "protection": {
+          "id": "original",
+          "version": "strategy-original"
+        },
+        "simulationScenario": "partial-unknown",
+        "botParameters": {
+          "deviationPct": 2,
+          "sizeMultiplier": 1.5,
+          "maxEntries": 3,
+          "takeProfitPct": 0.05,
+          "stopLossPct": 8
+        }
+      },
+      "requestId": "LEGACY-APPROVAL-partial-unknown",
+      "cash": 500,
+      "state": {
+        "schema": 1,
+        "version": "paper-bot-v1",
+        "time": 3.0000000000000013,
+        "seq": 3,
+        "revision": 31,
+        "runs": [
+          {
+            "id": "BOT-000001",
+            "requestId": "LEGACY-APPROVAL-partial-unknown",
+            "tradeOwner": "STRATEGY_AGENT",
+            "recordedAt": 1794339825441,
+            "plan": {
+              "id": "LEGACY-S02-partial-unknown",
+              "version": 1,
+              "riskVersion": 1,
+              "strategy": "S02",
+              "planVariant": "S02-SIM",
+              "environment": "DEMO",
+              "market": "BTC/USDT",
+              "executionRoute": {
+                "accountId": "SIM-01",
+                "connectionId": "local-fixture",
+                "venueId": "binance",
+                "profileId": "cex-spot",
+                "chainId": "",
+                "market": "BTC/USDT"
+              },
+              "amount": 100,
+              "cap": 500,
+              "mode": "auto",
+              "protection": {
+                "id": "original",
+                "version": "strategy-original"
+              },
+              "botParameters": {
+                "deviationPct": 2,
+                "sizeMultiplier": 1.5,
+                "maxEntries": 3,
+                "takeProfitPct": 0.05,
+                "stopLossPct": 8
+              },
+              "simulationScenario": "partial-unknown"
+            },
+            "simVersion": "paper-bot-v1",
+            "environment": "DEMO",
+            "status": "blocked",
+            "createdAt": 0,
+            "updatedAt": 3.0000000000000013,
+            "startedAt": 0.1,
+            "endedAt": null,
+            "endIntent": null,
+            "endReason": null,
+            "cash": 449.95,
+            "initialAllocation": 500,
+            "allocated": 500,
+            "returned": 0,
+            "fees": 0.05,
+            "realizedPnl": 0,
+            "markPrice": 100000,
+            "priceSource": "INJECTED_PAPER_PRICE",
+            "clockKind": "synthetic",
+            "triggerDirection": "above",
+            "anchorPrice": 100000,
+            "entries": 1,
+            "slots": [],
+            "lots": [
+              {
+                "id": "LOT-BOT-ORD-000003",
+                "runId": "BOT-000001",
+                "orderId": "BOT-ORD-000003",
+                "slotId": null,
+                "qty": 0.0005,
+                "costBasis": 50.05,
+                "buyPrice": 100000
+              }
+            ],
+            "orders": [
+              {
+                "id": "BOT-ORD-000003",
+                "runId": "BOT-000001",
+                "market": "BTC/USDT",
+                "side": "buy",
+                "price": 100000,
+                "qty": 0.001,
+                "filled": 0.5,
+                "fee": 0.05,
+                "feeRate": 0.001,
+                "at": 0.1,
+                "eligibleAt": 0.2,
+                "status": "unknown",
+                "scenario": "partial-unknown",
+                "marketType": "SPOT",
+                "venueId": "binance",
+                "profileId": "cex-spot",
+                "currency": "USDT",
+                "connectionId": "local-fixture",
+                "priceSource": "INJECTED_PAPER_PRICE",
+                "entry": 0,
+                "intent": "open",
+                "planId": "PLAN-BOT-SIG-000002",
+                "admissionId": "ADM-BOT-SIG-000002",
+                "commandId": "CMD-BOT-ORD-000003",
+                "operationId": "OP-BOT-ORD-000003",
+                "idempotencyKey": "demo:SIM-01:BOT-SIG-000002:v1",
+                "clientOrderId": "HIVE-BOT-ORD-000003",
+                "accountId": "SIM-01",
+                "instrumentId": "binance:SPOT:BTC/USDT",
+                "environment": "DEMO",
+                "executionKind": "BOT",
+                "tradeOwner": "STRATEGY_AGENT",
+                "recordedAt": 1794339825441,
+                "planRef": {
+                  "id": "LEGACY-S02-partial-unknown",
+                  "version": 1
+                },
+                "mandateRef": null
+              }
+            ],
+            "events": [
+              {
+                "at": 0,
+                "kind": "created",
+                "reason": "批准方案已冻结；仅使用独立纸面价格钟。"
+              },
+              {
+                "at": 2.700000000000001,
+                "kind": "unknown",
+                "reason": "原模拟订单回执未知，保留原请求、库存与资金预留。"
+              }
+            ],
+            "protectionState": {
+              "base": 500,
+              "dayBase": 500,
+              "day": 0,
+              "high": 500,
+              "lossDebit": 0,
+              "reserve": 0,
+              "settledHigh": 500,
+              "locked": null
+            },
+            "protectionDecision": null,
+            "quantity": 0.0005,
+            "costBasis": 50.05,
+            "inventoryValue": 50,
+            "equity": 499.95,
+            "unrealizedPnl": -0.04999999999999716,
+            "freeCash": 399.9
+          }
+        ],
+        "requests": [
+          {
+            "requestId": "LEGACY-APPROVAL-partial-unknown",
+            "payload": "{\"amount\":100,\"botParameters\":{\"deviationPct\":2,\"maxEntries\":3,\"sizeMultiplier\":1.5,\"stopLossPct\":8,\"takeProfitPct\":0.05},\"cap\":500,\"environment\":\"DEMO\",\"executionRoute\":{\"accountId\":\"SIM-01\",\"chainId\":\"\",\"connectionId\":\"local-fixture\",\"market\":\"BTC/USDT\",\"profileId\":\"cex-spot\",\"venueId\":\"binance\"},\"id\":\"LEGACY-S02-partial-unknown\",\"market\":\"BTC/USDT\",\"mode\":\"auto\",\"planVariant\":\"S02-SIM\",\"protection\":{\"id\":\"original\",\"version\":\"strategy-original\"},\"riskVersion\":1,\"simulationScenario\":\"partial-unknown\",\"strategy\":\"S02\",\"version\":1}",
+            "runId": "BOT-000001",
+            "at": 0
+          }
+        ],
+        "actions": [],
+        "history": [
+          {
+            "runId": "BOT-000001",
+            "plan": {
+              "id": "LEGACY-S02-partial-unknown",
+              "version": 1,
+              "riskVersion": 1,
+              "strategy": "S02",
+              "planVariant": "S02-SIM",
+              "environment": "DEMO",
+              "market": "BTC/USDT",
+              "executionRoute": {
+                "accountId": "SIM-01",
+                "connectionId": "local-fixture",
+                "venueId": "binance",
+                "profileId": "cex-spot",
+                "chainId": "",
+                "market": "BTC/USDT"
+              },
+              "amount": 100,
+              "cap": 500,
+              "mode": "auto",
+              "protection": {
+                "id": "original",
+                "version": "strategy-original"
+              },
+              "botParameters": {
+                "deviationPct": 2,
+                "sizeMultiplier": 1.5,
+                "maxEntries": 3,
+                "takeProfitPct": 0.05,
+                "stopLossPct": 8
+              },
+              "simulationScenario": "partial-unknown"
+            },
+            "requestId": "LEGACY-APPROVAL-partial-unknown",
+            "createdAt": 0,
+            "status": "blocked",
+            "startedAt": 0.1,
+            "endedAt": null,
+            "endReason": null,
+            "allocated": 500,
+            "equity": 499.95,
+            "fees": 0.05,
+            "realizedPnl": 0,
+            "unrealizedPnl": -0.04999999999999716,
+            "returned": 0,
+            "events": [
+              {
+                "at": 0,
+                "kind": "created",
+                "reason": "批准方案已冻结；仅使用独立纸面价格钟。"
+              },
+              {
+                "at": 2.700000000000001,
+                "kind": "unknown",
+                "reason": "原模拟订单回执未知，保留原请求、库存与资金预留。"
+              }
+            ]
+          }
+        ],
+        "flow": {
+          "schema": 1,
+          "revision": 7,
+          "signals": [
+            {
+              "id": "BOT-SIG-000002",
+              "side": "buy",
+              "intent": "open",
+              "revision": 1,
+              "state": "TRIGGERED",
+              "instanceId": "BOT-000001",
+              "market": "BTC/USDT",
+              "accountId": "SIM-01",
+              "environment": "DEMO"
+            }
+          ],
+          "plans": [
+            {
+              "id": "PLAN-BOT-SIG-000002",
+              "revision": 1,
+              "tradeOwner": "STRATEGY_AGENT",
+              "recordedAt": 1794339825441,
+              "signalId": "BOT-SIG-000002",
+              "instanceId": "BOT-000001",
+              "accountId": "SIM-01",
+              "venueId": "binance",
+              "environment": "DEMO",
+              "instrumentId": "binance:SPOT:BTC/USDT",
+              "market": "BTC/USDT",
+              "marketType": "SPOT",
+              "side": "buy",
+              "quantity": "0.001",
+              "price": "100000",
+              "strategyVersion": "S02-SIM@paper-bot-v1",
+              "riskVersion": 1,
+              "mandateId": "LEGACY-APPROVAL-partial-unknown",
+              "configurationHash": "fixture:SIM-01:BOT-000001:S02-SIM:100:500",
+              "executionKind": "BOT",
+              "planRef": {
+                "id": "LEGACY-S02-partial-unknown",
+                "version": 1
+              },
+              "mandateRef": null,
+              "createdAt": 0.1,
+              "protectionPrepared": true
+            }
+          ],
+          "admissions": [
+            {
+              "id": "ADM-BOT-SIG-000002",
+              "planId": "PLAN-BOT-SIG-000002",
+              "revision": 1,
+              "source": "LOCAL_FIXTURE",
+              "state": "DISPATCHABLE",
+              "configurationHash": "fixture:SIM-01:BOT-000001:S02-SIM:100:500",
+              "checks": [
+                {
+                  "key": "risk",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                },
+                {
+                  "key": "mandate",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                },
+                {
+                  "key": "configuration",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                },
+                {
+                  "key": "reservation",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                },
+                {
+                  "key": "protection",
+                  "result": "PASS",
+                  "reason": "本地合同样例通过"
+                }
+              ],
+              "blockingReasons": [],
+              "evidenceId": "SIM-EVIDENCE-BOT-SIG-000002",
+              "reservationIds": [
+                "RES-BOT-ORD-000003"
+              ],
+              "checkedAt": 0.1,
+              "expiresAt": 45.1
+            }
+          ],
+          "commands": [
+            {
+              "id": "CMD-BOT-ORD-000003",
+              "revision": 1,
+              "planId": "PLAN-BOT-SIG-000002",
+              "signalId": "BOT-SIG-000002",
+              "idempotencyKey": "demo:SIM-01:BOT-SIG-000002:v1",
+              "clientOrderId": "HIVE-BOT-ORD-000003",
+              "accountId": "SIM-01",
+              "environment": "DEMO",
+              "state": "DISPATCHED",
+              "at": 0.1
+            }
+          ],
+          "operations": [
+            {
+              "id": "OP-BOT-ORD-000003",
+              "commandId": "CMD-BOT-ORD-000003",
+              "revision": 2,
+              "state": "UNKNOWN",
+              "orderId": "BOT-ORD-000003",
+              "lastCheckedAt": null
+            }
+          ],
+          "fills": [
+            {
+              "id": "FILL-BOT-ORD-000003-5000",
+              "revision": 2,
+              "tradeOwner": "STRATEGY_AGENT",
+              "recordedAt": 1794339825442,
+              "venueFillId": "FIXTURE-FILL-BOT-ORD-000003-5000",
+              "orderId": "BOT-ORD-000003",
+              "accountId": "SIM-01",
+              "instrumentId": "binance:SPOT:BTC/USDT",
+              "quantity": "0.0005",
+              "price": "100000",
+              "notional": "50",
+              "side": "buy",
+              "marketType": "SPOT",
+              "venueId": "binance",
+              "currency": "USDT",
+              "feeRate": 0.001,
+              "intent": "open",
+              "executedAt": 1.4000000000000001,
+              "feeState": "CONFIRMED",
+              "feeAmount": "0.05",
+              "expectedFee": 0.05
+            }
+          ],
+          "ledger": [
+            {
+              "id": "LEDGER-BOT-ALLOCATION-BOT-000001",
+              "economicEventId": "BOT-ALLOCATION-BOT-000001",
+              "accountId": "SIM-01",
+              "type": "BOT_ALLOCATION",
+              "amount": "500",
+              "currency": "USDT",
+              "at": 0,
+              "recordedAt": 1794339825441,
+              "revision": 1,
+              "backfill": false
+            },
+            {
+              "id": "LEDGER-FILL-BOT-ORD-000003-5000-TRADE_CASH",
+              "revision": 1,
+              "economicEventId": "FIXTURE-FILL-BOT-ORD-000003-5000:TRADE_CASH",
+              "fillId": "FILL-BOT-ORD-000003-5000",
+              "orderId": "BOT-ORD-000003",
+              "accountId": "SIM-01",
+              "type": "TRADE_CASH",
+              "amount": "-50",
+              "currency": "USDT",
+              "at": 1.4000000000000001,
+              "recordedAt": 1794339825442,
+              "backfill": false
+            },
+            {
+              "id": "LEDGER-BOT-FEE-FILL-BOT-ORD-000003-5000",
+              "economicEventId": "BOT-FEE-FILL-BOT-ORD-000003-5000",
+              "orderId": "BOT-ORD-000003",
+              "fillId": "FILL-BOT-ORD-000003-5000",
+              "accountId": "SIM-01",
+              "type": "FEE",
+              "amount": "-0.05",
+              "currency": "USDT",
+              "at": 1.4000000000000001,
+              "recordedAt": 1794339825442,
+              "revision": 1,
+              "backfill": false
+            }
+          ],
+          "reservations": [
+            {
+              "id": "RES-BOT-ORD-000003",
+              "revision": 2,
+              "orderId": "BOT-ORD-000003",
+              "planId": "PLAN-BOT-SIG-000002",
+              "accountId": "SIM-01",
+              "unit": "USDT",
+              "amount": "50.05",
+              "state": "HELD",
+              "releaseEvidenceId": null
+            },
+            {
+              "id": "ALLOC-BOT-000001",
+              "revision": 1,
+              "kind": "BOT_ALLOCATION",
+              "instanceId": "BOT-000001",
+              "accountId": "SIM-01",
+              "unit": "USDT",
+              "amount": "500",
+              "state": "HELD",
+              "releaseEvidenceId": null
+            }
+          ],
+          "protections": [],
+          "sourceEvents": [
+            "FIXTURE-FILL-BOT-ORD-000003-5000"
+          ],
+          "venueReceipts": []
+        }
+      }
+    }
+  ],
+  "serviceStarted": false,
+  "databaseOpened": false,
+  "externalCalls": 0,
+  "sharedSourceModified": false
+}

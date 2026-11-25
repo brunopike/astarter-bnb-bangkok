@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en" data-theme="dark"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#100e0b"><title>Astarter · Trading Workspace</title><link rel="icon" type="image/svg+xml" href="/brand/astarter-icon-gradient-primary.svg">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('hive-motion-theme')==='light'?'light':'dark';}catch{}</script><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/astarter-theme.css"><link rel="stylesheet" href="/reactor.css"><link rel="stylesheet" href="/trading-desk.css"><link rel="stylesheet" href="/product.css"><link rel="stylesheet" href="/product-polish.css"><script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/","/app.js":"/app.js?v=20261126a","/trading-desk.js":"/trading-desk.js?v=20261126a","/connections.mjs":"/connections.mjs?v=20261123a","/connection-options.mjs":"/connection-options.mjs?v=20261124a","/trading-access.mjs":"/trading-access.mjs?v=20261120c"}}</script><script type="module" src="/app.js?v=20261126a"></script><link rel="stylesheet" href="research-board.css"><link rel="stylesheet" href="/business-pages.css"><link rel="stylesheet" href="/product-workflow.css"><link rel="stylesheet" href="/execution-views.css">
+<link rel="stylesheet" href="/product-experience.css">
+<link rel="stylesheet" href="/product-composition.css"><link rel="stylesheet" href="/strategy-center.css">
+<link rel="stylesheet" href="/data-center.css">
+<link rel="stylesheet" href="/data-asset-view.css">
+<link rel="stylesheet" href="/data-feed-views.css">
+<link rel="stylesheet" href="/trading-assistant.css">
+<link rel="stylesheet" href="/signal-social.css">
+<link rel="stylesheet" href="/public-data.css">
+<link rel="stylesheet" href="/brand-icons.css">
+<link rel="stylesheet" href="/connections.css?v=20261120e">
+<link rel="stylesheet" href="/membership.css"><link rel="stylesheet" href="/membership-product.css">
+<link rel="stylesheet" href="/bento-system.css">
+<link rel="stylesheet" href="/workbench-terminal.css">
+<link rel="stylesheet" href="/agent-floor.css">
+<link rel="stylesheet" href="/workbench-charts.css">
+<link rel="stylesheet" href="/workbench-console.css">
+<link rel="preload" href="/fonts/inter-dbb4c50049c7.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/typography.css"><link rel="stylesheet" href="/liquid-select-ui/liquid-select.css"><link rel="stylesheet" href="/interface-polish.css"><link rel="stylesheet" href="/market-hub.css"><link rel="stylesheet" href="/product-layout.css"><link rel="stylesheet" href="/workbench-os.css"><link rel="stylesheet" href="/ai-operator.css"><link rel="stylesheet" href="/strategy-bot-workspace.css"><link rel="stylesheet" href="/private-draft-editor.css">
+<link rel="stylesheet" href="/wallet-header.css">
+<link rel="stylesheet" href="/trading-chart.css">
+<link rel="stylesheet" href="/bot-hub.css?v=20261123x">
+<link rel="stylesheet" href="/strategy-activity-trend.css">
+<link rel="stylesheet" href="/trade-activity-skyline.css"><link rel="stylesheet" href="/page-companion.css">
+<link rel="stylesheet" href="/account-center.css">
+<link rel="stylesheet" href="/statements.css"><link rel="stylesheet" href="/product-number-input.css">
+<style id="app-preload-style">
+body.app-loading{overflow:hidden}
+body.app-loading>:not(#app-preload){visibility:hidden}
+#app-preload{z-index:10000;pointer-events:auto;background:#000;color:#ecebe6;transition:background 1s cubic-bezier(.2,.7,.2,1);display:block;position:fixed;inset:0;overflow:hidden}
+#app-preload .ov-c{width:min(70vw,980px);height:0;position:absolute;top:50%;left:50%;translate:-50%}
+#app-preload .ov-line{opacity:0;background:linear-gradient(90deg,#0000,#fff 18% 82%,#0000);border-radius:2px;height:2px;animation:.5s .15s forwards app-ov-dot,1.1s cubic-bezier(.75,0,.15,1) .6s forwards app-ov-line;position:absolute;top:-1px;left:0;right:0;transform:scaleX(.002);box-shadow:0 0 12px #fff,0 0 40px #b4e1ffb3,0 0 120px #6fe3ff59}
+@keyframes app-ov-dot{to{opacity:1}
+}
+@keyframes app-ov-line{0%{transform:scaleX(.002)}
+to{transform:scaleX(1)}
+}
+#app-preload .ov-fan b{opacity:0;background:linear-gradient(90deg, transparent, var(--c) 25%, var(--c) 75%, transparent);height:1.5px;box-shadow:0 0 16px var(--c);transform-origin:0;animation:app-ov-fan 1.2s cubic-bezier(.2, .8, .2, 1) calc(1.55s + var(--i) * 45ms) forwards, app-ov-breathe 2.6s ease-in-out calc(2.9s + var(--i) * .12s) infinite alternate;border-radius:2px;position:absolute;top:-.75px;left:4%;right:4%}
+@keyframes app-ov-fan{0%{opacity:0;transform:translateY(0)rotate(0)}
+to{opacity:.9;transform:translateY(calc((var(--i) - 3) * 11px)) rotate(calc((var(--i) - 3) * .5deg))}
+}
+@keyframes app-ov-breathe{0%{transform:translateY(calc((var(--i) - 3) * 11px)) rotate(calc((var(--i) - 3) * .5deg))}
+to{transform:translateY(calc((var(--i) - 3) * 15px)) rotate(calc((var(--i) - 3) * .7deg))}
+}
+#app-preload .ov-word{white-space:nowrap;opacity:0;font:400 12px/1 var(--mono);letter-spacing:1.4em;text-transform:uppercase;color:#ecebe6b3;margin:0;animation:2.2s cubic-bezier(.2,.8,.2,1) .9s forwards app-ov-word;position:absolute;top:calc(50% + 86px);left:50%;translate:-50%}
+@keyframes app-ov-word{to{opacity:1;letter-spacing:.62em}
+}
+#app-preload .ov-flash{opacity:0;background:radial-gradient(circle,#fff 0% 35%,#c8ebffcc 55%,#6fe3ff00 72%);border-radius:50%;width:10px;height:10px;margin:-5px;position:absolute;top:50%;left:50%}
+#app-preload.go .ov-fan b{opacity:.9;transform:translateY(calc((var(--i) - 3) * 11px));transition:transform .32s cubic-bezier(.7,0,.3,1),opacity .32s;animation:none}
+#app-preload.go.fold .ov-fan b{opacity:0;transform:translateY(0)}
+#app-preload.go .ov-line{opacity:1;transition:transform .38s cubic-bezier(.8,0,.2,1) .28s;animation:none;transform:scaleX(1)}
+#app-preload.go.fold .ov-line{transform:scaleX(.002)}
+#app-preload.go .ov-word{opacity:0;transition:opacity .3s}
+#app-preload.flash .ov-flash{animation:1.05s cubic-bezier(.15,.8,.2,1) forwards app-ov-flash}
+@keyframes app-ov-flash{0%{opacity:1;transform:scale(0)}
+35%{opacity:1}
+to{opacity:0;transform:scale(min(320, 300vmax / 10px))}
+}
+#app-preload.flash{background:0 0;transition-delay:.12s}
+#app-preload.flash .ov-line{opacity:0;transition:opacity .2s}
+#app-preload .pl-meta{position:absolute;inset:auto clamp(24px,5vw,64px) max(24px,env(safe-area-inset-bottom));display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;opacity:0;pointer-events:none;font:400 14px/1.5 var(--sans, sans-serif)}
+#app-preload [data-load-label]{color:#b9bab6}
+#app-preload button{margin-left:auto;min-height:44px;padding:10px 18px;border:1px solid #747b87;border-radius:10px;background:transparent;color:inherit;font:500 14px/1.2 var(--sans,sans-serif);cursor:pointer}
+#app-preload button:hover{border-color:#b9bab6;background:#111419}
+#app-preload button[hidden]{display:none}
+#app-preload button:focus-visible{outline:2px solid #ecebe6;outline-offset:4px}
+#app-preload.attention .pl-meta{opacity:1;pointer-events:auto}
+#app-preload.reduce,#app-preload.reduce *{animation:none!important;transition:none!important}
+#app-preload.reduce .ov-line{opacity:1;transform:scaleX(1)}
+#app-preload.reduce .ov-fan b{opacity:.9;transform:translateY(calc((var(--i) - 3) * 11px)) rotate(calc((var(--i) - 3) * .5deg))}
+#app-preload.reduce .ov-word{opacity:1;letter-spacing:.62em}
+#app-preload.reduce .ov-flash{display:none}
+@media(prefers-reduced-motion:reduce){#app-preload,#app-preload *{animation:none!important;transition:none!important}#app-preload .ov-line{opacity:1;transform:scaleX(1)}#app-preload .ov-fan b{opacity:.9;transform:translateY(calc((var(--i) - 3) * 11px))}#app-preload .ov-word{opacity:1;letter-spacing:.62em}#app-preload .ov-flash{display:none}}
+</style>
+<link rel="stylesheet" href="./fonts/dot-numbers.css">
+</head>
+<body class="app-loading" data-mobile-view="network">
+<!-- Landing opening: white light, seven spectrum beams, fold and reveal. -->
+<div id="app-preload" role="status" aria-live="polite" data-no-translate>
+<div class="ov-c" aria-hidden="true"><i class="ov-line"></i><div class="ov-fan"><b style="--i:0;--c:var(--ast-spectrum-1,#ff4b3e)"></b><b style="--i:1;--c:var(--ast-spectrum-2,#ff9a2b)"></b><b style="--i:2;--c:var(--ast-spectrum-3,#ffd84d)"></b><b style="--i:3;--c:var(--ast-spectrum-4,#4dff7a)"></b><b style="--i:4;--c:var(--ast-spectrum-5,#3dd5ff)"></b><b style="--i:5;--c:var(--ast-spectrum-6,#4a6bff)"></b><b style="--i:6;--c:var(--ast-spectrum-7,#a24dff)"></b></div></div>
+<i class="ov-flash" aria-hidden="true"></i><p class="ov-word" aria-hidden="true">Astarter</p>
+<div class="pl-meta"><span data-load-label>正在加载</span><button type="button" data-load-retry hidden>重新加载</button></div>
+</div>
+<script id="app-preload-controller">
+(()=>{
+ const root=document.getElementById('app-preload'),label=root.querySelector('[data-load-label]'),retry=root.querySelector('[data-load-retry]');
+ const copy={zh:['正在加载','加载时间较长','加载失败，请重试','重新加载'],en:['Loading','Taking longer than usual','Unable to load. Try again.','Reload'],ja:['読み込み中','読み込みに時間がかかっています','読み込めませんでした','再読み込み'],ko:['불러오는 중','평소보다 오래 걸리고 있습니다','불러오지 못했습니다','새로고침'],vi:['Đang tải','Tải lâu hơn bình thường','Không thể tải. Vui lòng thử lại.','Tải lại'],es:['Cargando','Está tardando más de lo habitual','No se ha podido cargar. Inténtalo de nuevo.','Volver a cargar'],fr:['Chargement','Le chargement prend plus de temps','Impossible de charger. Réessayez.','Recharger'],ru:['Загрузка','Загрузка занимает больше времени','Не удалось загрузить. Повторите попытку.','Обновить']};
+ let locale='en';try{locale=localStorage.getItem('hive.locale')||'en';}catch{}
+ const words=copy[locale]||copy.en;label.textContent=words[0];retry.textContent=words[3];
+ const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches||new URLSearchParams(location.search).get('motion')==='reduced';
+ if(reduced())root.classList.add('reduce');
+ const started=performance.now();let complete=false;
+ const fail=()=>{if(!complete){clearTimeout(wait);label.textContent=words[2];retry.hidden=false;root.classList.add('attention');}};
+ const wait=setTimeout(()=>{label.textContent=words[1];retry.hidden=false;root.classList.add('attention');},15000);
+ window.addEventListener('error',fail);
+ document.querySelector('script[src^="/app.js"]').addEventListener('error',fail);
+ retry.addEventListener('click',()=>location.reload());
+ window.__appPreload={fail,done(){
+  if(complete)return;complete=true;clearTimeout(wait);window.removeEventListener('error',fail);
+  label.textContent=words[0];retry.hidden=true;root.classList.remove('attention');
+  const reveal=()=>document.body.classList.remove('app-loading');
+  if(reduced()){reveal();root.remove();return;}
+  // Let Landing's opening finish before folding; readiness still owns the reveal.
+  setTimeout(()=>{
+   root.classList.add('go');requestAnimationFrame(()=>root.classList.add('fold'));
+   setTimeout(()=>root.classList.add('flash'),680);
+   setTimeout(reveal,760);setTimeout(()=>root.remove(),2000);
+  },Math.max(0,2600-(performance.now()-started)));
+ }};
+})();
+</script>
+<header class="topbar"><a class="brand" href="/" aria-label="Astarter 首页"><img class="brandmark" src="/brand/astarter-mark-ui.svg" width="34" height="19" alt="" aria-hidden="true"><strong data-no-translate>ASTARTER</strong></a><div class="top-context">交易工作台</div><div class="simulation-badge" role="note" aria-label="演示数据 · 仅供界面体验" title="演示数据 · 仅供界面体验"><i></i><b data-no-translate>DEMO</b></div><div class="theme-switch" role="group" aria-label="界面配色"><button type="button" data-theme-choice="light" aria-pressed="false" title="浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span>浅色</span></button><button type="button" data-theme-choice="dark" aria-pressed="true" title="深色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M21 13.2A9 9 0 0 1 10.8 3 9 9 0 1 0 21 13.2Z"/></svg><span>深色</span></button></div><details class="language-picker" data-no-translate><summary aria-label="Language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"/></svg><span data-language-code>EN</span><svg class="language-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary><div class="language-options" role="group" aria-label="Language"><button type="button" data-locale="zh" aria-label="中文" lang="zh" aria-pressed="false"><span lang="zh">中文</span><span class="language-check" aria-hidden="true">✓</span></button><button type="button" data-locale="en" aria-label="English" lang="en" aria-pressed="true"><span lang="en">English</span><span class="language-check" aria-hidden="true">✓</span></button><button type="button" data-locale="ja" aria-label="日本語" lang="ja" aria-pressed="false"><span lang="ja">日本語</span><span class="language-check" aria-hidden="true">✓</span></button><button type="button" data-locale="ko" aria-label="한국어" lang="ko" aria-pressed="false"><span lang="ko">한국어</span><span class="language-check" aria-hidden="true">✓</span></button><button type="button" data-locale="vi" aria-label="Tiếng Việt" lang="vi" aria-pressed="false"><span lang="vi">Tiếng Việt</span><span class="language-check" aria-hidden="true">✓</span></button><button type="button" data-locale="es" aria-label="Español" lang="es" aria-pressed="false"><span lang="es">Español</span><span class="language-check" aria-hidden="true">✓</span></button><button type="button" data-locale="fr" aria-label="Français" lang="fr" aria-pressed="false"><span lang="fr">Français</span><span class="language-check" aria-hidden="true">✓</span></button><button type="button" data-locale="ru" aria-label="Русский" lang="ru" aria-pressed="false"><span lang="ru">Русский</span><span class="language-check" aria-hidden="true">✓</span></button></div></details><span class="language-status sr-only" role="status" aria-live="polite"></span></header>
+<main class="workspace">
+<aside class="status-panel" aria-label="运行状态与协作信息">
+<div class="panel-heading"><h2>运行概览</h2><span class="mono" id="task-counter">#0001</span></div><div class="run-summary"><span class="run-state"><i class="live-dot"></i><span id="stage-state">演示运行中</span></span><strong class="mono" id="clock">00:00</strong></div>
+<dl class="context-list"><div><dt>观察范围</dt><dd>Crypto · TradFi</dd></div><div><dt>当前核验</dt><dd id="active-market">BTC / USDT <small>SIM</small></dd></div><div><dt>当前方案</dt><dd id="active-scenario">盘口联合核验</dd></div><div><dt>配置版本</dt><dd class="mono" id="config-version">v01</dd></div></dl>
+<div class="metrics"><div><span>参与 Agent</span><strong><b id="participant-count">05</b><em>/ 18</em></strong></div><div><span>传递记录</span><strong id="handoff-count">00</strong></div><div><span>处理中</span><strong id="running-count">01</strong></div><div><span>已完成</span><strong id="done-count">00</strong></div></div>
+<section class="phase-section"><div class="section-label"><h3>协作进度</h3><span class="mono" id="cycle-progress">00%</span></div><div class="progress-track"><div id="progress-fill"></div></div><ol class="phase-list" id="phase-list"><li>市场扫描</li><li>线索聚合</li><li>交叉核验</li><li>结果留存</li></ol></section>
+<section><div class="section-label"><h3>本轮参与</h3><span>按需调度</span></div><div class="participants" id="participants"></div></section>
+<section class="focused-agent" aria-label="当前聚焦的 Agent"><div class="focus-top"><span>当前节点</span><span class="mono" id="focus-id">A05</span></div><h3 id="focus-name">盘口与流动性</h3><p id="focus-description">核对盘口深度、价差与数据时效。</p><div class="focus-status"><span id="focus-status">等待交接</span><span>观察记录</span></div><p class="focus-output" id="focus-output">等待证据进入。</p></section>
+<section class="event-section"><div class="section-label"><h3>事件记录</h3><span class="mono" id="event-count">01</span></div><ol class="event-list" id="event-list" aria-live="off"></ol></section><div class="system-readout"><span>本地演示 · <b id="renderer-state">WEBGL</b></span><span class="mono" id="performance">— FPS</span></div>
+</aside>
+<section class="network-stage" tabindex="0" aria-label="可交互的立体 Agent 线网球体">
+<div class="stage-heading"><div><p class="eyebrow"><span id="field-market">BTC / USDT</span> · 示意</p><h1 id="stage-title">AI 战队</h1><div class="field-reading"><span id="field-state">观察中</span><span id="field-detail">留意盘口的变化</span></div></div><div class="stage-controls"><div class="scene-switch" role="group" aria-label="动效方案对比"><button type="button" data-scene-choice="reactor" aria-pressed="true">协作核心</button><button type="button" data-scene-choice="network" aria-pressed="false">网状球</button><button type="button" data-scene-choice="field" aria-pressed="false">织构</button><button type="button" data-scene-choice="bricks" aria-pressed="false">积木</button></div><div class="view-switch" role="group" aria-label="场景显示方式"><button id="view-network" class="active" aria-pressed="true">全场</button><button id="view-flow" aria-pressed="false">聚焦线索</button></div></div></div>
+<div class="mobile-stage-status" id="mobile-run-state">演示运行中 · 5 个角色</div><div id="globe" class="globe"></div><div class="agent-labels" id="agent-labels" aria-hidden="true"></div><div class="scene-note"><ol id="reading-phases"><li class="active">观察</li><li>线索</li><li>核验</li><li>记录</li></ol><span class="field-key">灰 · 背景　紫 · 线索</span></div>
+<div class="route-caption" id="route-caption"><span class="mono" id="route-pair">NETWORK READY</span><span id="route-text">等待演示传递记录</span></div><div class="stage-bottom"><span class="interaction-hint"><span class="desktop-hint">拖动旋转 · 滚轮缩放</span><span class="mobile-hint">拖动旋转 · 双指缩放</span></span><div class="camera-tools"><button id="mobile-play" class="mobile-only-control" aria-label="暂停演示">Ⅱ</button><button id="zoom-out" aria-label="缩小视图">−</button><button id="reset-camera" aria-label="重置场景视角">↺</button><button id="zoom-in" aria-label="放大视图">＋</button></div></div>
+</section>
+<aside class="console-panel" aria-label="操作台">
+<div class="console-header"><div class="panel-heading"><h2>操作台</h2></div><div class="console-tabs" role="tablist" aria-label="操作分组"><button id="tab-run" role="tab" aria-selected="true" aria-controls="pane-run">运行设置</button><button id="tab-visual" role="tab" aria-selected="false" aria-controls="pane-visual">画面</button></div></div>
+<div class="console-scroll"><section id="pane-run" role="tabpanel" aria-labelledby="tab-run">
+<div class="section-label"><h3>观察方案</h3><span id="draft-state">与运行一致</span></div>
+<label class="field" for="scenario"><span>观察方案</span><select id="scenario"><option value="liquidity">盘口变化 · 联合核验</option><option value="volatility">波动异常 · 风险审阅</option><option value="review">策略复核 · 情景推演</option></select></label>
+<label class="field" for="market"><span>观察标的 <em>合成数据</em></span><select id="market"><option value="BTC/USDT">BTC / USDT</option><option value="ETH/USDT">ETH / USDT</option><option value="SOL/USDT">SOL / USDT</option></select></label>
+<label class="field" for="cycle-limit"><span>观察轮次</span><select id="cycle-limit"><option value="0">连续演示</option><option value="1">完成 1 轮后结束</option><option value="3">完成 3 轮后结束</option></select></label><p class="field-note" id="draft-role-note">本方案按需调度 5 / 18 个角色。</p><div class="button-pair"><button class="button secondary" id="save-draft">保存草稿</button><button class="button apply-button" id="apply-config" disabled>应用并重启</button></div><p class="draft-note" id="save-note">配置修改后，应用时开启新的演示运行。</p>
+<div class="console-section legacy-events"><div class="section-label"><h3>加入演示事件</h3><span>观察响应</span></div><div class="event-actions"><button data-inject="market"><span>↗</span>行情信号</button><button data-inject="volatility"><span>⌁</span>波动异常</button><button data-inject="risk"><span>◇</span>风险事件</button></div></div>
+<div class="console-section console-records"><label class="field" for="focus-role"><span>定位 Agent</span><select id="focus-role"></select></label><button class="button export-button" id="export-records"><span>↓</span>导出研究记录 <span class="mono">JSON</span></button><p class="draft-note">包含当前证据、研究结论及本地处理记录。</p></div>
+</section>
+<section id="pane-visual" role="tabpanel" aria-labelledby="tab-visual" hidden>
+<div class="section-label"><h3>信号表现</h3><span>即时生效</span></div><label class="range-field" for="intensity"><span><span id="intensity-label">落位动势</span><output id="intensity-value">1.8×</output></span><input id="intensity" type="range" min="0.6" max="2.6" step="0.1" value="1.8"></label><label class="range-field" for="point-scale"><span><span id="point-scale-label">落位脉冲与光片尺度</span><output id="point-value">1.6×</output></span><input id="point-scale" type="range" min="0.7" max="2.5" step="0.1" value="1.6"></label>
+<label class="field" id="brick-style-field" for="brick-style"><span>积木材质</span><select id="brick-style"><option value="outline">边缘线 · 立体层次</option><option value="solid">实体面 · 结构体量</option><option value="wire">细线框 · 通透结构</option></select></label><button class="button secondary full-width bricks-only" id="restore-bricks">恢复积木结构</button><label class="field" for="speed"><span>演示速度</span><select id="speed" aria-label="演示速度"><option value="0.5">0.5× · 慢速观察</option><option value="1" selected>1× · 标准</option><option value="1.5">1.5× · 加速</option><option value="2">2× · 快速</option></select></label><div class="switch-fields"><label><span>自动旋转</span><input type="checkbox" id="auto-rotate"></label><label><span>显示角色标签</span><input type="checkbox" id="show-labels" checked></label><label><span>显示交接路径</span><input type="checkbox" id="show-paths" checked></label></div><button class="button secondary full-width" id="reset-visual">恢复默认动效</button><p class="field-note" id="visual-timing-note">摘选、搭建和局部换块共用演示时钟，暂停时同步停留。</p><div class="console-section"><h3 class="mini-title">画面操作</h3><p class="field-note" id="canvas-instructions">拖动旋转，点击角色积木聚焦。</p><p class="field-note" id="motion-note">减少动态效果可跟随系统设置。</p></div>
+</section></div>
+<div class="run-dock"><div class="operation-notice" id="operation-notice" role="status">选择研究范围，或为本轮追加核验任务。</div><button class="button primary" id="play-pause" aria-pressed="false"><span id="play-icon">Ⅱ</span><span id="play-text">暂停演示</span></button><div class="dock-secondary"><button id="step" disabled>单步 +3s</button><button id="replay">重播</button><button id="stop-run">中止本轮</button></div></div>
+</aside></main>
+<footer class="controlbar"><span class="footer-title">蜂巢</span><div class="legend"><span><i class="market"></i>市场观察</span><span><i class="research"></i>策略研究</span><span><i class="risk"></i>决策与风险</span><span><i class="review"></i>运行复盘</span></div><span class="footer-version">演示 / 18</span></footer>
+<nav class="mobile-nav" aria-label="手机工作区"><button data-mobile-pane="status" aria-pressed="false"><span>▤</span>状态</button><button data-mobile-pane="network" class="active" aria-pressed="true"><span>◎</span>网络</button><button data-mobile-pane="console" aria-pressed="false"><span>☷</span>操作</button></nav><dialog id="export-dialog" aria-labelledby="export-title"><div class="export-head"><div><h2 id="export-title">演示运行记录</h2><p id="export-summary"></p></div><button id="close-export" aria-label="关闭导出预览">×</button></div><textarea id="export-json" aria-label="演示运行记录 JSON" readonly spellcheck="false"></textarea><div class="export-footer"><span>仅合成数据 · 最近 24 条事件</span><button class="button secondary" id="copy-export">复制 JSON</button><a class="button apply-button" id="download-export" download>下载 JSON</a></div><p id="export-feedback" role="status"></p></dialog><div class="sr-only" id="announcement" aria-live="polite"></div></body></html>

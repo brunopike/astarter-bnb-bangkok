@@ -1,0 +1,44 @@
+name: Astarter backend offline checks
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-contracts:
+    runs-on: macos-26
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      OPENAI_API_KEY: ''
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: '0.12.7'
+          python-version: '3.12.4'
+          enable-cache: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Install committed backend lock
+        run: uv sync --project services/engine --all-extras --locked
+      - name: Repository and backend contracts
+        run: PYTHONPATH=services/engine/src uv run --locked --project services/engine pytest tests services/engine/tests/unit services/engine/tests/contract -q -p no:cacheprovider
+      - name: Backend capability boundaries
+        run: |
+          node --test scripts/tests/scan-forbidden-capabilities.test.mjs
+          node scripts/scan-forbidden-capabilities.mjs
+      - name: PUBLIC closed distribution tests
+        working-directory: deployments/public
+        run: PYTHONPATH=. ../../services/engine/.venv/bin/python -B -m unittest discover -s tests -v
+      - name: PRIVATE closed distribution tests
+        working-directory: deployments/private
+        run: PYTHONPATH=. ../../services/engine/.venv/bin/python -B -m unittest discover -s tests -v
+      - name: Fail-closed Python secret scan
+        run: uv run --locked --project services/engine python services/engine/scripts/scan_secrets.py

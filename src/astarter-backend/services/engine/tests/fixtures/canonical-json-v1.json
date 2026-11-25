@@ -1,0 +1,20 @@
+{
+  "schema": "CanonicalJSONFixture.v1",
+  "unicode_and_integers": {
+    "value": {"é": "accent", "z": "last", "a": "first", "integer": 7},
+    "expected": "{\"a\":\"first\",\"integer\":7,\"z\":\"last\",\"é\":\"accent\"}"
+  },
+  "declared_set": {
+    "value": {"schema": "SetFixture.v1", "items": [{"id": "b", "amount": "1.20"}, {"id": "a", "amount": "0"}]},
+    "expected": "{\"items\":[{\"amount\":\"0\",\"id\":\"a\"},{\"amount\":\"1.20\",\"id\":\"b\"}],\"schema\":\"SetFixture.v1\"}"
+  },
+  "composite_numeric_set": {
+    "value": {"schema": "CompositeSetFixture.v1", "items": [{"ts_ns": "10", "source_seq": 2, "name": "η"}, {"ts_ns": "2", "source_seq": 10, "name": "ETH"}]},
+    "expected": "{\"items\":[{\"name\":\"ETH\",\"source_seq\":10,\"ts_ns\":\"2\"},{\"name\":\"η\",\"source_seq\":2,\"ts_ns\":\"10\"}],\"schema\":\"CompositeSetFixture.v1\"}"
+  },
+  "composite_numeric_set_reversed": {
+    "value": {"schema": "CompositeSetFixture.v1", "items": [{"ts_ns": "2", "source_seq": 10, "name": "ETH"}, {"ts_ns": "10", "source_seq": 2, "name": "η"}]},
+    "expected": "{\"items\":[{\"name\":\"ETH\",\"source_seq\":10,\"ts_ns\":\"2\"},{\"name\":\"η\",\"source_seq\":2,\"ts_ns\":\"10\"}],\"schema\":\"CompositeSetFixture.v1\"}"
+  },
+  "duplicate_composite_key": {"schema": "CompositeSetFixture.v1", "items": [{"ts_ns": "2", "source_seq": 10, "name": "ETH"}, {"ts_ns": "2", "source_seq": 10, "name": "ETH"}]}
+}

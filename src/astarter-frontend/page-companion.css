@@ -1,0 +1,146 @@
+/* The companion floats independently of the shared navigation. */
+body[data-page] #hive-mascot.mascot-pocket{display:block!important;position:fixed;z-index:80;width:48px;height:48px;scroll-margin-bottom:env(safe-area-inset-bottom);transition:none}
+body #hive-mascot.mascot-pocket .mascot-trigger{display:grid;place-items:center;min-width:48px;min-height:48px;width:48px;height:48px;padding:0;touch-action:manipulation;user-select:none;-webkit-user-select:none;cursor:pointer;border:0;border-radius:50%;background:none;box-shadow:none}
+body #hive-mascot.mascot-pocket .mascot-trigger:focus-visible{outline:2px solid var(--optical-focus,var(--b-ink));outline-offset:2px}
+/* Match the central white core with static reflections; gestures stay inside the 48px target. */
+body #hive-mascot.mascot-pocket .mascot-orb{position:relative;width:36px;height:36px;border:1px solid #e0e5eb;background:radial-gradient(ellipse at 30% 21%,#fff 0 22%,#f6f7fc 50%,#d4dbe2 86%,#e9edf2 100%);box-shadow:inset -2px -3px 5px #8b99a84a,inset 1px 1px 2px #fff,0 2px 5px #11192330;animation:none!important}
+body #hive-mascot.mascot-pocket .mascot-orb::before{content:'';position:absolute;inset:3px 6px 10px 3px;border-top:1px solid #fff;border-left:1px solid #ffffffc7;border-radius:50%;transform:rotate(-22deg);pointer-events:none}
+body #hive-mascot.mascot-pocket .mascot-orb::after{content:'';position:absolute;left:23px;top:22px;width:5px;height:5px;border-radius:50%;background:radial-gradient(circle,#fff 0 12%,#ffffff80 35%,transparent 72%);pointer-events:none}
+body #hive-mascot.mascot-pocket .mascot-orb i{top:31%;width:3px;height:10px;background:#181922;border:0;border-radius:3px;translate:0 0;animation:none!important}
+body #hive-mascot.mascot-pocket .mascot-orb i:first-child{left:10px;transform:rotate(-7deg)}
+body #hive-mascot.mascot-pocket .mascot-orb i:nth-child(2){left:21px;transform:rotate(7deg)}
+body #hive-mascot.mascot-pocket .mascot-hand{position:absolute;z-index:3;top:35px;left:8px;width:8px;height:7px;border:1px solid #dce2e8;border-radius:50%;background:radial-gradient(ellipse at 30% 20%,#fff 0 28%,#f6f7fc 55%,#cbd4de 100%);box-shadow:inset -1px -1px 2px #a7b3c13d,0 1px 2px #18202c26;pointer-events:none;transition:transform 180ms ease-out}
+body #hive-mascot.mascot-pocket .mascot-hand-right{left:32px}
+body #hive-mascot.mascot-pocket .mascot-paper{position:absolute;z-index:2;left:16px;top:27px;bottom:auto;width:17px;height:19px;display:block;pointer-events:none;opacity:0;transform:translateY(2px) scale(.9);transition:opacity 150ms ease-out,transform 180ms ease-out}
+body #hive-mascot.mascot-pocket .mascot-paper>span{position:absolute;inset:0;width:auto;height:auto;border:1px solid #9692b2;border-radius:2px;background:linear-gradient(145deg,#fff,#e9edf4);box-shadow:0 1px 2px #141a2e26;transform:translate(-2px,-1px) rotate(-8deg)}
+body #hive-mascot.mascot-pocket .mascot-paper>span+span{transform:none;clip-path:polygon(0 0,72% 0,100% 25%,100% 100%,0 100%)}
+body #hive-mascot.mascot-pocket .mascot-paper>span+span::before{content:'';position:absolute;right:0;top:0;width:4px;height:4px;background:#d5d6e5;border-left:1px solid #a3a3bc;border-bottom:1px solid #a3a3bc}
+body #hive-mascot.mascot-pocket .mascot-paper>span::after{content:'';position:absolute;inset:5px 3px 3px;background:linear-gradient(to bottom,#70778a 0 1px,transparent 1px 4px,#70778a 4px 5px,transparent 5px 8px,#70778a 8px 9px,transparent 9px);opacity:.75}
+body #hive-mascot.mascot-pocket:is([data-mood=browse],[data-mood=audit]) .mascot-paper{opacity:1;transform:rotate(-5deg)}
+body #hive-mascot.mascot-pocket:is([data-mood=browse],[data-mood=audit]) .mascot-hand-left{transform:translate(4px,-1px) rotate(-10deg)}
+body #hive-mascot.mascot-pocket:is([data-mood=browse],[data-mood=audit]) .mascot-hand-right{transform:translate(-3px,-1px) rotate(10deg)}
+body #hive-mascot.mascot-pocket[data-mood=think] .mascot-hand-right{transform:translate(1px,-13px) rotate(-20deg)}
+body #hive-mascot.mascot-pocket[data-mood=confirm] .mascot-hand-left{transform:translate(-1px,-2px) rotate(-15deg)}
+body #hive-mascot.mascot-pocket[data-mood=confirm] .mascot-hand-right{transform:translate(1px,-2px) rotate(15deg)}
+@media(prefers-reduced-motion:no-preference){
+ html:not([data-reduced-motion=true]) body #hive-mascot.mascot-pocket .mascot-orb{animation:companion-rest 5s ease-in-out infinite!important}
+ html:not([data-reduced-motion=true]) body #hive-mascot.mascot-pocket .mascot-orb i{animation:companion-eyes 5.6s ease-in-out infinite!important}
+ html:not([data-reduced-motion=true]) body #hive-mascot.mascot-pocket:is([data-mood=browse],[data-mood=audit]) .mascot-orb{animation:companion-read 5.2s ease-in-out infinite!important}
+ html:not([data-reduced-motion=true]) body #hive-mascot.mascot-pocket[data-mood=think] .mascot-orb{animation:companion-think 4.8s ease-in-out infinite!important}
+ html:not([data-reduced-motion=true]) body #hive-mascot.mascot-pocket[data-mood=confirm] .mascot-orb{animation:companion-nod 5s ease-in-out infinite!important}
+ html:not([data-reduced-motion=true]) body #hive-mascot.mascot-pocket.responding .mascot-orb{animation:companion-ack .72s ease-in-out 1!important}
+ html:not([data-reduced-motion=true]) body #hive-mascot.mascot-pocket.responding .mascot-hand-right{animation:companion-wave .72s ease-in-out 1}
+}
+@keyframes companion-rest{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-2px) rotate(2deg)}}
+@keyframes companion-read{0%,100%{transform:translateY(0) rotate(-2deg)}35%{transform:translateY(1px) rotate(2deg)}70%{transform:translateY(-1px) rotate(-1deg)}}
+@keyframes companion-eyes{0%,44%,49%,100%{scale:1 1}46%{scale:1 .12}65%,80%{translate:1px 0}}
+@keyframes companion-think{0%,100%{transform:translateY(0) rotate(0)}28%,62%{transform:translateY(-2px) rotate(-7deg)}78%{transform:translateY(0) rotate(2deg)}}
+@keyframes companion-nod{0%,30%,100%{transform:translateY(0)}39%{transform:translateY(1px) rotate(3deg)}48%{transform:translateY(-1px) rotate(-2deg)}57%{transform:translateY(0)}}
+@keyframes companion-ack{0%,100%{transform:translateY(0) rotate(0) scale(1)}28%{transform:translateY(-2px) rotate(-5deg) scale(1.03)}58%{transform:translateY(1px) rotate(3deg)}78%{transform:translateY(-1px) rotate(-1deg)}}
+@keyframes companion-wave{0%,100%{transform:translateY(0) rotate(0)}28%,68%{transform:translate(1px,-9px) rotate(-22deg)}48%{transform:translate(2px,-9px) rotate(12deg)}}
+body #hive-mascot.mascot-pocket .mascot-speech,body #hive-mascot.mascot-pocket .mascot-menu{box-sizing:border-box;overscroll-behavior:contain;overflow:auto}
+body #hive-mascot.mascot-pocket .mascot-speech{overflow:hidden}
+@media(prefers-reduced-motion:reduce){body #hive-mascot.mascot-pocket *,body #hive-mascot.mascot-pocket *::after{animation:none!important;transition:none!important}}
+html[data-reduced-motion=true] body #hive-mascot.mascot-pocket *,html[data-reduced-motion=true] body #hive-mascot.mascot-pocket *::after{animation:none!important;transition:none!important}
+
+html body[data-page]>#hive-mascot.mascot-pocket[data-placement=corner]{inset:auto 24px calc(24px + env(safe-area-inset-bottom)) auto!important;transform:none!important}
+html body[data-page]>#hive-mascot.mascot-pocket[data-avoidance=blocked],html body[data-page]>#hive-mascot.mascot-pocket[data-avoidance=blocked] *{visibility:hidden!important;pointer-events:none!important}
+body[data-page=signals]:has(.sig-track-dialog[open],.sig-controls details[open],.liquid-native-host [aria-expanded=true])>#hive-mascot{visibility:hidden;pointer-events:none}
+@media(min-width:901px) and (max-width:1359px){
+ body:has(>#hive-mascot.mascot-pocket) #product-page.account-context[data-layout=unified]{padding-inline:80px!important}
+}
+@media(min-width:901px){
+ html body[data-page]>#hive-mascot.mascot-pocket[data-placement=corner][data-avoidance]{transform:translate(var(--companion-offset-x,0px),var(--companion-offset-y,0px))!important}
+ body[data-agent-creation]:has(>#hive-mascot.mascot-pocket) #product-page .sc-inline-drawer .sc-drawer-footer,
+ body[data-page=workbench]:has(>#hive-mascot.mascot-pocket)>.connection-bar{padding-inline-end:88px!important}
+}
+@media(max-width:900px){
+ html body[data-page]>#hive-mascot.mascot-pocket[data-placement=corner]{inset:auto calc(max(12px,env(safe-area-inset-right)) + 4px) calc(72px + env(safe-area-inset-bottom)) auto!important;transform:translate(var(--companion-offset-x,0px),var(--companion-offset-y,0px))!important}
+ body:has(>#hive-mascot.mascot-pocket) :is(.setup-actions,.ux-profile-cta,.sc-inline-drawer .sc-drawer-footer){padding-inline-end:80px!important}
+ body[data-page=assistant]:has(>#hive-mascot.mascot-pocket) #product-page .chat-main{padding-bottom:48px}
+}
+
+@media(max-width:380px){
+ html body[data-page]>#hive-mascot.mascot-pocket[data-placement=corner]{inset:auto calc(max(8px,env(safe-area-inset-right)) + 4px) calc(72px + env(safe-area-inset-bottom)) auto!important}
+}
+
+/* Collection crews share the research-room runner. The white companion receives input. */
+body>.news-courier[data-courier-page]{position:fixed;inset:0 auto auto 0;z-index:78;width:0;height:0;pointer-events:none;user-select:none}
+body>.news-courier[data-courier-page][data-speaking=true]{z-index:79}
+.news-courier *{pointer-events:none!important}
+.news-courier-figure{display:block;position:absolute;left:-18px;top:-23px;width:36px;height:46px;transform:scale(.78);transform-origin:center;--bob:0px;--lean:0deg;--blink:1;--step:0deg;--arm:-14deg}
+.news-courier[data-facing=left] .news-courier-figure{transform:scale(-.78,.78)}
+.news-courier .courier-person{left:2px;top:0}
+.news-courier .courier-shadow{left:4px;top:44px}
+body>.news-courier[data-courier-page] .courier-paper{display:block;left:22px;top:23px;opacity:0;width:13px;height:16px;transform:rotate(9deg);background:linear-gradient(145deg,#fff,#dfe7f0);border:1px solid #708698;box-shadow:1px 2px 2px #10182435}
+.news-courier .courier-paper::after{content:'';position:absolute;right:0;top:0;border:2px solid transparent;border-top-color:#91a7b8;border-right-color:#91a7b8}
+.news-courier .courier-paper i{background:#62829a}
+body>.news-courier[data-courier-page][data-carrying=true] .courier-paper{opacity:1}
+.news-courier[data-phase=pickup] .courier-person{transform:translateY(2px) rotate(8deg);transform-origin:50% 92%}
+.news-courier[data-carrying=true] .courier-arm.right{z-index:5;transform:rotate(-35deg)}
+.news-courier[data-phase=inspect] .courier-head{animation:news-read calc(var(--run-stride) * 8) ease-in-out infinite}
+.news-courier:is([data-phase=out],[data-phase=to-meeting],[data-phase=return]) .courier-person{animation:news-run-bob calc(var(--run-stride) * 1.4) ease-in-out infinite alternate}
+.news-courier:is([data-phase=out],[data-phase=to-meeting],[data-phase=return]) :is(.courier-leg,.courier-arm.left){animation:news-run-step var(--run-stride) ease-in-out infinite alternate}
+.news-courier:is([data-phase=out],[data-phase=to-meeting],[data-phase=return]) .courier-leg.right{animation-direction:alternate-reverse}
+.news-courier[data-phase=discuss] .courier-person{--look:1.5px}
+.news-courier[data-phase=discuss][data-speaking=true] .courier-head{animation:news-talk-head .46s ease-in-out both}
+.news-courier[data-phase=discuss][data-speaking=true] .courier-arm.right{z-index:5;animation:news-point .43s ease-out both}
+.news-courier[data-phase=discuss][data-speaking=false] .courier-head{animation:news-listen .54s ease-in-out both}
+.news-courier[data-phase=dock] .courier-person{animation:news-arrive .32s ease-out both;transform-origin:50% 92%}
+.news-courier[data-phase=dock] .courier-arm.right{z-index:5;transform:rotate(-50deg)}
+.news-courier-reaction{
+ --bubble-offset:0px;--bubble-width:26px;--bubble-height:24px;--bubble-top:-45px;
+ --bubble-fill:color-mix(in srgb,var(--b-panel,#fff) 88%,var(--agent-color));
+ --bubble-rim:color-mix(in srgb,var(--agent-color) 52%,var(--b-line-strong,#a2a8af));
+ position:absolute;z-index:2;display:grid;place-items:center;box-sizing:border-box;
+ left:calc(var(--bubble-offset) - var(--bubble-width) / 2);top:var(--bubble-top);width:var(--bubble-width);height:var(--bubble-height);
+ border:1px solid var(--bubble-rim);border-radius:9px;background:var(--bubble-fill);box-shadow:0 1px 2px #151b271a;
+ font:normal 16px/1 "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",emoji;
+ transform-origin:50% 100%;animation:news-reaction-in .15s cubic-bezier(.18,.8,.34,1) both;
+}
+.news-courier-reaction::after{
+ content:"";position:absolute;bottom:-3px;left:calc(50% - 3px - var(--bubble-offset));
+ width:5px;height:5px;box-sizing:border-box;background:var(--bubble-fill);
+ border-right:1px solid var(--bubble-rim);border-bottom:1px solid var(--bubble-rim);transform:rotate(45deg);
+}
+.news-courier-reaction[hidden],.news-courier-reaction:empty{display:none}
+.news-courier[data-reaction-side=left] .news-courier-reaction{--bubble-offset:-6px}
+.news-courier[data-reaction-side=right] .news-courier-reaction{--bubble-offset:6px}
+.news-courier[data-paused] *,.news-courier[data-paused] *::before,.news-courier[data-paused] *::after{animation-play-state:paused!important}
+@keyframes news-reaction-in{from{transform:translateY(2px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+@keyframes news-talk-head{0%,100%{transform:rotate(4deg)}48%{transform:translateY(-1px) rotate(9deg)}}
+@keyframes news-point{0%{transform:rotate(-18deg)}46%{transform:rotate(-78deg)}100%{transform:rotate(-56deg)}}
+@keyframes news-listen{0%,100%{transform:rotate(-3deg)}58%{transform:translateY(2px) rotate(7deg)}}
+@keyframes news-arrive{0%{transform:translateY(-1px) rotate(-4deg)}48%{transform:translateY(2px) scale(1.025,.94)}100%{transform:none}}
+@keyframes news-read{0%,100%{transform:rotate(0)}50%{transform:translateY(1px) rotate(9deg)}}
+@keyframes news-run-bob{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-2px) rotate(2deg)}}
+@keyframes news-run-step{from{transform:rotate(-29deg)}to{transform:rotate(29deg)}}
+body[data-page=intelligence] :is(.df-story,.df-developing>div)[data-news-pickup] time{color:var(--b-ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--b-muted)}
+body #hive-mascot.mascot-pocket[data-news-received] .mascot-paper{opacity:1;transform:rotate(-6deg)}
+body #hive-mascot.mascot-pocket[data-news-received] .mascot-hand-left{transform:translate(4px,-2px)}
+body #hive-mascot.mascot-pocket[data-news-received] .mascot-hand-right{transform:translate(-3px,-2px)}
+@media(prefers-reduced-motion:no-preference){
+ html:not([data-reduced-motion=true]) #hive-mascot[data-news-welcome]:not(.responding) .mascot-hand-left{animation:news-welcome-hand .3s ease-out both}
+ html:not([data-reduced-motion=true]) #hive-mascot[data-news-handoff][data-news-received] .mascot-paper{animation:news-handoff-paper .52s cubic-bezier(.2,.7,.25,1) both}
+}
+@keyframes news-handoff-paper{
+ from{transform:translate(-3px,4px) rotate(-18deg) scale(.84)}
+ 58%{transform:translateY(-2px) rotate(-4deg)}
+ to{transform:rotate(-6deg)}
+}
+@keyframes news-welcome-hand{
+ 0%,100%{translate:0 0;rotate:0deg}
+ 42%{translate:-1px -3px;rotate:-16deg}
+ 75%{translate:0 -1.5px;rotate:8deg}
+}
+body #hive-mascot .news-delivery-options{position:absolute;top:4px;right:44px;width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:var(--b-muted);font:600 21px/1 var(--sans);cursor:pointer}
+body #hive-mascot .news-delivery-options:focus-visible{outline:2px solid var(--optical-focus);outline-offset:-4px}
+body #hive-mascot .mascot-speech:has(.news-delivery-options:not([hidden])) .pet-kicker{padding-right:70px}
+body #hive-mascot :is(.news-delivery-options,[data-news-courier-toggle],.pet-next)[hidden]{display:none!important}
+@media(max-width:900px){
+ .news-courier-figure{transform:scale(.68)}
+ .news-courier[data-facing=left] .news-courier-figure{transform:scale(-.68,.68)}
+ .news-courier-reaction{--bubble-width:24px;--bubble-height:22px;--bubble-top:-41px;font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){.news-courier{display:none!important}}
+html[data-reduced-motion=true] .news-courier{display:none!important}

@@ -1,0 +1,7 @@
+.env*
+*.sqlite*
+*.db*
+.venv
+.git
+__pycache__
+*.log

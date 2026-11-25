@@ -1,0 +1,449 @@
+{
+  "notice": "Synthetic test inputs only. This file records what the code accepts and shows. It is not a live observation, not connectivity, entitlement or production acceptance, and not a real-model acceptance of the 18 research roles.",
+  "schema": "astarter-research-coverage-v1",
+  "description": "Coverage list of the live research model (live-research.mjs, MarketResearch) originally recorded at main 7a436fa and updated for the source changes through aacf600, for card R4 step 5, \"Publish the actual coverage matrix with unknown fields retained.\" For each of the eight assets and six dimensions it records the status before any source answers and when every connected source answers with valid data, including the public news and social answers that reach the model through ingestPublic, the provider name exactly as the code writes it, the time fields and time basis each kept item carries, and the history and freshness bounds the code holds for each source. A provider fact the code does not hold stays null (see unknown_fields). Each text is a pair [zh, en]: research-coverage.test.mjs compares the Chinese half in the zh locale and the English half in the en locale. The test fails when the code changes the model's mode or a source, status, provider name, time field, text or bound recorded here, until this file is updated; the facts listed under by_reading, and the line locations, are recorded by reading and no assertion holds them.",
+  "code": {
+    "main": "7a436fa",
+    "read_from": "b308d62",
+    "read_from_note": "b308d62 contains main 7a436fa. Every file cited in this list is byte-identical in both commits except public-data-client.mjs, where this branch only adds checks (receipt times required, an empty-answer rule) and keeps a kept answer stale while a failed read is retried; the lines cited from that file are those at 7a436fa",
+    "dukascopy_request_at": "88322db (rule changed in b6ec429); the daily gold request now uses an hourly URL",
+    "release_updates": "aa5fe94 includes named daily-source failures from 966b607 and cryptocurrency category discovery from 418d321. Commit aacf600 adds Bluesky and Nostr to the separate recent social projection. The research model accepts the featured LunarCrush projection.",
+    "locations": "file and line at main 7a436fa unless a later commit is identified",
+    "model": "live-research.mjs MarketResearch",
+    "mode": "live_readonly",
+    "mode_location": "live-research.mjs L10, L75"
+  },
+  "situations": {
+    "before_any_answer": "new MarketResearch(), before any row reaches ingestMarket, ingest or ingestPublic (live-research.mjs L74-L83)",
+    "all_connected_answer": "every connected source answers once with valid data: a daily row for each asset and a spot-depth snapshot for each depth asset through ingestMarket (live-research.mjs L154-L175), the three context resources through ingest (live-research.mjs L182-L197), then the news answer and the social answer of the served handler through ingestPublic (live-research.mjs L137-L145). The news answer holds a fresh BlockBeats headline naming each of the eight assets, and the social answer holds a LunarCrush topic row for BTC, ETH and SOL and one curated KOL post",
+    "without_public_answers": "as all_connected_answer, without the news and social answers: every cell whose source is public-context reads missing, and every other cell keeps its status and provider. This is the list recorded at main 49d6a03"
+  },
+  "assets": [["BTC", "Crypto"], ["ETH", "Crypto"], ["SOL", "Crypto"], ["SPX", "TradFi"], ["NDX", "TradFi"], ["XAU", "TradFi"], ["DXY", "TradFi"], ["US10Y", "TradFi"]],
+  "assets_location": "product-data.mjs L15",
+  "dimensions": ["trend", "depth", "macro", "social", "chain", "risk"],
+  "dimensions_location": "multi-research.mjs L2",
+  "statuses": {
+    "retain": "kept from this asset's own source (daily-bars or spot-depth): the item carries a sourceId and its source times, and sharedVersion is null",
+    "context": "kept as background. From a shared background source (background-*): the item carries a sourceId and its source times, and sharedVersion is the version of that source. From the public news and social answers (public-context): the item carries a sourceId but no source time, and sharedVersion is null",
+    "missing": "nothing kept: no sourceId and no time field",
+    "na": "the code's not-applicable status, only for chain of the five TradFi assets; nothing kept, as for missing"
+  },
+  "statuses_location": "live-research.mjs L96-L108",
+  "counts": {
+    "before_any_answer": {"retain": 0, "context": 0, "missing": 43, "na": 5},
+    "without_public_answers": {"retain": 11, "context": 6, "missing": 26, "na": 5},
+    "all_connected_answer": {"retain": 11, "context": 13, "missing": 19, "na": 5}
+  },
+  "cells": {
+    "BTC": {
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Binance Spot"},
+      "depth": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "spot-depth", "provider": "Binance Spot"},
+      "macro": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "background-stablecoins", "provider": "DefiLlama"},
+      "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "background-sentiment", "provider": "Alternative.me", "text_adds": "public-context"},
+      "chain": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
+    },
+    "ETH": {
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Binance Spot"},
+      "depth": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "spot-depth", "provider": "Binance Spot"},
+      "macro": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "background-stablecoins", "provider": "DefiLlama"},
+      "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "public-context", "provider": "BlockBeats / LunarCrush"},
+      "chain": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "background-chains", "provider": "DefiLlama"},
+      "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
+    },
+    "SOL": {
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Binance Spot"},
+      "depth": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "spot-depth", "provider": "Binance Spot"},
+      "macro": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "background-stablecoins", "provider": "DefiLlama"},
+      "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "public-context", "provider": "BlockBeats / LunarCrush"},
+      "chain": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "background-chains", "provider": "DefiLlama"},
+      "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
+    },
+    "SPX": {
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Yahoo Finance · S&P 500"},
+      "depth": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "macro": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "public-context", "provider": "BlockBeats"},
+      "chain": {"before_any_answer": "na", "all_connected_answer": "na", "source": null, "provider": null},
+      "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
+    },
+    "NDX": {
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Yahoo Finance · Nasdaq 100"},
+      "depth": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "macro": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "public-context", "provider": "BlockBeats"},
+      "chain": {"before_any_answer": "na", "all_connected_answer": "na", "source": null, "provider": null},
+      "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
+    },
+    "XAU": {
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Dukascopy · XAU/USD BID"},
+      "depth": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "macro": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "public-context", "provider": "BlockBeats"},
+      "chain": {"before_any_answer": "na", "all_connected_answer": "na", "source": null, "provider": null},
+      "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
+    },
+    "DXY": {
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Yahoo Finance · ICE USD Index"},
+      "depth": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "macro": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "public-context", "provider": "BlockBeats"},
+      "chain": {"before_any_answer": "na", "all_connected_answer": "na", "source": null, "provider": null},
+      "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
+    },
+    "US10Y": {
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Yahoo Finance · US 10Y yield"},
+      "depth": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "macro": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
+      "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "public-context", "provider": "BlockBeats"},
+      "chain": {"before_any_answer": "na", "all_connected_answer": "na", "source": null, "provider": null},
+      "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
+    }
+  },
+  "sources": {
+    "daily-bars": {
+      "dimension": "trend",
+      "kept_status": "retain",
+      "assets": ["BTC", "ETH", "SOL", "SPX", "NDX", "XAU", "DXY", "US10Y"],
+      "per_asset": {
+        "BTC": {"provider": "Binance Spot", "venue": "binance", "timezone": "UTC", "unit": "USDT"},
+        "ETH": {"provider": "Binance Spot", "venue": "binance", "timezone": "UTC", "unit": "USDT"},
+        "SOL": {"provider": "Binance Spot", "venue": "binance", "timezone": "UTC", "unit": "USDT"},
+        "SPX": {"provider": "Yahoo Finance · S&P 500", "venue": "yahoo", "timezone": "America/New_York", "unit": "index"},
+        "NDX": {"provider": "Yahoo Finance · Nasdaq 100", "venue": "yahoo", "timezone": "America/New_York", "unit": "index"},
+        "XAU": {"provider": "Dukascopy · XAU/USD BID", "venue": "dukascopy", "timezone": "UTC", "unit": "USD/oz"},
+        "DXY": {"provider": "Yahoo Finance · ICE USD Index", "venue": "yahoo", "timezone": "America/New_York", "unit": "index"},
+        "US10Y": {"provider": "Yahoo Finance · US 10Y yield", "venue": "yahoo", "timezone": "America/Chicago", "unit": "%"}
+      },
+      "identity_location": "live-research.mjs L13-L16, L65; cross-market-data.mjs L1-L7; trading-chart-data.mjs L29-L33",
+      "period": "1D",
+      "method_version": "ema20-atr14-rsi14-v1",
+      "item": {
+        "keys": ["closedAt", "id", "key", "methodVersion", "name", "period", "sharedVersion", "source", "sourceId", "status", "text", "timezone", "unit", "validUntil"],
+        "time_fields": ["closedAt", "validUntil"],
+        "time_unit": "s",
+        "time_unit_on_item": false,
+        "time_basis": null,
+        "source_id": "<symbol>:1D:<sampleAt>:<closedAt>:<method_version>",
+        "time_in_text": null,
+        "location": "live-research.mjs L70, L107",
+        "note": "The kept item has no timeBasis or timeUnit key. Its times are Unix seconds: the model compares them with now in seconds (live-research.mjs L66-L68, L74, L124), and the same row with its times in milliseconds reads missing. sampleAt is only inside sourceId. The daily snapshot's closeTimeBasis, quoteAsOf and sessionDate (cross-market-data.mjs L85) do not reach the item."
+      },
+      "history": {
+        "research_accepts_bars": {"min": 250, "max": 500, "field": "row.bars", "location": "live-research.mjs L66"},
+        "scanner_minimum_closed_bars": {"value": 250, "state_below": "warmup", "location": "workbench-market-analysis.mjs L55, L250"},
+        "per_venue": {
+          "binance": {
+            "requested": {"relay_path": "/api/market-hub?resource=candles&symbol=<SYMBOL>USDT&interval=1d", "upstream_parameters": {"symbol": "<SYMBOL>USDT", "interval": "1d", "limit": "300"}, "location": "trading-chart-data.mjs L170-L171; market-hub-relay.mjs L45-L49"},
+            "response_maximum_rows": {"value": 500, "location": "trading-chart-data.mjs L42"},
+            "kept_maximum_bars": {"value": 500, "location": "trading-chart-data.mjs L57"}
+          },
+          "yahoo": {
+            "requested": {"relay_path": "/api/market-hub?resource=cross-candles&symbol=<SYMBOL>", "upstream_parameters": {"range": "2y", "interval": "1d"}, "location": "cross-market-data.mjs L31, L104; market-hub-relay.mjs L41-L43"},
+            "response_maximum_timestamps": {"value": 800, "location": "cross-market-data.mjs L56"},
+            "kept_maximum_bars": {"value": 500, "location": "cross-market-data.mjs L85, L88"}
+          },
+          "dukascopy": {
+            "requested": {"relay_path": "/api/market-hub?resource=cross-candles&symbol=<SYMBOL>", "windows": [{"path_ends_with": "/<previous_year>", "upstream_parameters": {}}, {"path_ends_with": "/BID", "upstream_parameters": {"from": "<current_hour_start_ms>"}}], "meaning": "the previous calendar year, then the current UTC year, asked with the start of the current hour as from (the code comment: \"The endpoint returns the UTC year's shard. A fixed January URL can retain yesterday's version.\")", "location": "cross-market-data.mjs L32-L34, L120; market-hub-relay.mjs L48-L50 at 88322db (L32-L33, L104 and L41-L43 at 7a436fa)"},
+            "response_maximum_days_per_window": {"value": 370, "location": "cross-market-data.mjs L38"},
+            "kept_maximum_bars": {"value": 500, "location": "cross-market-data.mjs L85, L88"}
+          }
+        }
+      },
+      "evidence_valid_until": {
+        "binance": {"seconds_after_sample": 172800, "seconds_after_close": 86400, "rule": "validUntil must equal sampleAt + 172800 s, one day after closedAt; a row from the scanner carries exactly that", "location": "live-research.mjs L67; workbench-market-analysis.mjs L57, L257"},
+        "yahoo": {"seconds_after_sample": null, "rule": "no fixed window: the kept item has the validUntil of the last closed bar in the provider snapshot, which the scanner passes on; a later value is accepted too", "location": "cross-market-data.mjs L67, L75, L85; workbench-market-analysis.mjs L57, L257; live-research.mjs L66, L68, L70"},
+        "dukascopy": {"seconds_after_sample": null, "rule": "no fixed window: the kept item has the validUntil of the last closed bar in the provider snapshot, which the scanner passes on; a later value is accepted too", "location": "cross-market-data.mjs L42, L85; workbench-market-analysis.mjs L57, L257; live-research.mjs L66, L68, L70"}
+      },
+      "failure_trace": {"input": "a daily row in state error", "state_field": "observation.state", "state": "error", "status": "missing", "text": ["<provider> · 日线暂不可用", "<provider> · Daily candles unavailable"], "location": "live-research.mjs L24, L64, L92-L95, L108 at aa5fe94"}
+    },
+    "spot-depth": {
+      "dimension": "depth",
+      "kept_status": "retain",
+      "assets": ["BTC", "ETH", "SOL"],
+      "provider": "Binance Spot",
+      "unit": "USDT",
+      "method_version": "spot-depth-100-v1",
+      "scope_location": "live-research.mjs L11, L44; spot-depth-data.mjs L3; workbench-market-analysis.mjs L273",
+      "item": {
+        "keys": ["id", "key", "lastUpdateId", "methodVersion", "name", "receivedAt", "requestStartedAt", "sharedVersion", "source", "sourceId", "status", "text", "timeBasis", "timeUnit", "unit", "validUntil"],
+        "time_fields": ["requestStartedAt", "receivedAt", "validUntil"],
+        "time_unit": "ms",
+        "time_unit_on_item": true,
+        "time_basis": "request-observation-window",
+        "source_id": "<symbol>:depth:<lastUpdateId>:<requestStartedAt>:<receivedAt>:<method_version>",
+        "time_in_text": null,
+        "location": "live-research.mjs L103",
+        "note": "Request observation times, not exchange event times (spot-depth-data.mjs L2). The item text names that basis but shows no time value."
+      },
+      "history": {
+        "requested": {"relay_path": "/api/market-hub?resource=spot-depth&symbol=<SYMBOL>", "upstream_parameters": {"symbol": "<SYMBOL>USDT", "limit": "100"}, "location": "spot-depth-client.mjs L12; market-hub-relay.mjs L37-L39"},
+        "levels_per_side": {"min": 1, "max": 100, "location": "spot-depth-data.mjs L18"},
+        "series": "none, one snapshot per read"
+      },
+      "evidence_valid_for_ms": {"value": 30000, "from": "requestStartedAt", "location": "spot-depth-data.mjs L4, L46"},
+      "receipt_window_maximum_ms": {"value": 8000, "location": "spot-depth-data.mjs L4, L37"},
+      "clock_skew_allowance_ms": {"value": 1000, "location": "spot-depth-data.mjs L5, L60"},
+      "failure_trace": {"input": "depthState error", "state_field": "depthObservation.state", "state": "error", "status": "missing", "text": ["盘口来源暂不可用", "Spot depth unavailable"], "location": "live-research.mjs L29, L48, L103"}
+    },
+    "background-sentiment": {
+      "dimension": "social",
+      "kept_status": "context",
+      "resource": "sentiment",
+      "assets": ["BTC"],
+      "provider": "Alternative.me",
+      "method_version": "public-background-context-v1",
+      "scope_location": "live-research.mjs L30-L31; market-hub-data.mjs L192",
+      "item": {
+        "keys": ["asOf", "id", "key", "methodVersion", "name", "receivedAt", "sharedVersion", "source", "sourceId", "status", "text", "timeBasis", "timeUnit", "validUntil"],
+        "time_fields": ["asOf", "receivedAt", "validUntil"],
+        "time_unit": "ms",
+        "time_unit_on_item": true,
+        "time_basis": "daily-source-time",
+        "source_id": "background:<resource>:<asOf>:v<version>",
+        "time_in_text": {"field": "asOf", "format": "utc-date"},
+        "location": "live-research.mjs L35, L100",
+        "note": "When BTC also holds public news or social facts, the text adds \" / \" and the public summary; source, sourceId and times stay those of this source (live-research.mjs L97, L100)."
+      },
+      "history": {
+        "requested": {"relay_path": "/api/market-hub?resource=<resource>", "upstream_parameters": {"limit": "90", "format": "json"}, "location": "market-hub-data.mjs L14, L232; market-hub-relay.mjs L51"},
+        "response_maximum_rows": {"value": 1000, "location": "market-hub-data.mjs L58"},
+        "research_keeps": {"field": "value", "of": "the latest row only", "location": "market-hub-data.mjs L212"}
+      },
+      "evidence_valid_for_ms": {"value": 129600000, "from": "asOf", "location": "market-hub-data.mjs L14, L199-L200"},
+      "failure_trace": {
+        "input": "a context row in state error",
+        "state_field": "shared.state",
+        "state": "error",
+        "status": "missing",
+        "text": ["背景来源暂不可用", "Background source unavailable"],
+        "location": "live-research.mjs L106, L131, L182-L193",
+        "with_public_answers": {"BTC": {"social": {"status": "context", "source": "public-context", "provider": "BlockBeats / LunarCrush"}}},
+        "with_public_answers_note": "the trace above holds without the news and social answers; with them, the BTC social cell reads the public item instead (live-research.mjs L97-L102)"
+      }
+    },
+    "background-stablecoins": {
+      "dimension": "macro",
+      "kept_status": "context",
+      "resource": "stablecoins",
+      "assets": ["BTC", "ETH", "SOL"],
+      "provider": "DefiLlama",
+      "method_version": "public-background-context-v1",
+      "scope_location": "live-research.mjs L30-L31; market-hub-data.mjs L192",
+      "item": {
+        "keys": ["asOf", "id", "key", "methodVersion", "name", "receivedAt", "sharedVersion", "source", "sourceId", "status", "text", "timeBasis", "timeUnit", "validUntil"],
+        "time_fields": ["asOf", "receivedAt", "validUntil"],
+        "time_unit": "ms",
+        "time_unit_on_item": true,
+        "time_basis": "daily-source-time",
+        "source_id": "background:<resource>:<asOf>:v<version>",
+        "time_in_text": {"field": "asOf", "format": "utc-date"},
+        "location": "live-research.mjs L36, L100"
+      },
+      "history": {
+        "requested": {"relay_path": "/api/market-hub?resource=<resource>", "upstream_parameters": {}, "location": "market-hub-data.mjs L12, L232; market-hub-relay.mjs L51"},
+        "response_maximum_rows": {"value": 20000, "location": "market-hub-data.mjs L28"},
+        "normalized_series_maximum_points": {"value": 366, "location": "market-hub-data.mjs L30"},
+        "research_keeps": {"field": "totalUsd", "of": "the latest row only", "location": "market-hub-data.mjs L212"}
+      },
+      "evidence_valid_for_ms": {"value": 129600000, "from": "asOf", "location": "market-hub-data.mjs L12, L199-L200"},
+      "failure_trace": {"input": "a context row in state error", "state_field": "shared.state", "state": "error", "status": "missing", "text": ["背景来源暂不可用", "Background source unavailable"], "location": "live-research.mjs L106, L131, L182-L193"}
+    },
+    "background-chains": {
+      "dimension": "chain",
+      "kept_status": "context",
+      "resource": "chains",
+      "assets": ["ETH", "SOL"],
+      "provider": "DefiLlama",
+      "method_version": "public-background-context-v1",
+      "scope_location": "live-research.mjs L30-L31, L37; market-hub-data.mjs L192",
+      "item": {
+        "keys": ["asOf", "id", "key", "methodVersion", "name", "receivedAt", "sharedVersion", "source", "sourceId", "status", "text", "timeBasis", "timeUnit", "validUntil"],
+        "time_fields": ["asOf", "receivedAt", "validUntil"],
+        "time_unit": "ms",
+        "time_unit_on_item": true,
+        "time_basis": "retrieval-time",
+        "source_id": "background:<resource>:<receivedAt>:v<version>",
+        "time_in_text": {"field": "receivedAt", "format": "iso"},
+        "location": "live-research.mjs L38, L100",
+        "note": "asOf is null: the answer carries no source event time (market-hub-data.mjs L199)."
+      },
+      "history": {
+        "requested": {"relay_path": "/api/market-hub?resource=<resource>", "upstream_parameters": {}, "location": "market-hub-data.mjs L11, L232; market-hub-relay.mjs L51"},
+        "response_maximum_rows": {"value": 2000, "location": "market-hub-data.mjs L53"},
+        "research_keeps": {"rows": ["Ethereum", "Solana"], "of": "the current TVL rows of these chains only, at most two rows, no series; a third row is refused, and an answer with only one of the two rows is the case under not_recorded", "most_rows": 2, "location": "market-hub-data.mjs L205, L212"}
+      },
+      "evidence_valid_for_ms": {"value": 900000, "from": "receivedAt", "location": "market-hub-data.mjs L11, L199-L200"},
+      "failure_trace": {"input": "a context row in state error", "state_field": "shared.state", "state": "error", "status": "missing", "text": ["背景来源暂不可用", "Background source unavailable"], "location": "live-research.mjs L106, L131, L182-L193"}
+    },
+    "public-context": {
+      "dimension": "social",
+      "kept_status": "context",
+      "assets": ["ETH", "SOL", "SPX", "NDX", "XAU", "DXY", "US10Y"],
+      "text_added_to": ["BTC"],
+      "text_added_location": "live-research.mjs L97, L100",
+      "per_asset": {
+        "ETH": {"provider": "BlockBeats / LunarCrush", "providers": ["BlockBeats", "LunarCrush"]},
+        "SOL": {"provider": "BlockBeats / LunarCrush", "providers": ["BlockBeats", "LunarCrush"]},
+        "SPX": {"provider": "BlockBeats", "providers": ["BlockBeats"]},
+        "NDX": {"provider": "BlockBeats", "providers": ["BlockBeats"]},
+        "XAU": {"provider": "BlockBeats", "providers": ["BlockBeats"]},
+        "DXY": {"provider": "BlockBeats", "providers": ["BlockBeats"]},
+        "US10Y": {"provider": "BlockBeats", "providers": ["BlockBeats"]}
+      },
+      "provider_rule": "the item names BlockBeats while the asset holds a news fact and LunarCrush while it holds a topic or KOL fact, news first, joined by \" / \"; with no fact left the cell reads missing",
+      "provider_location": "live-research.mjs L102, L146-L153",
+      "method_version": "public-asset-context-v1",
+      "scope_location": "live-research.mjs L97, L102; workbench-public-evidence.mjs L18, L27, L32",
+      "item": {
+        "keys": ["id", "key", "methodVersion", "name", "sharedVersion", "source", "sourceId", "status", "text", "timeUnit"],
+        "time_fields": [],
+        "time_unit": "ms",
+        "time_unit_on_item": true,
+        "time_basis": null,
+        "source_id": "public-context:<symbol>:<publicVersion>",
+        "time_in_text": null,
+        "location": "live-research.mjs L102",
+        "note": "The kept item carries timeUnit ms but no time field and no timeBasis, and sharedVersion is null. The time and end of each fact stay on the task (publicFacts, fields at and expires), not on the item (live-research.mjs L81, L146-L153). The text shows counts per provider and no time (workbench-public-evidence.mjs L38-L42). publicVersion counts the changes of this asset's public facts since the model started (live-research.mjs L81, L151)."
+      },
+      "feeds": {
+        "news": {
+          "resource": "news",
+          "provider": "BlockBeats",
+          "provider_id": "blockbeats-news-v1",
+          "assets": ["BTC", "ETH", "SOL", "SPX", "NDX", "XAU", "DXY", "US10Y"],
+          "asset_matching": "headline keywords: a headline counts for each asset its title names, and a cell reads context only while such a headline is kept",
+          "asset_matching_location": "public-blockbeats.mjs L3, L16; licensed-feeds.mjs L25; public-data-client.mjs L98",
+          "requested": {
+            "page_limit": 50,
+            "relay_path": "/api/market-hub?resource=news&selection_version=0&limit=50",
+            "requests": [
+              {"host": "api-pro.theblockbeats.info", "path_ends_with": "/v1/newsflash", "upstream_parameters": {"page": "1", "size": "20", "lang": "cn"}},
+              {"host": "www.coindesk.com", "path_ends_with": "/arc/outboundfeeds/rss", "upstream_parameters": {}}
+            ],
+            "location": "workbench-console.mjs L621; public-data-client.mjs L32; licensed-feeds.mjs L65; public-blockbeats.mjs L1; public-news.mjs L4"
+          },
+          "response_maximum_rows": {"value": 20, "location": "public-blockbeats.mjs L7"},
+          "answer_maximum_items": {"value": 50, "location": "public-data-client.mjs L28; licensed-feeds.mjs L23"},
+          "research_keeps": "fresh BlockBeats headlines with a theblockbeats.info flash link, one fact per asset the headline names; the latest answer only, no series",
+          "research_keeps_location": "workbench-public-evidence.mjs L13-L19; live-research.mjs L143",
+          "fact_time": {"at": "published_at_ms", "basis": "source time"},
+          "evidence_valid_for_ms": {"value": 86400000, "from": "published_at_ms", "rule": "a headline fact ends at the earlier of published_at_ms + 86400000 and the item's valid_until_ms, which is published_at_ms + 86400000 for a BlockBeats headline", "location": "workbench-public-evidence.mjs L4, L16; public-news.mjs L4, L34; licensed-feeds.mjs L23"},
+          "not_kept": [{"provider": "CoinDesk", "provider_id": "coindesk-rss-v1", "reason": "the same news answer carries CoinDesk headlines, and research keeps none of them", "location": "licensed-feeds.mjs L9, L65; workbench-public-evidence.mjs L17"}],
+          "failure_trace": {
+            "input": "the news read fails: the page passes null when it kept no earlier answer, or the kept answer marked stale",
+            "input_location": "workbench-console.mjs L511-L512; public-data-client.mjs L134-L142, L153",
+            "state_field": "publicFeeds.news",
+            "state": [],
+            "status": "missing",
+            "text": ["尚无已验证的舆情来源", "Verified sentiment sources are unavailable"],
+            "location": "live-research.mjs L20, L107, L137-L145; workbench-public-evidence.mjs L9",
+            "cells_after": {
+              "ETH": {"status": "context", "source": "public-context", "provider": "LunarCrush"},
+              "SOL": {"status": "context", "source": "public-context", "provider": "LunarCrush"},
+              "SPX": {"status": "missing", "source": null, "provider": null},
+              "NDX": {"status": "missing", "source": null, "provider": null},
+              "XAU": {"status": "missing", "source": null, "provider": null},
+              "DXY": {"status": "missing", "source": null, "provider": null},
+              "US10Y": {"status": "missing", "source": null, "provider": null}
+            },
+            "note": "BTC keeps the Alternative.me item; its text drops the BlockBeats part."
+          }
+        },
+        "social": {
+          "resource": "social",
+          "provider": "LunarCrush",
+          "provider_id": "lunarcrush-v4",
+          "assets": ["BTC", "ETH", "SOL"],
+          "asset_location": "public-lunarcrush.mjs L1; public-data-client.mjs L5, L49, L103",
+          "requested": {
+            "page_limit": 50,
+            "relay_path": "/api/market-hub?resource=social&selection_version=0&limit=50",
+            "requests": [
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/creators/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/creators/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/creators/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/category/cryptocurrencies/posts/v1", "upstream_parameters": {}}
+            ],
+            "location": "public-data-client.mjs L29-L36; licensed-feeds.mjs L65; public-lunarcrush.mjs L143-L165 at aa5fe94"
+          },
+          "response_maximum_rows": {"posts": 5000, "creators": 5000, "category-posts": 5000, "location": "public-lunarcrush.mjs L46-L47, L62-L63, L156-L163 at aa5fe94"},
+          "discovery": {"category": "cryptocurrencies", "error_symbol": "CRYPTO"},
+          "featured_scope": "LUNARCRUSH_KOL_TOPICS",
+          "recent": {"scope": "SOCIAL_RECENT_POSTS", "relay_path": "/api/market-hub?resource=social&selection_version=0&limit=50&feed=recent", "providers": ["lunarcrush-v4", "bluesky-latest-v1", "nostr-relay-v1"], "direct_valid_ms": 180000, "location": "public-social-scope.mjs L1-L5; licensed-feeds.mjs L46-L97 at aacf600"},
+          "answer_maximum_items": {"value": 50, "location": "public-data-client.mjs L28"},
+          "research_keeps": "Research accepts the featured LunarCrush topic summaries for BTC, ETH and SOL and qualified KOL posts for their evidence asset. The recent list combines LunarCrush category and topic posts, Bluesky originals and Nostr notes. All three sources remain outside research evidence on this route, including posts about BTC, ETH and SOL.",
+          "research_keeps_location": "workbench-public-evidence.mjs L6-L7, L20-L34; live-research.mjs L143",
+          "fact_time": {"topic": "asOf, or observed_at_ms marked as retrieval time when asOf is null", "kol_post": "published_at_ms"},
+          "evidence_valid_for_ms": {
+            "topic": {"value": 3600000, "from": "the earlier of asOf and observed_at_ms (observed_at_ms when asOf is null)", "location": "workbench-public-evidence.mjs L4, L21-L22, L25, L27"},
+            "kol_post": {"observed_for_ms": 3600000, "published_for_ms": 86400000, "rule": "a KOL post fact ends at the earlier of observed_at_ms + 3600000 and published_at_ms + 86400000", "location": "workbench-public-evidence.mjs L4, L21, L31-L32"}
+          },
+          "failure_trace": {
+            "input": "the social read fails: the page passes null when it kept no earlier answer, or the kept answer marked stale",
+            "input_location": "workbench-console.mjs L511-L512; public-data-client.mjs L134-L142, L153",
+            "state_field": "publicFeeds.social",
+            "state": [],
+            "status": "missing",
+            "text": ["尚无已验证的舆情来源", "Verified sentiment sources are unavailable"],
+            "location": "live-research.mjs L20, L107, L137-L145; workbench-public-evidence.mjs L9",
+            "cells_after": {
+              "ETH": {"status": "context", "source": "public-context", "provider": "BlockBeats"},
+              "SOL": {"status": "context", "source": "public-context", "provider": "BlockBeats"}
+            },
+            "note": "No cell reads missing here: BTC keeps the Alternative.me item and its text drops the LunarCrush part, and the five TradFi assets hold no LunarCrush fact. A cell left with no fact reads missing with the text above."
+          }
+        }
+      }
+    }
+  },
+  "providers": {
+    "Binance Spot": {"used_by": ["daily-bars", "spot-depth"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "Yahoo Finance · S&P 500": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "Yahoo Finance · Nasdaq 100": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "Dukascopy · XAU/USD BID": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "Yahoo Finance · ICE USD Index": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "Yahoo Finance · US 10Y yield": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "Alternative.me": {"used_by": ["background-sentiment"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "DefiLlama": {"used_by": ["background-stablecoins", "background-chains"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "BlockBeats": {"used_by": ["public-context"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "LunarCrush": {"used_by": ["public-context"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null}
+  },
+  "unknown_fields": {
+    "fields": ["display_rights", "quota", "rate_limit", "expiry"],
+    "meaning": {
+      "display_rights": "whether and how this provider's data may be shown to users",
+      "quota": "how much this provider allows to be read",
+      "rate_limit": "this provider's request rate limit; the code holds no number for it: the relay only reacts to HTTP 429 and Retry-After (market-hub-relay.mjs L133-L134, L162), LunarCrush's HTTP 429 becomes a RATE_LIMIT error (public-lunarcrush.mjs L29), and a failed news or social read is answered 503 with Retry-After 60 and not asked upstream again for 60 s (licensed-feeds.mjs L53, L68)",
+      "expiry": "when the right to use this provider's data ends; not the evidence validity windows recorded under sources"
+    },
+    "null_means": "the code at main 7a436fa holds no value for it; it was not filled from memory or from a provider website. Fill one only with a cited source, and update the test with it."
+  },
+  "no_source_text": ["尚无来源", "No source"],
+  "no_source_location": "live-research.mjs L103, L107",
+  "missing_item_keys": ["id", "key", "name", "sharedVersion", "source", "sourceId", "status", "text"],
+  "by_reading": [
+    {"field": "sources.daily-bars.item.time_in_text, sources.spot-depth.item.time_in_text and the spot-depth item note", "reading": "null: the item text shows no time value; the depth text names its time basis only", "location": "live-research.mjs L93, L103, L107"},
+    {"field": "sources.spot-depth.history.series", "reading": "one snapshot per read: the source returns one snapshot, and the item shows the latest one the model accepted", "location": "spot-depth-data.mjs L44-L51; live-research.mjs L103, L167-L168"},
+    {"field": "the relay_path of each requested entry, and page_limit", "reading": "the page-side caller named in its location builds this path, and the workbench desk asks news and social with limit 50; the test sends the path to the served handler and checks the provider request, it does not run the caller", "location": "trading-chart-data.mjs L170-L171; cross-market-data.mjs L104; spot-depth-client.mjs L12; market-hub-data.mjs L232; workbench-console.mjs L621"},
+    {"field": "which handler answers /api/market-hub", "reading": "at main 7a436fa the deployed function and the local server both use licensed-feeds.mjs, which answers news and social itself and passes every other resource to market-hub-relay.mjs; the test asks that handler", "location": "api/market-hub.mjs L1-L2; server.mjs L11, L50; licensed-feeds.mjs L56-L58"},
+    {"field": "when the page passes news and social to the model", "reading": "the workbench information desk passes each answer to ingestPublic only while the workbench page is shown and not paused, and reads social only while a crypto asset is in view", "location": "workbench-console.mjs L510-L513, L617-L621"},
+    {"field": "the served handler's cut of the social posts to the query limit", "reading": "The handler applies the query limit to the selected feed. The research feed features at most 30 curated posts across three topics. The latest list combines up to 200 LunarCrush candidates with Bluesky and Nostr candidates, removes duplicate URLs and text, and returns at most the requested 50 ordered by source publication time.", "location": "licensed-feeds.mjs L40-L97; public-lunarcrush.mjs L109-L138 at aacf600"},
+    {"field": "sources.public-context.item.time_in_text and the item note on time, the BTC text in the notes of both feed failure traces, sources.public-context.feeds.social.provider_id, and the post-text part of sources.public-context.feeds.social.research_keeps", "reading": "the public summary shows counts per provider and no time; after a feed failure the BTC text keeps only the summary of the facts left; the social answer and its items carry provider_id lunarcrush-v4; a KOL fact keeps no post text. No assertion in this test holds these", "location": "workbench-public-evidence.mjs L22, L32, L38-L42; live-research.mjs L100; licensed-feeds.mjs L33, L35"},
+    {"field": "the status and text of sources.public-context.feeds.social.failure_trace and the last sentence of its note, the per-asset part of sources.public-context.feeds.news.asset_matching and research_keeps, and the flash-link part of sources.public-context.feeds.news.research_keeps", "reading": "after a failed social read no fed cell is left without a public fact (ETH and SOL keep BlockBeats, BTC keeps Alternative.me, the TradFi assets hold no LunarCrush fact), so no assertion reaches the missing status and text of that trace; a cell left with no fact reads missing with the social missing text. Each fed headline names one asset, so no assertion holds that a headline naming several assets counts for each of them. The BlockBeats parser already refuses a link that is not a flash link, so the link check in research is not reached either", "location": "live-research.mjs L20, L102, L107; public-blockbeats.mjs L12, L16; workbench-public-evidence.mjs L17-L18"},
+    {"field": "BlockBeats and LunarCrush access","reading": "both are read with a server key (BLOCKBEATS_API_KEY, LUNARCRUSH_API_KEY); the code holds no plan, quota or rights for these keys, so their unknown fields stay null", "location": "licensed-feeds.mjs L64-L65; public-blockbeats.mjs L22-L23; public-lunarcrush.mjs L123, L128"},
+    {"field": "display_rights, quota, rate_limit and expiry of each provider, and the code facts in unknown_fields", "reading": "the code at main 7a436fa holds none of these values; the test checks only that this file keeps the four fields null"}
+  ],
+  "not_recorded": [
+    {"case": "a valid context answer without a row for an asset in the source's scope, for example a chains answer with an Ethereum row only", "reason": "how it should read next to a source that was never connected is not decided, so no expected value is recorded or tested", "location": "live-research.mjs L37-L38, L105-L107; market-hub-data.mjs L205"},
+    {"case": "the value of publicVersion inside the sourceId of the public item", "reason": "it counts the changes to the asset's public facts since the model started (an answer that changes them, a fact that ends), so it depends on what the page read before; the test reads it from the model and checks only the form of the sourceId. Reading each answer once, in either order, does not change it", "location": "live-research.mjs L81, L102, L151"},
+    {"case": "the model's own limits on what it keeps of its past: task.history holds at most the 5 newest earlier versions of each task, and events at most the 32 newest log entries", "reason": "version and log limits, not data history: they bound the model's record of its own updates, not the history a source answers or research accepts (the history entries under sources). live-research.test.mjs L115 and L197 already hold both limits, so this test does not repeat them", "location": "live-research.mjs L113, L176; live-research.test.mjs L115, L197"},
+    {"case": "request cadence, relay and handler cache intervals and response byte limits of each source", "reason": "not part of this version"}
+  ]
+}

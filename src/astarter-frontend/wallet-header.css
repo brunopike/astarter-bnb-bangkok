@@ -1,0 +1,86 @@
+body .topbar>.header-wallet{display:flex;align-items:center;flex:0 0 auto;min-width:0;margin-inline:2px}
+.header-wallet .wallet-control{position:relative}
+body .header-wallet .wallet-login{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;max-width:166px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font:500 14px/1.4 var(--sans);white-space:nowrap;cursor:pointer}
+body .header-wallet .wallet-login:hover{border-color:var(--accent-ink);background:var(--surface)}
+body .header-wallet .wallet-login:focus-visible{outline:2px solid var(--accent-ink);outline-offset:3px}
+body .header-wallet .wallet-login:is(:disabled,[aria-disabled=true]){opacity:.55;cursor:wait}
+.header-wallet .wallet-login svg{width:18px;height:18px;flex:none}
+.header-wallet .wallet-login span{overflow:hidden;text-overflow:ellipsis}
+.header-wallet .wallet-login i{width:6px;height:6px;border-radius:50%;background:var(--accent-ink);flex:none}
+.header-wallet .wallet-error{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:100;width:min(240px,calc(100vw - 100px));padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:13px;line-height:1.5;overflow-wrap:anywhere;opacity:0;pointer-events:none}
+.header-wallet .wallet-control:has(.wallet-error)::after{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--error,#ed6474);pointer-events:none}
+.header-wallet .wallet-control:is(:hover,:focus-within) .wallet-error{opacity:1}
+[data-rk="astarter_wallet"]{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+[data-rk="astarter_wallet"][role=dialog] [role=document]{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;border-radius:var(--rk-radii-modal)}
+/* RainbowKit exposes its body font through the theme, but keeps bold weights in component classes. */
+[data-rk="astarter_wallet"][role=dialog] *{font-weight:500}
+[data-rk="astarter_wallet"][role=dialog] button{min-width:44px;min-height:44px}
+@media(max-width:1200px){body .header-wallet .wallet-login{width:44px;min-width:44px;padding:9px}.header-wallet .wallet-login span{display:none}.header-wallet .wallet-login i{position:absolute;right:5px;top:5px}}
+@media(max-width:900px){body .header-wallet .wallet-login{width:44px;min-width:44px;min-height:44px}body .topbar>.header-wallet{margin-inline:0}}
+/* Make room for wallet access without clipping the existing phone controls. */
+@media(max-width:600px){
+ body .topbar:has(.header-wallet) .theme-switch{padding:0;border:0}
+ body .topbar:has(.header-wallet) .theme-switch button{width:44px;min-width:44px;min-height:44px;padding:10px}
+ body .topbar:has(.header-wallet) .theme-switch button[aria-pressed=true]{display:none}
+ body .topbar:has(.header-wallet) .language-picker>summary{min-width:44px;min-height:44px;gap:4px;padding-inline:7px}
+ body .topbar:has(.header-wallet) .language-picker>summary>svg:first-child{display:none}
+ body .topbar:has(.header-wallet)>.header-settings{width:44px;min-width:44px;height:44px;flex-basis:44px}
+}
+@media(max-width:360px){body .topbar:has(.header-wallet) .brand strong{display:none}}
+/* Keep RainbowKit's native panel within the viewport on narrow phones. */
+@media(max-width:480px){
+ [data-rk][role=dialog] [role=document]{width:calc(100vw - 24px);max-width:calc(100vw - 24px)}
+ [data-rk][role=dialog] [role=document]>div>div{box-sizing:border-box;min-width:0;width:100%;max-width:100%}
+}
+/* The signed-in account keeps the existing preferences in one quiet header menu. */
+body .header-wallet .wallet-login.is-authenticated{width:auto;max-width:224px;gap:9px;padding:5px 11px 5px 5px;border-radius:999px;background:var(--b-panel);border-color:var(--b-line);box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--b-ink) 5%,transparent)}
+body .header-wallet .wallet-login.is-authenticated:hover,body .header-wallet .wallet-login.is-authenticated[aria-expanded=true]{background:var(--b-soft);border-color:color-mix(in srgb,var(--b-ink) 20%,var(--b-line))}
+body .header-wallet .wallet-login.is-authenticated>span{display:block}
+body .header-wallet .wallet-login.is-authenticated>svg{width:14px;height:14px;color:var(--b-muted);transition:transform 150ms ease}
+body .header-wallet .wallet-login.is-authenticated[aria-expanded=true]>svg{transform:rotate(90deg)}
+body .header-wallet .wallet-avatar{display:block;flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 28% 22%,#b9ffe0 0,transparent 45%),conic-gradient(from 160deg,#53c9ed,#a991ff,#ef95c2,#f4d38b,#73e4bf,#53c9ed);box-shadow:inset 0 0 0 1px #ffffff24}
+body .topbar .wallet-account-menu{position:fixed;inset:auto 12px auto auto;margin:0;box-sizing:border-box;width:min(344px,calc(100vw - 24px));max-height:calc(100dvh - var(--wallet-menu-top,72px) - 12px);overflow:auto;overscroll-behavior:contain;padding:8px;border:1px solid var(--b-line);border-radius:20px;background:var(--b-panel);color:var(--b-ink);box-shadow:0 18px 50px #0002,inset 0 -1px 0 color-mix(in srgb,var(--b-ink) 7%,transparent);font:400 14px/1.45 var(--sans);text-align:start;isolation:isolate}
+body .wallet-account-menu::backdrop{background:transparent}
+body .topbar .wallet-account-menu :is(button,a,summary){box-sizing:border-box;min-width:44px;min-height:44px;border-radius:10px;font:500 14px/1.4 var(--sans);color:var(--b-ink);cursor:pointer}
+body .topbar .wallet-account-menu :is(button,a,summary):focus-visible{outline:2px solid var(--optical-focus);outline-offset:2px}
+body .topbar .wallet-account-menu :is(button,a):disabled{opacity:.5;cursor:wait}
+body .topbar .wallet-account-menu svg{width:18px;height:18px;flex:none}
+body .topbar .wallet-menu-identity{margin:0;padding:10px 12px 14px;border-bottom:1px solid var(--b-line)}
+body .topbar .wallet-menu-eyebrow{margin:0 0 12px;color:var(--b-muted);font-size:12px;font-weight:500}
+body .topbar .wallet-menu-address{display:flex;align-items:center;gap:11px;min-width:0}
+body .topbar .wallet-menu-address>.wallet-avatar{width:38px;height:38px;flex-basis:38px}
+body .topbar .wallet-menu-address>div{display:grid;gap:3px;min-width:0;flex:1}
+body .topbar .wallet-menu-address strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px;font-weight:500;letter-spacing:.01em}
+body .topbar .wallet-menu-address>div>span{display:flex;align-items:center;gap:6px;color:var(--b-muted);font-size:12px}
+body .topbar .wallet-menu-address i{width:3px;height:3px;border-radius:50%;background:currentColor}
+body .topbar .wallet-menu-icon{display:grid;place-items:center;padding:0;border:0;background:transparent;color:var(--b-muted)}
+body .topbar .wallet-menu-address-actions{display:flex;gap:8px;margin-top:12px}
+body .topbar .wallet-menu-address-actions :is(button,a){display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 12px;border:1px solid var(--b-line);background:transparent;text-decoration:none}
+body .topbar .wallet-menu-address-actions button{flex:1}
+body .topbar .wallet-menu-address-actions a{flex:0 0 44px;padding:9px}
+body .topbar .wallet-menu-copy-error{margin:9px 0 0;color:var(--b-muted);font-size:13px}
+body .topbar .wallet-menu-profile{padding:7px 0;border-bottom:1px solid var(--b-line)}
+body .topbar .wallet-menu-profile>.header-settings{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;height:auto;margin:0;padding:12px;border:1px solid transparent;background:transparent;box-shadow:none}
+body .topbar .wallet-menu-profile>.header-settings[aria-pressed=true]{border-color:color-mix(in srgb,var(--optical-focus) 38%,var(--b-line));background:var(--optical-selection),var(--b-panel)}
+body .topbar .wallet-menu-profile>.header-settings::after{content:'›';margin-inline-start:auto;color:var(--b-muted);font-size:20px;font-weight:400}
+body .topbar .wallet-menu-profile .wallet-account-label{display:block;min-width:0}
+body .topbar .wallet-menu-preferences{padding:5px 12px;border-bottom:1px solid var(--b-line)}
+body .topbar .wallet-menu-preference{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px}
+body .topbar .wallet-menu-preference>span{flex:none;color:var(--b-muted)}
+body .topbar .wallet-menu-preference>div{min-width:0}
+body .topbar .wallet-menu-language{align-items:flex-start}
+body .topbar .wallet-menu-language>span{padding-block-start:14px}
+body .topbar .wallet-account-menu .theme-switch{display:flex;gap:3px;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+body .topbar .wallet-account-menu .theme-switch button{display:flex;align-items:center;justify-content:center;gap:7px;width:auto;padding:8px 10px;border:1px solid transparent;background:transparent;color:var(--b-muted);box-shadow:none}
+body .topbar .wallet-account-menu .theme-switch button[aria-pressed=true]{display:flex;border-color:color-mix(in srgb,var(--optical-focus) 38%,var(--b-line));background:var(--optical-selection),var(--b-panel);color:var(--b-ink);box-shadow:none}
+body .topbar .wallet-account-menu .theme-switch button span{display:none}
+body .topbar .wallet-account-menu .language-picker{margin:0;z-index:auto}
+body .topbar .wallet-account-menu .language-picker>summary{display:flex;justify-content:flex-end;gap:8px;padding:8px 9px;background:transparent;border:0;box-shadow:none}
+body .topbar .wallet-account-menu .language-picker>summary>svg:first-child{display:block;width:18px;height:18px}
+body .topbar .wallet-account-menu .language-options{position:static;width:180px;max-width:100%;max-height:228px;overflow:auto;display:grid;gap:2px;margin:4px 0 8px;padding:4px;border:1px solid var(--b-line);border-radius:12px;background:var(--b-panel);box-shadow:none}
+body .topbar .wallet-account-menu .language-options button{display:flex;justify-content:space-between;gap:12px;width:100%;padding:8px 10px;border:0;background:transparent;text-align:start}
+body .topbar .wallet-account-menu .language-options button[aria-pressed=true]{background:var(--optical-selection),var(--b-panel);box-shadow:none}
+body .topbar .wallet-account-menu .wallet-menu-disconnect{display:flex;align-items:center;gap:12px;width:100%;margin-top:6px;padding:12px;border:0;background:transparent;color:var(--b-muted);text-align:start}
+body .topbar .wallet-account-menu :is(.wallet-menu-profile>.header-settings,.wallet-menu-disconnect,.wallet-menu-icon,.wallet-menu-address-actions button,.wallet-menu-address-actions a,.language-options button,.language-picker>summary):hover{background:var(--b-soft);color:var(--b-ink)}
+@media(max-width:480px){body .header-wallet .wallet-login.is-authenticated{max-width:188px}body .topbar .wallet-account-menu{border-radius:16px}body .topbar .wallet-menu-address strong{font-size:16px}}
+@media(prefers-reduced-motion:reduce){body .header-wallet .wallet-login.is-authenticated>svg{transition:none}}

@@ -1,0 +1,885 @@
+/* Astarter finish layer. Existing components retain geometry, color semantics and state. */
+:is(body,#membership-app,.commerce-dialog) {
+  --finish-highlight:#ffffffb3;
+  --finish-shadow:0 2px 3px #10182004,0 10px 28px #10182007;
+  --finish-action-shadow:0 3px 8px #10182029;
+  --finish-dialog-shadow:0 24px 80px #05060838,0 4px 16px #05060814;
+  --finish-backdrop:#05060859;
+  --finish-fast:120ms;
+  --finish-open:160ms;
+  --finish-ease:cubic-bezier(.2,.7,.1,1);
+}
+:root[data-theme=dark] :is(body,#membership-app,.commerce-dialog),#membership-app[data-theme=dark] {
+  --finish-highlight:#ffffff0c;
+  --finish-shadow:0 2px 4px #00000018,0 12px 28px #00000021;
+  --finish-action-shadow:0 3px 12px #05060840;
+  --finish-dialog-shadow:0 24px 80px #00000075,0 4px 16px #00000038;
+  --finish-backdrop:#050608b3;
+}
+body[data-agent-look=threeui] {
+  --agent-sheen:var(--finish-highlight);
+  --agent-shadow:var(--finish-shadow);
+}
+
+/* A quiet edge makes one surface readable without giving every nested region a card. */
+body :is(#product-page,.sc-drawer,.product-dialog,#connection-dialog) :is(.p-card,.sc-card,.capability-card,.ux-run-panel,.dc-panel,.df-panel),
+body :is(.terminal-rail,.network-stage,.workbench-console),
+#membership-app .membership-tier {
+  box-shadow:inset 0 1px 0 var(--finish-highlight),var(--finish-shadow);
+}
+body #product-page :is(.p-card,.sc-card,.capability-card,.dc-panel,.df-panel) {
+  border-color:var(--b-line);
+}
+body .network-stage {
+  box-shadow:inset 0 1px 0 var(--finish-highlight),0 4px 24px #10182009;
+}
+
+/* Primary actions carry depth; secondary controls stay calm until engaged. */
+body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.network-stage)
+  :is(.p-button,.sc-button,.dc-button,.btn,.ops-button,.sc-advisor,.sc-link),
+body :is(.button,.header-cta) {
+  transition:background-color var(--finish-fast) ease,border-color var(--finish-fast) ease,
+    color var(--finish-fast) ease,box-shadow var(--finish-fast) ease,background-position 180ms var(--finish-ease),
+    transform var(--finish-fast) var(--finish-ease),opacity var(--finish-fast) ease;
+}
+body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console)
+  :is(.p-button.p-primary,.sc-button.sc-primary,.dc-button.dc-primary,.btn.primary,.ops-button.ops-primary,.sc-advisor),
+body .button.primary {
+  background-image:linear-gradient(180deg,#ffffff0f,transparent 70%);
+  box-shadow:inset 0 1px 0 #ffffff30,inset 0 -1px 0 #10182017,var(--finish-action-shadow);
+}
+
+/* Keep current-page navigation, section tabs and selected filters distinct from actions. */
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.trading-chart-zoom)
+  :is(.p-segments,.dc-tabs,.sc-filter-tabs,.research-filters,.hub-segments,.membership-tier-tabs,.segmented,.bot-chart-periods,.chat-periods,.df-tabs,.sig-sources,.trading-chart-periods,.commerce-filters) {
+  flex-wrap:wrap;max-width:100%;padding:0;gap:var(--b-space-1);background:transparent;border:0;border-radius:var(--b-control-radius);box-shadow:none;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.trading-chart-zoom)
+  :is(.p-segments,.dc-tabs,.sc-filter-tabs,.research-filters,.hub-segments,.membership-tier-tabs,.segmented,.bot-chart-periods,.chat-periods,.df-tabs,.sig-sources,.trading-chart-periods,.commerce-filters) > button {
+  display:inline-flex;align-items:center;justify-content:center;min-height:var(--b-touch-height);min-width:var(--b-touch-height);gap:6px;border:1px solid transparent;border-radius:var(--b-control-radius);background:transparent;color:var(--b-muted);font-size:13px;font-weight:500;box-shadow:none;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.trading-chart-zoom)
+  :is(.p-segments,.dc-tabs,.sc-filter-tabs,.research-filters,.hub-segments,.membership-tier-tabs,.segmented,.bot-chart-periods,.chat-periods,.df-tabs,.sig-sources,.trading-chart-periods,.commerce-filters) > button::before {
+  content:'';box-sizing:border-box;flex:none;width:8px;height:5px;border:solid currentColor;border-width:0 0 1.5px 1.5px;transform:rotate(-45deg);opacity:0;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.trading-chart-zoom)
+  :is(.p-segments,.dc-tabs,.sc-filter-tabs,.research-filters,.hub-segments,.membership-tier-tabs,.segmented,.bot-chart-periods,.chat-periods,.df-tabs,.sig-sources,.trading-chart-periods,.commerce-filters)
+  >button:is([aria-pressed=true],[aria-selected=true],[aria-checked=true],.selected):not(:disabled):not([aria-disabled=true]) {
+  background:var(--optical-selection);color:var(--b-ink);border-color:transparent;box-shadow:none;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.trading-chart-zoom)
+  :is(.p-segments,.dc-tabs,.sc-filter-tabs,.research-filters,.hub-segments,.membership-tier-tabs,.segmented,.bot-chart-periods,.chat-periods,.df-tabs,.sig-sources,.trading-chart-periods,.commerce-filters)
+  >button:is([aria-pressed=true],[aria-selected=true],[aria-checked=true],.selected)::before {opacity:1}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.workbench-console,.trading-chart-zoom)
+  :is(.ops-tabs,.terminal-rail-tabs,.chat-modebar,.cc-access-tabs,.trading-chart-views,.bot-config-tabs,.execution-market-tabs) {
+  gap:var(--b-space-4);padding:0;border:0;border-bottom:1px solid var(--b-line);border-radius:0;background:transparent;box-shadow:none;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.workbench-console,.trading-chart-zoom)
+  :is(.ops-tabs,.terminal-rail-tabs,.chat-modebar,.cc-access-tabs,.trading-chart-views,.bot-config-tabs,.bot-mobile-tabs,.execution-market-tabs)>button {
+  position:relative;min-height:var(--b-touch-height);border:0;border-radius:0;background:transparent;color:var(--b-muted);box-shadow:none;font-size:var(--b-text-control);font-weight:500;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.workbench-console,.trading-chart-zoom)
+  :is(.ops-tabs,.terminal-rail-tabs,.chat-modebar,.cc-access-tabs,.trading-chart-views,.bot-config-tabs,.bot-mobile-tabs,.execution-market-tabs)>button:is([aria-selected=true],[aria-pressed=true]) {
+  background:transparent;color:var(--b-ink);box-shadow:none;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.workbench-console,.trading-chart-zoom)
+  :is(.ops-tabs,.terminal-rail-tabs,.chat-modebar,.cc-access-tabs,.trading-chart-views,.bot-config-tabs,.bot-mobile-tabs,.execution-market-tabs)>button:is([aria-selected=true],[aria-pressed=true])::after {
+  content:'';display:block;position:absolute;inset:auto 0 -1px;height:2px;border-radius:2px;background:var(--b-ink);box-shadow:none;pointer-events:none;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog)
+  :is(.sc-policy.selected,.sc-modes label:has(input:checked),.ux-answer[aria-pressed=true],.cc-provider[aria-pressed=true],.cc-source-options>button[aria-pressed=true],.pack-option[aria-pressed=true],.pay-method:has(input:checked),.df-calendar>button[aria-pressed=true]) {
+  border-color:color-mix(in srgb,var(--optical-focus) 38%,var(--b-line));background:var(--optical-selection),var(--b-panel);color:var(--b-ink);box-shadow:none;
+}
+body #product-page :is(.biz-op-row.active,.biz-strategy-row.active,.ux-preset.active,.as-signal.selected) {
+  position:relative;background:var(--optical-selection);color:var(--b-ink);box-shadow:none;
+}
+body #product-page :is(.biz-op-row.active,.biz-strategy-row.active,.ux-preset.active,.as-signal.selected)::before {
+  content:'';position:absolute;inset-block:12px;inset-inline-start:0;width:2px;border-radius:2px;background:var(--b-ink);pointer-events:none;
+}
+body #product-page #membership-app :is(.commerce-section-heading,.commerce-panel-heading,.section-top) {
+  gap:var(--b-space-3);margin-bottom:var(--b-space-4);flex-wrap:wrap;min-width:0;
+}
+body #product-page #membership-app :is(.commerce-section-heading,.commerce-panel-heading,.section-top) h2 {
+  margin:0;font:500 var(--b-section-title)/1.5 var(--sans);letter-spacing:-.1px;overflow-wrap:anywhere;
+}
+body #product-page #membership-app .commerce-pack.is-selected {
+  background:var(--optical-selection),var(--b-panel);border-color:color-mix(in srgb,var(--optical-focus) 38%,var(--b-line));box-shadow:none;
+}
+body #product-page #membership-app .commerce-pack.is-selected::after {background:var(--b-ink)}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog,.trading-chart-zoom) .trading-chart-tools button[aria-pressed=true] {
+  background:var(--optical-selection);color:var(--b-ink);border-color:transparent;box-shadow:none;
+}
+body .topbar .product-nav>a[aria-current=page],
+body .topbar .product-nav>a.active {
+  box-shadow:none;
+}
+body .topbar :is(.theme-switch button,.language-picker>summary,.settings-trigger),
+body :is(.biz-subnav,.dc-section-nav,.ux-settings-nav) :is(button,a) {
+  transition:color var(--finish-fast) ease,background-color var(--finish-fast) ease,
+    border-color var(--finish-fast) ease,box-shadow var(--finish-fast) ease;
+}
+
+/* Focus is immediate; the small outer wash helps locate a field in a dense form. */
+body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console)
+  :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea) {
+  transition:border-color var(--finish-fast) ease,background-color var(--finish-fast) ease,
+    box-shadow var(--finish-fast) ease;
+}
+body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console)
+  :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea):focus-visible {
+  outline:2px solid var(--finish-field-focus,var(--b-action,var(--accent,#8061ce)));
+  outline-offset:2px;
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--finish-field-focus,var(--b-action,var(--accent,#8061ce))) 9%,transparent);
+}
+body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console)
+  :is(input,select,textarea)[aria-invalid=true] {
+  --finish-field-focus:var(--error,var(--danger,#c22f28));
+  border-color:var(--finish-field-focus);
+}
+body[data-agent-look] #product-page :is(.sc-search,.dc-search,.as-search,.df-search,.search-field):focus-within {
+  border-color:var(--b-action);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--b-action) 11%,transparent);
+}
+
+@media(hover:hover) and (pointer:fine) {
+  body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.network-stage)
+    :is(.p-button,.sc-button,.dc-button,.btn,.ops-button,.sc-advisor):not(:disabled):not([aria-disabled=true]):not([aria-busy=true]):hover,
+  body :is(.button,.header-cta):not(:disabled):hover {
+    transform:none;
+    box-shadow:inset 0 1px 0 var(--finish-highlight),0 3px 9px #4a33621a;
+  }
+  body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console)
+    :is(.p-button.p-primary,.sc-button.sc-primary,.dc-button.dc-primary,.btn.primary,.ops-button.ops-primary,.sc-advisor):not(:disabled):hover,
+  body .button.primary:hover {
+    transform:none;
+    box-shadow:inset 0 1px 0 #ffffff3b,inset 0 -1px 0 #10182017,0 5px 14px #6648b833;
+  }
+  body :is(.p-segments,.sc-filter-tabs,.research-filters,.ops-tabs,.terminal-rail-tabs) button:hover {
+    transform:none;
+  }
+  body #product-page :is(.p-table,.dc-table,.df-table,.contract-ledger) tbody tr:hover {
+    background:color-mix(in srgb,var(--b-accent) 12%,transparent);
+  }
+  body #product-page .sc-card:hover {
+    border-color:color-mix(in srgb,var(--b-accent-ink) 38%,var(--b-line));
+  }
+  body :is(.ops-link,.terminal-team-open,.sc-advisor) > svg {transition:transform var(--finish-fast) var(--finish-ease)}
+  body :is(.ops-link,.terminal-team-open,.sc-advisor):hover > svg {transform:translateX(2px)}
+}
+
+body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.network-stage)
+  :is(.p-button,.sc-button,.dc-button,.btn,.ops-button,.sc-advisor):not(:disabled):not([aria-disabled=true]):active,
+body :is(.button,.header-cta):active {
+  transform:none;
+  box-shadow:inset 0 1px 3px #24153814;
+  transition-duration:120ms;
+}
+body :is(#product-page,.product-dialog,#connection-dialog,.sc-drawer,#membership-app,.commerce-dialog,.workbench-console,.network-stage)
+  :is(.p-button,.sc-button,.dc-button,.btn,.ops-button,.sc-advisor):focus-visible,
+body :is(.button,.header-cta):focus-visible {
+  outline:2px solid var(--b-action,var(--purple,var(--accent,#8061ce)));
+  outline-offset:3px;
+  transform:none;
+  transition:none;
+}
+body :is(.p-button,.sc-button,.dc-button,.btn,.ops-button,.sc-advisor):is(:disabled,[aria-disabled=true],[aria-busy=true]) {
+  transform:none;
+}
+
+/* Native top-layer controls keep their placement, focus and light-dismiss behavior. */
+body dialog {
+  box-shadow:var(--finish-dialog-shadow);
+}
+body dialog::backdrop {
+  background:var(--finish-backdrop,#05060859);
+}
+body .ui-info-popover[popover] {
+  overscroll-behavior:contain;
+  box-shadow:0 8px 28px #1e153d24,inset 0 1px 0 var(--finish-highlight);
+}
+@supports (transition-behavior:allow-discrete) {
+  body dialog {
+    opacity:0;
+    translate:0 7px;
+    transition:opacity var(--finish-open) var(--finish-ease),translate var(--finish-open) var(--finish-ease),
+      display var(--finish-open) allow-discrete,overlay var(--finish-open) allow-discrete;
+  }
+  body dialog[open] {opacity:1;translate:0 0}
+  body dialog:not([open]),body dialog:not([open])::backdrop {pointer-events:none}
+  body dialog::backdrop {
+    opacity:0;
+    transition:opacity 160ms ease,display var(--finish-open) allow-discrete,overlay var(--finish-open) allow-discrete;
+  }
+  body dialog[open]::backdrop {opacity:1}
+  body .ui-info-popover[popover] {
+    opacity:0;
+    transition:opacity 100ms ease,display 100ms allow-discrete,overlay 100ms allow-discrete;
+  }
+  body .ui-info-popover[popover]:popover-open {opacity:1}
+  @starting-style {
+    body dialog[open] {opacity:0;translate:0 7px}
+    body dialog[open]::backdrop {opacity:0}
+    body .ui-info-popover[popover]:popover-open {opacity:0}
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  body :is(.p-button,.sc-button,.dc-button,.btn,.ops-button,.sc-advisor,.sc-link,.button,.header-cta),
+  body :is(.p-segments,.sc-filter-tabs,.research-filters,.ops-tabs,.terminal-rail-tabs) button,
+  body :is(.biz-subnav,.dc-section-nav,.ux-settings-nav) :is(button,a),
+  body :is(input,select,textarea),body dialog,body dialog::backdrop,body .ui-info-popover[popover] {
+    transition:none!important;
+  }
+  body :is(.p-button,.sc-button,.dc-button,.btn,.ops-button,.sc-advisor,.button,.header-cta) {
+    transform:none!important;
+  }
+  body dialog {translate:none!important}
+  body :is(.ops-link,.terminal-team-open,.sc-advisor) > svg {transform:none!important;transition:none!important}
+}
+:root[data-reduced-motion=true] body :is(.p-button,.sc-button,.dc-button,.btn,.ops-button,.sc-advisor,.button,.header-cta) {
+  transform:none!important;
+}
+:root[data-reduced-motion=true] body dialog {translate:none!important}
+:root[data-reduced-motion=true] body :is(.ops-link,.terminal-team-open,.sc-advisor) > svg {transform:none!important;transition:none!important}
+
+/* Landing optical language: neutral materials, spectrum for navigation and data. */
+:root {
+  --s1:#d4241a;--s2:#d26a00;--s3:#b38900;--s4:#12a046;--s5:#0090c2;--s6:#2f4fe0;--s7:#7a2fd6;
+  --spectrum:linear-gradient(90deg,var(--s1),var(--s2),var(--s3),var(--s4),var(--s5),var(--s6),var(--s7));
+  --chart-accent:var(--s5);--chart-series-1:var(--s5);--chart-series-2:var(--s6);--chart-series-3:var(--s7);--chart-series-4:var(--s3);
+  --chart-series-5:var(--s4);--chart-series-6:var(--s2);--chart-series-7:var(--s1);--chart-series-8:#687682;
+  --optical-sheen:linear-gradient(145deg,#ffffffb3,transparent 42%,#1c344805);
+  --optical-border:#cdd5dc;--optical-edge:#ffffffdb;--optical-glow:#0079a824;
+  --optical-action:linear-gradient(168deg,#303740 0%,#15191f 46%,#080a0e 100%);--optical-focus:var(--b-violet);
+  --optical-reflection:linear-gradient(112deg,transparent 22%,#ffffff00 34%,#ffffff26 48%,#ffffff00 62%,transparent 78%);
+  --optical-control-rim:conic-gradient(from 215deg,#4d5666,#cbd5de 12%,#fff 19%,#7b8998 28%,#38404e 43%,#a8bbc5 56%,#fff 65%,#b8a68c 72%,#6d7890 83%,#4d5666);
+  --optical-selection:linear-gradient(125deg,#ffffffb8 0%,#ffffff30 38%,#00667d09 76%,#15171b06);
+}
+:root[data-theme=dark] {
+  --s1:#ff4b3e;--s2:#ff9a2b;--s3:#ffd84d;--s4:#4dff7a;--s5:#3dd5ff;--s6:#4a6bff;--s7:#a24dff;
+  --chart-accent:var(--s5);--chart-series-1:var(--s5);--chart-series-2:var(--s6);--chart-series-3:var(--s7);--chart-series-4:var(--s3);
+  --chart-series-5:var(--s4);--chart-series-6:var(--s2);--chart-series-7:var(--s1);--chart-series-8:#a6b6c8;
+  --optical-sheen:linear-gradient(145deg,#ffffff0d,transparent 42%,#8ca7bd03);
+  --optical-border:#ecebe629;--optical-edge:#ffffff1c;--optical-glow:#6fe3ff22;
+  --optical-action:linear-gradient(168deg,#ffffff 0%,#ecebe6 46%,#d4d9dc 100%);--optical-focus:var(--b-violet);
+  --optical-reflection:linear-gradient(112deg,transparent 22%,#ffffff00 34%,#ffffff3b 48%,#ffffff00 62%,transparent 78%);
+  --optical-control-rim:conic-gradient(from 215deg,#424957,#8c9aa8 12%,#edf7ff 19%,#69798b 28%,#2a303d 43%,#7495a5 56%,#f6f3e8 65%,#ad9774 72%,#646f8b 83%,#424957);
+  --optical-selection:linear-gradient(125deg,#ffffff0d 0%,#ffffff04 38%,#6fe3ff06 76%,#ffffff02);
+}
+/* Charts reuse the landing spectrum; controls retain their product palette. */
+:is(#product-page,.product-dialog,.connection-center,.sc-drawer,.commerce-dialog) {
+  --chart-accent:var(--s5);
+  --chart-series-1:var(--s5);--chart-series-2:var(--s6);--chart-series-3:var(--s7);--chart-series-4:var(--s3);
+  --chart-series-5:var(--s4);--chart-series-6:var(--s2);--chart-series-7:var(--s1);--chart-series-8:var(--muted);
+  --optical-sheen:linear-gradient(125deg,#ffffffb3,transparent 38%,#56778d04 72%,#ffffff24);
+  --optical-border:var(--b-line);--optical-edge:#ffffffcc;--optical-glow:#006b941a;
+}
+:root[data-theme=dark] :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.commerce-dialog) {
+  --optical-sheen:linear-gradient(125deg,#ffffff08,transparent 38%,#6fe3ff02 72%,#ffffff03);
+  --optical-edge:#ffffff09;--optical-glow:#6fe3ff1a;
+}
+body {--finish-field-focus:var(--optical-focus)}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.console-panel,.workbench-console,.terminal-analytics) {
+  --chart-price-ink:#fff;
+}
+:root[data-theme=dark] body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.console-panel,.workbench-console,.terminal-analytics) {--chart-price-ink:#0b0d10}
+body>.topbar,body .connection-bar,body>.biz-mobile-nav {
+  background-image:var(--optical-sheen);
+  box-shadow:inset 0 1px 0 var(--optical-edge),0 4px 20px #00000008;
+}
+body .topbar .brandmark {filter:grayscale(1) brightness(.35)}
+:root[data-theme=dark] body .topbar .brandmark {filter:grayscale(1) brightness(4)}
+body .topbar .brand strong {font-weight:500;letter-spacing:.08em}
+body .topbar .product-nav>a[aria-current=page]:not(.biz-credit-link) {
+  box-shadow:none;
+}
+body .topbar .product-nav>a[aria-current=page]:not(.biz-credit-link)::after {
+  display:block;content:'';position:absolute;left:12px;right:12px;bottom:1px;height:2px;
+  border-radius:2px;background:var(--spectrum);box-shadow:none;pointer-events:none;
+}
+body #product-page :is(.biz-subnav button,.dc-section-nav a)[aria-current=page]::after,
+body #product-page .dc-section-nav a.selected::after {background:var(--b-ink)}
+body:not([data-page=setup])>.biz-mobile-nav>.mobile-nav-indicator {
+  background-image:var(--optical-sheen);box-shadow:inset 0 1px 0 var(--optical-edge);
+}
+body>.biz-mobile-nav>button[aria-current=page]::after {
+  content:'';position:absolute;bottom:1px;left:28%;right:28%;height:2px;border-radius:2px;background:var(--spectrum);
+}
+/* Liquid Metal reference: layered reflection on existing surfaces, without a per-control renderer. */
+body :is(#product-page,.sc-drawer,.product-dialog,#connection-dialog) :is(.p-card,.sc-card,.capability-card,.ux-run-panel,.dc-panel,.df-panel,.df-post,.df-calendar,.df-related,.df-market-watch,.hub-panel,.as-signal,.as-ticket,.settings-board,.commerce-card,.commerce-section,.commerce-usage-main,.commerce-balance-panel,.commerce-plan-overview,.commerce-records-section),
+body :is(.terminal-rail,.network-stage,.workbench-console,.terminal-analytics>article) {
+  background-color:var(--b-panel);border-color:transparent;
+  background-image:var(--optical-sheen),linear-gradient(var(--b-panel),var(--b-panel)),var(--optical-rim);
+  background-origin:padding-box,padding-box,border-box;background-clip:padding-box,padding-box,border-box;
+  box-shadow:inset 0 1px 0 var(--optical-edge),var(--b-shadow);
+}
+body .network-stage {background-image:linear-gradient(135deg,#3dd5ff04,transparent 35%,#a24dff03),var(--optical-sheen)}
+body #product-page :is(.p-head h1,.tc-head h1,.dc-market-heading h1,.df-page-head h1,.sc-heading h1,.sig-page-header h1),
+body .workbench-header h1 {font-weight:500;letter-spacing:0}
+body #product-page :is(.biz-overview,.biz-stats,.ux-metrics,.metric-row) strong {font-weight:450;letter-spacing:-.035em}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.console-panel,.workbench-console)
+  :is(.p-button,.sc-button,.dc-button,.ops-button,.btn):not(:disabled,[aria-disabled=true],[aria-busy=true],[aria-pressed],[aria-selected],.danger,.p-danger,.text-button) {
+  background-image:var(--optical-reflection);background-size:220% 100%;background-position:100% 0;background-repeat:no-repeat;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.console-panel,.workbench-console)
+  :is(.p-button.p-primary,.sc-button.sc-primary,.dc-button.dc-primary,.ops-button.ops-primary,.sc-advisor):not(:disabled,[aria-disabled=true],[aria-busy=true],.danger,.p-danger),
+body :is(.button.primary,.terminal-command>.p-button):not(:disabled,[aria-disabled=true],[aria-busy=true],.danger,.p-danger),
+body :is(#membership-app,.commerce-dialog) .primary:not(:disabled,[aria-disabled=true],[aria-busy=true],.danger) {
+  background-image:var(--optical-reflection),var(--optical-action),var(--optical-control-rim);
+  background-origin:padding-box,padding-box,border-box;background-clip:padding-box,padding-box,border-box;
+  background-size:220% 100%,100% 100%,100% 100%;background-position:100% 0,0 0,0 0;background-repeat:no-repeat;
+  border-color:transparent;font-weight:500;box-shadow:inset 0 1px 0 #ffffff33,0 2px 6px #00000014;
+  transition:background-position 180ms var(--finish-ease),box-shadow var(--finish-fast) ease;
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog) button:is(:disabled,[aria-disabled=true],[aria-busy=true]) {background-image:none!important;box-shadow:none!important;transform:none!important;transition:none!important}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,#membership-app,.commerce-dialog) :is(h2,h3,h4) {font-weight:500;letter-spacing:0}
+body #product-page .execution-product :is(.contract-card h2,.contract-ledger h2) {font-weight:500}
+body #connection-dialog.connection-center :is(header h2,.cc-heading h3,.cc-detail-heading h3,.cc-saved h3,.cc-review-title h3) {font-weight:500}
+body #connection-dialog.connection-center :is(.cc-field,.cc-form-heading b) {font-weight:500}
+body #membership-app .commerce-page :is(h1,h2,h3) {font-weight:500}
+body :is(#membership-app .commerce-page,.commerce-flow) button {font-weight:500}
+body #membership-app .commerce-page :is(.commerce-plan-price strong,.commerce-topup-balance strong,.commerce-usage-totals strong,.commerce-balance-total strong,.commerce-credit-available>strong) {font-weight:400}
+body #membership-app .commerce-page :is(.commerce-included>b,.commerce-plan-features b,.commerce-filters button) {font-weight:500}
+body :is(button,a,input,select,textarea,summary,[tabindex]):focus-visible {
+  outline-color:var(--finish-field-focus,var(--optical-focus))!important;
+}
+body[data-agent-look] #product-page :is(.sc-search,.dc-search,.as-search,.df-search,.search-field):focus-within {
+  border-color:var(--optical-focus);box-shadow:0 0 0 3px var(--optical-glow);
+}
+@media(hover:hover) and (pointer:fine) {
+  body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.console-panel,.workbench-console)
+    :is(.p-button.p-primary,.sc-button.sc-primary,.dc-button.dc-primary,.ops-button.ops-primary,.sc-advisor):not(:disabled):hover,
+  body .button.primary:not(:disabled):hover,body .terminal-command>.p-button:not(:disabled):hover {
+    background-position:0 0,0 0,0 0;box-shadow:inset 0 1px 0 #ffffff4d,0 3px 10px #0000001a;transform:none;
+  }
+  body #product-page :is(.sc-card,.as-signal):hover {border-color:color-mix(in srgb,var(--optical-focus) 42%,var(--b-line))}
+}
+@media(hover:hover) and (pointer:fine) {
+  body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.console-panel,.workbench-console)
+    :is(.p-button,.sc-button,.dc-button,.ops-button,.btn):not(:disabled,[aria-disabled=true],[aria-busy=true],[aria-pressed],[aria-selected],.danger,.p-danger,.text-button):hover,
+  body :is(#membership-app,.commerce-dialog) .primary:not(:disabled,[aria-disabled=true],[aria-busy=true],.danger):hover {background-position:0 0,0 0,0 0}
+}
+body :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.console-panel,.workbench-console)
+  :is(.p-button,.sc-button,.dc-button,.ops-button,.btn,.sc-advisor):not(:disabled,[aria-disabled=true],[aria-busy=true],.danger,.p-danger):active,
+body :is(#membership-app,.commerce-dialog) .primary:not(:disabled,[aria-disabled=true],[aria-busy=true],.danger):active {
+  box-shadow:inset 0 2px 4px #00000024;transform:none;
+}
+@media(prefers-reduced-motion:reduce) {
+  body :is(.p-button,.sc-button,.dc-button,.ops-button,.btn,.sc-advisor,.button.primary,#membership-app .primary,.commerce-dialog .primary) {transition:none!important;background-position:100% 0!important}
+}
+:root[data-reduced-motion=true] body :is(.p-button,.sc-button,.dc-button,.ops-button,.btn,.sc-advisor,.button.primary,#membership-app .primary,.commerce-dialog .primary) {transition:none!important;background-position:100% 0!important}
+@media(forced-colors:active) {
+  body :is(.p-button,.sc-button,.dc-button,.ops-button,.btn,.sc-advisor,.button.primary,#membership-app .primary,.commerce-dialog .primary) {background-image:none!important;border-color:ButtonText!important;box-shadow:none!important}
+}
+/* One-series charts use cyan; comparisons and allocations use discrete spectral hues. */
+body :is(.chart,.chart-canvas,.dc-chart) {--accent:var(--chart-accent)}
+body .chart-interactive path[fill=none][stroke]:not([stroke-dasharray]) {filter:drop-shadow(0 0 2px var(--optical-glow))}
+.chart-series-key {display:inline-block;flex:0 0 8px;width:8px;height:8px;border-radius:2px;background:var(--series-color);margin-right:8px}
+body .dc-distribution>div:last-child>div>a {margin-right:auto}
+@media(prefers-reduced-motion:reduce) {body .terminal-command>.p-button:hover {transform:none}}
+body #product-page .dc-root {--dc-green:var(--b-up);--dc-red:var(--b-down);--ok:var(--b-up);--error:var(--b-down)}
+body .dc-meter>div {background:linear-gradient(90deg,var(--b-up),var(--chart-series-4) 50%,var(--b-down))}
+:root {--optical-rim:conic-gradient(from 215deg,#15171b20,#86949f4a 14%,#ffffffd9 22%,#15171b20 37%,#0079a820 51%,#ffffffb3 63%,#b7a58c3b 73%,#6e7a8c30 86%,#15171b20)}
+:root[data-theme=dark] {--optical-rim:conic-gradient(from 215deg,#ecebe61a,#7398ad33 14%,#e5f5ff52 22%,#ecebe610 37%,#3dd5ff24 51%,#ffffff3b 63%,#c6a57529 73%,#8b9ec12b 86%,#ecebe61a)}
+body[data-agent-look] :is(.terminal-rail,.network-stage,.workbench-console),body[data-agent-look] #product-page :is(.dc-terminal,.sc-card,.sig-detail-aside) {
+  border-color:transparent;
+  background-image:var(--optical-sheen),linear-gradient(var(--b-panel),var(--b-panel)),var(--optical-rim);
+  background-origin:padding-box,padding-box,border-box;
+  background-clip:padding-box,padding-box,border-box;
+}
+body .dc-distribution>div:last-child>div {align-items:center;gap:8px}
+body .dc-distribution .chart-series-key {margin-right:0}
+/* Data strokes and small labels use different contrast roles. */
+:root body #product-page .hub-detail-toolbar>a {color:var(--b-accent-ink)}
+:root body #product-page .sig-tracking .sig-current-marker {color:var(--b-violet)}
+:root[data-theme=light] body[data-workbench-view=photonic] .pw-patrol[aria-pressed=true] {color:var(--b-violet)!important}
+:root[data-theme=light] body[data-workbench-view=photonic] .pw-task-evidence>span:first-child {color:var(--b-violet)}
+/* Card-level actions remain secondary; only the page's main action has a solid fill. */
+body #product-page .sc-card .sc-primary {background-image:none;box-shadow:none}
+body #product-page .sc-card .sc-primary:hover:not(:disabled) {background-image:none;color:var(--b-accent-ink)}
+body .strategy-art[data-chart] {--sa-accent:var(--chart-accent);--sa-secondary:var(--chart-series-2)}
+
+/* Graph-only tokens also follow charts moved into body-level zoom dialogs. */
+:root {
+  --signal-up:var(--s4);--signal-down:var(--s1);
+  --signal-up-core:#5ebe81;--signal-down-core:#e26a63;
+  --plot-core:#fff;--plot-core-width:.6px;--plot-core-opacity:.26;--plot-envelope-opacity:.1;--plot-halo-radius:1.5px;--plot-halo-strength:14%;--plot-ring-opacity:.08;
+  --light-up:linear-gradient(180deg,var(--signal-up-core),var(--signal-up) 24%);
+  --light-down:linear-gradient(180deg,var(--signal-down-core),var(--signal-down) 24%);
+}
+:root[data-theme=dark] {
+  --signal-up-core:#86ffa5;--signal-down-core:#ff857c;
+  --plot-core-opacity:.5;--plot-envelope-opacity:.2;--plot-halo-radius:4px;--plot-halo-strength:30%;--plot-ring-opacity:.18;
+}
+.chart-native-core {stroke:var(--plot-core);stroke-width:var(--plot-core-width);stroke-opacity:var(--plot-core-opacity);stroke-linecap:round;stroke-linejoin:round;filter:none;pointer-events:none}
+.chart-native-fill {stroke:color-mix(in srgb,var(--native-light-tone) 72%,white);stroke-width:.55;stroke-opacity:.85}
+body #product-page .dc-root {--dc-green:var(--b-up);--dc-red:var(--b-down);--ok:var(--b-up);--error:var(--b-down)}
+body #product-page .dc-ls-track i {background:var(--light-up);box-shadow:inset 0 .5px 0 var(--signal-up-core),0 0 var(--plot-halo-radius) color-mix(in srgb,var(--signal-up) var(--plot-halo-strength),transparent)}
+body #product-page .bento-bars span {border-radius:1.5px 1.5px 0 0;box-shadow:inset 0 .5px 0 color-mix(in srgb,var(--bar-tone,var(--chart-accent)) 65%,white),0 0 var(--plot-halo-radius) color-mix(in srgb,var(--bar-tone,var(--chart-accent)) var(--plot-halo-strength),transparent)}
+body #product-page .bento-bars .up span {--bar-tone:var(--signal-up);background:var(--light-up)}
+body #product-page .bento-bars .down span {--bar-tone:var(--signal-down);background:var(--light-down)}
+/* Data fills share a luminous edge; zero and missing-value markers keep their neutral treatment. */
+body #product-page :is(.hub-breadth-bars>.hub-positive>i,.hub-breadth-bars>.hub-negative>i,.hub-meter>i,.hub-venue-list i,.tc-fill-track i,.dc-table-bar i,.da-share>i,.da-venue-bars i,.commerce-chart-bar.has-usage) {
+ background:linear-gradient(var(--bar-light-angle,90deg),var(--bar-light-tone,var(--chart-accent)) 78%,color-mix(in srgb,var(--bar-light-tone,var(--chart-accent)) 68%,white));
+ box-shadow:inset 0 .5px 0 color-mix(in srgb,var(--bar-light-tone,var(--chart-accent)) 65%,white),0 0 var(--plot-halo-radius) color-mix(in srgb,var(--bar-light-tone,var(--chart-accent)) var(--plot-halo-strength),transparent);
+ opacity:1;
+}
+body #product-page .hub-breadth-bars>.hub-positive>i {--bar-light-tone:var(--s4);--bar-light-angle:0deg}
+body #product-page .hub-breadth-bars>.hub-negative>i {--bar-light-tone:var(--s1);--bar-light-angle:180deg}
+body #product-page .hub-meter>i {--bar-light-tone:var(--series)}
+body #product-page .hub-venue-list i {--bar-light-tone:var(--chart-series-1)}
+body #product-page .commerce-chart-bar.has-usage {--bar-light-angle:0deg}
+body #product-page .commerce-allowance progress {appearance:none;border:0;border-radius:3px;overflow:visible;background:var(--b-soft);accent-color:var(--chart-accent)}
+body #product-page .commerce-allowance progress::-webkit-progress-bar {border-radius:inherit;overflow:visible;background:var(--b-soft)}
+body #product-page .commerce-allowance progress::-webkit-progress-value {border-radius:inherit;background:linear-gradient(90deg,var(--chart-accent) 78%,color-mix(in srgb,var(--chart-accent) 68%,white));box-shadow:inset 0 .5px 0 color-mix(in srgb,var(--chart-accent) 65%,white),0 0 var(--plot-halo-radius) color-mix(in srgb,var(--chart-accent) var(--plot-halo-strength),transparent)}
+body #product-page .commerce-allowance progress::-moz-progress-bar {border-radius:inherit;background:linear-gradient(90deg,var(--chart-accent) 78%,color-mix(in srgb,var(--chart-accent) 68%,white));box-shadow:inset 0 .5px 0 color-mix(in srgb,var(--chart-accent) 65%,white),0 0 var(--plot-halo-radius) color-mix(in srgb,var(--chart-accent) var(--plot-halo-strength),transparent)}
+body #product-page :is(.hub-meter,.dc-table-bar,.da-venue-bars>div>div,.tc-fill-track,.dc-ls-track) {overflow:visible}
+body #product-page :is(.dc-table-bar,.da-venue-bars>div>div,.dc-ls-track)>i {border-radius:inherit}
+body #product-page .hub-gauge-band {
+ stroke:color-mix(in srgb,var(--gauge-color) 68%,white);stroke-width:.55;
+ filter:drop-shadow(0 0 var(--plot-halo-radius) color-mix(in srgb,var(--gauge-color) var(--plot-halo-strength),transparent));
+}
+body #product-page .dc-meter>div {isolation:isolate;box-shadow:inset 0 1px 0 #ffffff65}
+body #product-page .dc-meter>div::before {content:"";position:absolute;inset:-1px;z-index:-1;border-radius:inherit;background:inherit;filter:blur(var(--plot-halo-radius));opacity:var(--plot-ring-opacity);pointer-events:none}
+body #product-page .dc-meter i {filter:drop-shadow(0 0 3px var(--plot-core))}
+body #product-page .commerce-service-table svg {filter:drop-shadow(0 0 4px color-mix(in srgb,var(--chart-accent) var(--plot-halo-strength),transparent))}
+body #product-page .commerce-service-table polyline {stroke:var(--chart-accent)}
+body #product-page .commerce-service-table circle {fill:var(--chart-accent)}
+body #product-page .dc-ls-track {background:var(--light-down);filter:drop-shadow(0 0 3px color-mix(in srgb,var(--plot-core) var(--plot-halo-strength),transparent))}
+body #product-page .dc-tile.gain {--tile-light:var(--signal-up);--tile-ink:var(--b-up)}
+body #product-page .dc-tile.loss {--tile-light:var(--signal-down);--tile-ink:var(--b-down)}
+body #product-page .dc-tile:is(.gain,.loss) {
+ background:linear-gradient(145deg,color-mix(in srgb,var(--tile-light) 23%,var(--b-panel)),color-mix(in srgb,var(--tile-light) 7%,var(--b-panel)));
+ color:var(--tile-ink);border:1px solid color-mix(in srgb,var(--tile-light) 32%,transparent);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--tile-light) 28%,transparent);
+}
+body #product-page .dc-book::before {background:var(--light-down);opacity:.16;box-shadow:inset 0 1px 0 #ffffff65,0 0 4px color-mix(in srgb,var(--signal-down) 22%,transparent)}
+body #product-page .dc-book.bid::before {background:var(--light-up);box-shadow:inset 0 1px 0 #ffffff65,0 0 4px color-mix(in srgb,var(--signal-up) 22%,transparent)}
+/* Shared fallback SVGs retain the same light when their host or zoom scope changes. */
+.chart-light-envelope,.chart-light-core {pointer-events:none}
+.chart-light-envelope {stroke-width:4.5;opacity:var(--plot-envelope-opacity);filter:blur(1.2px);stroke-linecap:round;stroke-linejoin:round}
+.chart-light-core {stroke:var(--plot-core);stroke-width:var(--plot-core-width);opacity:var(--plot-core-opacity);stroke-linecap:round;stroke-linejoin:round}
+.chart-value-bar {fill:var(--bar-light-fill);opacity:1;stroke:color-mix(in srgb,var(--bar-light-color,var(--chart-accent)) 72%,white);stroke-width:.55}
+.chart-light-point {filter:drop-shadow(0 0 var(--plot-halo-radius) var(--point-light,var(--chart-accent)))}
+.chart-value-bar {filter:drop-shadow(0 0 var(--plot-halo-radius) color-mix(in srgb,var(--bar-light-color,var(--chart-accent)) var(--plot-halo-strength),transparent))}
+#product-page :is(.dc-donut,.tc-status-ring,.tc-allocation-ring) {position:relative;isolation:isolate}
+#product-page :is(.dc-donut,.tc-status-ring,.tc-allocation-ring)::before {content:"";position:absolute;inset:-2px;z-index:-1;border-radius:inherit;background:inherit;filter:blur(var(--plot-halo-radius));opacity:var(--plot-ring-opacity);pointer-events:none}
+#product-page :is(.pro-chart,.dc-stat):is(:hover,:focus-within) .chart-light-point {animation:chart-light-inspect 1.2s ease-in-out 2}
+:root[data-reduced-motion=true] #product-page :is(.pro-chart,.dc-stat) .chart-light-point {animation:none}
+@keyframes chart-light-inspect {50%{opacity:.5}}
+@media(prefers-reduced-motion:reduce) {
+ #product-page :is(.pro-chart,.dc-stat) .chart-light-point {animation:none}
+}
+.chart-candle.chart-positive {color:var(--signal-up-core)}
+.chart-candle.chart-negative {color:var(--signal-down-core)}
+.chart-candle>rect:first-of-type {stroke:currentColor;stroke-width:.55}
+#product-page .pro-chart[data-inspecting=true] [data-crosshair]>circle {filter:drop-shadow(0 0 3px var(--chart-accent))}
+
+/* Original strategy mechanisms, rendered as Landing's colored envelope + fine luminous core. */
+body :is(#product-page,.sc-drawer) .strategy-art[data-chart] {--sa-accent:var(--chart-accent);--sa-secondary:var(--chart-series-2);background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--s5) 5%,transparent),transparent 72%),var(--b-panel)}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-path {stroke:var(--sa-spectrum);stroke-width:2.4}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-secondary {stroke:var(--sa-spectrum-alt);stroke-width:1.9}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-light-envelope {fill:none;stroke:var(--sa-spectrum);stroke-width:7;opacity:.22;filter:blur(2px)}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-light-alt {stroke:var(--sa-spectrum-alt);opacity:.12}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-light-core {fill:none;stroke:var(--plot-core);stroke-width:.55;opacity:var(--plot-core-opacity);pointer-events:none}
+body :is(#product-page,.sc-drawer) .strategy-art svg :is(.sa-bar,.sa-bar-muted) {fill:var(--sa-bar-color,var(--sa-spectrum));fill-opacity:.62;stroke:var(--sa-bar-color,var(--sa-secondary));stroke-width:.5}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-band {fill:var(--sa-spectrum);fill-opacity:.10}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-candle-up {fill:var(--signal-up);stroke:var(--signal-up);fill-opacity:.76}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-candle-down {fill:var(--signal-down);stroke:var(--signal-down);fill-opacity:.28}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-stop {stroke:var(--signal-down);opacity:.7}
+body :is(#product-page,.sc-drawer) .strategy-art[data-chart=depth] svg .sa-bar,
+body :is(#product-page,.sc-drawer) .strategy-art[data-chart=net-flow] svg .sa-bar,
+body :is(#product-page,.sc-drawer) .strategy-art[data-chart=exchange-flow] svg .sa-bar {fill:var(--signal-up);stroke:var(--signal-up)}
+body :is(#product-page,.sc-drawer) .strategy-art[data-chart=depth] svg .sa-bar-muted,
+body :is(#product-page,.sc-drawer) .strategy-art[data-chart=net-flow] svg .sa-bar-muted,
+body :is(#product-page,.sc-drawer) .strategy-art[data-chart=exchange-flow] svg .sa-bar-muted {fill:var(--signal-down);stroke:var(--signal-down)}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-quote {opacity:0;transition:opacity 140ms ease}
+body :is(#product-page,.sc-drawer) .strategy-art:is([data-motion=active],[data-motion=reduced]) svg .sa-quote {opacity:1}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-light-packet {fill:none;stroke:var(--sa-spectrum);stroke-linecap:round;opacity:0;pointer-events:none}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-packet-tail {stroke-width:4;stroke-dasharray:10 90;filter:blur(1px)}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-packet-head {stroke:var(--plot-core);stroke-width:1.5;stroke-dasharray:1.5 98.5}
+body :is(#product-page,.sc-drawer) .strategy-art[data-motion=active] svg .sa-packet-tail {opacity:.65}
+body :is(#product-page,.sc-drawer) .strategy-art[data-motion=active] svg .sa-packet-head {opacity:.95}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-scan-dot {stroke:var(--chart-accent);filter:drop-shadow(0 0 3px color-mix(in srgb,var(--s5) 45%,transparent))}
+body :is(#product-page,.sc-drawer) .strategy-art svg .sa-footer-rule {stroke:var(--sa-spectrum);stroke-opacity:.3}
+@media(prefers-reduced-motion:reduce) {
+ body :is(#product-page,.sc-drawer) .strategy-art svg .sa-light-packet {display:none}
+ body :is(#product-page,.sc-drawer) .strategy-art svg .sa-quote {transition:none}
+}
+
+body #product-page .dc-meter-sentiment>div {background:linear-gradient(90deg,var(--s1),var(--s2) 25%,var(--s3) 50%,var(--s4))}
+body #product-page .dc-meter-season>div {background:linear-gradient(90deg,var(--s2),var(--s5) 50%,var(--s7))}
+
+/* Fixed and scrolling cells share one opaque row surface, including hover/focus. */
+body #product-page .dc-root .dc-table tbody tr {--dc-row-bg:var(--b-panel);background:var(--dc-row-bg)}
+body #product-page .dc-root .dc-table tbody tr>td:not(.dc-heat) {background:var(--dc-row-bg);transition:background-color 140ms ease}
+body #product-page .dc-root .dc-table tbody tr:focus-within {--dc-row-bg:color-mix(in srgb,var(--b-ink) 5%,var(--b-panel))}
+@media(hover:hover) {
+ body #product-page .dc-root .dc-table tbody tr:hover {--dc-row-bg:color-mix(in srgb,var(--b-ink) 5%,var(--b-panel))}
+}
+[data-theme=dark] #product-page .dc-root :is(.dc-up,.dc-down) {text-shadow:none}
+@media(prefers-reduced-motion:reduce) {
+ body #product-page .dc-root .dc-table tbody tr>td:not(.dc-heat) {transition:none}
+}
+
+/* Operational surfaces inherit Landing's light treatment, not its 3D scene. */
+body:is([data-page=signals],[data-page=execution],[data-page=logs],[data-page=assets],[data-page=assistant]) #product-page,
+.sig-track-dialog {
+ --ok:var(--b-up);--error:var(--b-down);
+ --surface-hover:color-mix(in srgb,var(--b-ink) 4%,var(--b-panel));
+ --surface-selected:var(--b-accent);
+}
+body #product-page :is(.sig-feed,.sig-detail-aside,.tc-orders,.tc-balance-hero,.tc-stat-strip,.execution-summary,.execution-product .contract-run,.chat-app,.chat-chart-workbench),
+body .sig-track-dialog {
+ background-color:var(--b-panel);background-image:var(--optical-sheen);
+ border-color:var(--optical-border);box-shadow:inset 0 1px 0 var(--optical-edge),var(--finish-shadow);
+}
+body #product-page :is(.sig-page-header nav,.chat-modebar) button {position:relative}
+body #product-page :is(.sig-page-header nav,.chat-modebar) button[aria-pressed=true]::after {
+ content:'';position:absolute;left:12px;right:12px;bottom:0;height:2px;border-radius:2px;background:var(--b-ink);pointer-events:none;
+}
+body #product-page :is(.sig-page-header,.tc-head) h1,
+body #product-page .chat-heading h1 {font-weight:500;letter-spacing:-.025em}
+body #product-page :is(.sig-price-focus strong,.tc-balance-main>strong,.tc-stat-strip strong,.execution-summary strong,.chat-analysis-metrics strong) {
+ font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.025em;
+}
+body #product-page :is(.sig-event-data,.sig-detail-facts,.tc-allocation-list,.tc-status-legend,.chat-evidence,.contract-details) {font-variant-numeric:tabular-nums}
+
+/* The feed is one surface; color belongs to a stage, not an entire record. */
+body #product-page .sig-event {background:none;grid-template-columns:max-content minmax(0,1fr);transition:background-color 140ms ease}
+body #product-page .sig-event-time {white-space:nowrap}
+body #product-page .sig-event.selected {background:var(--surface-selected)}
+body #product-page .sig-event.selected::before {width:2px;background:var(--b-ink);box-shadow:none}
+.sig-tracking [data-stage=discovered],.sig-track-dialog [data-stage=discovered] {--stage-color:var(--chart-series-1)}
+.sig-tracking [data-stage=confirming],.sig-track-dialog [data-stage=confirming] {--stage-color:var(--chart-series-2)}
+.sig-tracking [data-stage=momentum],.sig-track-dialog [data-stage=momentum] {--stage-color:var(--chart-series-5)}
+.sig-tracking [data-stage=risk],.sig-track-dialog [data-stage=risk] {--stage-color:var(--chart-series-4)}
+.sig-tracking [data-stage=closed],.sig-track-dialog [data-stage=closed] {--stage-color:var(--chart-series-8)}
+body :is(#product-page .sig-tracking,.sig-track-dialog) .sig-event-progress>div {border-bottom-color:color-mix(in srgb,var(--stage-color) 26%,var(--b-line))}
+body :is(#product-page .sig-tracking,.sig-track-dialog) .sig-event-progress>.current {border-bottom-color:var(--stage-color);color:var(--b-ink)}
+body :is(#product-page .sig-tracking,.sig-track-dialog) .sig-event-progress>.current>i {color:var(--stage-color)}
+body :is(.sig-tracking,.sig-track-dialog) .sig-stage {border:1px solid color-mix(in srgb,var(--badge-color,var(--b-muted)) 20%,transparent);background:color-mix(in srgb,var(--badge-color,var(--b-muted)) 7%,var(--b-panel));color:var(--badge-color,var(--b-muted))}
+.sig-stage:is(.discovered,.confirming) {--badge-color:var(--chart-series-1)}
+.sig-stage.momentum {--badge-color:var(--b-up)}
+.sig-stage.risk {--badge-color:var(--b-warning)}
+body #product-page .sig-state-counts>button {position:relative}
+body #product-page .sig-state-counts>button[aria-pressed=true]::after {content:'';position:absolute;left:26px;right:26px;bottom:-10px;height:2px;background:var(--spectrum);border-radius:2px}
+body #product-page .sig-state-counts>button:first-child::after {left:0}
+body #product-page .sig-event-body>footer button {padding-inline:8px;border-radius:6px;min-height:36px}
+body #product-page .sig-event-body>footer>div {gap:4px}
+body #product-page .sig-detail-quote {padding-block:20px 16px}
+body #product-page .sig-detail-aside .sig-detail-thesis {border-left-color:var(--chart-accent)}
+body #product-page .sig-watch[aria-pressed=true] {color:var(--chart-accent)}
+body #product-page .sig-watch[aria-pressed=true] svg {fill:color-mix(in srgb,var(--chart-accent) 16%,transparent);stroke:currentColor}
+
+/* Account series keep stable colors shared by rings, legends and charts. */
+body #product-page .tc-allocation-ring {background:conic-gradient(var(--chart-series-1) 0% var(--tc-free),var(--chart-series-4) var(--tc-free) var(--tc-reserved),var(--chart-series-2) var(--tc-reserved) 100%);box-shadow:0 0 18px var(--optical-glow)}
+body #product-page :is(.tc-status-ring,.tc-allocation-ring)>div {box-shadow:0 0 0 1px var(--optical-edge)}
+body #product-page .tc-root .tc-dot:not(.buy):not(.sell) {background:var(--chart-accent)}
+body #product-page :is(.tc-allocation-list,.tc-status-legend) i {width:7px;height:7px;border-radius:2px}
+body #product-page :is(.tc-stat-strip,.execution-summary)>div {position:relative}
+body #product-page :is(.tc-stat-strip,.execution-summary)>div::before {content:'';position:absolute;left:24px;top:0;width:24px;height:2px;background:var(--chart-series-1);opacity:.7}
+body #product-page :is(.tc-stat-strip,.execution-summary)>div:nth-child(2)::before {background:var(--chart-series-2)}
+body #product-page :is(.tc-stat-strip,.execution-summary)>div:nth-child(3)::before {background:var(--chart-series-4)}
+body #product-page :is(.tc-stat-strip,.execution-summary)>div:nth-child(4)::before {background:var(--chart-series-3)}
+body #product-page .execution-product .contract-run {border-left:2px solid var(--chart-accent)}
+body #product-page .contract-chain>div.present {border-color:color-mix(in srgb,var(--chart-accent) 30%,var(--b-line));background:color-mix(in srgb,var(--chart-accent) 4%,var(--b-panel))}
+body #product-page .coverage-track>i {background:var(--chart-series-5)}
+body #product-page .tc-order-table tbody tr>td {background:var(--b-panel);transition:background-color 140ms ease}
+body #product-page :is(.tc-root,.execution-product) :is(.p-button,.contract-ref) {transform:none}
+body #product-page .tc-filters input {padding-inline:12px;min-height:40px}
+
+/* Chat keeps focus on the answer; the composer carries the optical interaction. */
+body[data-page=assistant] #product-page {
+ --chat-surface:var(--b-panel);--chat-inset:var(--b-soft);--chat-canvas:var(--b-bg);
+ --chat-ink:var(--b-ink);--chat-muted:var(--b-muted);--chat-line:var(--b-line);
+ --chat-accent:var(--b-violet);--chat-selection:var(--b-accent);
+ --chat-action:var(--b-action);--chat-action-ink:var(--b-action-fg);
+ --chat-edge:var(--optical-sheen);--chat-shadow:var(--finish-shadow);--chat-spectrum:var(--spectrum);
+}
+body #product-page .chat-app .chat-history {background:color-mix(in srgb,var(--b-bg) 45%,var(--b-panel))}
+body #product-page .chat-thread>button:first-child[aria-current=true] {background:var(--surface-selected);box-shadow:none;color:var(--b-ink)}
+body #product-page .chat-heading {padding-bottom:14px}
+body #product-page .chat-heading h1 {font-size:22px}
+body #product-page .chat-app .chat-suggestions>button {background-image:var(--optical-sheen);box-shadow:inset 0 1px var(--optical-edge);border-color:var(--optical-border)}
+body #product-page .chat-suggestions>button:nth-child(1) {--suggest-color:var(--chart-series-1)}
+body #product-page .chat-suggestions>button:nth-child(2) {--suggest-color:var(--chart-series-3)}
+body #product-page .chat-suggestions>button:nth-child(3) {--suggest-color:var(--chart-series-5)}
+body #product-page .chat-suggestions>button>svg {color:var(--suggest-color)}
+body #product-page .chat-app .chat-composer {
+ border:1px solid transparent;background-image:var(--optical-sheen),linear-gradient(var(--b-panel),var(--b-panel)),var(--optical-rim);
+ background-origin:padding-box,padding-box,border-box;background-clip:padding-box,padding-box,border-box;
+ box-shadow:inset 0 1px var(--optical-edge),0 4px 16px #0000000a;padding:14px 16px 10px;
+}
+body #product-page .chat-app .chat-composer:focus-within {border-color:var(--optical-focus);box-shadow:0 0 0 3px var(--optical-glow)}
+body #product-page .chat-composer-area {background:linear-gradient(180deg,transparent,var(--b-panel) 20%)}
+body #product-page .chat-app .chat-send {width:40px;height:40px;min-width:40px;min-height:40px;background-image:var(--optical-action);box-shadow:inset 0 1px var(--optical-edge)}
+body #product-page .chat-app .chat-send:disabled {background:var(--b-soft);color:var(--b-muted);box-shadow:none;opacity:.55}
+body #product-page .chat-user {background:var(--surface-selected);border:1px solid color-mix(in srgb,var(--chart-accent) 13%,var(--b-line))}
+body #product-page .chat-analysis-metrics strong {font-size:21px}
+body #product-page .chat-analysis-metrics>div:nth-child(2) strong {color:var(--chart-series-2)}
+body #product-page .chat-number-row b {padding:4px 9px;color:var(--chart-accent);background:color-mix(in srgb,var(--chart-accent) 6%,var(--b-panel))}
+body #product-page .chat-source {border-color:var(--optical-border);background:var(--surface-selected)}
+body #product-page .chat-answer-actions .chat-icon {border:1px solid var(--b-line)}
+body #product-page .chat-app :is(.chat-inline-action,.chat-new,.chat-composer-tools .chat-icon) {font-size:14px}
+body #product-page .chat-suggestions strong {font-size:14px;font-weight:550}
+body #product-page .chat-suggestions span {font-size:13px}
+
+@media(hover:hover) and (pointer:fine) {
+ body #product-page .sig-event:not(.selected):hover,
+ body #product-page .sig-event-body>footer button:hover {background:var(--surface-hover)}
+ body #product-page .tc-order-table tbody tr:hover>td {background:var(--surface-hover)}
+ body #product-page .chat-app .chat-suggestions>button:hover {border-color:color-mix(in srgb,var(--suggest-color) 55%,var(--b-line));box-shadow:inset 0 1px var(--optical-edge),0 0 12px color-mix(in srgb,var(--suggest-color) 7%,transparent)}
+ body #product-page .chat-app .chat-send:not(:disabled):hover {box-shadow:0 0 14px var(--optical-glow)}
+}
+@media(max-width:900px) {
+ body #product-page .sig-state-counts>button[aria-pressed=true]::after {right:18px;left:18px;bottom:-5px}
+ body #product-page .sig-state-counts>button:first-child::after {left:0}
+ body #product-page .sig-event-body>footer button {min-height:44px}
+ body #product-page .sig-event-body>header {padding-right:80px}
+ body #product-page .chat-heading h1 {font-size:19px}
+ body #product-page .chat-app .chat-composer {padding:12px}
+ body #product-page .chat-composer-tools .chat-icon {width:44px;height:44px;min-width:44px;min-height:44px}
+ body #product-page .chat-app .chat-send {width:44px;height:44px;min-width:44px;min-height:44px}
+ body #product-page .chat-composer textarea {font-size:16px}
+ body #product-page .tc-filters input {min-height:44px;font-size:16px}
+}
+@media(prefers-reduced-motion:reduce) {
+ body #product-page :is(.sig-event,.tc-order-table tbody tr>td) {transition:none}
+}
+@media(max-width:480px) {
+ body #product-page .sig-refresh-controls {grid-template-columns:minmax(0,1fr) 44px}
+ body #product-page .sig-refresh-controls>label {grid-column:1}
+ body #product-page .sig-refresh-controls>.dc-info {grid-column:2;grid-row:1 / span 2;align-self:start;margin:0}
+}
+
+/* One compact info glyph across metrics, forms, source metadata and dialogs. */
+body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) details:is(.dc-info,.pd-info,.sc-info,.as-info,.as-inline-info,.tc-info,.cc-billing-info){width:var(--b-info-target);min-width:var(--b-info-target);height:var(--b-info-target);min-height:var(--b-info-target);margin:0 0 0 3px;flex:none}
+body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) details:is(.dc-info,.pd-info,.sc-info,.as-info,.as-inline-info,.tc-info,.cc-billing-info)>summary{display:grid;place-items:center;position:relative;width:var(--b-info-target);min-width:var(--b-info-target);height:var(--b-info-target);min-height:var(--b-info-target);padding:0;margin:0;border:0;border-radius:5px;background:transparent;font-size:0!important;line-height:1;color:var(--b-muted);list-style:none}
+body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) details:is(.dc-info,.pd-info,.sc-info,.as-info,.as-inline-info,.tc-info,.cc-billing-info)>summary:before{content:'';position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:16px;height:16px;border:0;border-radius:0;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='10' cy='10' r='8'/%3E%3Cpath d='M10 9v5'/%3E%3C/g%3E%3Ccircle fill='black' cx='10' cy='6' r='1'/%3E%3C/svg%3E") center/contain no-repeat}
+body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) details:is(.dc-info,.pd-info,.sc-info,.as-info,.as-inline-info,.tc-info,.cc-billing-info)>summary>svg{display:none}
+body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) :is(.ux-info,button.info){width:var(--b-info-target);min-width:var(--b-info-target);height:var(--b-info-target);min-height:var(--b-info-target);padding:10px;border-radius:5px;background:transparent;line-height:1}
+body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) :is(.ux-info,button.info)>svg{display:block;width:16px;height:16px;flex:none}
+body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) .ui-info-popover[popover]{width:max-content;max-width:min(300px,calc(100vw - 24px));padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.6;font-weight:400;letter-spacing:normal;box-shadow:0 6px 22px #0003}
+@media(max-width:600px){
+ body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) :is(.ux-info,button.info,details:is(.dc-info,.pd-info,.sc-info,.as-info,.as-inline-info,.tc-info,.cc-billing-info)),
+ body :is(#product-page,#connection-dialog,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog) details:is(.dc-info,.pd-info,.sc-info,.as-info,.as-inline-info,.tc-info,.cc-billing-info)>summary{width:var(--b-info-target);min-width:var(--b-info-target);height:var(--b-info-target);min-height:var(--b-info-target)}
+}
+
+body :is(#product-page,.sig-track-dialog) .sig-record-state>.dc-info{margin-inline-start:auto}
+
+/* Metric captions reserve the same line even when one has an info control. */
+body #product-page .biz-stats>div>span{display:flex;align-items:center;gap:6px;min-height:24px}
+body #product-page .biz-stats .metric-unit{display:block;line-height:1.4;font-size:13px;font-weight:400;letter-spacing:0;color:var(--b-muted);white-space:nowrap}
+@media(max-width:700px){
+ body #product-page .biz-stats>div>span{min-height:40px}
+ body[data-page=risk] #product-page .biz-stats strong{font-size:22px;line-height:1.4;letter-spacing:-.4px}
+ body[data-page=risk] #product-page .biz-stats .metric-unit{font-size:12px}
+}
+
+/* Keep the protection pairing and its action on one row when space permits. */
+@media(min-width:901px){
+ body[data-page=risk] #product-page .ux-run-panel:has(>.ux-risk-combination){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 24px;align-items:center}
+ body[data-page=risk] #product-page .ux-run-panel:has(>.ux-risk-combination)>h2{grid-column:1;grid-row:1;margin:0}
+ body[data-page=risk] #product-page .ux-run-panel:has(>.ux-risk-combination)>.ux-pill{grid-column:2;grid-row:1;justify-self:end}
+ body[data-page=risk] #product-page .ux-risk-combination{grid-column:1;grid-row:2;margin:0}
+ body[data-page=risk] #product-page .ux-run-panel:has(>.ux-risk-combination)>.p-primary{grid-column:2;grid-row:2;justify-self:end}
+ body[data-page=risk] #product-page .ux-run-panel:has(>.ux-risk-combination)>:is(.ux-detail-rules,.p-footnote){grid-column:1/-1;margin-block:0}
+ body[data-page=risk] #product-page .ux-run-panel:has(>.ux-risk-combination)>.p-button:not(.p-primary){grid-column:1/-1;justify-self:start}
+}
+/* Shared dropdowns: solid surfaces and quiet feedback, without liquid optics. */
+:root body :is(.astarter-liquid,.astarter-liquid-portal),
+body :is(.language-options,.wallet-account-menu,.chat-exchange-picker,.layout-section-menu,.layout-data-menu>.layout-section-tabs,.layout-actions-menu>.layout-heading-actions){
+ --lq-accent:var(--b-violet);--lq-foreground:var(--b-ink);--lq-text:var(--b-ink);--lq-muted:var(--b-muted);
+ --lq-solid-fill:var(--b-panel);--lq-field-fill:var(--b-panel);
+ --lq-field-focus-fill:var(--b-panel);
+ --lq-field-line:var(--b-control-line);--lq-regular-line:var(--b-line-strong);
+ --lq-glass-bright:transparent;--lq-glass-shade:transparent;
+ --optical-reflection:none;--optical-selection:var(--b-soft);--optical-control-rim:none;
+ --lq-shadow-color:#0002;--lq-placeholder:var(--b-muted);
+ color:var(--b-ink);font-family:var(--sans);font-size:14px;line-height:1.45;
+}
+:root body select:focus-visible{box-shadow:none!important}
+body .liquid-native-host{padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;display:inline-grid;grid-template-columns:minmax(0,1fr);vertical-align:middle;position:relative;min-width:0;max-width:100%;width:var(--liquid-field-width);min-height:44px}
+body .liquid-native-host[data-stretch]{width:100%}
+body .liquid-native-host>select{grid-area:1/1;box-sizing:border-box;min-width:0!important;max-width:100%!important;width:100%!important;margin:0!important}
+body .liquid-native-mount{grid-area:1/1;display:block;min-width:0;align-self:stretch}
+body .liquid-native-host[data-liquid-ready]>select{opacity:0!important;pointer-events:none!important;position:absolute;inset:0;height:100%!important}
+body .liquid-native-host :is(.astarter-liquid,.lq-select){height:100%;min-width:0}
+:root body .liquid-native-host button.lq-select__trigger{
+ /* Form fields keep their anchor while the popup and chevron retain their motion. */
+ transform:none;transform-style:flat;will-change:auto;
+ box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-height:44px;height:100%;margin:0;padding:0 12px;
+ border:1px solid var(--lq-field-line);border-radius:var(--b-control-radius,10px);background:var(--lq-field-fill);color:var(--b-ink);
+ font:500 max(13px,var(--liquid-field-font,14px))/1.45 var(--sans);letter-spacing:normal;text-align:start;
+ display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+ box-shadow:none;filter:none;-webkit-backdrop-filter:none;backdrop-filter:none;transition:background-color 120ms ease,border-color 120ms ease;
+}
+:root body .liquid-native-host button.lq-select__trigger[data-popup-open]{background:var(--lq-field-focus-fill);border-color:var(--b-ink)}
+@media(hover:hover){:root body .liquid-native-host button.lq-select__trigger:not([data-disabled]):hover{border-color:var(--b-ink)}}
+:root body .liquid-native-host button.lq-select__trigger:focus-visible{outline:2px solid var(--b-violet);outline-offset:3px}
+:root body .liquid-native-host button.lq-select__trigger[aria-invalid=true]{border-color:var(--b-red,#ed879a)}
+:root body .liquid-native-host button.lq-select__trigger[data-disabled]{opacity:.45;cursor:not-allowed}
+body .liquid-native-host .lq-select__chevron{transition:rotate 120ms ease}
+body .liquid-native-host .lq-select__chevron>svg{display:block;width:15px;height:15px;flex:none}
+body .liquid-native-host .lq-select__value{min-width:0;flex:1}
+body .brand-select>.liquid-native-host{width:100%}
+body .brand-select>.brand-select-leading{z-index:4;pointer-events:none}
+:root body .brand-select .liquid-native-host button.lq-select__trigger{padding-inline-start:44px}
+:root body .brand-select:has(.brand-pair) .liquid-native-host button.lq-select__trigger{padding-inline-start:49px}
+body .astarter-liquid-portal{position:relative;z-index:1000}
+body .astarter-liquid-portal .lq-select__positioner{z-index:1000}
+body .astarter-liquid-portal .lq-select__listbox{background:var(--lq-solid-fill);-webkit-backdrop-filter:none;backdrop-filter:none;border-color:var(--lq-regular-line);border-radius:12px;box-shadow:0 8px 24px var(--lq-shadow-color);animation:none;transition:opacity 120ms ease-out;box-sizing:border-box;min-width:min(var(--anchor-width),calc(100vw - 24px));max-width:min(420px,calc(100vw - 24px));overscroll-behavior:contain;scroll-padding:5px}
+body .astarter-liquid-portal .lq-select__listbox:is([data-starting-style],[data-ending-style]){opacity:0}
+body .astarter-liquid-portal .lq-select__option{border-radius:7px;min-height:40px;font-size:14px;line-height:1.45;gap:12px;overflow-wrap:anywhere}
+body .astarter-liquid-portal .lq-select__option>span:first-child{min-width:0}
+body .astarter-liquid-portal .lq-select__option>span:last-child:has(svg){flex:none}
+body .astarter-liquid-portal .lq-select__option[data-selected]{color:var(--b-ink);background:var(--b-soft);font-weight:500}
+body .astarter-liquid-portal .lq-select__option[data-highlighted]{background:var(--b-soft)}
+body .astarter-liquid-portal .lq-select__group-label{padding:10px 11px 5px;color:var(--b-muted);font-size:12px;font-weight:500}
+body .astarter-liquid-portal .lq-select__ungrouped{display:contents}
+
+/* Menus share the same quiet material; their navigation and actions stay intact. */
+:root body :is(.language-options,.wallet-account-menu,.chat-exchange-picker,.layout-section-menu){
+ background:var(--b-panel);border:1px solid var(--lq-regular-line);border-radius:12px;
+ box-shadow:0 8px 24px var(--lq-shadow-color);
+ -webkit-backdrop-filter:none;backdrop-filter:none;
+ transform-origin:top right;
+}
+:root body :is(.language-picker,.layout-section-switch)[open]>:is(.language-options,.layout-section-menu),
+:root body :is(.wallet-account-menu,.chat-exchange-picker):popover-open{animation:none}
+:root body :is(.language-picker,.layout-section-switch):not([open])>:is(.language-options,.layout-section-menu),
+:root body :is(.wallet-account-menu,.chat-exchange-picker):not(:popover-open){animation:none}
+:root body :is(.wallet-account-menu,.chat-exchange-picker){transition:none}
+:root body :is(.language-picker,.layout-section-switch,.layout-data-menu,.layout-actions-menu)::details-content{transition:none}
+:root body .language-options button{border-radius:9px;min-height:40px;font-size:14px}
+:root body .language-options button[aria-pressed=true]{color:var(--b-ink);background:var(--b-soft)}
+:root body .topbar .wallet-account-menu{box-shadow:0 8px 24px var(--lq-shadow-color);-webkit-backdrop-filter:none;backdrop-filter:none}
+:root body .header-wallet .wallet-login.is-authenticated{box-shadow:none}
+:root body :is(.language-options,.wallet-account-menu,.chat-exchange-picker,.layout-section-menu,.layout-data-menu>.layout-section-tabs,.layout-actions-menu>.layout-heading-actions) :is(button,a){background-image:none;filter:none}
+@media(max-width:900px){
+ :root body #product-page[data-layout=unified] .layout-data-menu>.layout-section-tabs{display:grid!important;position:absolute;left:0;top:50px;grid-template-columns:repeat(2,minmax(0,1fr));min-width:220px;max-width:calc(100vw - 32px);padding:5px!important;gap:3px;background:var(--b-panel);border:1px solid var(--lq-regular-line);border-radius:12px;box-shadow:0 8px 24px var(--lq-shadow-color);backdrop-filter:none}
+ :root body #product-page[data-layout=unified] .layout-actions-menu>.layout-heading-actions{display:flex!important;position:absolute;right:0;top:48px;min-width:160px;padding:10px!important;flex-wrap:wrap;gap:8px!important;background:var(--b-panel);border:1px solid var(--lq-regular-line);border-radius:12px;box-shadow:0 8px 24px var(--lq-shadow-color);backdrop-filter:none}
+ :root body :is(.layout-data-menu,.layout-actions-menu)[open]>:is(.layout-section-tabs,.layout-heading-actions){animation:none}
+ :root body :is(.layout-data-menu,.layout-actions-menu):not([open])>:is(.layout-section-tabs,.layout-heading-actions){animation:none}
+}
+@media(max-width:700px),(pointer:coarse){
+ :root body .liquid-native-host button.lq-select__trigger{font-size:14px}
+ body .astarter-liquid-portal .lq-select__option,:root body .language-options button{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+ :root body :is(.lq-select__trigger,.lq-select__chevron,.lq-popover,.language-options,.wallet-account-menu,.chat-exchange-picker,.layout-section-menu,.layout-data-menu>.layout-section-tabs,.layout-actions-menu>.layout-heading-actions){animation:none!important;transition:none!important;transform:none!important}
+}
+:root[data-reduced-motion=true] body :is(.lq-select__trigger,.lq-select__chevron,.lq-popover,.language-options,.wallet-account-menu,.chat-exchange-picker,.layout-section-menu,.layout-data-menu>.layout-section-tabs,.layout-actions-menu>.layout-heading-actions){animation:none!important;transition:none!important;transform:none!important}
+@media(prefers-reduced-transparency:reduce){body :is(.lq-select__listbox,.language-options,.wallet-account-menu,.chat-exchange-picker,.layout-section-menu){background:var(--b-panel)!important;backdrop-filter:none!important}}
+
+/* Shared glyphs keep their optical weight at the rendered size. */
+:root body :is(.p-button,.sc-button,.dc-button,.ops-button,.btn,.chat-icon,.chat-inline-action,.hub-watch-save)>svg[stroke="currentColor"]{
+ width:18px;height:18px;flex:none;display:block;stroke-width:1.6;
+}
+:root body :is(.p-button,.sc-button,.dc-button,.ops-button,.btn,.chat-icon,.chat-inline-action,.hub-watch-save)>svg[stroke="currentColor"]>:is(path,circle,rect,line,polyline,polygon){vector-effect:non-scaling-stroke}
+
+/* Dialog actions use the same compact geometry without changing their meaning. */
+:root body :is(dialog,#connection-dialog) :is(.p-button,.sc-button,.dc-button,.btn),
+:root body .commerce-flow>footer>button,:root body .multi-research-dialog .multi-detail-footer>button{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;
+ min-height:var(--b-control-height);max-width:100%;padding:9px 14px;border-radius:10px;
+ font:500 var(--b-text-control)/20px var(--sans);letter-spacing:0;white-space:normal;
+}
+:root body :is(dialog,#connection-dialog) :is(.p-button.p-primary,.sc-button.sc-primary,.dc-button.dc-primary,.primary):not(:disabled,[aria-disabled=true],[aria-busy=true],.danger,.p-danger){
+ filter:none;box-shadow:inset 0 1px 0 #ffffff30,inset 0 -1px 0 #0000000d,0 1px 3px #00000012;
+}
+:root body :is(dialog,#connection-dialog) .execution-account-tabs .p-button{min-height:44px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;box-shadow:none;color:var(--b-muted)}
+:root body :is(dialog,#connection-dialog) .execution-account-tabs .p-button[aria-pressed=true]{border-bottom-color:var(--b-ink);color:var(--b-ink)}
+:root body dialog .p-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+:root body .product-flow-dialog>.p-dialog-head{padding-inline-end:26px}
+:root body dialog .p-dialog-head h2{min-width:0;flex:1;margin:0}
+:root body :is(.product-dialog,.multi-research-dialog,.research-dialog,.sig-track-dialog,.commerce-flow,.ai-operator,.assistant-team-dialog,#connection-dialog)>header h2{
+ font:500 20px/1.4 var(--sans);letter-spacing:0;text-wrap:balance;
+}
+
+/* The close target stays generous; only the glyph is visually small. */
+:root body dialog :is(.p-dialog-close,.sc-close,.research-close,.journal-close,.ai-operator-close,[data-track-close],[data-team-close],[data-team-reset],[data-close]):not([hidden]),
+:root body #connection-dialog #connections-close{
+ display:inline-grid;place-items:center;box-sizing:border-box;flex:none;
+ width:var(--b-touch-height);min-width:var(--b-touch-height);height:var(--b-touch-height);min-height:var(--b-touch-height);
+ padding:0;margin:0;border:1px solid transparent;border-radius:10px;
+ background:transparent;color:var(--b-muted);box-shadow:none;filter:none;cursor:pointer;line-height:1;
+ transition:color 120ms ease,background-color 120ms ease;
+}
+:root body dialog header :is(.p-dialog-close,.sc-close,.research-close,.journal-close,.ai-operator-close,[data-track-close],[data-team-close],[data-close]){position:static!important}
+:root body dialog :is(.p-dialog-close,.sc-close,.research-close,.journal-close,.ai-operator-close,[data-track-close],[data-team-close],[data-team-reset],[data-close])>svg,
+:root body #connection-dialog #connections-close>svg{
+ display:block;flex:none;width:20px;height:20px;margin:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
+}
+:root body dialog :is(.p-dialog-close,.sc-close,.research-close,.journal-close,.ai-operator-close,[data-track-close],[data-team-close],[data-team-reset],[data-close])>svg>:is(path,line),
+:root body #connection-dialog #connections-close>svg>:is(path,line){vector-effect:non-scaling-stroke}
+:root body .ux-help-dialog>h2{padding-inline-end:48px}
+:root body :is(dialog,#connection-dialog) :is(button,a,input,textarea,select,summary):focus-visible{outline:2px solid var(--optical-focus);outline-offset:3px;transition:none}
+:root body :is(dialog,#connection-dialog) .ai-operator-search input:focus-visible{outline:none;box-shadow:none}
+:root body .ai-operator-search:focus-within{border-color:var(--optical-focus);box-shadow:0 0 0 1px var(--optical-focus)}
+:root body dialog{overscroll-behavior:contain}
+:root body dialog :is(.p-dialog-body,.research-dialog-content,.multi-detail-body){overscroll-behavior:contain}
+@media(hover:hover) and (pointer:fine){
+ :root body dialog :is(.p-dialog-close,.sc-close,.research-close,.journal-close,.ai-operator-close,[data-track-close],[data-team-close],[data-team-reset],[data-close]):not(:disabled,[aria-disabled=true]):hover,
+ :root body #connection-dialog #connections-close:hover{background:var(--b-soft);color:var(--b-ink);border-color:transparent;box-shadow:none}
+}
+:root body dialog :is(.p-dialog-close,.sc-close,.research-close,.journal-close,.ai-operator-close,[data-track-close],[data-team-close],[data-team-reset],[data-close]):not(:disabled,[aria-disabled=true]):active,
+:root body #connection-dialog #connections-close:active{background:var(--b-accent-hover);color:var(--b-ink)}
+@media(max-width:700px){
+ :root body :is(dialog,#connection-dialog) :is(.p-button,.sc-button,.dc-button,.btn),:root body .commerce-flow>footer>button,:root body .multi-research-dialog .multi-detail-footer>button{min-height:var(--b-touch-height)}
+ :root body :is(.product-dialog,.multi-research-dialog,.research-dialog,.sig-track-dialog,.commerce-flow,.ai-operator,.assistant-team-dialog,#connection-dialog)>header h2{font-size:18px}
+ :root body .product-flow-dialog>.p-dialog-head{padding-inline-end:20px}
+}
+@media(max-width:480px){
+ :root body .multi-research-dialog .multi-detail-footer{flex-direction:column}
+ :root body .multi-research-dialog .multi-detail-footer>button{flex:none;width:100%}
+ :root body .sc-wizard[data-phase=resume]>.sc-drawer-footer{display:flex;flex-direction:column;gap:8px}
+ :root body .sc-wizard[data-phase=resume]>.sc-drawer-footer>button{flex:none;width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ :root body dialog :is(.p-dialog-close,.sc-close,.research-close,.journal-close,.ai-operator-close,[data-track-close],[data-team-close],[data-team-reset],[data-close]),:root body #connection-dialog #connections-close{transition:none}
+}
+:root[data-reduced-motion=true] body dialog :is(.p-dialog-close,.sc-close,.research-close,.journal-close,.ai-operator-close,[data-track-close],[data-team-close],[data-team-reset],[data-close]),
+:root[data-reduced-motion=true] body #connection-dialog #connections-close{transition:none}
+
+/* The existing GlowCard rim is shared by framed product cards, never selection controls. */
+body :where(:is(.insight-surface,.p-card,.sc-card,.capability-card,.ux-run-panel,.dc-panel,.hub-panel,.hub-stat,.hub-asset-card,.sig-event,.sig-detail-aside,.df-post,.df-related,.settings-board,.commerce-card,.commerce-section,.commerce-usage-main,.commerce-balance-panel,.commerce-plan-overview,.commerce-records-section,.tc-orders,.tc-balance-hero,.contract-run,.chat-app,.ux-profile-method,.ux-profile-settings):not(button,a,dialog,.bh-root *)){position:relative}
+body [data-card-edge]::after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;padding:1px;background:radial-gradient(240px circle at var(--surface-x,50%) var(--surface-y,0),color-mix(in srgb,var(--b-accent-ink) 60%,transparent),transparent 75%);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;opacity:0;transition:opacity .18s ease-out}
+body [data-card-edge]:focus-within::after{opacity:.65}
+@media(hover:hover) and (pointer:fine){body [data-card-edge][data-pointer]::after{opacity:1}}
+body [data-card-edge]:has([data-card-edge]:is([data-pointer],:focus-within))::after{opacity:0}
+@media(prefers-reduced-motion:reduce){body [data-card-edge]::after{transition:none}}
+
+
+/* Shared help standard: one card-header anchor, neutral icon, predictable top-layer panel. */
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) :is(details,button)[data-ui-info],
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) details[data-ui-info]>summary {
+ --b-info-target:32px;box-sizing:border-box;width:var(--b-info-target);min-width:var(--b-info-target);height:var(--b-info-target);min-height:var(--b-info-target);flex:none;margin:0;padding:0;border:0;border-radius:6px;background:transparent;color:var(--b-muted,var(--muted));vertical-align:middle;
+}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) button[data-ui-info] {display:inline-grid;place-items:center;cursor:pointer}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) button[data-ui-info]>svg {width:16px;height:16px}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) :is(button[data-ui-info],details[data-ui-info]>summary):hover {background:var(--b-soft);color:var(--b-ink)}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) :is(button[data-ui-info],details[data-ui-info]>summary):focus-visible {outline:2px solid var(--b-action,var(--accent));outline-offset:2px}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) header.ui-info-header:has(>:is(details,button)[data-ui-info]) {display:flex;align-items:center;flex-wrap:nowrap;gap:12px;min-height:44px}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) header.ui-info-header:has(>:is(details,button)[data-ui-info])>.ui-info-heading {flex:1;min-width:0;margin-inline-end:auto;white-space:normal}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) header.ui-info-header:has(>:is(details,button)[data-ui-info])>[data-ui-info] {order:99;margin:0}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) .ui-info-title {display:flex;align-items:center;gap:8px}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) .ui-info-title>[data-ui-info] {margin-inline-start:auto}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) .ui-info-popover[popover] {width:min(320px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:min(420px,calc(100dvh - 24px));padding:14px 16px;border:1px solid var(--b-line-strong,var(--line));border-radius:8px;background:var(--b-panel,var(--surface));color:var(--b-ink,var(--text));font:400 13px/1.65 var(--sans);text-align:start;white-space:normal;overflow:auto;overflow-wrap:anywhere}
+body .ui-info-popover .ui-info-description {margin:0 0 12px;padding:0 0 12px;border:0;border-bottom:1px solid var(--b-line,var(--line));font:inherit;color:inherit}
+body #product-page .hub-graph-source[data-ui-info-footer] {justify-content:flex-end}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) details[data-ui-info-text] {width:auto;min-width:0;height:auto;min-height:0}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) details[data-ui-info-text]>summary {width:auto;min-width:0;height:auto;min-height:32px;padding:6px 8px;font-size:13px!important}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) details[data-ui-info-text]>summary::before {display:none!important}
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) details[data-ui-info-text]>summary>svg {display:block}
+@media(max-width:700px),(pointer:coarse) {
+ body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) :is(details,button)[data-ui-info],
+ body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) details[data-ui-info]>summary {--b-info-target:44px}
+}
+
+/* Source freshness is described in the panel, not by changing the help glyph. */
+body :is(#product-page,#connection-dialog,.workspace,.sc-drawer,.product-dialog,.as-ticket,.commerce-dialog,.multi-research-dialog,.sig-track-dialog,#membership-app) details[data-ui-info]>summary {color:var(--b-muted,var(--muted))!important}
+body .hub-source:is(.stale,.unavailable) .ui-info-popover>small {color:var(--b-warning)}
+@media(max-width:480px) {
+ body #product-page .hub-panel>header.ui-info-header:has(>.hub-segments) {flex-wrap:wrap;gap:8px 12px}
+ body #product-page .hub-panel>header.ui-info-header>.hub-segments {order:100;flex-basis:100%;justify-content:flex-start}
+}

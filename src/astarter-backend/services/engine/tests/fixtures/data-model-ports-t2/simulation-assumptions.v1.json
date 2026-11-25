@@ -1,0 +1,16 @@
+{
+  "profile_id": "SIM_FIXTURE_RC04_BTCUSDT_V1",
+  "revision": "v1",
+  "base": "BTC",
+  "quote": "USDT",
+  "buy_fee": "0.001",
+  "sell_fee": "0.001",
+  "quote_unit": "0.000001",
+  "fee_currency": "QUOTE",
+  "fee_model": "RC04_QUOTE_BOUND_V1",
+  "fill_bound_policy": "MIN_NONZERO_FILL_AT_LEAST_STEP",
+  "provenance": "SIM_ASSUMPTION",
+  "valid_from_ns": 1700000000000000000,
+  "valid_until_ns": 1700000300000000000,
+  "unmodeled_constraints": []
+}

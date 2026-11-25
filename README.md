@@ -1,40 +1,48 @@
-# Astarter at BNB Bangkok
+# LensWave at BNB Bangkok
 
-**Astarter turns AI research into trade plans you can test before committing capital.**
+LensWave turns market research into trading decisions you can inspect and rehearse before committing capital. Astarter’s AI Trading OS brings market data, strategy review, and execution simulation into one workspace.
 
-LensWave, Astarter’s AI Trading OS, connects market research, strategy design, risk review, and simulation. At BNB Bangkok, we’re applying that workflow to a BNB Chain swap. The prototype will check a live PancakeSwap quote against a market reference and show whether the trade is ready for review, needs a fresh quote, or falls outside the allowed price range.
+[Download v0.1.0](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) · [BNB Bangkok challenge](https://www.hackquest.io/zh-cn/hackathons/BNB-Bangkok)
 
-## From quote to approval
+## What the build includes
 
-Enter a trade size for BNB/USDT. The preflight will compare the amount-specific PancakeSwap quote with the reference on the same price basis. The review screen will show the expected output, the data sources and timestamps, and the rule behind the result.
+- **Market data.** CoinMarketCap adapters normalize market, category, and sentiment data into the Market Hub. The Atlas adapter maps symbols to feed IDs and reads configured Pull quotes with their source timestamps.
+- **Research and strategy.** LensWave organizes market evidence, strategy parameters, and risk review. The optional Living Brain adapter supports research memory.
+- **Execution rehearsal.** The backend contains preflight checks, historical and simulated execution, and order and fill evidence for replay.
 
-| Condition | What the trader sees |
+The BNB Bangkok project explores how an agent can use market references to review BNB Chain trades. The source includes the market adapters and simulation workflow. The original BNB Chain swap preflight is a project direction and can be explored separately from the included local demo.
+
+## Source layout
+
+| Directory | Contents |
 | --- | --- |
-| Fresh data and a price within the allowed range | The proposal is ready for user review. |
-| An expired quote or an unavailable reference | The proposal pauses and asks for fresh data. |
-| A price difference beyond the allowed limit | The proposal pauses and shows the difference. |
+| [Frontend](src/astarter-frontend) | LensWave browser UI, local server, and provider adapters |
+| [Backend](src/astarter-backend) | Trading engine, simulation, API contracts, and distribution sources |
 
-## What we’re building in Bangkok
+## Run locally
 
-**Existing product.** LensWave supports strategy review and simulated trading. Astarter is developing AI Wealth for portfolio allocation and monitoring on the same research and risk foundation.
+Use Node.js 24 with npm. The server binds to localhost.
 
-**Verified on BNB Chain.** A read-only call to the PancakeSwap V2 router returns an amount-specific WBNB/USDT quote on BNB Smart Chain mainnet.
-
-**Planned hackathon work.** Connect a live CoinMarketCap or Atlas reference price, apply quote freshness and price-deviation rules, and surface each decision in the trade review flow. This build targets the Developer Track and the CoinMarketCap × Atlas Challenge. [See the BNB Bangkok brief](https://www.hackquest.io/zh-cn/hackathons/BNB-Bangkok).
-
-<details>
-<summary>Reproduce the live PancakeSwap quote</summary>
-
-Run this read-only command with Foundry to quote 1 WBNB into USDT.
-
-```bash
-cast call 0x10ED43C718714eb63d5aA57B78B54704E256024E \
-  'getAmountsOut(uint256,address[])(uint256[])' \
-  1000000000000000000 \
-  '[0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c,0x55d398326f99059fF775485246999027B3197955]' \
-  --rpc-url https://bsc-dataseed.bnbchain.org
+```sh
+cd src/astarter-frontend
+npm ci
+npm start
 ```
 
-The second returned value is the expected USDT output in base units at the time of the query.
+Open [LensWave on localhost](http://127.0.0.1:4188/). Inspect the Atlas feed catalog without credentials.
 
-</details>
+```sh
+curl -fsS 'http://127.0.0.1:4188/api/atlas/feeds?symbol=NVDAB'
+```
+
+Set `COINMARKETCAP_API_KEY` and `ATLAS_API_KEY` as server-side environment variables to enable those providers. See the [backend setup guide](src/astarter-backend/README.en.md) for Python 3.12, dependency locks, and the simulation engine.
+
+## Verify the release
+
+Run the adapter, research-memory, and simulated-checkout checks from the frontend directory.
+
+```sh
+node --import ./test-locale.mjs --test atlas-feed-master.test.mjs market-source-adapters.test.mjs living-brain.test.mjs commerce.test.mjs
+```
+
+The release includes a versioned source ZIP and a SHA-256 checksum. To verify a downloaded copy, put both files in the same directory and run `shasum -a 256 -c SHA256SUMS.txt`.

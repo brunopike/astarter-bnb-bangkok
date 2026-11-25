@@ -1,0 +1,11 @@
+{
+  "schema": "T3_FIXTURE_MANIFEST_V1",
+  "purpose": "OFFLINE_FIXTURE",
+  "source": "synthetic-only-no-provider-prices",
+  "files": [
+    {
+      "name": "scenarios.v1.json",
+      "sha256": "ec267f55a964c66926c4d9d8472db5bb7e07c7ca4eebaad62d2b96d374f3c129"
+    }
+  ]
+}

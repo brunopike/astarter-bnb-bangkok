@@ -1,0 +1,3693 @@
+{
+  "contract": "r3-private-draft-v1",
+  "evidenceGrade": "SYNTHETIC_WIRE_ONLY",
+  "bindingsAddedServerSide": {
+    "leaseId": "lease",
+    "targetId": "target",
+    "audience": "astarter-research"
+  },
+  "previewEmpty": {
+    "sourceRequestId": "research-01",
+    "draftId": "draft-01",
+    "fields": {
+      "name": "BTC research draft",
+      "strategy": "S01",
+      "planVariant": "S01-SIM",
+      "market": "BTC/USDT",
+      "environment": "DEMO",
+      "mode": "auto",
+      "amount": null,
+      "cap": null,
+      "researchBudget": null,
+      "botParameters": null,
+      "protection": null,
+      "executionRoute": null
+    }
+  },
+  "previewGrid": {
+    "sourceRequestId": "research-01",
+    "draftId": "draft-01",
+    "fields": {
+      "name": "BTC research draft",
+      "strategy": "S01",
+      "planVariant": "S01-SIM",
+      "market": "BTC/USDT",
+      "environment": "DEMO",
+      "mode": "auto",
+      "amount": 20,
+      "cap": 300,
+      "researchBudget": 0,
+      "botParameters": {
+        "lower": 60000,
+        "upper": 70000,
+        "count": 4,
+        "spacing": "arithmetic",
+        "triggerPrice": null,
+        "takeProfitPrice": null,
+        "stopLossPrice": null
+      },
+      "protection": {
+        "id": "original",
+        "version": "strategy-original"
+      },
+      "executionRoute": {
+        "profileId": "cex-spot",
+        "venueId": "binance",
+        "accountId": "SIM-01",
+        "connectionId": "sim-connection",
+        "chainId": ""
+      }
+    }
+  },
+  "previewBasket": {
+    "sourceRequestId": "research-01",
+    "draftId": "draft-01",
+    "fields": {
+      "name": "BTC research draft",
+      "strategy": "S02",
+      "planVariant": "S02-SIM",
+      "market": "BTC/USDT",
+      "environment": "DEMO",
+      "mode": "auto",
+      "amount": 20,
+      "cap": 300,
+      "researchBudget": 0,
+      "botParameters": {
+        "deviationPct": 2,
+        "sizeMultiplier": 1.5,
+        "maxEntries": 3,
+        "takeProfitPct": 2,
+        "stopLossPct": 8,
+        "triggerPrice": null
+      },
+      "protection": {
+        "id": "original",
+        "version": "strategy-original"
+      },
+      "executionRoute": {
+        "profileId": "cex-spot",
+        "venueId": "binance",
+        "accountId": "SIM-01",
+        "connectionId": "sim-connection",
+        "chainId": ""
+      }
+    }
+  },
+  "source": {
+    "kind": "private-research-request",
+    "sourceRequestId": "research-01",
+    "requestFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "reportRevision": "8c8a516f8f0965bf7d0a5bc0ec41c6d9f1dae2505841a6f639649271e69a8c1a",
+    "evidenceRevision": "0197e321bcdf98ee23b55aceb23f4831f932aa8710e39a1e33bf198218bb3b35",
+    "symbol": "BTC",
+    "evidenceId": "market-c5f3fac6e76d2d493f1e9811a5b7c23e",
+    "methodVersion": "closed-market-research-v1",
+    "createdAt": 1794790799000,
+    "validUntil": 1794873600000,
+    "sourceClock": {
+      "unit": "seconds",
+      "sampleAt": 1794700800,
+      "closedAt": 1794787200,
+      "validUntil": 1794873600
+    }
+  },
+  "schemas": {
+    "DraftPreview": {
+      "$defs": {
+        "BasketParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "deviationPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deviationpct"
+            },
+            "sizeMultiplier": {
+              "anyOf": [
+                {
+                  "maximum": 10,
+                  "minimum": 1,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sizemultiplier"
+            },
+            "maxEntries": {
+              "anyOf": [
+                {
+                  "maximum": 3,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxentries"
+            },
+            "takeProfitPct": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitpct"
+            },
+            "stopLossPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplosspct"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            }
+          },
+          "required": [
+            "deviationPct",
+            "sizeMultiplier",
+            "maxEntries",
+            "takeProfitPct",
+            "stopLossPct",
+            "triggerPrice"
+          ],
+          "title": "BasketParameters",
+          "type": "object"
+        },
+        "DemoRoute": {
+          "additionalProperties": false,
+          "properties": {
+            "profileId": {
+              "const": "cex-spot",
+              "title": "Profileid",
+              "type": "string"
+            },
+            "venueId": {
+              "const": "binance",
+              "title": "Venueid",
+              "type": "string"
+            },
+            "accountId": {
+              "const": "SIM-01",
+              "title": "Accountid",
+              "type": "string"
+            },
+            "connectionId": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_:.-]{0,79}$",
+              "title": "Connectionid",
+              "type": "string"
+            },
+            "chainId": {
+              "const": "",
+              "title": "Chainid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "profileId",
+            "venueId",
+            "accountId",
+            "connectionId",
+            "chainId"
+          ],
+          "title": "DemoRoute",
+          "type": "object"
+        },
+        "DraftFields": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "strategy": {
+              "enum": [
+                "S01",
+                "S02"
+              ],
+              "title": "Strategy",
+              "type": "string"
+            },
+            "planVariant": {
+              "enum": [
+                "S01-SIM",
+                "S02-SIM"
+              ],
+              "title": "Planvariant",
+              "type": "string"
+            },
+            "market": {
+              "enum": [
+                "BTC/USDT",
+                "ETH/USDT",
+                "SOL/USDT"
+              ],
+              "title": "Market",
+              "type": "string"
+            },
+            "environment": {
+              "const": "DEMO",
+              "title": "Environment",
+              "type": "string"
+            },
+            "mode": {
+              "const": "auto",
+              "title": "Mode",
+              "type": "string"
+            },
+            "amount": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount"
+            },
+            "cap": {
+              "anyOf": [
+                {
+                  "maximum": 3000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cap"
+            },
+            "researchBudget": {
+              "anyOf": [
+                {
+                  "maximum": 10000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Researchbudget"
+            },
+            "botParameters": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GridParameters"
+                },
+                {
+                  "$ref": "#/$defs/BasketParameters"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Botparameters"
+            },
+            "protection": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/OriginalProtection"
+                },
+                {
+                  "$ref": "#/$defs/LegacyProtection"
+                },
+                {
+                  "$ref": "#/$defs/ParameterProtection"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Protection"
+            },
+            "executionRoute": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DemoRoute"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "strategy",
+            "planVariant",
+            "market",
+            "environment",
+            "mode",
+            "amount",
+            "cap",
+            "researchBudget",
+            "botParameters",
+            "protection",
+            "executionRoute"
+          ],
+          "title": "DraftFields",
+          "type": "object"
+        },
+        "GridParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "lower": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lower"
+            },
+            "upper": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Upper"
+            },
+            "count": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 2,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Count"
+            },
+            "spacing": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "arithmetic",
+                    "geometric"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Spacing"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            },
+            "takeProfitPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitprice"
+            },
+            "stopLossPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplossprice"
+            }
+          },
+          "required": [
+            "lower",
+            "upper",
+            "count",
+            "spacing",
+            "triggerPrice",
+            "takeProfitPrice",
+            "stopLossPrice"
+          ],
+          "title": "GridParameters",
+          "type": "object"
+        },
+        "LegacyProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-2",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode"
+          ],
+          "title": "LegacyProtection",
+          "type": "object"
+        },
+        "OriginalProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "original",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "strategy-original",
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version"
+          ],
+          "title": "OriginalProtection",
+          "type": "object"
+        },
+        "ParameterProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-3",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            },
+            "parameters": {
+              "$ref": "#/$defs/ProtectionParameters"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode",
+            "parameters"
+          ],
+          "title": "ParameterProtection",
+          "type": "object"
+        },
+        "ProtectionParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "episode": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.0025,
+              "title": "Episode",
+              "type": "number"
+            },
+            "notional": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.1,
+              "title": "Notional",
+              "type": "number"
+            },
+            "daily": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.02,
+              "title": "Daily",
+              "type": "number"
+            },
+            "epoch": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.05,
+              "title": "Epoch",
+              "type": "number"
+            },
+            "soft": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.03,
+              "title": "Soft",
+              "type": "number"
+            },
+            "hard": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.08,
+              "title": "Hard",
+              "type": "number"
+            }
+          },
+          "required": [
+            "episode",
+            "notional",
+            "daily",
+            "epoch",
+            "soft",
+            "hard"
+          ],
+          "title": "ProtectionParameters",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "leaseId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "title": "Leaseid",
+          "type": "string"
+        },
+        "targetId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "title": "Targetid",
+          "type": "string"
+        },
+        "audience": {
+          "const": "astarter-research",
+          "title": "Audience",
+          "type": "string"
+        },
+        "draftId": {
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9:_-]{1,96}$",
+          "title": "Draftid",
+          "type": "string"
+        },
+        "sourceRequestId": {
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9:_-]{8,96}$",
+          "title": "Sourcerequestid",
+          "type": "string"
+        },
+        "fields": {
+          "$ref": "#/$defs/DraftFields"
+        }
+      },
+      "required": [
+        "leaseId",
+        "targetId",
+        "audience",
+        "draftId",
+        "sourceRequestId",
+        "fields"
+      ],
+      "title": "DraftPreview",
+      "type": "object"
+    },
+    "DraftAdopt": {
+      "$defs": {
+        "BasketParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "deviationPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deviationpct"
+            },
+            "sizeMultiplier": {
+              "anyOf": [
+                {
+                  "maximum": 10,
+                  "minimum": 1,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sizemultiplier"
+            },
+            "maxEntries": {
+              "anyOf": [
+                {
+                  "maximum": 3,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxentries"
+            },
+            "takeProfitPct": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitpct"
+            },
+            "stopLossPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplosspct"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            }
+          },
+          "required": [
+            "deviationPct",
+            "sizeMultiplier",
+            "maxEntries",
+            "takeProfitPct",
+            "stopLossPct",
+            "triggerPrice"
+          ],
+          "title": "BasketParameters",
+          "type": "object"
+        },
+        "DemoRoute": {
+          "additionalProperties": false,
+          "properties": {
+            "profileId": {
+              "const": "cex-spot",
+              "title": "Profileid",
+              "type": "string"
+            },
+            "venueId": {
+              "const": "binance",
+              "title": "Venueid",
+              "type": "string"
+            },
+            "accountId": {
+              "const": "SIM-01",
+              "title": "Accountid",
+              "type": "string"
+            },
+            "connectionId": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_:.-]{0,79}$",
+              "title": "Connectionid",
+              "type": "string"
+            },
+            "chainId": {
+              "const": "",
+              "title": "Chainid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "profileId",
+            "venueId",
+            "accountId",
+            "connectionId",
+            "chainId"
+          ],
+          "title": "DemoRoute",
+          "type": "object"
+        },
+        "DraftFields": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "strategy": {
+              "enum": [
+                "S01",
+                "S02"
+              ],
+              "title": "Strategy",
+              "type": "string"
+            },
+            "planVariant": {
+              "enum": [
+                "S01-SIM",
+                "S02-SIM"
+              ],
+              "title": "Planvariant",
+              "type": "string"
+            },
+            "market": {
+              "enum": [
+                "BTC/USDT",
+                "ETH/USDT",
+                "SOL/USDT"
+              ],
+              "title": "Market",
+              "type": "string"
+            },
+            "environment": {
+              "const": "DEMO",
+              "title": "Environment",
+              "type": "string"
+            },
+            "mode": {
+              "const": "auto",
+              "title": "Mode",
+              "type": "string"
+            },
+            "amount": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount"
+            },
+            "cap": {
+              "anyOf": [
+                {
+                  "maximum": 3000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cap"
+            },
+            "researchBudget": {
+              "anyOf": [
+                {
+                  "maximum": 10000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Researchbudget"
+            },
+            "botParameters": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GridParameters"
+                },
+                {
+                  "$ref": "#/$defs/BasketParameters"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Botparameters"
+            },
+            "protection": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/OriginalProtection"
+                },
+                {
+                  "$ref": "#/$defs/LegacyProtection"
+                },
+                {
+                  "$ref": "#/$defs/ParameterProtection"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Protection"
+            },
+            "executionRoute": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DemoRoute"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "strategy",
+            "planVariant",
+            "market",
+            "environment",
+            "mode",
+            "amount",
+            "cap",
+            "researchBudget",
+            "botParameters",
+            "protection",
+            "executionRoute"
+          ],
+          "title": "DraftFields",
+          "type": "object"
+        },
+        "GridParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "lower": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lower"
+            },
+            "upper": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Upper"
+            },
+            "count": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 2,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Count"
+            },
+            "spacing": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "arithmetic",
+                    "geometric"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Spacing"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            },
+            "takeProfitPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitprice"
+            },
+            "stopLossPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplossprice"
+            }
+          },
+          "required": [
+            "lower",
+            "upper",
+            "count",
+            "spacing",
+            "triggerPrice",
+            "takeProfitPrice",
+            "stopLossPrice"
+          ],
+          "title": "GridParameters",
+          "type": "object"
+        },
+        "LegacyProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-2",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode"
+          ],
+          "title": "LegacyProtection",
+          "type": "object"
+        },
+        "OriginalProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "original",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "strategy-original",
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version"
+          ],
+          "title": "OriginalProtection",
+          "type": "object"
+        },
+        "ParameterProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-3",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            },
+            "parameters": {
+              "$ref": "#/$defs/ProtectionParameters"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode",
+            "parameters"
+          ],
+          "title": "ParameterProtection",
+          "type": "object"
+        },
+        "ProtectionParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "episode": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.0025,
+              "title": "Episode",
+              "type": "number"
+            },
+            "notional": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.1,
+              "title": "Notional",
+              "type": "number"
+            },
+            "daily": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.02,
+              "title": "Daily",
+              "type": "number"
+            },
+            "epoch": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.05,
+              "title": "Epoch",
+              "type": "number"
+            },
+            "soft": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.03,
+              "title": "Soft",
+              "type": "number"
+            },
+            "hard": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.08,
+              "title": "Hard",
+              "type": "number"
+            }
+          },
+          "required": [
+            "episode",
+            "notional",
+            "daily",
+            "epoch",
+            "soft",
+            "hard"
+          ],
+          "title": "ProtectionParameters",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "leaseId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "title": "Leaseid",
+          "type": "string"
+        },
+        "targetId": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "title": "Targetid",
+          "type": "string"
+        },
+        "audience": {
+          "const": "astarter-research",
+          "title": "Audience",
+          "type": "string"
+        },
+        "draftId": {
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9:_-]{1,96}$",
+          "title": "Draftid",
+          "type": "string"
+        },
+        "sourceRequestId": {
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9:_-]{8,96}$",
+          "title": "Sourcerequestid",
+          "type": "string"
+        },
+        "fields": {
+          "$ref": "#/$defs/DraftFields"
+        },
+        "requestId": {
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9:_-]{8,96}$",
+          "title": "Requestid",
+          "type": "string"
+        },
+        "expectedRevision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Expectedrevision",
+          "type": "integer"
+        },
+        "workspaceRevision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Workspacerevision",
+          "type": "integer"
+        },
+        "proposalRevision": {
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Proposalrevision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "leaseId",
+        "targetId",
+        "audience",
+        "draftId",
+        "sourceRequestId",
+        "fields",
+        "requestId",
+        "expectedRevision",
+        "workspaceRevision",
+        "proposalRevision"
+      ],
+      "title": "DraftAdopt",
+      "type": "object"
+    },
+    "DraftDocument": {
+      "$defs": {
+        "BasketParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "deviationPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deviationpct"
+            },
+            "sizeMultiplier": {
+              "anyOf": [
+                {
+                  "maximum": 10,
+                  "minimum": 1,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sizemultiplier"
+            },
+            "maxEntries": {
+              "anyOf": [
+                {
+                  "maximum": 3,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxentries"
+            },
+            "takeProfitPct": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitpct"
+            },
+            "stopLossPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplosspct"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            }
+          },
+          "required": [
+            "deviationPct",
+            "sizeMultiplier",
+            "maxEntries",
+            "takeProfitPct",
+            "stopLossPct",
+            "triggerPrice"
+          ],
+          "title": "BasketParameters",
+          "type": "object"
+        },
+        "DemoRoute": {
+          "additionalProperties": false,
+          "properties": {
+            "profileId": {
+              "const": "cex-spot",
+              "title": "Profileid",
+              "type": "string"
+            },
+            "venueId": {
+              "const": "binance",
+              "title": "Venueid",
+              "type": "string"
+            },
+            "accountId": {
+              "const": "SIM-01",
+              "title": "Accountid",
+              "type": "string"
+            },
+            "connectionId": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_:.-]{0,79}$",
+              "title": "Connectionid",
+              "type": "string"
+            },
+            "chainId": {
+              "const": "",
+              "title": "Chainid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "profileId",
+            "venueId",
+            "accountId",
+            "connectionId",
+            "chainId"
+          ],
+          "title": "DemoRoute",
+          "type": "object"
+        },
+        "DraftContent": {
+          "additionalProperties": false,
+          "properties": {
+            "catalogVersion": {
+              "const": "private-paper-draft-v1",
+              "title": "Catalogversion",
+              "type": "string"
+            },
+            "templateVersion": {
+              "enum": [
+                "S01-SIM@paper-v1",
+                "S02-SIM@paper-v1"
+              ],
+              "title": "Templateversion",
+              "type": "string"
+            },
+            "parameterOrigin": {
+              "const": "user-confirmed",
+              "title": "Parameterorigin",
+              "type": "string"
+            },
+            "source": {
+              "$ref": "#/$defs/ReportSource"
+            },
+            "fields": {
+              "$ref": "#/$defs/DraftFields"
+            },
+            "missingFields": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 24,
+              "title": "Missingfields",
+              "type": "array"
+            },
+            "executionAuthority": {
+              "const": "NONE",
+              "title": "Executionauthority",
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalogVersion",
+            "templateVersion",
+            "parameterOrigin",
+            "source",
+            "fields",
+            "missingFields",
+            "executionAuthority"
+          ],
+          "title": "DraftContent",
+          "type": "object"
+        },
+        "DraftFields": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "strategy": {
+              "enum": [
+                "S01",
+                "S02"
+              ],
+              "title": "Strategy",
+              "type": "string"
+            },
+            "planVariant": {
+              "enum": [
+                "S01-SIM",
+                "S02-SIM"
+              ],
+              "title": "Planvariant",
+              "type": "string"
+            },
+            "market": {
+              "enum": [
+                "BTC/USDT",
+                "ETH/USDT",
+                "SOL/USDT"
+              ],
+              "title": "Market",
+              "type": "string"
+            },
+            "environment": {
+              "const": "DEMO",
+              "title": "Environment",
+              "type": "string"
+            },
+            "mode": {
+              "const": "auto",
+              "title": "Mode",
+              "type": "string"
+            },
+            "amount": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount"
+            },
+            "cap": {
+              "anyOf": [
+                {
+                  "maximum": 3000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cap"
+            },
+            "researchBudget": {
+              "anyOf": [
+                {
+                  "maximum": 10000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Researchbudget"
+            },
+            "botParameters": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GridParameters"
+                },
+                {
+                  "$ref": "#/$defs/BasketParameters"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Botparameters"
+            },
+            "protection": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/OriginalProtection"
+                },
+                {
+                  "$ref": "#/$defs/LegacyProtection"
+                },
+                {
+                  "$ref": "#/$defs/ParameterProtection"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Protection"
+            },
+            "executionRoute": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DemoRoute"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "strategy",
+            "planVariant",
+            "market",
+            "environment",
+            "mode",
+            "amount",
+            "cap",
+            "researchBudget",
+            "botParameters",
+            "protection",
+            "executionRoute"
+          ],
+          "title": "DraftFields",
+          "type": "object"
+        },
+        "GridParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "lower": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lower"
+            },
+            "upper": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Upper"
+            },
+            "count": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 2,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Count"
+            },
+            "spacing": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "arithmetic",
+                    "geometric"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Spacing"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            },
+            "takeProfitPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitprice"
+            },
+            "stopLossPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplossprice"
+            }
+          },
+          "required": [
+            "lower",
+            "upper",
+            "count",
+            "spacing",
+            "triggerPrice",
+            "takeProfitPrice",
+            "stopLossPrice"
+          ],
+          "title": "GridParameters",
+          "type": "object"
+        },
+        "LegacyProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-2",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode"
+          ],
+          "title": "LegacyProtection",
+          "type": "object"
+        },
+        "OriginalProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "original",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "strategy-original",
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version"
+          ],
+          "title": "OriginalProtection",
+          "type": "object"
+        },
+        "ParameterProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-3",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            },
+            "parameters": {
+              "$ref": "#/$defs/ProtectionParameters"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode",
+            "parameters"
+          ],
+          "title": "ParameterProtection",
+          "type": "object"
+        },
+        "ProtectionParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "episode": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.0025,
+              "title": "Episode",
+              "type": "number"
+            },
+            "notional": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.1,
+              "title": "Notional",
+              "type": "number"
+            },
+            "daily": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.02,
+              "title": "Daily",
+              "type": "number"
+            },
+            "epoch": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.05,
+              "title": "Epoch",
+              "type": "number"
+            },
+            "soft": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.03,
+              "title": "Soft",
+              "type": "number"
+            },
+            "hard": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.08,
+              "title": "Hard",
+              "type": "number"
+            }
+          },
+          "required": [
+            "episode",
+            "notional",
+            "daily",
+            "epoch",
+            "soft",
+            "hard"
+          ],
+          "title": "ProtectionParameters",
+          "type": "object"
+        },
+        "ReportSource": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "private-research-request",
+              "title": "Kind",
+              "type": "string"
+            },
+            "sourceRequestId": {
+              "maxLength": 96,
+              "pattern": "^[A-Za-z0-9:_-]{8,96}$",
+              "title": "Sourcerequestid",
+              "type": "string"
+            },
+            "requestFingerprint": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Requestfingerprint",
+              "type": "string"
+            },
+            "reportRevision": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Reportrevision",
+              "type": "string"
+            },
+            "evidenceRevision": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Evidencerevision",
+              "type": "string"
+            },
+            "symbol": {
+              "enum": [
+                "BTC",
+                "ETH",
+                "SOL"
+              ],
+              "title": "Symbol",
+              "type": "string"
+            },
+            "evidenceId": {
+              "pattern": "^market-[a-f0-9]{32}$",
+              "title": "Evidenceid",
+              "type": "string"
+            },
+            "methodVersion": {
+              "const": "closed-market-research-v1",
+              "title": "Methodversion",
+              "type": "string"
+            },
+            "createdAt": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Createdat",
+              "type": "integer"
+            },
+            "validUntil": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Validuntil",
+              "type": "integer"
+            },
+            "sourceClock": {
+              "$ref": "#/$defs/SourceClock"
+            }
+          },
+          "required": [
+            "kind",
+            "sourceRequestId",
+            "requestFingerprint",
+            "reportRevision",
+            "evidenceRevision",
+            "symbol",
+            "evidenceId",
+            "methodVersion",
+            "createdAt",
+            "validUntil",
+            "sourceClock"
+          ],
+          "title": "ReportSource",
+          "type": "object"
+        },
+        "SourceClock": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "const": "seconds",
+              "title": "Unit",
+              "type": "string"
+            },
+            "sampleAt": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Sampleat",
+              "type": "integer"
+            },
+            "closedAt": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Closedat",
+              "type": "integer"
+            },
+            "validUntil": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Validuntil",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "unit",
+            "sampleAt",
+            "closedAt",
+            "validUntil"
+          ],
+          "title": "SourceClock",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "private-strategy-draft-v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "scope": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "title": "Scope",
+          "type": "string"
+        },
+        "draftId": {
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9:_-]{1,96}$",
+          "title": "Draftid",
+          "type": "string"
+        },
+        "revision": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "savedAt": {
+          "maximum": 253402300799999,
+          "minimum": 0,
+          "title": "Savedat",
+          "type": "integer"
+        },
+        "content": {
+          "$ref": "#/$defs/DraftContent"
+        }
+      },
+      "required": [
+        "schema",
+        "scope",
+        "draftId",
+        "revision",
+        "savedAt",
+        "content"
+      ],
+      "title": "DraftDocument",
+      "type": "object"
+    },
+    "DraftPreviewResult": {
+      "$defs": {
+        "BasketParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "deviationPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deviationpct"
+            },
+            "sizeMultiplier": {
+              "anyOf": [
+                {
+                  "maximum": 10,
+                  "minimum": 1,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sizemultiplier"
+            },
+            "maxEntries": {
+              "anyOf": [
+                {
+                  "maximum": 3,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxentries"
+            },
+            "takeProfitPct": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitpct"
+            },
+            "stopLossPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplosspct"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            }
+          },
+          "required": [
+            "deviationPct",
+            "sizeMultiplier",
+            "maxEntries",
+            "takeProfitPct",
+            "stopLossPct",
+            "triggerPrice"
+          ],
+          "title": "BasketParameters",
+          "type": "object"
+        },
+        "DemoRoute": {
+          "additionalProperties": false,
+          "properties": {
+            "profileId": {
+              "const": "cex-spot",
+              "title": "Profileid",
+              "type": "string"
+            },
+            "venueId": {
+              "const": "binance",
+              "title": "Venueid",
+              "type": "string"
+            },
+            "accountId": {
+              "const": "SIM-01",
+              "title": "Accountid",
+              "type": "string"
+            },
+            "connectionId": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_:.-]{0,79}$",
+              "title": "Connectionid",
+              "type": "string"
+            },
+            "chainId": {
+              "const": "",
+              "title": "Chainid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "profileId",
+            "venueId",
+            "accountId",
+            "connectionId",
+            "chainId"
+          ],
+          "title": "DemoRoute",
+          "type": "object"
+        },
+        "DraftContent": {
+          "additionalProperties": false,
+          "properties": {
+            "catalogVersion": {
+              "const": "private-paper-draft-v1",
+              "title": "Catalogversion",
+              "type": "string"
+            },
+            "templateVersion": {
+              "enum": [
+                "S01-SIM@paper-v1",
+                "S02-SIM@paper-v1"
+              ],
+              "title": "Templateversion",
+              "type": "string"
+            },
+            "parameterOrigin": {
+              "const": "user-confirmed",
+              "title": "Parameterorigin",
+              "type": "string"
+            },
+            "source": {
+              "$ref": "#/$defs/ReportSource"
+            },
+            "fields": {
+              "$ref": "#/$defs/DraftFields"
+            },
+            "missingFields": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 24,
+              "title": "Missingfields",
+              "type": "array"
+            },
+            "executionAuthority": {
+              "const": "NONE",
+              "title": "Executionauthority",
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalogVersion",
+            "templateVersion",
+            "parameterOrigin",
+            "source",
+            "fields",
+            "missingFields",
+            "executionAuthority"
+          ],
+          "title": "DraftContent",
+          "type": "object"
+        },
+        "DraftDocument": {
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "private-strategy-draft-v1",
+              "title": "Schema",
+              "type": "string"
+            },
+            "scope": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+              "title": "Scope",
+              "type": "string"
+            },
+            "draftId": {
+              "maxLength": 96,
+              "pattern": "^[A-Za-z0-9:_-]{1,96}$",
+              "title": "Draftid",
+              "type": "string"
+            },
+            "revision": {
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "savedAt": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Savedat",
+              "type": "integer"
+            },
+            "content": {
+              "$ref": "#/$defs/DraftContent"
+            }
+          },
+          "required": [
+            "schema",
+            "scope",
+            "draftId",
+            "revision",
+            "savedAt",
+            "content"
+          ],
+          "title": "DraftDocument",
+          "type": "object"
+        },
+        "DraftFields": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "strategy": {
+              "enum": [
+                "S01",
+                "S02"
+              ],
+              "title": "Strategy",
+              "type": "string"
+            },
+            "planVariant": {
+              "enum": [
+                "S01-SIM",
+                "S02-SIM"
+              ],
+              "title": "Planvariant",
+              "type": "string"
+            },
+            "market": {
+              "enum": [
+                "BTC/USDT",
+                "ETH/USDT",
+                "SOL/USDT"
+              ],
+              "title": "Market",
+              "type": "string"
+            },
+            "environment": {
+              "const": "DEMO",
+              "title": "Environment",
+              "type": "string"
+            },
+            "mode": {
+              "const": "auto",
+              "title": "Mode",
+              "type": "string"
+            },
+            "amount": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount"
+            },
+            "cap": {
+              "anyOf": [
+                {
+                  "maximum": 3000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cap"
+            },
+            "researchBudget": {
+              "anyOf": [
+                {
+                  "maximum": 10000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Researchbudget"
+            },
+            "botParameters": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GridParameters"
+                },
+                {
+                  "$ref": "#/$defs/BasketParameters"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Botparameters"
+            },
+            "protection": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/OriginalProtection"
+                },
+                {
+                  "$ref": "#/$defs/LegacyProtection"
+                },
+                {
+                  "$ref": "#/$defs/ParameterProtection"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Protection"
+            },
+            "executionRoute": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DemoRoute"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "strategy",
+            "planVariant",
+            "market",
+            "environment",
+            "mode",
+            "amount",
+            "cap",
+            "researchBudget",
+            "botParameters",
+            "protection",
+            "executionRoute"
+          ],
+          "title": "DraftFields",
+          "type": "object"
+        },
+        "GridParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "lower": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lower"
+            },
+            "upper": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Upper"
+            },
+            "count": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 2,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Count"
+            },
+            "spacing": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "arithmetic",
+                    "geometric"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Spacing"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            },
+            "takeProfitPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitprice"
+            },
+            "stopLossPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplossprice"
+            }
+          },
+          "required": [
+            "lower",
+            "upper",
+            "count",
+            "spacing",
+            "triggerPrice",
+            "takeProfitPrice",
+            "stopLossPrice"
+          ],
+          "title": "GridParameters",
+          "type": "object"
+        },
+        "LegacyProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-2",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode"
+          ],
+          "title": "LegacyProtection",
+          "type": "object"
+        },
+        "OriginalProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "original",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "strategy-original",
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version"
+          ],
+          "title": "OriginalProtection",
+          "type": "object"
+        },
+        "ParameterProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-3",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            },
+            "parameters": {
+              "$ref": "#/$defs/ProtectionParameters"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode",
+            "parameters"
+          ],
+          "title": "ParameterProtection",
+          "type": "object"
+        },
+        "ProtectionParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "episode": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.0025,
+              "title": "Episode",
+              "type": "number"
+            },
+            "notional": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.1,
+              "title": "Notional",
+              "type": "number"
+            },
+            "daily": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.02,
+              "title": "Daily",
+              "type": "number"
+            },
+            "epoch": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.05,
+              "title": "Epoch",
+              "type": "number"
+            },
+            "soft": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.03,
+              "title": "Soft",
+              "type": "number"
+            },
+            "hard": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.08,
+              "title": "Hard",
+              "type": "number"
+            }
+          },
+          "required": [
+            "episode",
+            "notional",
+            "daily",
+            "epoch",
+            "soft",
+            "hard"
+          ],
+          "title": "ProtectionParameters",
+          "type": "object"
+        },
+        "ReportSource": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "private-research-request",
+              "title": "Kind",
+              "type": "string"
+            },
+            "sourceRequestId": {
+              "maxLength": 96,
+              "pattern": "^[A-Za-z0-9:_-]{8,96}$",
+              "title": "Sourcerequestid",
+              "type": "string"
+            },
+            "requestFingerprint": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Requestfingerprint",
+              "type": "string"
+            },
+            "reportRevision": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Reportrevision",
+              "type": "string"
+            },
+            "evidenceRevision": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Evidencerevision",
+              "type": "string"
+            },
+            "symbol": {
+              "enum": [
+                "BTC",
+                "ETH",
+                "SOL"
+              ],
+              "title": "Symbol",
+              "type": "string"
+            },
+            "evidenceId": {
+              "pattern": "^market-[a-f0-9]{32}$",
+              "title": "Evidenceid",
+              "type": "string"
+            },
+            "methodVersion": {
+              "const": "closed-market-research-v1",
+              "title": "Methodversion",
+              "type": "string"
+            },
+            "createdAt": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Createdat",
+              "type": "integer"
+            },
+            "validUntil": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Validuntil",
+              "type": "integer"
+            },
+            "sourceClock": {
+              "$ref": "#/$defs/SourceClock"
+            }
+          },
+          "required": [
+            "kind",
+            "sourceRequestId",
+            "requestFingerprint",
+            "reportRevision",
+            "evidenceRevision",
+            "symbol",
+            "evidenceId",
+            "methodVersion",
+            "createdAt",
+            "validUntil",
+            "sourceClock"
+          ],
+          "title": "ReportSource",
+          "type": "object"
+        },
+        "SourceClock": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "const": "seconds",
+              "title": "Unit",
+              "type": "string"
+            },
+            "sampleAt": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Sampleat",
+              "type": "integer"
+            },
+            "closedAt": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Closedat",
+              "type": "integer"
+            },
+            "validUntil": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Validuntil",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "unit",
+            "sampleAt",
+            "closedAt",
+            "validUntil"
+          ],
+          "title": "SourceClock",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "private-draft-preview-v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "scope": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "title": "Scope",
+          "type": "string"
+        },
+        "draftId": {
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9:_-]{1,96}$",
+          "title": "Draftid",
+          "type": "string"
+        },
+        "expectedRevision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Expectedrevision",
+          "type": "integer"
+        },
+        "workspaceRevision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Workspacerevision",
+          "type": "integer"
+        },
+        "proposalRevision": {
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Proposalrevision",
+          "type": "string"
+        },
+        "listed": {
+          "title": "Listed",
+          "type": "boolean"
+        },
+        "current": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DraftDocument"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposal": {
+          "$ref": "#/$defs/DraftContent"
+        },
+        "changedFields": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 13,
+          "title": "Changedfields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema",
+        "scope",
+        "draftId",
+        "expectedRevision",
+        "workspaceRevision",
+        "proposalRevision",
+        "listed",
+        "current",
+        "proposal",
+        "changedFields"
+      ],
+      "title": "DraftPreviewResult",
+      "type": "object"
+    },
+    "DraftCommandResult": {
+      "$defs": {
+        "BasketParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "deviationPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Deviationpct"
+            },
+            "sizeMultiplier": {
+              "anyOf": [
+                {
+                  "maximum": 10,
+                  "minimum": 1,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sizemultiplier"
+            },
+            "maxEntries": {
+              "anyOf": [
+                {
+                  "maximum": 3,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxentries"
+            },
+            "takeProfitPct": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitpct"
+            },
+            "stopLossPct": {
+              "anyOf": [
+                {
+                  "exclusiveMaximum": 100,
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplosspct"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            }
+          },
+          "required": [
+            "deviationPct",
+            "sizeMultiplier",
+            "maxEntries",
+            "takeProfitPct",
+            "stopLossPct",
+            "triggerPrice"
+          ],
+          "title": "BasketParameters",
+          "type": "object"
+        },
+        "DemoRoute": {
+          "additionalProperties": false,
+          "properties": {
+            "profileId": {
+              "const": "cex-spot",
+              "title": "Profileid",
+              "type": "string"
+            },
+            "venueId": {
+              "const": "binance",
+              "title": "Venueid",
+              "type": "string"
+            },
+            "accountId": {
+              "const": "SIM-01",
+              "title": "Accountid",
+              "type": "string"
+            },
+            "connectionId": {
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9_][A-Za-z0-9_:.-]{0,79}$",
+              "title": "Connectionid",
+              "type": "string"
+            },
+            "chainId": {
+              "const": "",
+              "title": "Chainid",
+              "type": "string"
+            }
+          },
+          "required": [
+            "profileId",
+            "venueId",
+            "accountId",
+            "connectionId",
+            "chainId"
+          ],
+          "title": "DemoRoute",
+          "type": "object"
+        },
+        "DraftContent": {
+          "additionalProperties": false,
+          "properties": {
+            "catalogVersion": {
+              "const": "private-paper-draft-v1",
+              "title": "Catalogversion",
+              "type": "string"
+            },
+            "templateVersion": {
+              "enum": [
+                "S01-SIM@paper-v1",
+                "S02-SIM@paper-v1"
+              ],
+              "title": "Templateversion",
+              "type": "string"
+            },
+            "parameterOrigin": {
+              "const": "user-confirmed",
+              "title": "Parameterorigin",
+              "type": "string"
+            },
+            "source": {
+              "$ref": "#/$defs/ReportSource"
+            },
+            "fields": {
+              "$ref": "#/$defs/DraftFields"
+            },
+            "missingFields": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 24,
+              "title": "Missingfields",
+              "type": "array"
+            },
+            "executionAuthority": {
+              "const": "NONE",
+              "title": "Executionauthority",
+              "type": "string"
+            }
+          },
+          "required": [
+            "catalogVersion",
+            "templateVersion",
+            "parameterOrigin",
+            "source",
+            "fields",
+            "missingFields",
+            "executionAuthority"
+          ],
+          "title": "DraftContent",
+          "type": "object"
+        },
+        "DraftDocument": {
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "private-strategy-draft-v1",
+              "title": "Schema",
+              "type": "string"
+            },
+            "scope": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+              "title": "Scope",
+              "type": "string"
+            },
+            "draftId": {
+              "maxLength": 96,
+              "pattern": "^[A-Za-z0-9:_-]{1,96}$",
+              "title": "Draftid",
+              "type": "string"
+            },
+            "revision": {
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "savedAt": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Savedat",
+              "type": "integer"
+            },
+            "content": {
+              "$ref": "#/$defs/DraftContent"
+            }
+          },
+          "required": [
+            "schema",
+            "scope",
+            "draftId",
+            "revision",
+            "savedAt",
+            "content"
+          ],
+          "title": "DraftDocument",
+          "type": "object"
+        },
+        "DraftFields": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "strategy": {
+              "enum": [
+                "S01",
+                "S02"
+              ],
+              "title": "Strategy",
+              "type": "string"
+            },
+            "planVariant": {
+              "enum": [
+                "S01-SIM",
+                "S02-SIM"
+              ],
+              "title": "Planvariant",
+              "type": "string"
+            },
+            "market": {
+              "enum": [
+                "BTC/USDT",
+                "ETH/USDT",
+                "SOL/USDT"
+              ],
+              "title": "Market",
+              "type": "string"
+            },
+            "environment": {
+              "const": "DEMO",
+              "title": "Environment",
+              "type": "string"
+            },
+            "mode": {
+              "const": "auto",
+              "title": "Mode",
+              "type": "string"
+            },
+            "amount": {
+              "anyOf": [
+                {
+                  "maximum": 1000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Amount"
+            },
+            "cap": {
+              "anyOf": [
+                {
+                  "maximum": 3000,
+                  "minimum": 10,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cap"
+            },
+            "researchBudget": {
+              "anyOf": [
+                {
+                  "maximum": 10000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Researchbudget"
+            },
+            "botParameters": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GridParameters"
+                },
+                {
+                  "$ref": "#/$defs/BasketParameters"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Botparameters"
+            },
+            "protection": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/OriginalProtection"
+                },
+                {
+                  "$ref": "#/$defs/LegacyProtection"
+                },
+                {
+                  "$ref": "#/$defs/ParameterProtection"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Protection"
+            },
+            "executionRoute": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DemoRoute"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "strategy",
+            "planVariant",
+            "market",
+            "environment",
+            "mode",
+            "amount",
+            "cap",
+            "researchBudget",
+            "botParameters",
+            "protection",
+            "executionRoute"
+          ],
+          "title": "DraftFields",
+          "type": "object"
+        },
+        "DraftReceipt": {
+          "additionalProperties": false,
+          "properties": {
+            "requestId": {
+              "maxLength": 96,
+              "pattern": "^[A-Za-z0-9:_-]{8,96}$",
+              "title": "Requestid",
+              "type": "string"
+            },
+            "draftId": {
+              "maxLength": 96,
+              "pattern": "^[A-Za-z0-9:_-]{1,96}$",
+              "title": "Draftid",
+              "type": "string"
+            },
+            "status": {
+              "const": "applied",
+              "title": "Status",
+              "type": "string"
+            },
+            "expectedRevision": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "title": "Expectedrevision",
+              "type": "integer"
+            },
+            "revision": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "title": "Revision",
+              "type": "integer"
+            },
+            "workspaceBaseRevision": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "title": "Workspacebaserevision",
+              "type": "integer"
+            },
+            "workspaceRevision": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "title": "Workspacerevision",
+              "type": "integer"
+            },
+            "appliedAt": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Appliedat",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "requestId",
+            "draftId",
+            "status",
+            "expectedRevision",
+            "revision",
+            "workspaceBaseRevision",
+            "workspaceRevision",
+            "appliedAt"
+          ],
+          "title": "DraftReceipt",
+          "type": "object"
+        },
+        "GridParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "lower": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lower"
+            },
+            "upper": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Upper"
+            },
+            "count": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 2,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Count"
+            },
+            "spacing": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "arithmetic",
+                    "geometric"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Spacing"
+            },
+            "triggerPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Triggerprice"
+            },
+            "takeProfitPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Takeprofitprice"
+            },
+            "stopLossPrice": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000000000.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stoplossprice"
+            }
+          },
+          "required": [
+            "lower",
+            "upper",
+            "count",
+            "spacing",
+            "triggerPrice",
+            "takeProfitPrice",
+            "stopLossPrice"
+          ],
+          "title": "GridParameters",
+          "type": "object"
+        },
+        "LegacyProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-2",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode"
+          ],
+          "title": "LegacyProtection",
+          "type": "object"
+        },
+        "OriginalProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "original",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "strategy-original",
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version"
+          ],
+          "title": "OriginalProtection",
+          "type": "object"
+        },
+        "ParameterProtection": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "const": "astarter",
+              "title": "Id",
+              "type": "string"
+            },
+            "version": {
+              "const": "astarter-research-v0.1/sim-3",
+              "title": "Version",
+              "type": "string"
+            },
+            "mode": {
+              "enum": [
+                "normal",
+                "conservative"
+              ],
+              "title": "Mode",
+              "type": "string"
+            },
+            "parameters": {
+              "$ref": "#/$defs/ProtectionParameters"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "mode",
+            "parameters"
+          ],
+          "title": "ParameterProtection",
+          "type": "object"
+        },
+        "ProtectionParameters": {
+          "additionalProperties": false,
+          "properties": {
+            "episode": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.0025,
+              "title": "Episode",
+              "type": "number"
+            },
+            "notional": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.1,
+              "title": "Notional",
+              "type": "number"
+            },
+            "daily": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.02,
+              "title": "Daily",
+              "type": "number"
+            },
+            "epoch": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.05,
+              "title": "Epoch",
+              "type": "number"
+            },
+            "soft": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.03,
+              "title": "Soft",
+              "type": "number"
+            },
+            "hard": {
+              "exclusiveMinimum": 0,
+              "maximum": 0.08,
+              "title": "Hard",
+              "type": "number"
+            }
+          },
+          "required": [
+            "episode",
+            "notional",
+            "daily",
+            "epoch",
+            "soft",
+            "hard"
+          ],
+          "title": "ProtectionParameters",
+          "type": "object"
+        },
+        "ReportSource": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "private-research-request",
+              "title": "Kind",
+              "type": "string"
+            },
+            "sourceRequestId": {
+              "maxLength": 96,
+              "pattern": "^[A-Za-z0-9:_-]{8,96}$",
+              "title": "Sourcerequestid",
+              "type": "string"
+            },
+            "requestFingerprint": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Requestfingerprint",
+              "type": "string"
+            },
+            "reportRevision": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Reportrevision",
+              "type": "string"
+            },
+            "evidenceRevision": {
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Evidencerevision",
+              "type": "string"
+            },
+            "symbol": {
+              "enum": [
+                "BTC",
+                "ETH",
+                "SOL"
+              ],
+              "title": "Symbol",
+              "type": "string"
+            },
+            "evidenceId": {
+              "pattern": "^market-[a-f0-9]{32}$",
+              "title": "Evidenceid",
+              "type": "string"
+            },
+            "methodVersion": {
+              "const": "closed-market-research-v1",
+              "title": "Methodversion",
+              "type": "string"
+            },
+            "createdAt": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Createdat",
+              "type": "integer"
+            },
+            "validUntil": {
+              "maximum": 253402300799999,
+              "minimum": 0,
+              "title": "Validuntil",
+              "type": "integer"
+            },
+            "sourceClock": {
+              "$ref": "#/$defs/SourceClock"
+            }
+          },
+          "required": [
+            "kind",
+            "sourceRequestId",
+            "requestFingerprint",
+            "reportRevision",
+            "evidenceRevision",
+            "symbol",
+            "evidenceId",
+            "methodVersion",
+            "createdAt",
+            "validUntil",
+            "sourceClock"
+          ],
+          "title": "ReportSource",
+          "type": "object"
+        },
+        "SourceClock": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "const": "seconds",
+              "title": "Unit",
+              "type": "string"
+            },
+            "sampleAt": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Sampleat",
+              "type": "integer"
+            },
+            "closedAt": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Closedat",
+              "type": "integer"
+            },
+            "validUntil": {
+              "maximum": 253402300799,
+              "minimum": 0,
+              "title": "Validuntil",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "unit",
+            "sampleAt",
+            "closedAt",
+            "validUntil"
+          ],
+          "title": "SourceClock",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "private-draft-command-v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "scope": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "title": "Scope",
+          "type": "string"
+        },
+        "request": {
+          "$ref": "#/$defs/DraftReceipt"
+        },
+        "draft": {
+          "$ref": "#/$defs/DraftDocument"
+        }
+      },
+      "required": [
+        "schema",
+        "scope",
+        "request",
+        "draft"
+      ],
+      "title": "DraftCommandResult",
+      "type": "object"
+    }
+  },
+  "changedFieldsOrder": [
+    "source",
+    "fields.name",
+    "fields.strategy",
+    "fields.planVariant",
+    "fields.market",
+    "fields.environment",
+    "fields.mode",
+    "fields.amount",
+    "fields.cap",
+    "fields.researchBudget",
+    "fields.botParameters",
+    "fields.protection",
+    "fields.executionRoute"
+  ]
+}

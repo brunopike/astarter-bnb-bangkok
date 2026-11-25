@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Astarter · 账户与安全</title><link rel="icon" href="/brand/account-mark-dark.svg" type="image/svg+xml"><link rel="icon" href="/brand/account-mark-light.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="/typography.css"><link rel="stylesheet" href="/bento-system.css"><link rel="stylesheet" href="/account-security.css">
+<style>
+*{box-sizing:border-box}body{margin:0;color:var(--b-ink);font:15px/1.6 var(--sans)}.access-header{display:flex;align-items:center;gap:24px;min-height:72px;padding:12px 32px;border-bottom:1px solid var(--b-line)}.access-header a{color:var(--b-ink);text-decoration:none;display:inline-flex;align-items:center;gap:10px;min-height:44px}.access-logo{font-size:20px;font-weight:600;letter-spacing:-.5px}.access-logo .as-brand-mark{width:39px;height:22px}.access-links{display:flex;gap:24px;font-size:14px}.access-tools{display:flex;gap:8px;margin-left:auto}.access-tools button,.access-tools select{min-height:40px;border:1px solid var(--b-line-strong);border-radius:8px;background:var(--b-panel);color:var(--b-ink);padding:8px 12px;font:14px var(--sans)}#security-root{max-width:1264px;margin:auto;padding:32px}.access-header :focus-visible{outline:2px solid var(--b-violet);outline-offset:3px}@media(max-width:760px){.access-header{padding:12px 16px;gap:16px}.access-links{display:none}#security-root{padding:20px 16px}.access-logo{font-size:18px}.access-tools{gap:6px}.access-tools button,.access-tools select{min-height:44px;font-size:14px;padding-inline:10px}}@media(max-width:380px){.access-logo>.access-wordmark{display:none}.access-header{gap:8px}}
+</style>
+</head>
+<body>
+<header class="access-header"><a href="?page=login" class="access-logo" aria-label="Astarter"><span class="as-brand-mark" aria-hidden="true"><img class="as-mark-on-dark" src="/brand/account-mark-light.svg" width="39" height="22" alt=""><img class="as-mark-on-light" src="/brand/account-mark-dark.svg" width="39" height="22" alt=""></span><span class="access-wordmark">Astarter</span></a><nav class="access-links" aria-label="账户"><a href="?page=login" data-label="login">登录 / 注册</a><a href="?page=security" data-label="security">安全中心</a></nav><div class="access-tools"><select aria-label="语言 / Language" id="access-locale"><option value="zh">中文</option><option value="en">English</option></select><button type="button" id="access-theme">浅色</button></div></header>
+<main id="security-root"></main>
+<script type="module" src="/account-access.mjs"></script>
+</body></html>

@@ -1,0 +1,486 @@
+{
+  "notice": "Synthetic contract examples only. Not live market observations or connectivity evidence.",
+  "market_fresh": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-request-001",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": 1793268000000,
+      "requested_at_ms": 1793268001000,
+      "quality": "fresh",
+      "coverage": {
+        "requested_subjects": [
+          "bitcoin",
+          "ethereum",
+          "solana"
+        ],
+        "returned_subjects": [
+          "bitcoin",
+          "ethereum",
+          "solana"
+        ],
+        "gaps": [],
+        "scope": "BINANCE_SPOT_24H_STATISTICS"
+      },
+      "missing_capabilities": [],
+      "sources": [
+        {
+          "provider_id": "binance-spot-ticker-v1",
+          "status": "OK",
+          "last_success_at_ms": 1793268000000,
+          "reason_code": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [
+        {
+          "record_id": "fixture:market:bitcoin",
+          "subject_id": "bitcoin",
+          "provider_id": "binance-spot-ticker-v1",
+          "venue_or_chain": "BINANCE:SPOT",
+          "event_time_ms": 1793267998000,
+          "received_at_ms": 1793267999000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268030000,
+          "source_revision": "synthetic-v1",
+          "quality": "fresh",
+          "data": {
+            "instrument": {
+              "venue": "BINANCE",
+              "market_kind": "SPOT",
+              "symbol": "BTCUSDT",
+              "base_asset": "BTC",
+              "quote_asset": "USDT"
+            },
+            "metric_kind": "SPOT_24H_STATISTICS",
+            "last_price": "60000",
+            "base_volume": "10",
+            "quote_volume": "100000",
+            "window_open_at_ms": 1793181600000,
+            "window_close_at_ms": 1793267998000,
+            "price_change_pct": null
+          }
+        },
+        {
+          "record_id": "fixture:market:ethereum",
+          "subject_id": "ethereum",
+          "provider_id": "binance-spot-ticker-v1",
+          "venue_or_chain": "BINANCE:SPOT",
+          "event_time_ms": 1793267998000,
+          "received_at_ms": 1793267999000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268030000,
+          "source_revision": "synthetic-v1",
+          "quality": "fresh",
+          "data": {
+            "instrument": {
+              "venue": "BINANCE",
+              "market_kind": "SPOT",
+              "symbol": "ETHUSDT",
+              "base_asset": "ETH",
+              "quote_asset": "USDT"
+            },
+            "metric_kind": "SPOT_24H_STATISTICS",
+            "last_price": "3000",
+            "base_volume": "10",
+            "quote_volume": "100000",
+            "window_open_at_ms": 1793181600000,
+            "window_close_at_ms": 1793267998000,
+            "price_change_pct": null
+          }
+        },
+        {
+          "record_id": "fixture:market:solana",
+          "subject_id": "solana",
+          "provider_id": "binance-spot-ticker-v1",
+          "venue_or_chain": "BINANCE:SPOT",
+          "event_time_ms": 1793267998000,
+          "received_at_ms": 1793267999000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268030000,
+          "source_revision": "synthetic-v1",
+          "quality": "fresh",
+          "data": {
+            "instrument": {
+              "venue": "BINANCE",
+              "market_kind": "SPOT",
+              "symbol": "SOLUSDT",
+              "base_asset": "SOL",
+              "quote_asset": "USDT"
+            },
+            "metric_kind": "SPOT_24H_STATISTICS",
+            "last_price": "150",
+            "base_volume": "10",
+            "quote_volume": "100000",
+            "window_open_at_ms": 1793181600000,
+            "window_close_at_ms": 1793267998000,
+            "price_change_pct": null
+          }
+        }
+      ],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "market_partial": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-request-001",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": 1793268000000,
+      "requested_at_ms": 1793268001000,
+      "quality": "partial",
+      "coverage": {
+        "requested_subjects": [
+          "bitcoin",
+          "ethereum",
+          "solana"
+        ],
+        "returned_subjects": [
+          "bitcoin",
+          "ethereum"
+        ],
+        "gaps": [
+          "solana"
+        ],
+        "scope": "BINANCE_SPOT_24H_STATISTICS"
+      },
+      "missing_capabilities": [
+        "market.statistics:solana"
+      ],
+      "sources": [
+        {
+          "provider_id": "binance-spot-ticker-v1",
+          "status": "OK",
+          "last_success_at_ms": 1793268000000,
+          "reason_code": null,
+          "retry_after_seconds": null
+        },
+        {
+          "provider_id": "binance-solana-statistics",
+          "status": "TIMEOUT",
+          "last_success_at_ms": null,
+          "reason_code": "UPSTREAM_TIMEOUT",
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [
+        {
+          "record_id": "fixture:market:bitcoin",
+          "subject_id": "bitcoin",
+          "provider_id": "binance-spot-ticker-v1",
+          "venue_or_chain": "BINANCE:SPOT",
+          "event_time_ms": 1793267998000,
+          "received_at_ms": 1793267999000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268030000,
+          "source_revision": "synthetic-v1",
+          "quality": "fresh",
+          "data": {
+            "instrument": {
+              "venue": "BINANCE",
+              "market_kind": "SPOT",
+              "symbol": "BTCUSDT",
+              "base_asset": "BTC",
+              "quote_asset": "USDT"
+            },
+            "metric_kind": "SPOT_24H_STATISTICS",
+            "last_price": "60000",
+            "base_volume": "10",
+            "quote_volume": "100000",
+            "window_open_at_ms": 1793181600000,
+            "window_close_at_ms": 1793267998000,
+            "price_change_pct": null
+          }
+        },
+        {
+          "record_id": "fixture:market:ethereum",
+          "subject_id": "ethereum",
+          "provider_id": "binance-spot-ticker-v1",
+          "venue_or_chain": "BINANCE:SPOT",
+          "event_time_ms": 1793267998000,
+          "received_at_ms": 1793267999000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268030000,
+          "source_revision": "synthetic-v1",
+          "quality": "fresh",
+          "data": {
+            "instrument": {
+              "venue": "BINANCE",
+              "market_kind": "SPOT",
+              "symbol": "ETHUSDT",
+              "base_asset": "ETH",
+              "quote_asset": "USDT"
+            },
+            "metric_kind": "SPOT_24H_STATISTICS",
+            "last_price": "3000",
+            "base_volume": "10",
+            "quote_volume": "100000",
+            "window_open_at_ms": 1793181600000,
+            "window_close_at_ms": 1793267998000,
+            "price_change_pct": null
+          }
+        }
+      ],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "market_stale": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-request-001",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": 1793268000000,
+      "requested_at_ms": 1793268120000,
+      "quality": "stale",
+      "coverage": {
+        "requested_subjects": [
+          "bitcoin",
+          "ethereum",
+          "solana"
+        ],
+        "returned_subjects": [
+          "bitcoin",
+          "ethereum",
+          "solana"
+        ],
+        "gaps": [],
+        "scope": "BINANCE_SPOT_24H_STATISTICS"
+      },
+      "missing_capabilities": [],
+      "sources": [
+        {
+          "provider_id": "binance-spot-ticker-v1",
+          "status": "STALE",
+          "last_success_at_ms": 1793268000000,
+          "reason_code": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [
+        {
+          "record_id": "fixture:market:bitcoin",
+          "subject_id": "bitcoin",
+          "provider_id": "binance-spot-ticker-v1",
+          "venue_or_chain": "BINANCE:SPOT",
+          "event_time_ms": 1793267998000,
+          "received_at_ms": 1793267999000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268030000,
+          "source_revision": "synthetic-v1",
+          "quality": "stale",
+          "data": {
+            "instrument": {
+              "venue": "BINANCE",
+              "market_kind": "SPOT",
+              "symbol": "BTCUSDT",
+              "base_asset": "BTC",
+              "quote_asset": "USDT"
+            },
+            "metric_kind": "SPOT_24H_STATISTICS",
+            "last_price": "60000",
+            "base_volume": "10",
+            "quote_volume": "100000",
+            "window_open_at_ms": 1793181600000,
+            "window_close_at_ms": 1793267998000,
+            "price_change_pct": null
+          }
+        },
+        {
+          "record_id": "fixture:market:ethereum",
+          "subject_id": "ethereum",
+          "provider_id": "binance-spot-ticker-v1",
+          "venue_or_chain": "BINANCE:SPOT",
+          "event_time_ms": 1793267998000,
+          "received_at_ms": 1793267999000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268030000,
+          "source_revision": "synthetic-v1",
+          "quality": "stale",
+          "data": {
+            "instrument": {
+              "venue": "BINANCE",
+              "market_kind": "SPOT",
+              "symbol": "ETHUSDT",
+              "base_asset": "ETH",
+              "quote_asset": "USDT"
+            },
+            "metric_kind": "SPOT_24H_STATISTICS",
+            "last_price": "3000",
+            "base_volume": "10",
+            "quote_volume": "100000",
+            "window_open_at_ms": 1793181600000,
+            "window_close_at_ms": 1793267998000,
+            "price_change_pct": null
+          }
+        },
+        {
+          "record_id": "fixture:market:solana",
+          "subject_id": "solana",
+          "provider_id": "binance-spot-ticker-v1",
+          "venue_or_chain": "BINANCE:SPOT",
+          "event_time_ms": 1793267998000,
+          "received_at_ms": 1793267999000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268030000,
+          "source_revision": "synthetic-v1",
+          "quality": "stale",
+          "data": {
+            "instrument": {
+              "venue": "BINANCE",
+              "market_kind": "SPOT",
+              "symbol": "SOLUSDT",
+              "base_asset": "SOL",
+              "quote_asset": "USDT"
+            },
+            "metric_kind": "SPOT_24H_STATISTICS",
+            "last_price": "150",
+            "base_volume": "10",
+            "quote_volume": "100000",
+            "window_open_at_ms": 1793181600000,
+            "window_close_at_ms": 1793267998000,
+            "price_change_pct": null
+          }
+        }
+      ],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "market_unavailable": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-request-001",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": null,
+      "requested_at_ms": 1793268001000,
+      "quality": "unavailable",
+      "coverage": {
+        "requested_subjects": [
+          "bitcoin",
+          "ethereum",
+          "solana"
+        ],
+        "returned_subjects": [],
+        "gaps": [
+          "bitcoin",
+          "ethereum",
+          "solana"
+        ],
+        "scope": "BINANCE_SPOT_24H_STATISTICS"
+      },
+      "missing_capabilities": [
+        "market.statistics:bitcoin",
+        "market.statistics:ethereum",
+        "market.statistics:solana"
+      ],
+      "sources": [
+        {
+          "provider_id": "binance-spot-ticker-v1",
+          "status": "RATE_LIMITED",
+          "last_success_at_ms": null,
+          "reason_code": "UPSTREAM_RATE_LIMITED",
+          "retry_after_seconds": 60
+        }
+      ],
+      "items": [],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "proxy_error": {
+    "http_status": 503,
+    "body": {
+      "schema_version": "AstarterPublicDataError.v1",
+      "request_id": "fixture-request-002",
+      "selection_version": 7,
+      "code": "DATA_SERVICE_UNAVAILABLE",
+      "message": "Data service is unavailable.",
+      "retryable": true
+    }
+  },
+  "asset_item": {
+    "record_id": "fixture:asset:bitcoin",
+    "subject_id": "bitcoin",
+    "provider_id": "coingecko-assets-v1",
+    "venue_or_chain": null,
+    "event_time_ms": null,
+    "received_at_ms": 1793267999000,
+    "available_at_ms": 1793268000000,
+    "valid_until_ms": 1793268300000,
+    "source_revision": "synthetic-v1",
+    "quality": "fresh",
+    "data": {
+      "asset_id": "bitcoin",
+      "name": "Bitcoin",
+      "symbol": "BTC",
+      "quote_currency": "USD",
+      "market_cap": null,
+      "total_volume": null,
+      "contracts": []
+    }
+  },
+  "news_item": {
+    "record_id": "fixture:news:1",
+    "subject_id": "news:1",
+    "provider_id": "blockbeats-news-v1",
+    "venue_or_chain": null,
+    "event_time_ms": 1793267990000,
+    "received_at_ms": 1793267999000,
+    "available_at_ms": 1793268000000,
+    "valid_until_ms": 1793268060000,
+    "source_revision": "synthetic-v1",
+    "quality": "fresh",
+    "data": {
+      "news_id": "fixture:1",
+      "title": "合成新闻标题",
+      "summary": "仅供合同测试。",
+      "url": "https://www.theblockbeats.info/",
+      "published_at_ms": 1793267990000,
+      "asset_ids": []
+    }
+  },
+  "explorer_capability_items": [
+    {
+      "chain_id": "56",
+      "capability_id": "proxy.block_number",
+      "verification_state": "VERIFIED",
+      "status": "UNAUTHORIZED",
+      "verified_at_ms": 1793268000000,
+      "reason_code": "ENTITLEMENT_REQUIRED"
+    },
+    {
+      "chain_id": "56",
+      "capability_id": "contract.abi",
+      "verification_state": "VERIFIED",
+      "status": "OK",
+      "verified_at_ms": 1793268000000,
+      "reason_code": null
+    },
+    {
+      "chain_id": "10",
+      "capability_id": "contract.abi",
+      "verification_state": "UNTESTED",
+      "status": "UNCONFIGURED",
+      "verified_at_ms": null,
+      "reason_code": "CAPABILITY_UNTESTED"
+    }
+  ]
+}

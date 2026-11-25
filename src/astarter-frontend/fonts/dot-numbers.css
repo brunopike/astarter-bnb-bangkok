@@ -1,0 +1,40 @@
+/* Dot Tiles (Louis Studios, MIT): original digit cells, native selectable text. */
+@font-face{
+ font-family:'LensWave Dot Digits';
+ src:url('/fonts/lenswave-digits-c51af0a60a7c.woff2') format('woff2');
+ font-style:normal;font-weight:100 900;font-display:swap;
+ unicode-range:U+0025,U+002B-003A,U+2013-2014,U+2212;
+}
+
+/* Headline values only. Keep each surface's size, color, precision and updates. */
+@layer brand-numerals{
+body :is(
+ .dot-number,.pw-lane-stats dd>span,
+ .metric-row strong,.biz-overview strong,.biz-stats strong,.ux-metrics strong,.p-stats strong,
+ .pw-output-filter>b,.terminal-equity-readout strong,.terminal-market-readout strong,
+ .ops-account-equity dd,.insight-evidence-total strong,.terminal-account button:first-child b,
+ .pnl-primary>strong,
+ .related-price strong,.sig-detail-quote>strong,.sig-price-focus>strong:not(.sig-price-missing),.sig-state-counts strong,
+ .hub-donut-center strong,.hub-chart-value>strong,.hub-breadth-summary strong,
+ .hub-card-quote .hub-price,.hub-detail-price>strong,.hub-stat>strong,
+ .dc-stat>strong,.dc-ratio strong,.dc-gauge-value b,.dc-trader-pnl strong,
+ .dc-position-change>span:first-child,.dc-position-change strong,.bento-pulse-title strong,
+ .da-price>strong,.pd-quote>div:first-child>strong,.df-card-return>strong,.df-account-metrics>section>strong,
+ .p-big-price,.ux-market-summary strong,.market-map-tile>strong,.setup-account-tile>strong,
+ .tc-stat-strip strong,.tc-status-ring strong,.tc-balance-main>strong,.tc-allocation-ring strong,.tc-no-fees strong,
+ .fund-summary strong,.execution-distribution strong,.execution-summary strong,.op-overview strong,
+ .bot-management-summary strong,.bot-review-hero strong,.bh-overview-metrics strong,.bh-return strong,.bh-total>strong,
+ .sc-risk-visual strong,.sc-combo-amount b,.ux-risk-amounts b,.chat-analysis-metrics strong,
+ .membership-tier-price strong,.vault-number,.account-balance>strong,.budget-used strong,.cost-total strong,
+ .commerce-plan-price strong,.commerce-purchase-total strong,.commerce-topup-balance strong,
+ .commerce-usage-totals strong,.commerce-balance-total strong,.commerce-plan-line>strong,
+ .commerce-order-total>b,.commerce-price,.commerce-credit-available>strong,.commerce-context-total b,
+ .overview-number,.plan-credits strong,.stake-total strong,.reward-pair strong,
+ .billing-summary strong,.receipt-price,.confirm-amount,.tier-price,
+ .pack-option>strong,.topup-quantity>strong,.summary-total>strong
+){
+ font-family:'LensWave Dot Digits',var(--mono,monospace)!important;
+ font-variant-numeric:tabular-nums;
+ letter-spacing:0!important;
+}
+}

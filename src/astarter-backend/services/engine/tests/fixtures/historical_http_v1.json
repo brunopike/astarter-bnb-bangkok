@@ -1,0 +1,649 @@
+{
+  "fixture_source": "SYNTHETIC_QA_NATIVE_HTTP_CAPTURE",
+  "source_head": "d244ecaa1944878ed26f88e0d601b5dde2cc4534",
+  "configuration_input": {
+    "name": "SMA engineering baseline",
+    "strategy_ref": "sma-cross-long-flat@v1",
+    "purpose": "ENGINEERING_BASELINE",
+    "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+    "parameters": {
+      "fast_period": 2,
+      "slow_period": 3,
+      "order_quantity": "1"
+    },
+    "risk": {
+      "schema": "SmaLocalRisk.v1",
+      "max_order_notional": "1000",
+      "max_position_quantity": "2"
+    },
+    "execution_cost": {
+      "schema": "HistoricalExecutionCost.v1",
+      "profile": "HISTORICAL_BAR_CLOSE_CASH_V1",
+      "starting_cash": "1000",
+      "maker_fee": "0.0002",
+      "taker_fee": "0.001",
+      "fee_source": "synthetic explicit assumption",
+      "fill_model": "NATIVE_BASE_FILL",
+      "latency": "ZERO",
+      "execution_timing": "CLOSED_BAR_NATIVE",
+      "random_seed_support": "UNSUPPORTED"
+    }
+  },
+  "capabilities": {
+    "enabled": true,
+    "environment": "BACKTEST",
+    "contract_kind": "HISTORICAL_SMA_V2",
+    "live_available": false
+  },
+  "strategies": {
+    "items": [
+      {
+        "strategy_ref": "sma-cross-long-flat@v1",
+        "name": "SMA 多头/空仓工程基准",
+        "purpose": "ENGINEERING_BASELINE",
+        "environment": "BACKTEST",
+        "contract_kind": "HISTORICAL_SMA_V2",
+        "data_selection": "ENTIRE_PUBLISHED_CATALOG",
+        "availability": "HTTP_WORKFLOW_IMPLEMENTED",
+        "admission": "PREFLIGHT_REQUIRED",
+        "live_available": false
+      }
+    ]
+  },
+  "catalogs": {
+    "items": [
+      {
+        "dataset": {
+          "selection": "ENTIRE_PUBLISHED_CATALOG",
+          "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+          "source_id": "37ab61423f95e4627533ca5778be5859a0eae7ac006c09f8e5b2dde14361af2c",
+          "raw_sha256": "deb4102ccdda3203234dd30f4f465c9f0fbba477ec893c2fc77f5ca38618b17e",
+          "metadata_sha256": "fc33c4f8fe64c1a01b1944915367097847092e7e35da28059eba644286bd9627",
+          "catalog_checksum": "31a6f06e3495f6447b1f8a03940da365ae9df13fbb72d3439dfb3b02b014f44a",
+          "inventory_hash": "053928b7ad84621f61b603cf51a6f557353239ea90fd931165d8a477c8182a81",
+          "bar_values_sha256": "7a241fb5370fc1be86a69a2187dd6dccd6fdd860457e2c4f30cb204a2c0b911a",
+          "instrument_id": "HIST37AB61423F95E4627533.SIM",
+          "bar_type": "HIST37AB61423F95E4627533.SIM-1-MINUTE-LAST-EXTERNAL",
+          "timeframe_ns": "60000000000",
+          "record_count": 6,
+          "window": {
+            "first_open_ns": "1700000000000000000",
+            "first_close_ns": "1700000060000000000",
+            "last_open_ns": "1700000300000000000",
+            "last_close_ns": "1700000360000000000",
+            "first_available_ns": "1700000060000000000",
+            "last_available_ns": "1700000360000000000"
+          },
+          "base_currency": "ETH",
+          "quote_currency": "USDT",
+          "purpose": "SYNTHETIC_QA",
+          "availability_source": "ASSUMED_AT_CLOSE"
+        },
+        "source_label": "Synthetic publication bars",
+        "source_market": "SYNTHETIC",
+        "source_symbol": "ETHUSDT",
+        "price_precision": 2,
+        "size_precision": 3,
+        "price_increment": "0.01",
+        "size_increment": "0.001",
+        "minimum_quantity": "0.001",
+        "published_at_ns": "100",
+        "authority": "CONTROL_SQLITE",
+        "filesystem_verification": "NOT_CHECKED",
+        "current_eligibility": "NOT_RECHECKED"
+      }
+    ],
+    "next_cursor": null
+  },
+  "catalog": {
+    "dataset": {
+      "selection": "ENTIRE_PUBLISHED_CATALOG",
+      "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+      "source_id": "37ab61423f95e4627533ca5778be5859a0eae7ac006c09f8e5b2dde14361af2c",
+      "raw_sha256": "deb4102ccdda3203234dd30f4f465c9f0fbba477ec893c2fc77f5ca38618b17e",
+      "metadata_sha256": "fc33c4f8fe64c1a01b1944915367097847092e7e35da28059eba644286bd9627",
+      "catalog_checksum": "31a6f06e3495f6447b1f8a03940da365ae9df13fbb72d3439dfb3b02b014f44a",
+      "inventory_hash": "053928b7ad84621f61b603cf51a6f557353239ea90fd931165d8a477c8182a81",
+      "bar_values_sha256": "7a241fb5370fc1be86a69a2187dd6dccd6fdd860457e2c4f30cb204a2c0b911a",
+      "instrument_id": "HIST37AB61423F95E4627533.SIM",
+      "bar_type": "HIST37AB61423F95E4627533.SIM-1-MINUTE-LAST-EXTERNAL",
+      "timeframe_ns": "60000000000",
+      "record_count": 6,
+      "window": {
+        "first_open_ns": "1700000000000000000",
+        "first_close_ns": "1700000060000000000",
+        "last_open_ns": "1700000300000000000",
+        "last_close_ns": "1700000360000000000",
+        "first_available_ns": "1700000060000000000",
+        "last_available_ns": "1700000360000000000"
+      },
+      "base_currency": "ETH",
+      "quote_currency": "USDT",
+      "purpose": "SYNTHETIC_QA",
+      "availability_source": "ASSUMED_AT_CLOSE"
+    },
+    "source_label": "Synthetic publication bars",
+    "source_market": "SYNTHETIC",
+    "source_symbol": "ETHUSDT",
+    "price_precision": 2,
+    "size_precision": 3,
+    "price_increment": "0.01",
+    "size_increment": "0.001",
+    "minimum_quantity": "0.001",
+    "published_at_ns": "100",
+    "authority": "CONTROL_SQLITE",
+    "filesystem_verification": "NOT_CHECKED",
+    "current_eligibility": "NOT_RECHECKED"
+  },
+  "created_draft": {
+    "configuration": {
+      "name": "SMA engineering baseline",
+      "strategy_ref": "sma-cross-long-flat@v1",
+      "purpose": "ENGINEERING_BASELINE",
+      "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+      "parameters": {
+        "fast_period": 2,
+        "slow_period": 3,
+        "order_quantity": "1"
+      },
+      "risk": {
+        "schema": "SmaLocalRisk.v1",
+        "max_order_notional": "1000",
+        "max_position_quantity": "2"
+      },
+      "execution_cost": {
+        "schema": "HistoricalExecutionCost.v1",
+        "profile": "HISTORICAL_BAR_CLOSE_CASH_V1",
+        "starting_cash": "1000",
+        "maker_fee": "0.0002",
+        "taker_fee": "0.001",
+        "fee_source": "synthetic explicit assumption",
+        "fill_model": "NATIVE_BASE_FILL",
+        "latency": "ZERO",
+        "execution_timing": "CLOSED_BAR_NATIVE",
+        "random_seed_support": "UNSUPPORTED"
+      }
+    },
+    "draft_id": "sd_00000000000000000000000000000001",
+    "created_at_ns": "1700000000000000000",
+    "revision": 1,
+    "updated_at_ns": "1700000000000000000"
+  },
+  "draft": {
+    "configuration": {
+      "name": "Updated SMA fixture",
+      "strategy_ref": "sma-cross-long-flat@v1",
+      "purpose": "ENGINEERING_BASELINE",
+      "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+      "parameters": {
+        "fast_period": 2,
+        "slow_period": 3,
+        "order_quantity": "1"
+      },
+      "risk": {
+        "schema": "SmaLocalRisk.v1",
+        "max_order_notional": "1000",
+        "max_position_quantity": "2"
+      },
+      "execution_cost": {
+        "schema": "HistoricalExecutionCost.v1",
+        "profile": "HISTORICAL_BAR_CLOSE_CASH_V1",
+        "starting_cash": "1000",
+        "maker_fee": "0.0002",
+        "taker_fee": "0.001",
+        "fee_source": "synthetic explicit assumption",
+        "fill_model": "NATIVE_BASE_FILL",
+        "latency": "ZERO",
+        "execution_timing": "CLOSED_BAR_NATIVE",
+        "random_seed_support": "UNSUPPORTED"
+      }
+    },
+    "draft_id": "sd_00000000000000000000000000000001",
+    "created_at_ns": "1700000000000000000",
+    "revision": 2,
+    "updated_at_ns": "1700000000000000001"
+  },
+  "update_request": {
+    "name": "Updated SMA fixture",
+    "strategy_ref": "sma-cross-long-flat@v1",
+    "purpose": "ENGINEERING_BASELINE",
+    "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+    "parameters": {
+      "fast_period": 2,
+      "slow_period": 3,
+      "order_quantity": "1"
+    },
+    "risk": {
+      "schema": "SmaLocalRisk.v1",
+      "max_order_notional": "1000",
+      "max_position_quantity": "2"
+    },
+    "execution_cost": {
+      "schema": "HistoricalExecutionCost.v1",
+      "profile": "HISTORICAL_BAR_CLOSE_CASH_V1",
+      "starting_cash": "1000",
+      "maker_fee": "0.0002",
+      "taker_fee": "0.001",
+      "fee_source": "synthetic explicit assumption",
+      "fill_model": "NATIVE_BASE_FILL",
+      "latency": "ZERO",
+      "execution_timing": "CLOSED_BAR_NATIVE",
+      "random_seed_support": "UNSUPPORTED"
+    },
+    "expected_revision": 1
+  },
+  "configuration": {
+    "configuration": {
+      "name": "Updated SMA fixture",
+      "strategy_ref": "sma-cross-long-flat@v1",
+      "purpose": "ENGINEERING_BASELINE",
+      "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+      "parameters": {
+        "fast_period": 2,
+        "slow_period": 3,
+        "order_quantity": "1"
+      },
+      "risk": {
+        "schema": "SmaLocalRisk.v1",
+        "max_order_notional": "1000",
+        "max_position_quantity": "2"
+      },
+      "execution_cost": {
+        "schema": "HistoricalExecutionCost.v1",
+        "profile": "HISTORICAL_BAR_CLOSE_CASH_V1",
+        "starting_cash": "1000",
+        "maker_fee": "0.0002",
+        "taker_fee": "0.001",
+        "fee_source": "synthetic explicit assumption",
+        "fill_model": "NATIVE_BASE_FILL",
+        "latency": "ZERO",
+        "execution_timing": "CLOSED_BAR_NATIVE",
+        "random_seed_support": "UNSUPPORTED"
+      }
+    },
+    "draft_id": "sd_00000000000000000000000000000001",
+    "created_at_ns": "1700000000000000002",
+    "configuration_id": "cfg_00000000000000000000000000000001",
+    "version": 1,
+    "source_revision": 2,
+    "content_sha256": "6c9c614438dc154179ae79c11273cda605db2b6f635f85f210572290bd8f9ec8"
+  },
+  "preflight": {
+    "checked_at_ns": "1700000000000000003",
+    "configuration_content_sha256": "6c9c614438dc154179ae79c11273cda605db2b6f635f85f210572290bd8f9ec8",
+    "configuration_id": "cfg_00000000000000000000000000000001",
+    "configuration_version": 1,
+    "expires_at_ns": "1700000060000000003",
+    "input_manifest_sha256": "c649c8310ef25ec7346eb6f1ab998fd137afcb38d49f1e056141ff8e6c65ff83",
+    "preflight_id": "pfh_5756c20f17db40c0a377678cfa037e18",
+    "request_sha256": "984211850d61ea4f2ea605ba7d5ea8821ad9e4aa1029eb2e733226e1a0b35022",
+    "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+    "schema": "HistoricalPreflightReceipt.v2",
+    "state": "PREFLIGHT_READY",
+    "state_version": 1
+  },
+  "preflight_status": {
+    "receipt": {
+      "schema": "HistoricalPreflightReceipt.v2",
+      "preflight_id": "pfh_5756c20f17db40c0a377678cfa037e18",
+      "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+      "state": "PREFLIGHT_READY",
+      "state_version": 1,
+      "configuration_id": "cfg_00000000000000000000000000000001",
+      "configuration_version": 1,
+      "configuration_content_sha256": "6c9c614438dc154179ae79c11273cda605db2b6f635f85f210572290bd8f9ec8",
+      "input_manifest_sha256": "c649c8310ef25ec7346eb6f1ab998fd137afcb38d49f1e056141ff8e6c65ff83",
+      "request_sha256": "984211850d61ea4f2ea605ba7d5ea8821ad9e4aa1029eb2e733226e1a0b35022",
+      "checked_at_ns": "1700000000000000003",
+      "expires_at_ns": "1700000060000000003"
+    },
+    "consumed_at_ns": null,
+    "observed_at_ns": "1700000000000000006",
+    "time_status": "IN_WINDOW",
+    "current_eligibility": "NOT_RECHECKED"
+  },
+  "start": {
+    "input_manifest_hash": "c649c8310ef25ec7346eb6f1ab998fd137afcb38d49f1e056141ff8e6c65ff83",
+    "last_visible_seq": 2,
+    "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+    "state": "QUEUED",
+    "state_version": 2
+  },
+  "drafts": {
+    "items": [
+      {
+        "configuration": {
+          "name": "Updated SMA fixture",
+          "strategy_ref": "sma-cross-long-flat@v1",
+          "purpose": "ENGINEERING_BASELINE",
+          "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+          "parameters": {
+            "fast_period": 2,
+            "slow_period": 3,
+            "order_quantity": "1"
+          },
+          "risk": {
+            "schema": "SmaLocalRisk.v1",
+            "max_order_notional": "1000",
+            "max_position_quantity": "2"
+          },
+          "execution_cost": {
+            "schema": "HistoricalExecutionCost.v1",
+            "profile": "HISTORICAL_BAR_CLOSE_CASH_V1",
+            "starting_cash": "1000",
+            "maker_fee": "0.0002",
+            "taker_fee": "0.001",
+            "fee_source": "synthetic explicit assumption",
+            "fill_model": "NATIVE_BASE_FILL",
+            "latency": "ZERO",
+            "execution_timing": "CLOSED_BAR_NATIVE",
+            "random_seed_support": "UNSUPPORTED"
+          }
+        },
+        "draft_id": "sd_00000000000000000000000000000001",
+        "created_at_ns": "1700000000000000000",
+        "revision": 2,
+        "updated_at_ns": "1700000000000000001"
+      }
+    ],
+    "next_cursor": null
+  },
+  "configurations": {
+    "items": [
+      {
+        "configuration": {
+          "name": "Updated SMA fixture",
+          "strategy_ref": "sma-cross-long-flat@v1",
+          "purpose": "ENGINEERING_BASELINE",
+          "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+          "parameters": {
+            "fast_period": 2,
+            "slow_period": 3,
+            "order_quantity": "1"
+          },
+          "risk": {
+            "schema": "SmaLocalRisk.v1",
+            "max_order_notional": "1000",
+            "max_position_quantity": "2"
+          },
+          "execution_cost": {
+            "schema": "HistoricalExecutionCost.v1",
+            "profile": "HISTORICAL_BAR_CLOSE_CASH_V1",
+            "starting_cash": "1000",
+            "maker_fee": "0.0002",
+            "taker_fee": "0.001",
+            "fee_source": "synthetic explicit assumption",
+            "fill_model": "NATIVE_BASE_FILL",
+            "latency": "ZERO",
+            "execution_timing": "CLOSED_BAR_NATIVE",
+            "random_seed_support": "UNSUPPORTED"
+          }
+        },
+        "draft_id": "sd_00000000000000000000000000000001",
+        "created_at_ns": "1700000000000000002",
+        "configuration_id": "cfg_00000000000000000000000000000001",
+        "version": 1,
+        "source_revision": 2,
+        "content_sha256": "6c9c614438dc154179ae79c11273cda605db2b6f635f85f210572290bd8f9ec8"
+      }
+    ],
+    "next_cursor": null
+  },
+  "run": {
+    "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+    "environment": "BACKTEST",
+    "contract_kind": "HISTORICAL_SMA_V2",
+    "state": "COMPLETED",
+    "state_version": 5,
+    "last_visible_seq": 5,
+    "created_at_ns": "1700000000000000004",
+    "observed_at_ns": "1700000000000000017",
+    "preflight_id": "pfh_5756c20f17db40c0a377678cfa037e18",
+    "configuration_id": "cfg_00000000000000000000000000000001",
+    "configuration_version": 1,
+    "configuration_content_sha256": "6c9c614438dc154179ae79c11273cda605db2b6f635f85f210572290bd8f9ec8",
+    "input_manifest_hash": "c649c8310ef25ec7346eb6f1ab998fd137afcb38d49f1e056141ff8e6c65ff83",
+    "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+    "catalog_publication_sha256": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+    "cost_sha256": "6ea447050f7bc17a7c533b7820576f0585313f077398da843ca7f47e5312578d",
+    "process": {
+      "claim": "CLAIMED_BOUND",
+      "cancel_phase": "NONE"
+    },
+    "outcome": {
+      "classification": "NATURAL_SUCCESS",
+      "outcome_sha256": "c61b82a37c9c9b45a8173ce7c82afff02c576865ee93450e0ed98a15161e4e32"
+    },
+    "publication": {
+      "state": "PUBLISHED",
+      "evidence_anchor_sha256": "98fccccc983161182f28285e04ea4854a071763c96fbd0681aa7b3c23ad38087",
+      "seal_sha256": "a397e0a477748691f62a9ecf3d0ea2f8a1eab0cff2cf390faa9eae72e2bfd2c5",
+      "report_validation": "COMPLETE_PASSED",
+      "authority": "CONTROL_SQLITE",
+      "filesystem_verification": "NOT_CHECKED"
+    }
+  },
+  "events": {
+    "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+    "items": [
+      {
+        "event_id": "evt_bt_e8fb9c2a686849a792cfc151df93c462_000001",
+        "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+        "seq": 1,
+        "source_seq": 1,
+        "source": "control-api",
+        "type": "preflight.passed",
+        "ts_event_ns": "1700000000000000003",
+        "ts_ingest_ns": "1700000000000000005",
+        "schema_version": 1,
+        "payload": {
+          "canonical_request_hash": "984211850d61ea4f2ea605ba7d5ea8821ad9e4aa1029eb2e733226e1a0b35022",
+          "preflight_id": "pfh_5756c20f17db40c0a377678cfa037e18"
+        }
+      },
+      {
+        "event_id": "evt_bt_e8fb9c2a686849a792cfc151df93c462_000002",
+        "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+        "seq": 2,
+        "source_seq": 2,
+        "source": "control-api",
+        "type": "run.queued",
+        "ts_event_ns": "1700000000000000008",
+        "ts_ingest_ns": "1700000000000000009",
+        "schema_version": 1,
+        "payload": {
+          "preflight_id": "pfh_5756c20f17db40c0a377678cfa037e18"
+        }
+      },
+      {
+        "event_id": "evt_bt_e8fb9c2a686849a792cfc151df93c462_000003",
+        "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+        "seq": 3,
+        "source_seq": 3,
+        "source": "control-api",
+        "type": "run.started",
+        "ts_event_ns": "1700000000000000010",
+        "ts_ingest_ns": "1700000000000000011",
+        "schema_version": 1,
+        "payload": {
+          "pid": 42905,
+          "process_identity_sha256": "a36f4f5e9fcb5cd679b1101e518af3803d62ffda379abae600458f82c9bb9494",
+          "spawn_nonce": "396efecb4ff9a7501700d8880293a90f"
+        }
+      },
+      {
+        "event_id": "evt_bt_e8fb9c2a686849a792cfc151df93c462_000004",
+        "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+        "seq": 4,
+        "source_seq": 4,
+        "source": "control-api",
+        "type": "run.finalizing",
+        "ts_event_ns": "1700000000000000013",
+        "ts_ingest_ns": "1700000000000000014",
+        "schema_version": 1,
+        "payload": {
+          "classification": "NATURAL_SUCCESS",
+          "outcome_hash": "c61b82a37c9c9b45a8173ce7c82afff02c576865ee93450e0ed98a15161e4e32",
+          "proposed_terminal_state": "COMPLETED"
+        }
+      },
+      {
+        "event_id": "evt_bt_e8fb9c2a686849a792cfc151df93c462_000005",
+        "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+        "seq": 5,
+        "source_seq": 5,
+        "source": "control-api",
+        "type": "run.completed",
+        "ts_event_ns": "1700000000000000015",
+        "ts_ingest_ns": "1700000000000000015",
+        "schema_version": 1,
+        "payload": {
+          "evidence_anchor_sha256": "98fccccc983161182f28285e04ea4854a071763c96fbd0681aa7b3c23ad38087",
+          "outcome_hash": "c61b82a37c9c9b45a8173ce7c82afff02c576865ee93450e0ed98a15161e4e32",
+          "report_validation": "COMPLETE_PASSED",
+          "terminal_state": "COMPLETED"
+        }
+      }
+    ],
+    "next_after_seq": 5
+  },
+  "artifacts": {
+    "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+    "state": "COMPLETED",
+    "report_validation": "COMPLETE_PASSED",
+    "evidence_anchor_sha256": "98fccccc983161182f28285e04ea4854a071763c96fbd0681aa7b3c23ad38087",
+    "seal_sha256": "a397e0a477748691f62a9ecf3d0ea2f8a1eab0cff2cf390faa9eae72e2bfd2c5",
+    "verification": "FRESH_FULL_ROOT_AND_CONTROL_ANCHORS",
+    "observed_at_ns": "1700000000000000018",
+    "items": [
+      {
+        "name": "input_manifest",
+        "downloadable": true,
+        "size_bytes": 2951,
+        "sha256": "c649c8310ef25ec7346eb6f1ab998fd137afcb38d49f1e056141ff8e6c65ff83"
+      },
+      {
+        "name": "catalog_manifest",
+        "downloadable": true,
+        "size_bytes": 6231,
+        "sha256": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92"
+      },
+      {
+        "name": "runner_exit",
+        "downloadable": true,
+        "size_bytes": 1881,
+        "sha256": "c61b82a37c9c9b45a8173ce7c82afff02c576865ee93450e0ed98a15161e4e32"
+      },
+      {
+        "name": "stderr",
+        "downloadable": true,
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "component_snapshot",
+        "downloadable": true,
+        "size_bytes": 5408,
+        "sha256": "03b666f47297d57dbd9761c6454ea55c2fbdafa54f1fc226e3907905b2f7e478"
+      },
+      {
+        "name": "historical_report",
+        "downloadable": true,
+        "size_bytes": 11428,
+        "sha256": "9e57285d50ee5289681e32b797a5c63164e575a89b6d8f2005337c0295a02e61"
+      },
+      {
+        "name": "evidence_anchor",
+        "downloadable": true,
+        "size_bytes": 1332,
+        "sha256": "98fccccc983161182f28285e04ea4854a071763c96fbd0681aa7b3c23ad38087"
+      },
+      {
+        "name": "events",
+        "downloadable": true,
+        "size_bytes": 2274,
+        "sha256": "26259d3660a0d5bf6123304b80a57a1a3340446194d073750558a763bc1b7732"
+      },
+      {
+        "name": "audit",
+        "downloadable": true,
+        "size_bytes": 765,
+        "sha256": "151b94d2a61699ac154bdd97acfbf021463b8091cb45663ea6bde2f26955befa"
+      },
+      {
+        "name": "run",
+        "downloadable": true,
+        "size_bytes": 617,
+        "sha256": "ad031839d504063b24cbe588f6e6c7d4a6b19d20c6c87077a597989ab329d4c3"
+      },
+      {
+        "name": "seal",
+        "downloadable": true,
+        "size_bytes": 1442,
+        "sha256": "a397e0a477748691f62a9ecf3d0ea2f8a1eab0cff2cf390faa9eae72e2bfd2c5"
+      }
+    ]
+  },
+  "summary": {
+    "run_id": "bt_e8fb9c2a686849a792cfc151df93c462",
+    "environment": "BACKTEST",
+    "contract_kind": "HISTORICAL_SMA_V2",
+    "report_status": "INTERNAL_REPORT_CHECK_PASSED",
+    "report_validation": "COMPLETE_PASSED",
+    "report_sha256": "9e57285d50ee5289681e32b797a5c63164e575a89b6d8f2005337c0295a02e61",
+    "component_snapshot_sha256": "03b666f47297d57dbd9761c6454ea55c2fbdafa54f1fc226e3907905b2f7e478",
+    "evidence_anchor_sha256": "98fccccc983161182f28285e04ea4854a071763c96fbd0681aa7b3c23ad38087",
+    "seal_sha256": "a397e0a477748691f62a9ecf3d0ea2f8a1eab0cff2cf390faa9eae72e2bfd2c5",
+    "input_manifest_sha256": "c649c8310ef25ec7346eb6f1ab998fd137afcb38d49f1e056141ff8e6c65ff83",
+    "configuration_content_sha256": "6c9c614438dc154179ae79c11273cda605db2b6f635f85f210572290bd8f9ec8",
+    "catalog_revision": "4d6305373e0966c55e109511638eb96a3d60db711569e5844a27338e0f5e9f92",
+    "cost_sha256": "6ea447050f7bc17a7c533b7820576f0585313f077398da843ca7f47e5312578d",
+    "account_id": "SIM-001",
+    "observed_at_ns": "1700000000000000019",
+    "verification": "FRESH_FULL_ROOT_AND_CONTROL_ANCHORS",
+    "consistency_failures": [],
+    "table_counts": {
+      "orders": 2,
+      "fills": 2,
+      "positions": 1,
+      "account": 6
+    },
+    "final_cash": {
+      "phase": "FINAL_POST_RUN",
+      "sequence": 6,
+      "clock_ns": "1700000360000000000",
+      "bar_ts_event": "1700000360000000000",
+      "balances": {
+        "ETH": {
+          "total": "0",
+          "free": "0",
+          "locked": "0"
+        },
+        "USDT": {
+          "total": "979.8",
+          "free": "979.8",
+          "locked": "0"
+        }
+      },
+      "realized_pnls": {
+        "USDT": "-20.2"
+      },
+      "unrealized_pnls": {},
+      "total_pnls": {
+        "USDT": "-20.2"
+      },
+      "mark_values": {},
+      "total_equity": {
+        "ETH": "0",
+        "USDT": "979.8"
+      },
+      "base_currency_equity": null,
+      "is_stale": false,
+      "stale_instruments": [],
+      "stale_currencies": [],
+      "unpriced_instruments": [],
+      "position_count": 0,
+      "pending_order_count": 0
+    }
+  }
+}

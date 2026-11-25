@@ -1,0 +1,15 @@
+{
+  "schema": "DataModelPortsT2Fixture.v1",
+  "purpose": "OFFLINE_FIXTURE",
+  "source": "Human-authored synthetic test data; not an exchange response or product default.",
+  "files": [
+    {
+      "path": "btcusdt-exchange-info.v1.json",
+      "sha256": "42093b5713e16c8c9fe316f7827799a9f99d803c4f9e7b699ef5c738feb2bd96"
+    },
+    {
+      "path": "simulation-assumptions.v1.json",
+      "sha256": "304f891136dae4317d57e5e695d599570ab25e212275b62e01acf1ab27deb7a7"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+.brand-mark{--brand-size:24px;position:relative;display:inline-flex;width:var(--brand-size);height:var(--brand-size);min-width:var(--brand-size);flex:0 0 var(--brand-size);vertical-align:middle;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;background:var(--surface-2);box-shadow:0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent);line-height:1}
+.brand-mark>img{position:relative;z-index:1;display:block;width:100%;height:100%;object-fit:contain;background:white}.brand-mark>img[hidden]{display:none}.brand-mark>.brand-fallback{position:absolute;inset:14%;width:72%;height:72%;stroke:var(--dim);stroke-width:1.25}.brand-mark[data-logo-state=unavailable]{background:var(--accent-soft)}
+.brand-mark.brand-solana>img{background:#101015;padding:19%;box-sizing:border-box}
+.brand-mark.brand-instrument{border-radius:7px;box-shadow:0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
+.brand-mark.brand-instrument>img{background:transparent}
+.brand-pair{display:inline-flex;align-items:center;vertical-align:middle;flex-shrink:0;isolation:isolate}.brand-pair>.brand-mark+ .brand-mark{margin-left:-6px;box-shadow:0 0 0 2px var(--surface);z-index:1}.has-brand-identity>.brand-mark,.has-brand-identity>.brand-pair{margin-right:7px}.has-brand-identity{vertical-align:middle}
+.brand-select{position:relative;display:inline-flex;align-items:center;min-width:0;max-width:100%;width:100%}.brand-select>select{width:100%;min-width:0;padding-left:44px!important}.brand-select-leading{position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:1;display:flex;align-items:center}.brand-select:has(.brand-pair>.brand-mark+.brand-mark)>select{padding-left:49px!important}
+.brand-mark.dc-coin,.brand-mark.sig-coin{color:inherit;background:var(--surface-2);font-size:0}.da-identity .brand-mark{--brand-size:38px}.pd-asset>.brand-mark{--brand-size:32px}.setup-account-icon .brand-mark,.integration-icon .brand-mark{box-shadow:none}.connection-spec dd .brand-mark{margin-right:8px}.pd-heading h1 .brand-mark{margin-right:8px}.pd-heading>div>span>.brand-mark{margin-right:6px}.capability-card h3{display:flex;align-items:center;gap:9px}
+@media(max-width:700px){.brand-mark.dc-coin,.brand-mark.sig-coin{--brand-size:25px}.pd-asset>.brand-mark{--brand-size:28px}.brand-select>select{font-size:16px}.da-identity .brand-mark{--brand-size:32px}.has-brand-identity>.brand-mark,.has-brand-identity>.brand-pair{margin-right:5px}}
+/* Scene names are available through the existing accessible agent controls. */
+body[data-scene=reactor] .agent-courier .courier-caption,body[data-scene=reactor] .agent-courier .courier-duty{display:none!important}
+
+/* Brand dimensions take precedence over legacy letter-badge sizes. */
+.dc-root .brand-mark.dc-coin{width:var(--brand-size);height:var(--brand-size);min-height:var(--brand-size);flex:0 0 var(--brand-size);aspect-ratio:1}
+.brand-mark.brand-venue{width:var(--brand-size);height:var(--brand-size);min-height:var(--brand-size);flex:0 0 var(--brand-size);aspect-ratio:1}
+/* Crop the large white margins in these bundled venue files only. */
+.brand-venue>img:is([src="/vendor/brand-assets/exchanges/binance.webp"],[src="/vendor/brand-assets/exchanges/okx.webp"],[src="/vendor/brand-assets/exchanges/bybit.webp"],[src="/vendor/brand-assets/exchanges/bitget.webp"],[src="/vendor/brand-assets/exchanges/gate.webp"]){transform:scale(2)}

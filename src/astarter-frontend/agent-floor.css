@@ -1,0 +1,109 @@
+/* ThreeUI Agent AI .panel / .btn-primary: ceramic surfaces, layered rims and inner highlights.
+   Material lives here; bento-system owns shared color tokens. */
+body[data-agent-look=threeui]{
+ --b-shadow:0 2px 5px #10182008,0 12px 32px #10182004;
+ --b-pane:var(--agent-panel);--b-glass:var(--b-panel);--b-glass-outline:var(--b-line);
+ --b-glass-edge:var(--b-line);--b-glass-shadow:var(--b-shadow);--b-heading:25px;
+ --agent-ceramic:#fbfcfd;--agent-sheen:rgba(255,255,255,.85);
+ --agent-edge:var(--optical-rim);
+ --agent-panel:var(--optical-sheen),var(--b-panel);
+ --agent-shadow:0 1px 2px #1018200b,0 12px 32px #10182006;
+ background:var(--b-bg);color:var(--b-ink);
+}
+:root[data-theme=dark] body[data-agent-look=threeui]{
+ --b-shadow:0 2px 6px #0002,0 12px 30px #0001;
+ --agent-ceramic:#0c0f13;--agent-sheen:rgba(232,241,248,.07);
+ --agent-edge:var(--optical-rim);
+ --agent-panel:var(--optical-sheen),var(--b-panel);
+ --agent-shadow:0 1px 2px #0003,0 12px 32px #0002;
+}
+body[data-agent-look=threeui] #product-page{--b-heading:25px}
+/* Shared product shell: stable dimensions and a restrained raised selection. */
+body[data-agent-look=threeui]>.topbar{background:var(--agent-panel);border-bottom-color:var(--b-line);box-shadow:0 1px 0 var(--agent-sheen),0 3px 16px #10182005}
+body[data-agent-look=threeui] .topbar .product-nav>a{font-size:14px;font-weight:550;border-radius:9px}
+body[data-agent-look=threeui] .topbar .product-nav>a[aria-current=page]{box-shadow:inset 0 1px 0 var(--agent-sheen);background:var(--b-violet-soft)}
+body[data-agent-look=threeui] :is(.biz-subnav,.dc-section-nav){border-bottom-color:var(--b-line)}
+body[data-agent-look=threeui] #product-page :is(.p-head,.tc-head,.df-page-head,.as-head,.dc-market-heading){gap:16px}
+body[data-agent-look=threeui] #product-page :is(h1,.p-head h1,.tc-head h1,.df-page-head h1,.as-head h1){font-size:var(--b-heading);font-weight:500;letter-spacing:-.5px;line-height:1.35}
+body[data-agent-look=threeui] #product-page :is(.section-heading h2,.dc-panel>header h2,.p-card h2){font-size:16px;line-height:1.45}
+/* Repeated panels share material, while tables and chart plots retain flat readable backgrounds. */
+body[data-agent-look=threeui] #product-page :is(.p-card,.dc-panel,.sc-card,.sc-my-card,.sc-config,.sc-policy,.sc-protection,.ux-run-panel,.ux-preset-detail,.ux-task,.ux-answer,.ux-preset,.ux-copy-banner,.contract-run,.capability-card,.settings-board,.df-post,.df-calendar,.df-related,.df-market-watch,.as-signal,.as-ticket,.ux-inbox-clear){
+ background:var(--agent-panel);border-color:var(--b-line);border-radius:14px;
+ box-shadow:inset 0 1px 0 var(--agent-sheen),var(--agent-shadow);
+}
+body[data-agent-look=threeui] #product-page :is(.biz-overview:not(.op-overview),.ux-metrics,.metric-row)>div,
+body[data-agent-look=threeui]:not([data-page=mandate]) #product-page .biz-stats>div{background:var(--agent-panel);border-color:var(--b-line);border-radius:12px;box-shadow:inset 0 1px 0 var(--agent-sheen)}
+body[data-agent-look=threeui] #product-page :is(.sc-art,.ux-advice-art){background:linear-gradient(180deg,var(--b-violet-soft),var(--b-panel));border-bottom:1px solid var(--b-line)}
+body[data-agent-look=threeui] #product-page :is(.p-table,.dc-table){background:transparent}
+body[data-agent-look=threeui] #product-page :is(.p-table th,.dc-table th){background:var(--b-soft);font-size:12px;line-height:1.5}
+body[data-agent-look=threeui] #product-page :is(.p-table td,.dc-table td){font-size:14px;line-height:1.5;border-color:var(--b-line)}
+body[data-agent-look=threeui] #product-page :is(.sig-feed,.sig-detail,.ta-sidebar,.ta-composer,.ta-conversation){border-color:var(--b-line)}
+body[data-agent-look=threeui] #product-page .sig-feed{box-shadow:inset 0 1px 0 var(--agent-sheen),var(--agent-shadow)}
+/* Primary controls use source inner highlight, never a halo or hover-driven layout shift. */
+body[data-agent-look=threeui] :is(#product-page,.product-dialog,.connection-center,.sc-drawer,.multi-research-dialog) :is(.p-button,.sc-button,.dc-button){border-radius:8px;box-shadow:inset 0 1px 0 var(--agent-sheen);transition:background-color 150ms ease,border-color 150ms ease,color 150ms ease}
+body[data-agent-look=threeui] :is(#product-page,.product-dialog,.connection-center,.sc-drawer) :is(.p-primary,.sc-primary,.dc-primary){box-shadow:inset 0 1px 0 #ffffff38,0 2px 4px #10182014}
+body[data-agent-look=threeui] :is(#product-page,.product-dialog,.connection-center,.sc-drawer) :is(.p-button,.sc-button,.dc-button):active{transform:none}
+body[data-agent-look=threeui] :is(#product-page,.product-dialog,.connection-center,.sc-drawer) :is(input,select,textarea){border-color:var(--b-control-line)}
+body[data-agent-look=threeui] :is(#product-page,.product-dialog,.connection-center,.sc-drawer) :is(button,a,input,select,textarea,summary):focus-visible{outline:2px solid var(--b-action);outline-offset:3px}
+body[data-agent-look=threeui] :is(.product-dialog,.connection-center,.sc-drawer,.multi-research-dialog){background:var(--b-panel);border:1px solid var(--b-line-strong);box-shadow:inset 0 1px 0 var(--agent-sheen),0 24px 80px #05060838;border-radius:16px}
+body[data-agent-look=threeui] dialog::backdrop{background:#05060866;backdrop-filter:blur(3px)}
+body[data-agent-look=threeui] :is(.product-dialog,.connection-center)>header{background:var(--agent-panel);border-bottom-color:var(--b-line)}
+body[data-agent-look=threeui] #connection-dialog .cc-provider{background:var(--agent-panel);border-color:var(--b-line);box-shadow:inset 0 1px 0 var(--agent-sheen);min-height:88px}
+body[data-agent-look=threeui] #connection-dialog .cc-provider[aria-pressed=true]{border-color:var(--b-action);background:var(--b-violet-soft)}
+body[data-agent-look=threeui] #connection-dialog .cc-heading h3{font-size:22px}
+body[data-agent-look=threeui] #connection-dialog :is(.cc-safety,.cc-empty,.cc-paper-account,.cc-review){border-radius:10px;background:var(--b-soft);border-color:var(--b-line)}
+body[data-agent-look=threeui] #connection-dialog .cc-overview>button{padding-inline:12px;border-radius:8px}
+body[data-agent-look=threeui] #connection-dialog .cc-secret button{min-height:34px}
+body[data-agent-look=threeui] #connection-dialog .cc-field :is(input,select){background-color:var(--b-panel);box-shadow:inset 0 1px 2px #10182006}
+body[data-agent-look=threeui] #connection-dialog #connections-close{border-radius:8px;background:var(--b-soft);border-color:var(--b-line)}
+body[data-agent-look=threeui] .connection-bar{background:var(--agent-panel);border-color:var(--b-line);box-shadow:0 -1px 0 var(--agent-sheen)}
+/* Chat keeps a quiet conversation surface with a clearly bounded input. */
+body[data-agent-look=threeui] #product-page .chat-app{border-radius:16px;background:var(--agent-panel);border-color:var(--b-line);box-shadow:inset 0 1px 0 var(--agent-sheen),var(--agent-shadow)}
+body[data-agent-look=threeui] #product-page .chat-history{background:var(--b-soft);border-color:var(--b-line)}
+body[data-agent-look=threeui] #product-page :is(.chat-new,.chat-suggestions>button){background:var(--agent-panel);border-color:var(--b-line);border-radius:10px;box-shadow:inset 0 1px 0 var(--agent-sheen)}
+body[data-agent-look=threeui] #product-page .chat-composer{border-color:var(--b-control-line);border-radius:12px;background:var(--b-panel);box-shadow:inset 0 1px 0 var(--agent-sheen),0 4px 16px #25113906}
+body[data-agent-look=threeui] #product-page .chat-composer:focus-within{border-color:var(--b-action);box-shadow:0 0 0 2px var(--b-violet-soft)}
+body[data-agent-look=threeui] #product-page .chat-app button:active{scale:1}
+body[data-agent-look=threeui] #product-page .chat-thread>button:first-child[aria-current=true]{background:var(--b-violet-soft);color:var(--b-accent-ink);box-shadow:inset 0 1px 0 var(--agent-sheen)}
+/* The original floor clock, tasks, paths, DOM targets and receipt elements remain the owners. */
+.agent-material-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.agent-material-canvas[hidden]{display:none}
+.agent-material-ready .courier-person,.agent-material-ready .courier-shadow{visibility:hidden}
+.agent-material-ready [data-research-zone]{visibility:hidden}
+.agent-material-ready .agent-courier{background:transparent;box-shadow:none}
+.agent-material-ready .agent-courier:focus-visible{outline:2px solid var(--accent);outline-offset:5px;border-radius:8px}
+body[data-agent-look=threeui][data-page=workbench] :is(.network-stage,.console-panel){background:linear-gradient(180deg,var(--agent-sheen),transparent 130px) padding-box,linear-gradient(var(--agent-ceramic),var(--agent-ceramic)) padding-box,var(--agent-edge) border-box;border:1px solid transparent;box-shadow:var(--agent-shadow)}
+body[data-agent-look=threeui][data-page=workbench] .network-stage{--surface:var(--agent-ceramic);--surface-2:var(--agent-ceramic)}
+body[data-agent-look=threeui][data-page=workbench] .terminal-ribbon{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:2px}
+body[data-agent-look=threeui][data-page=workbench] :is(.reactor-source-card,.research-team){background:linear-gradient(180deg,var(--agent-sheen),transparent) padding-box,linear-gradient(var(--b-panel),var(--b-panel)) padding-box,var(--agent-edge) border-box;border:1px solid transparent;box-shadow:inset 0 1px 0 var(--agent-sheen)}
+body[data-agent-look=threeui][data-page=workbench] :is(.primary,.p-button.primary,.terminal-command>.p-button){box-shadow:inset 0 1px 0 #fff4,0 2px 4px #10182014}
+body[data-agent-look=threeui][data-page=workbench] :is(input,select){box-shadow:inset 0 1px 2px #17102b0a}
+body[data-agent-look=threeui] .core-report{border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));box-shadow:0 8px 22px #13102315,inset 0 1px 0 var(--agent-sheen);background:var(--b-panel)}
+body[data-agent-look=threeui] .courier-document{filter:drop-shadow(0 2px 2px #17112d35)}
+@media(hover:hover){
+ body[data-agent-look=threeui] #product-page :is(.sc-card,.ux-preset,.as-signal):hover{border-color:var(--b-line-strong);box-shadow:inset 0 1px 0 var(--agent-sheen),0 6px 18px #2511390c}
+ body[data-agent-look=threeui] #connection-dialog .cc-provider:hover{border-color:var(--b-line-strong);background:var(--b-soft)}
+}
+@media(max-width:1179px) and (min-width:901px){body[data-agent-look=threeui] .topbar .product-nav>a{font-size:13px;padding-inline:8px;gap:5px}}
+@media(max-width:900px){
+ body[data-agent-look=threeui] #product-page{--b-heading:22px}
+ body[data-agent-look=threeui][data-page=workbench] .terminal-ribbon{padding-bottom:12px}
+ body[data-agent-look=threeui] .core-report{max-width:210px}
+ body[data-agent-look=threeui] #product-page :is(.p-table td,.dc-table td){font-size:14px}
+ body[data-agent-look=threeui] #connection-dialog .cc-provider{min-height:80px}
+ body[data-agent-look=threeui] #connection-dialog .cc-secret button{min-width:56px;min-height:40px}
+}
+@media(prefers-reduced-motion:reduce){body[data-agent-look=threeui] :is(.p-button,.sc-button,.dc-button){transition:none}}
+@media(forced-colors:active){body[data-agent-look=threeui] #product-page :is(.p-card,.dc-panel,.sc-card){background:Canvas;border:1px solid CanvasText;box-shadow:none}}
+/* Shared optical identity: transparent body, coloured rim, readable neon eyes. */
+body[data-character-look=crystal] .terminal-agent{
+ background:radial-gradient(ellipse at 27% 15%,#fff9,transparent 21%),linear-gradient(140deg,#172731 12%,#080c12 45%,color-mix(in srgb,var(--team) 24%,#10151d) 75%,#5a7186);
+ border:1px solid color-mix(in srgb,var(--team) 70%,#fff);box-shadow:inset 1px 1px 2px #fff7,inset -2px -2px 3px #0005,0 0 5px color-mix(in srgb,var(--team) 35%,transparent);border-radius:8px 8px 7px 7px;
+}
+body[data-character-look=crystal] .terminal-agent:nth-child(n){opacity:1}
+body[data-character-look=crystal] .terminal-agent:before,body[data-character-look=crystal] .terminal-agent:after{background:#f3fbff;box-shadow:0 0 4px var(--team),0 0 2px var(--team);top:5px}
+body[data-character-look=crystal] .terminal-agent>span{position:absolute;bottom:-4px;left:-2px;right:-2px;height:4px;border:1px solid var(--team);border-radius:50%;opacity:.7;box-shadow:0 0 4px color-mix(in srgb,var(--team) 50%,transparent)}
+body[data-character-look=crystal] .reactor-courier-trails path{stroke-width:1.8;filter:drop-shadow(0 0 2px currentColor)}
+:root[data-theme=light] body[data-character-look=crystal] .terminal-agent{background:radial-gradient(ellipse at 25% 15%,#fff 10%,transparent 30%),linear-gradient(140deg,#f5faff,color-mix(in srgb,var(--team) 25%,#e4edf6) 46%,#f4faff 52%,color-mix(in srgb,var(--team) 38%,#edf5fc));border-color:color-mix(in srgb,var(--team) 65%,#aabaca);box-shadow:inset 1px 1px 2px #fff,inset -1px -1px 2px #5680a51c,0 1px 3px #10182015}
+:root[data-theme=light] body[data-character-look=crystal] .terminal-agent:before,:root[data-theme=light] body[data-character-look=crystal] .terminal-agent:after{background:color-mix(in srgb,var(--team) 60%,#152330);box-shadow:0 0 2px color-mix(in srgb,var(--team) 50%,transparent)}
+:root[data-theme=light] body[data-character-look=crystal] .reactor-courier-trails path{filter:none}

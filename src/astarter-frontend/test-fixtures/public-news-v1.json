@@ -1,0 +1,381 @@
+{
+  "notice": "Synthetic contract examples only, written from a reading of the service code. Not vendor content, not live observations, not connectivity or entitlement evidence.",
+  "news_fresh": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-news-001",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": 1793268000000,
+      "requested_at_ms": 1793268001000,
+      "quality": "fresh",
+      "coverage": {
+        "requested_subjects": [
+          "news"
+        ],
+        "returned_subjects": [
+          "news"
+        ],
+        "gaps": [],
+        "scope": "NEWS_FEED"
+      },
+      "missing_capabilities": [],
+      "sources": [
+        {
+          "provider_id": "blockbeats-news-v1",
+          "status": "OK",
+          "last_success_at_ms": 1793268000000,
+          "reason_code": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [
+        {
+          "record_id": "news:900001",
+          "subject_id": "news",
+          "provider_id": "blockbeats-news-v1",
+          "venue_or_chain": null,
+          "event_time_ms": 1793267990000,
+          "received_at_ms": 1793268000000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268060000,
+          "source_revision": "synthetic-v1",
+          "quality": "fresh",
+          "data": {
+            "news_id": "blockbeats:900001",
+            "title": "合成快讯 900001",
+            "summary": "仅供合同测试，不是供应商内容。",
+            "url": "https://news.example.invalid/flash/900001",
+            "published_at_ms": 1793267990000,
+            "asset_ids": []
+          }
+        },
+        {
+          "record_id": "news:900002",
+          "subject_id": "news",
+          "provider_id": "blockbeats-news-v1",
+          "venue_or_chain": null,
+          "event_time_ms": 1793267930000,
+          "received_at_ms": 1793268000000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268060000,
+          "source_revision": "synthetic-v1",
+          "quality": "fresh",
+          "data": {
+            "news_id": "blockbeats:900002",
+            "title": "合成快讯 900002",
+            "summary": "仅供合同测试，不是供应商内容。",
+            "url": "https://news.example.invalid/flash/900002",
+            "published_at_ms": 1793267930000,
+            "asset_ids": []
+          }
+        }
+      ],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "news_empty_success": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-news-002",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": 1793268000000,
+      "requested_at_ms": 1793268001000,
+      "quality": "fresh",
+      "coverage": {
+        "requested_subjects": [
+          "news"
+        ],
+        "returned_subjects": [],
+        "gaps": [],
+        "scope": "NEWS_FEED"
+      },
+      "missing_capabilities": [],
+      "sources": [
+        {
+          "provider_id": "blockbeats-news-v1",
+          "status": "OK",
+          "last_success_at_ms": 1793268000000,
+          "reason_code": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "news_empty_aged": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-news-003",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": 1793268000000,
+      "requested_at_ms": 1793268061000,
+      "quality": "stale",
+      "coverage": {
+        "requested_subjects": [
+          "news"
+        ],
+        "returned_subjects": [],
+        "gaps": [],
+        "scope": "NEWS_FEED"
+      },
+      "missing_capabilities": [],
+      "sources": [
+        {
+          "provider_id": "blockbeats-news-v1",
+          "status": "OK",
+          "last_success_at_ms": 1793268000000,
+          "reason_code": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "news_stale_after_failure": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-news-004",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": 1793268000000,
+      "requested_at_ms": 1793268120000,
+      "quality": "stale",
+      "coverage": {
+        "requested_subjects": [
+          "news"
+        ],
+        "returned_subjects": [
+          "news"
+        ],
+        "gaps": [],
+        "scope": "NEWS_FEED"
+      },
+      "missing_capabilities": [],
+      "sources": [
+        {
+          "provider_id": "blockbeats-news-v1",
+          "status": "RATE_LIMITED",
+          "last_success_at_ms": 1793268000000,
+          "reason_code": "UPSTREAM_RATE_LIMITED",
+          "retry_after_seconds": 900
+        }
+      ],
+      "items": [
+        {
+          "record_id": "news:900001",
+          "subject_id": "news",
+          "provider_id": "blockbeats-news-v1",
+          "venue_or_chain": null,
+          "event_time_ms": 1793267990000,
+          "received_at_ms": 1793268000000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268060000,
+          "source_revision": "synthetic-v1",
+          "quality": "stale",
+          "data": {
+            "news_id": "blockbeats:900001",
+            "title": "合成快讯 900001",
+            "summary": "仅供合同测试，不是供应商内容。",
+            "url": "https://news.example.invalid/flash/900001",
+            "published_at_ms": 1793267990000,
+            "asset_ids": []
+          }
+        },
+        {
+          "record_id": "news:900002",
+          "subject_id": "news",
+          "provider_id": "blockbeats-news-v1",
+          "venue_or_chain": null,
+          "event_time_ms": 1793267930000,
+          "received_at_ms": 1793268000000,
+          "available_at_ms": 1793268000000,
+          "valid_until_ms": 1793268060000,
+          "source_revision": "synthetic-v1",
+          "quality": "stale",
+          "data": {
+            "news_id": "blockbeats:900002",
+            "title": "合成快讯 900002",
+            "summary": "仅供合同测试，不是供应商内容。",
+            "url": "https://news.example.invalid/flash/900002",
+            "published_at_ms": 1793267930000,
+            "asset_ids": []
+          }
+        }
+      ],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "news_empty_after_failure": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-news-005",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": 1793268000000,
+      "requested_at_ms": 1793268120000,
+      "quality": "stale",
+      "coverage": {
+        "requested_subjects": [
+          "news"
+        ],
+        "returned_subjects": [],
+        "gaps": [],
+        "scope": "NEWS_FEED"
+      },
+      "missing_capabilities": [],
+      "sources": [
+        {
+          "provider_id": "blockbeats-news-v1",
+          "status": "TIMEOUT",
+          "last_success_at_ms": 1793268000000,
+          "reason_code": "UPSTREAM_TIMEOUT",
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "news_unconfigured": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-news-006",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": null,
+      "requested_at_ms": 1793268001000,
+      "quality": "unavailable",
+      "coverage": {
+        "requested_subjects": [
+          "news"
+        ],
+        "returned_subjects": [],
+        "gaps": [
+          "news"
+        ],
+        "scope": "news"
+      },
+      "missing_capabilities": [
+        "news"
+      ],
+      "sources": [
+        {
+          "provider_id": "blockbeats-news-v1",
+          "status": "UNCONFIGURED",
+          "last_success_at_ms": null,
+          "reason_code": "UPSTREAM_UNCONFIGURED",
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "news_no_snapshot": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-news-007",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": null,
+      "requested_at_ms": 1793268001000,
+      "quality": "unavailable",
+      "coverage": {
+        "requested_subjects": [
+          "news"
+        ],
+        "returned_subjects": [],
+        "gaps": [
+          "news"
+        ],
+        "scope": "news"
+      },
+      "missing_capabilities": [
+        "news"
+      ],
+      "sources": [
+        {
+          "provider_id": "public-data-collector",
+          "status": "UNAVAILABLE",
+          "last_success_at_ms": null,
+          "reason_code": "SNAPSHOT_NOT_AVAILABLE",
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  },
+  "news_cold_failure": {
+    "http_status": 200,
+    "body": {
+      "schema_version": "AstarterPublicData.v1",
+      "request_id": "fixture-news-008",
+      "selection_version": 7,
+      "mode": "offline_fixture",
+      "real_trading_connected": false,
+      "execution_binding": "NONE",
+      "as_of_ms": null,
+      "requested_at_ms": 1793268001000,
+      "quality": "unavailable",
+      "coverage": {
+        "requested_subjects": [
+          "news"
+        ],
+        "returned_subjects": [],
+        "gaps": [
+          "news"
+        ],
+        "scope": "news"
+      },
+      "missing_capabilities": [
+        "news"
+      ],
+      "sources": [
+        {
+          "provider_id": "blockbeats-news-v1",
+          "status": "UNAUTHORIZED",
+          "last_success_at_ms": null,
+          "reason_code": "UPSTREAM_UNAUTHORIZED",
+          "retry_after_seconds": null
+        }
+      ],
+      "items": [],
+      "tenant_scope": "PUBLIC",
+      "projection_version": "public-data-projection.v1"
+    }
+  }
+}

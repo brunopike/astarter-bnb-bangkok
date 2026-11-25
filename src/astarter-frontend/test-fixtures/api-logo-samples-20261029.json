@@ -1,0 +1,36 @@
+{
+  "source": "CoinGecko public coins/markets; logos only, no market figures retained",
+  "retrieved": "2026-10-29",
+  "items": [
+    {
+      "asset_id": "ondo-finance",
+      "symbol": "ONDO",
+      "image_url": "https://coin-images.coingecko.com/coins/images/26580/large/ONDO.png?1696525656"
+    },
+    {
+      "asset_id": "worldcoin-wld",
+      "symbol": "WLD",
+      "image_url": "https://coin-images.coingecko.com/coins/images/31069/large/worldcoin.jpeg?1696529903"
+    },
+    {
+      "asset_id": "polygon-ecosystem-token",
+      "symbol": "POL",
+      "image_url": "https://coin-images.coingecko.com/coins/images/32440/large/pol.png?1759114181"
+    },
+    {
+      "asset_id": "celestia",
+      "symbol": "TIA",
+      "image_url": "https://coin-images.coingecko.com/coins/images/31967/large/tia.jpg?1696530772"
+    },
+    {
+      "asset_id": "pendle",
+      "symbol": "PENDLE",
+      "image_url": "https://coin-images.coingecko.com/coins/images/15069/large/Pendle_Logo_Normal-03.png?1696514728"
+    },
+    {
+      "asset_id": "arweave",
+      "symbol": "AR",
+      "image_url": "https://coin-images.coingecko.com/coins/images/4343/large/oRt6SiEN_400x400.jpg?1696504946"
+    }
+  ]
+}

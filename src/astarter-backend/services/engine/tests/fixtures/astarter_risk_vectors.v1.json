@@ -1,0 +1,694 @@
+{
+  "schema_version": "1.0",
+  "content_version": "0.1",
+  "created_at": "2026-10-24T20:34:31.811663+08:00",
+  "kind": "STRATEGY_DEVELOPMENT_GOLDEN_INPUTS_AND_EXPECTED_RESULTS",
+  "status": "SYNTHETIC_ARITHMETIC_VERIFIED_STATE_CONTRACTS_NOT_EXECUTED",
+  "product_name": "Astarter 风控策略",
+  "scope": "合成算术与未来状态验收输入，非策略回测、原生撮合或已接入程序的测试",
+  "monetary_wire_format": "base10 decimal strings; no floats; rounding rules bound per case",
+  "sources": [
+    "docs/development/Astarter_策略与风控整合计划_v0.1.md",
+    "docs/product/S03_策略卡与ABC_v0.1.md",
+    "docs/research/策略研究/RX事件策略卡_v0.1/00_阅读入口与共用合同.md"
+  ],
+  "arithmetic_cases": 18,
+  "declared_state_cases": 8,
+  "real_market_data_used": false,
+  "native_order_execution_performed": false,
+  "cases": [
+    {
+      "id": "SIZE-01",
+      "kind": "directional_sizing",
+      "inputs": {
+        "cap": "60120",
+        "stress_exit": "58882",
+        "buy_fee": "0.001",
+        "sell_fee": "0.001",
+        "quantity_step": "0.00001",
+        "quote_unit": "0.00000001",
+        "min_quantity": "0.00001",
+        "min_notional": "5",
+        "notional_cap": "1000",
+        "available_quote": "1000",
+        "risk_budget": "5"
+      },
+      "expected": {
+        "quantity": "0.00368",
+        "reserve": "221.46284528",
+        "stress_loss": "4.99377472",
+        "max_fill_count_per_leg": 368,
+        "quantity_plus_step_exceeds_risk": true
+      },
+      "acceptance_refs": [
+        "AST-AC03"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "SIZE-02",
+      "kind": "directional_sizing",
+      "inputs": {
+        "cap": "60120",
+        "stress_exit": "58882",
+        "buy_fee": "0.001",
+        "sell_fee": "0.001",
+        "quantity_step": "0.00001",
+        "quote_unit": "0.00000001",
+        "min_quantity": "0.00001",
+        "min_notional": "5",
+        "notional_cap": "1000",
+        "available_quote": "221.462843",
+        "risk_budget": "5"
+      },
+      "expected": {
+        "quantity": "0.00367",
+        "reserve": "220.86104407",
+        "stress_loss": "4.98020468",
+        "initial_floor_quantity": "0.00368",
+        "fee_upper_bound_adjustment_steps": 1
+      },
+      "acceptance_refs": [
+        "AST-AC03"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "SIZE-03",
+      "kind": "directional_sizing",
+      "inputs": {
+        "cap": "60120",
+        "stress_exit": "58882",
+        "buy_fee": "0.001",
+        "sell_fee": "0.001",
+        "quantity_step": "0.00001",
+        "quote_unit": "0.00000001",
+        "min_quantity": "0.00001",
+        "min_notional": "5",
+        "notional_cap": "1000",
+        "available_quote": "1000",
+        "risk_budget": "0.01"
+      },
+      "expected": {
+        "quantity": "0",
+        "decision": "REJECT_MIN_ORDER",
+        "round_up_forbidden": true
+      },
+      "acceptance_refs": [
+        "AST-AC03"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "SIZE-04",
+      "kind": "directional_candidate_check",
+      "inputs": {
+        "cap": "60120",
+        "stress_exit": "58882",
+        "buy_fee": "0.001",
+        "sell_fee": "0.001",
+        "quantity_step": "0.00001",
+        "quote_unit": "0.00000001",
+        "min_quantity": "0.00001",
+        "min_notional": "5",
+        "notional_cap": "1000",
+        "available_quote": "1000",
+        "risk_budget": "5",
+        "quantity": "0.00369"
+      },
+      "expected": {
+        "reserve": "222.06464649",
+        "stress_loss": "5.00734476",
+        "risk_budget_exceeded": true
+      },
+      "acceptance_refs": [
+        "AST-AC03"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "MODE-01",
+      "kind": "staged_budget",
+      "inputs": {
+        "equity": "10000",
+        "base_risk_fraction": "0.0025",
+        "card_cap_fraction": "0.0025",
+        "policy_cap_fraction": "0.0025",
+        "account_multiplier": "0.5",
+        "stage_multiplier": "0.25"
+      },
+      "expected": {
+        "risk_fraction": "0.0003125",
+        "requested_risk": "3.125"
+      },
+      "acceptance_refs": [
+        "AST-AC02"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "BUDGET-01",
+      "kind": "minimum_remaining",
+      "inputs": {
+        "requested_risk": "25",
+        "portfolio_limit": "100",
+        "asset_limit": "50",
+        "correlated_limit": "60",
+        "inventory_risk_BTC": "45",
+        "inventory_risk_ETH": "10"
+      },
+      "expected": {
+        "portfolio_remaining": "45",
+        "asset_remaining": "5",
+        "correlated_remaining": "5",
+        "allowed_risk": "5"
+      },
+      "acceptance_refs": [
+        "AST-AC05"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "BUDGET-02",
+      "kind": "future_occupancy",
+      "inputs": {
+        "cycle_limit": "500",
+        "booked_loss_debit": "491",
+        "inventory_future_loss": "6",
+        "pending_or_unknown_future_loss": "3"
+      },
+      "expected": {
+        "total_occupied_including_booked": "500",
+        "new_remaining": "0",
+        "already_booked_loss_not_charged_twice": true
+      },
+      "acceptance_refs": [
+        "AST-AC04"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "LOCK-01",
+      "kind": "profit_reserve",
+      "inputs": {
+        "gross_native_equity": "12000",
+        "settled_net_profit": "2000",
+        "realized_profit_HWM": "0",
+        "locked_reserve_before": "0",
+        "lock_fraction": "0.2",
+        "flat": true,
+        "orders_terminal": true,
+        "reconciled": true
+      },
+      "expected": {
+        "new_profit_increment": "2000",
+        "new_locked_reserve": "400",
+        "locked_reserve_after": "400",
+        "tradable_equity": "11600",
+        "wealth": "12000"
+      },
+      "acceptance_refs": [
+        "AST-AC07"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "LOCK-02",
+      "kind": "profit_reserve",
+      "inputs": {
+        "gross_native_equity": "12000",
+        "settled_net_profit": "2000",
+        "realized_profit_HWM": "2000",
+        "locked_reserve_before": "400",
+        "lock_fraction": "0.2",
+        "flat": true,
+        "orders_terminal": true,
+        "reconciled": true
+      },
+      "expected": {
+        "new_profit_increment": "0",
+        "new_locked_reserve": "0",
+        "locked_reserve_after": "400",
+        "tradable_equity": "11600",
+        "wealth": "12000"
+      },
+      "acceptance_refs": [
+        "AST-AC07"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "LOCK-03",
+      "kind": "profit_reserve",
+      "inputs": {
+        "gross_native_equity": "11500",
+        "settled_net_profit": "1500",
+        "realized_profit_HWM": "2000",
+        "locked_reserve_before": "400",
+        "lock_fraction": "0.2",
+        "flat": true,
+        "orders_terminal": true,
+        "reconciled": true
+      },
+      "expected": {
+        "new_profit_increment": "0",
+        "new_locked_reserve": "0",
+        "locked_reserve_after": "400",
+        "tradable_equity": "11100",
+        "wealth": "11500"
+      },
+      "acceptance_refs": [
+        "AST-AC07"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "KELLY-01",
+      "kind": "kelly_advisory",
+      "inputs": {
+        "probability": "0.34",
+        "net_payoff_ratio": "2",
+        "fraction": "0.25",
+        "execution_mode": "OFF_ADVISORY"
+      },
+      "expected": {
+        "full_kelly": "0.01",
+        "fractional_kelly": "0.0025",
+        "execution_authorized": false
+      },
+      "acceptance_refs": [
+        "AST-AC08"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "KELLY-02",
+      "kind": "kelly_advisory",
+      "inputs": {
+        "probability": "0.34",
+        "net_payoff_ratio": "1.6",
+        "fraction": "0.25",
+        "execution_mode": "OFF_ADVISORY"
+      },
+      "expected": {
+        "full_kelly": "-0.0725",
+        "fractional_kelly": "-0.018125",
+        "positive_kelly_candidate": false,
+        "execution_authorized": false
+      },
+      "acceptance_refs": [
+        "AST-AC08"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "BASKET-01",
+      "kind": "basket_check",
+      "inputs": {
+        "stress_exit": "57000",
+        "buy_fee": "0.001",
+        "sell_fee": "0.001",
+        "quantity_step": "0.00001",
+        "quote_unit": "0.00000001",
+        "risk_budget": "5",
+        "layers": [
+          {
+            "cap": "60000",
+            "quantity": "0.001"
+          },
+          {
+            "cap": "59400",
+            "quantity": "0.001"
+          },
+          {
+            "cap": "58800",
+            "quantity": "0.001"
+          },
+          {
+            "cap": "58200",
+            "quantity": "0.001"
+          }
+        ]
+      },
+      "expected": {
+        "total_quantity": "0.004",
+        "reserve": "236.636404",
+        "stress_loss": "8.864408",
+        "risk_budget_exceeded": true
+      },
+      "acceptance_refs": [
+        "AST-AC11"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "BASKET-02",
+      "kind": "basket_check",
+      "inputs": {
+        "stress_exit": "57000",
+        "buy_fee": "0.001",
+        "sell_fee": "0.001",
+        "quantity_step": "0.00001",
+        "quote_unit": "0.00000001",
+        "risk_budget": "5",
+        "layers": [
+          {
+            "cap": "60000",
+            "quantity": "0.00056"
+          },
+          {
+            "cap": "59400",
+            "quantity": "0.00056"
+          },
+          {
+            "cap": "58800",
+            "quantity": "0.00056"
+          },
+          {
+            "cap": "58200",
+            "quantity": "0.00056"
+          }
+        ]
+      },
+      "expected": {
+        "total_quantity": "0.00224",
+        "reserve": "132.51638624",
+        "stress_loss": "4.96406848",
+        "risk_budget_exceeded": false,
+        "one_more_quantity_step_each_layer_exceeds_risk": true
+      },
+      "acceptance_refs": [
+        "AST-AC11"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "BASKET-03",
+      "kind": "basket_check",
+      "inputs": {
+        "stress_exit": "57000",
+        "buy_fee": "0.001",
+        "sell_fee": "0.001",
+        "quantity_step": "0.00001",
+        "quote_unit": "0.00000001",
+        "risk_budget": "5",
+        "layers": [
+          {
+            "cap": "60000",
+            "quantity": "0.001"
+          },
+          {
+            "cap": "59000",
+            "quantity": "0.0015"
+          },
+          {
+            "cap": "58000",
+            "quantity": "0.00225"
+          }
+        ]
+      },
+      "expected": {
+        "total_quantity": "0.00475",
+        "reserve": "279.27900475",
+        "stress_loss": "8.7997595",
+        "risk_budget_exceeded": true,
+        "extra_layers_forbidden": true
+      },
+      "acceptance_refs": [
+        "AST-AC11"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "LP-01",
+      "kind": "LP_full_principal_budget",
+      "inputs": {
+        "equity": "10000",
+        "portfolio_risk_fraction": "0.01",
+        "other_future_occupancy": "0",
+        "nominal_cap_fraction": "0.05",
+        "requested_principal": "500",
+        "gas_reserve_quote": "2"
+      },
+      "expected": {
+        "portfolio_remaining": "100",
+        "requested_pressure": "502",
+        "maximum_principal_by_risk": "98",
+        "risk_budget_exceeded": true,
+        "execution_authorized": false
+      },
+      "acceptance_refs": [
+        "AST-AC12"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "ATOMIC-01",
+      "kind": "atomic_net_cost_floor",
+      "inputs": {
+        "input_quote": "1000",
+        "amount_out_net": "1006",
+        "pool_fees_already_in_net": true,
+        "gas_quote": "3",
+        "external_fee_quote": "1",
+        "failure_MEV_buffer_quote": "1",
+        "minimum_absolute_net": "1",
+        "minimum_net_fraction": "0.0005",
+        "quote_unit": "0.000001",
+        "atomic_state_and_receipt_capability_verified": false
+      },
+      "expected": {
+        "net_profit_after_all_costs": "1",
+        "required_minimum_net": "1",
+        "amount_out_min": "1006",
+        "cost_floor_met": true,
+        "execution_authorized": false
+      },
+      "acceptance_refs": [
+        "AST-AC12"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "ATOMIC-02",
+      "kind": "atomic_net_cost_floor",
+      "inputs": {
+        "input_quote": "1000",
+        "amount_out_net": "1006",
+        "pool_fees_already_in_net": true,
+        "gas_quote": "4",
+        "external_fee_quote": "1",
+        "failure_MEV_buffer_quote": "1",
+        "minimum_absolute_net": "1",
+        "minimum_net_fraction": "0.0005",
+        "quote_unit": "0.000001",
+        "atomic_state_and_receipt_capability_verified": false
+      },
+      "expected": {
+        "net_profit_after_all_costs": "0",
+        "required_minimum_net": "1",
+        "amount_out_min": "1007",
+        "cost_floor_met": false,
+        "execution_authorized": false
+      },
+      "acceptance_refs": [
+        "AST-AC12"
+      ],
+      "verification_mode": "ARITHMETIC_ORACLE",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "STATE-01",
+      "kind": "atomic_budget_race",
+      "inputs": {
+        "cycle_limit": "500",
+        "booked_loss": "490",
+        "future_occupancy": "0",
+        "requests": [
+          {
+            "id": "A",
+            "requested_risk": "10",
+            "risk_epoch": "41"
+          },
+          {
+            "id": "B",
+            "requested_risk": "10",
+            "risk_epoch": "41"
+          }
+        ]
+      },
+      "expected": {
+        "number_of_successful_new_reservations": 1,
+        "additional_reserved_risk": "10",
+        "loser_must_conflict_or_recheck_and_reject": true,
+        "winner_not_prescribed": true
+      },
+      "acceptance_refs": [
+        "AST-AC04"
+      ],
+      "verification_mode": "DECLARED_CONTRACT_NOT_EXECUTED",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "STATE-02",
+      "kind": "unknown_and_partial_order",
+      "inputs": {
+        "entry_order_state": "UNKNOWN",
+        "cancel_requested": true,
+        "some_fills_confirmed": true
+      },
+      "expected": {
+        "keep_maximum_unresolved_remaining_occupancy": true,
+        "confirmed_fills_transfer_to_inventory_occupancy": true,
+        "cancel_request_is_not_zero_fill_proof": true,
+        "new_duplicate_submission_forbidden": true
+      },
+      "acceptance_refs": [
+        "AST-AC04",
+        "AST-AC09"
+      ],
+      "verification_mode": "DECLARED_CONTRACT_NOT_EXECUTED",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "STATE-03",
+      "kind": "restart_hard_lock",
+      "inputs": {
+        "persisted_lock": "DAY_LOSS",
+        "process_restarted": true,
+        "UTC_day_changed": true,
+        "market_recovered": true
+      },
+      "expected": {
+        "new_risk_allowed": false,
+        "risk_period_auto_refilled": false,
+        "new_private_recovery_required_as_policy": true
+      },
+      "acceptance_refs": [
+        "AST-AC06"
+      ],
+      "verification_mode": "DECLARED_CONTRACT_NOT_EXECUTED",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "STATE-04",
+      "kind": "expired_opportunity",
+      "inputs": {
+        "strategy_candidate": "S03+Astarter separate version",
+        "bar_close_ns": "1792800000000000000",
+        "expires_at_ns": "1792800005000000000",
+        "reservation_now_ns": "1792800005000000001"
+      },
+      "expected": {
+        "new_entry_allowed": false,
+        "new_model_result_does_not_extend_expiry": true,
+        "submitted_order_is_not_forgotten_on_TTL": true
+      },
+      "acceptance_refs": [
+        "AST-AC10"
+      ],
+      "verification_mode": "DECLARED_CONTRACT_NOT_EXECUTED",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "STATE-05",
+      "kind": "approved_exit_during_entry_lock",
+      "inputs": {
+        "contract_scope": "NEW_ASTARTER_COMBINATION_ONLY",
+        "new_entry_budget_available": "0",
+        "confirmed_sellable_quantity": "0.00368",
+        "quote_fresh": true,
+        "unresolved_competing_order": false,
+        "preapproved_exit_target_exists": true
+      },
+      "expected": {
+        "new_entry_allowed": false,
+        "exit_target_still_evaluated": true,
+        "new_entry_notional_cap_must_not_silently_block_approved_reduction": true,
+        "native_exit_capability_preflight_required": true,
+        "old_S03_and_SMA_guards_unchanged_by_this_vector": true
+      },
+      "acceptance_refs": [
+        "AST-AC09"
+      ],
+      "verification_mode": "DECLARED_CONTRACT_NOT_EXECUTED",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "STATE-06",
+      "kind": "LLM_outage",
+      "inputs": {
+        "private_binding_and_plan_already_valid": true,
+        "LLM_unavailable": true,
+        "market_account_and_risk_healthy": true
+      },
+      "expected": {
+        "LLM_calls_in_per_event_risk_and_protection": 0,
+        "existing_protection_kept": true,
+        "missing_private_approval_not_bypassed": true
+      },
+      "acceptance_refs": [
+        "AST-AC10"
+      ],
+      "verification_mode": "DECLARED_CONTRACT_NOT_EXECUTED",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "STATE-07",
+      "kind": "protection_not_accepted",
+      "inputs": {
+        "partial_entry_confirmed": true,
+        "protective_stop_acceptance_missing_after_ns": "1000000000"
+      },
+      "expected": {
+        "claim_protection_installed": false,
+        "state": "RECONCILIATION_REQUIRED",
+        "new_risk_allowed": false,
+        "retain_inventory_and_unresolved_reservations": true
+      },
+      "acceptance_refs": [
+        "AST-AC09"
+      ],
+      "verification_mode": "DECLARED_CONTRACT_NOT_EXECUTED",
+      "product_runtime_verified": false
+    },
+    {
+      "id": "STATE-08",
+      "kind": "strategy_copy",
+      "inputs": {
+        "copied_public_rules": true,
+        "copied_Astarter_policy_ref": true,
+        "destination_account": "SYNTHETIC_ACCOUNT_B"
+      },
+      "expected": {
+        "private_approval_copied": false,
+        "original_account_quantities_copied": false,
+        "new_binding_review_and_activation_required": true
+      },
+      "acceptance_refs": [
+        "AST-AC14",
+        "AST-AC16"
+      ],
+      "verification_mode": "DECLARED_CONTRACT_NOT_EXECUTED",
+      "product_runtime_verified": false
+    }
+  ],
+  "verification_evidence": "docs/development/Cursor交接记录/策略开发与执行_协作核对记录.json"
+}

@@ -1,0 +1,88 @@
+{
+  "schema": "T3_SYNTHETIC_SCENARIOS_V1",
+  "purpose": "OFFLINE_FIXTURE",
+  "request": {
+    "identity": {
+      "logical_request_id": "fixture-root-1",
+      "task_id": "fixture-task-1",
+      "attempt_id": "fixture-attempt-1",
+      "parent_attempt_id": null,
+      "tenant_id": "fixture-tenant-a",
+      "principal_scope_id": "fixture-principal-a",
+      "account_scope_id": "fixture-account-a",
+      "key_owner_id": "fixture-platform",
+      "credential_binding_revision": "fixture-key-v1",
+      "purpose": "OFFLINE_FIXTURE"
+    },
+    "task": {
+      "task_id": "fixture-task-1",
+      "role_id": "A01",
+      "profile_version": "fixture-profile-v1",
+      "evidence": [
+        {
+          "evidence_id": "fixture-evidence-1",
+          "text": "Synthetic BTC public observation",
+          "available_at_ms": 1000,
+          "valid_until_ms": 11000
+        }
+      ]
+    },
+    "bindings": [
+      {
+        "evidence_id": "fixture-evidence-1",
+        "utf8_sha256": "67f15d09912a7baaadad8b001293d5f1d632886d66f82944dbd6f6fce64d520e",
+        "source_id": "fixture-source",
+        "source_revision": "v1",
+        "evidence_revision": "v1",
+        "rights_revision": "v1",
+        "available_at_ms": 1000,
+        "valid_until_ms": 11000,
+        "classification": "PUBLIC",
+        "use_allowed": true,
+        "share_allowed": true,
+        "egress_allowed": true
+      }
+    ],
+    "policy": {
+      "policy_id": "fixture-policy",
+      "revision": "v1",
+      "model": "fixture/model-v1",
+      "providers": [
+        "fixture-provider"
+      ],
+      "data_policy_revision": "fixture-no-external-data-v1",
+      "renderer_revision": "FIXTURE_REQUEST_V1",
+      "system_sha256": "ca40d05bb96791694ce7372817c99dc064e77b56522b0d42c5263d394d1fc8c4",
+      "schema_sha256": "4e78d0d1b273da1a724e4dfb51da69975606c2910038622aeccabd69f1e2a271",
+      "max_output_tokens": 512,
+      "valid_until_ms": 11000,
+      "allow_fallbacks": false
+    },
+    "quote": {
+      "quote_id": "fixture-quote",
+      "revision": "v1",
+      "unit_id": "SIM_MODEL_CREDIT_V1",
+      "scale": 6,
+      "reserve_atoms": 100,
+      "pricing_revision": "fixture-price-v1",
+      "coverage_revision": "fixture-all-costs-v1",
+      "valid_until_ms": 11000
+    },
+    "context": {
+      "asset": "BTC",
+      "venue": "BINANCE",
+      "market": "SPOT",
+      "strategy_revision": "fixture-ma-rsi-v1",
+      "classification": "PUBLIC",
+      "funding": "PLATFORM",
+      "sharing_revision": "fixture-sharing-v1",
+      "use_policy_revision": "fixture-use-v1"
+    },
+    "enqueued_at_ms": 1000,
+    "deadline_ms": 10000,
+    "clock_epoch": "fixture-clock-v1"
+  },
+  "confirmed_charge_atoms": 35,
+  "unknown_charge": null,
+  "budget_limit_atoms": 200
+}

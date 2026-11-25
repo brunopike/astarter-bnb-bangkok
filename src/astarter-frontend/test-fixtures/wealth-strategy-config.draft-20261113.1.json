@@ -1,0 +1,738 @@
+{
+  "schemaVersion": 2,
+  "id": "astarter-ai-wealth",
+  "version": "draft-20261113.1",
+  "status": "draft",
+  "liveEnabled": false,
+  "chain": {
+    "id": 1,
+    "name": "Ethereum"
+  },
+  "vault": {
+    "address": null,
+    "spender": null,
+    "managementMode": "pooled_strategy_vault"
+  },
+  "assets": [
+    {
+      "id": "usdc",
+      "symbol": "USDC",
+      "name": [
+        "美元稳定币 USDC",
+        "USD Coin"
+      ],
+      "decimals": 6,
+      "chainId": 1,
+      "tokenAddress": null,
+      "minimumUnits": "100000000",
+      "maximumUnits": "50000000000"
+    },
+    {
+      "id": "usdt",
+      "symbol": "USDT",
+      "name": [
+        "美元稳定币 USDT",
+        "Tether USD"
+      ],
+      "decimals": 6,
+      "chainId": 1,
+      "tokenAddress": null,
+      "minimumUnits": "100000000",
+      "maximumUnits": "50000000000"
+    },
+    {
+      "id": "weth",
+      "symbol": "WETH",
+      "name": [
+        "WETH · ETH资产",
+        "WETH · ETH exposure"
+      ],
+      "decimals": 18,
+      "chainId": 1,
+      "tokenAddress": null,
+      "minimumUnits": "10000000000000000",
+      "maximumUnits": "100000000000000000000"
+    },
+    {
+      "id": "wbtc",
+      "symbol": "WBTC",
+      "name": [
+        "WBTC · BTC资产",
+        "WBTC · BTC exposure"
+      ],
+      "decimals": 8,
+      "chainId": 1,
+      "tokenAddress": null,
+      "minimumUnits": "100000",
+      "maximumUnits": "100000000"
+    }
+  ],
+  "products": [
+    {
+      "id": "core-lending",
+      "name": [
+        "基础借贷",
+        "Core lending"
+      ],
+      "kind": "lending",
+      "assetIds": [
+        "usdc",
+        "usdt",
+        "weth",
+        "wbtc"
+      ]
+    },
+    {
+      "id": "curated-vault",
+      "name": [
+        "精选金库",
+        "Curated vaults"
+      ],
+      "kind": "curated",
+      "assetIds": [
+        "usdc",
+        "usdt",
+        "weth",
+        "wbtc"
+      ]
+    },
+    {
+      "id": "term-yield",
+      "name": [
+        "期限收益",
+        "Term yield"
+      ],
+      "kind": "term",
+      "assetIds": [
+        "usdc",
+        "usdt",
+        "wbtc"
+      ]
+    },
+    {
+      "id": "liquidity-yield",
+      "name": [
+        "流动性收益",
+        "Liquidity yield"
+      ],
+      "kind": "liquidity",
+      "assetIds": [
+        "weth",
+        "wbtc"
+      ]
+    },
+    {
+      "id": "staking-yield",
+      "name": [
+        "质押收益",
+        "Staking yield"
+      ],
+      "kind": "staking",
+      "assetIds": [
+        "weth"
+      ]
+    },
+    {
+      "id": "base-savings",
+      "name": [
+        "基础储蓄",
+        "Base savings"
+      ],
+      "kind": "savings",
+      "assetIds": [
+        "usdc",
+        "usdt"
+      ]
+    },
+    {
+      "id": "cash-reserve",
+      "name": [
+        "流动储备",
+        "Liquid reserve"
+      ],
+      "kind": "reserve",
+      "assetIds": [
+        "usdc",
+        "usdt",
+        "weth",
+        "wbtc"
+      ]
+    }
+  ],
+  "defaultProfileId": "balanced",
+  "profiles": [
+    {
+      "id": "growth",
+      "risk": "high",
+      "principalGuaranteed": false,
+      "name": [
+        "进取增长",
+        "Growth"
+      ],
+      "goal": [
+        "捕捉波动与流动性溢价，以同币种复投积累资产",
+        "Capture volatile-asset yield and compound in the same asset"
+      ],
+      "riskNote": [
+        "币价波动、流动性和合约风险，净值可能显著回撤",
+        "Price, liquidity and contract risks can cause substantial drawdowns"
+      ],
+      "assetIds": [
+        "weth",
+        "wbtc"
+      ],
+      "defaultAssetId": "weth",
+      "fees": {
+        "version": "growth-terms-2",
+        "managementRate": 0.02,
+        "subscriptionRate": 0,
+        "performanceRate": 0.2,
+        "crystallisation": "annual-maturity-and-redemption",
+        "managementBasis": "daily-nav-act365",
+        "managementSettlement": "monthly",
+        "recipients": {
+          "management": "platform",
+          "performance": "platform",
+          "earlyRedemption": "vault"
+        }
+      },
+      "guards": {
+        "reserveBps": 1000,
+        "maxProductBps": 4000,
+        "allowLeverage": false,
+        "allowCrossChain": false,
+        "switchNetGainBps": 60
+      },
+      "allocations": {
+        "weth": [
+          {
+            "productId": "staking-yield",
+            "weightBps": 3500
+          },
+          {
+            "productId": "liquidity-yield",
+            "weightBps": 3000
+          },
+          {
+            "productId": "curated-vault",
+            "weightBps": 2500
+          },
+          {
+            "productId": "cash-reserve",
+            "weightBps": 1000
+          }
+        ],
+        "wbtc": [
+          {
+            "productId": "core-lending",
+            "weightBps": 4000
+          },
+          {
+            "productId": "liquidity-yield",
+            "weightBps": 3000
+          },
+          {
+            "productId": "term-yield",
+            "weightBps": 2000
+          },
+          {
+            "productId": "cash-reserve",
+            "weightBps": 1000
+          }
+        ]
+      },
+      "rules": [
+        {
+          "name": [
+            "收益择优",
+            "Yield selection"
+          ],
+          "description": [
+            "在质押、流动性与精选收益方向中比较费用与退出成本后的收益，满足净增益条件再调整",
+            "Compare returns after fees and exit costs within the strategy before switching"
+          ]
+        },
+        {
+          "name": [
+            "自动复投",
+            "Auto-compounding"
+          ],
+          "description": [
+            "收益仅复投至本策略允许的资产与方向，先核算Gas与调配成本",
+            "Reinvest only within the strategy after accounting for gas and allocation costs"
+          ]
+        },
+        {
+          "name": [
+            "动态再平衡",
+            "Rebalancing"
+          ],
+          "description": [
+            "单项不超过40%，流动储备不低于10%，偏离目标时按规则调整",
+            "Rebalance within the product cap and liquidity reserve constraints"
+          ]
+        },
+        {
+          "name": [
+            "风险巡检",
+            "Risk controls"
+          ],
+          "description": [
+            "将协议、资产与退出风险纳入检查，异常时暂停新增并收缩敞口",
+            "Check protocol, asset and exit risks; pause new allocations on exceptions"
+          ]
+        }
+      ],
+      "terms": {
+        "lockDays": 30,
+        "maturityDays": 365,
+        "earlyRedemptionBps": 200,
+        "settlementDays": 2,
+        "dayBasis": "calendar",
+        "startsAt": "investment-confirmation",
+        "maturityAction": "redeem"
+      },
+      "strategy": {
+        "id": "staking-liquidity",
+        "name": [
+          "质押与流动性增强",
+          "Staking & liquidity"
+        ],
+        "dispatchMode": "staking_liquidity_rebalance",
+        "custodyMode": "pooled_vault",
+        "fundingAuthority": "exact_deposit",
+        "executionAuthority": "vault_scoped",
+        "allocationPolicy": "dynamic_within_mandate"
+      }
+    },
+    {
+      "id": "balanced",
+      "risk": "medium",
+      "principalGuaranteed": false,
+      "name": [
+        "均衡配置",
+        "Balanced"
+      ],
+      "goal": [
+        "分散借贷、精选金库与期限收益，平衡收益来源和退出",
+        "Diversify lending, curated vaults and term yield with liquidity in mind"
+      ],
+      "riskNote": [
+        "底层信用、期限、脱锚及合约风险，退出可能受流动性限制",
+        "Credit, maturity, depeg and contract risks; exits depend on liquidity"
+      ],
+      "assetIds": [
+        "usdc",
+        "usdt"
+      ],
+      "defaultAssetId": "usdc",
+      "fees": {
+        "version": "balanced-terms-2",
+        "managementRate": 0.02,
+        "subscriptionRate": 0,
+        "performanceRate": 0.12,
+        "crystallisation": "annual-maturity-and-redemption",
+        "managementBasis": "daily-nav-act365",
+        "managementSettlement": "monthly",
+        "recipients": {
+          "management": "platform",
+          "performance": "platform",
+          "earlyRedemption": "vault"
+        }
+      },
+      "guards": {
+        "reserveBps": 1000,
+        "maxProductBps": 3500,
+        "allowLeverage": false,
+        "allowCrossChain": false,
+        "switchNetGainBps": 40
+      },
+      "allocations": {
+        "usdc": [
+          {
+            "productId": "core-lending",
+            "weightBps": 3500
+          },
+          {
+            "productId": "term-yield",
+            "weightBps": 3000
+          },
+          {
+            "productId": "curated-vault",
+            "weightBps": 2500
+          },
+          {
+            "productId": "cash-reserve",
+            "weightBps": 1000
+          }
+        ],
+        "usdt": [
+          {
+            "productId": "core-lending",
+            "weightBps": 3500
+          },
+          {
+            "productId": "term-yield",
+            "weightBps": 3000
+          },
+          {
+            "productId": "curated-vault",
+            "weightBps": 2500
+          },
+          {
+            "productId": "cash-reserve",
+            "weightBps": 1000
+          }
+        ]
+      },
+      "rules": [
+        {
+          "name": [
+            "收益择优",
+            "Yield selection"
+          ],
+          "description": [
+            "在借贷、精选金库与期限收益方向中比较费用与退出成本后的收益，满足净增益条件再调整",
+            "Compare returns after fees and exit costs within the strategy before switching"
+          ]
+        },
+        {
+          "name": [
+            "自动复投",
+            "Auto-compounding"
+          ],
+          "description": [
+            "收益仅复投至本策略允许的资产与方向，先核算Gas与调配成本",
+            "Reinvest only within the strategy after accounting for gas and allocation costs"
+          ]
+        },
+        {
+          "name": [
+            "动态再平衡",
+            "Rebalancing"
+          ],
+          "description": [
+            "单项不超过35%，流动储备不低于10%，偏离目标时按规则调整",
+            "Rebalance within the product cap and liquidity reserve constraints"
+          ]
+        },
+        {
+          "name": [
+            "风险巡检",
+            "Risk controls"
+          ],
+          "description": [
+            "将协议、资产与退出风险纳入检查，异常时暂停新增并收缩敞口",
+            "Check protocol, asset and exit risks; pause new allocations on exceptions"
+          ]
+        }
+      ],
+      "terms": {
+        "lockDays": 14,
+        "maturityDays": 180,
+        "earlyRedemptionBps": 100,
+        "settlementDays": 2,
+        "dayBasis": "calendar",
+        "startsAt": "investment-confirmation",
+        "maturityAction": "redeem"
+      },
+      "strategy": {
+        "id": "term-vault-rotation",
+        "name": [
+          "期限与金库轮动",
+          "Term & vault rotation"
+        ],
+        "dispatchMode": "term_aware_rotation",
+        "custodyMode": "pooled_vault",
+        "fundingAuthority": "exact_deposit",
+        "executionAuthority": "vault_scoped",
+        "allocationPolicy": "dynamic_within_mandate"
+      }
+    },
+    {
+      "id": "steady",
+      "risk": "low",
+      "principalGuaranteed": false,
+      "name": [
+        "稳健增值",
+        "Steady"
+      ],
+      "goal": [
+        "以主流借贷寻优，保留流动性，减少复杂策略敞口",
+        "Optimise lending income while retaining liquidity and limiting complexity"
+      ],
+      "riskNote": [
+        "借贷坏账、稳定币脱锚与合约风险仍可能损失本金",
+        "Bad debt, stablecoin depegs and contract failures can reduce principal"
+      ],
+      "assetIds": [
+        "usdc",
+        "usdt"
+      ],
+      "defaultAssetId": "usdc",
+      "fees": {
+        "version": "steady-terms-2",
+        "managementRate": 0.02,
+        "subscriptionRate": 0,
+        "performanceRate": 0.08,
+        "crystallisation": "annual-maturity-and-redemption",
+        "managementBasis": "daily-nav-act365",
+        "managementSettlement": "monthly",
+        "recipients": {
+          "management": "platform",
+          "performance": "platform",
+          "earlyRedemption": "vault"
+        }
+      },
+      "guards": {
+        "reserveBps": 2000,
+        "maxProductBps": 4500,
+        "allowLeverage": false,
+        "allowCrossChain": false,
+        "switchNetGainBps": 25
+      },
+      "allocations": {
+        "usdc": [
+          {
+            "productId": "core-lending",
+            "weightBps": 4500
+          },
+          {
+            "productId": "curated-vault",
+            "weightBps": 3500
+          },
+          {
+            "productId": "cash-reserve",
+            "weightBps": 2000
+          }
+        ],
+        "usdt": [
+          {
+            "productId": "core-lending",
+            "weightBps": 4500
+          },
+          {
+            "productId": "curated-vault",
+            "weightBps": 3500
+          },
+          {
+            "productId": "cash-reserve",
+            "weightBps": 2000
+          }
+        ]
+      },
+      "rules": [
+        {
+          "name": [
+            "收益择优",
+            "Yield selection"
+          ],
+          "description": [
+            "在借贷与精选金库方向中比较费用与退出成本后的收益，满足净增益条件再调整",
+            "Compare returns after fees and exit costs within the strategy before switching"
+          ]
+        },
+        {
+          "name": [
+            "自动复投",
+            "Auto-compounding"
+          ],
+          "description": [
+            "收益仅复投至本策略允许的资产与方向，先核算Gas与调配成本",
+            "Reinvest only within the strategy after accounting for gas and allocation costs"
+          ]
+        },
+        {
+          "name": [
+            "动态再平衡",
+            "Rebalancing"
+          ],
+          "description": [
+            "单项不超过45%，流动储备不低于20%，偏离目标时按规则调整",
+            "Rebalance within the product cap and liquidity reserve constraints"
+          ]
+        },
+        {
+          "name": [
+            "风险巡检",
+            "Risk controls"
+          ],
+          "description": [
+            "将协议、资产与退出风险纳入检查，异常时暂停新增并收缩敞口",
+            "Check protocol, asset and exit risks; pause new allocations on exceptions"
+          ]
+        }
+      ],
+      "terms": {
+        "lockDays": 7,
+        "maturityDays": 90,
+        "earlyRedemptionBps": 50,
+        "settlementDays": 2,
+        "dayBasis": "calendar",
+        "startsAt": "investment-confirmation",
+        "maturityAction": "redeem"
+      },
+      "strategy": {
+        "id": "lending-optimizer",
+        "name": [
+          "借贷利率择优",
+          "Lending optimisation"
+        ],
+        "dispatchMode": "lending_rate_rotation",
+        "custodyMode": "pooled_vault",
+        "fundingAuthority": "exact_deposit",
+        "executionAuthority": "vault_scoped",
+        "allocationPolicy": "dynamic_within_mandate"
+      }
+    },
+    {
+      "id": "defensive",
+      "risk": "defensive",
+      "principalGuaranteed": false,
+      "name": [
+        "本金防守",
+        "Capital defense"
+      ],
+      "goal": [
+        "U本位基础利息与高流动性储备，不配置波动资产",
+        "Stablecoin base income with a larger liquid reserve and no volatile assets"
+      ],
+      "riskNote": [
+        "U本位不是兑付担保，仍有脱锚、借贷与合约风险",
+        "Stablecoin denomination is not a principal guarantee; depeg and protocol risks remain"
+      ],
+      "assetIds": [
+        "usdc",
+        "usdt"
+      ],
+      "defaultAssetId": "usdc",
+      "fees": {
+        "version": "defensive-terms-2",
+        "managementRate": 0.02,
+        "subscriptionRate": 0,
+        "performanceRate": 0.05,
+        "crystallisation": "annual-maturity-and-redemption",
+        "managementBasis": "daily-nav-act365",
+        "managementSettlement": "monthly",
+        "recipients": {
+          "management": "platform",
+          "performance": "platform",
+          "earlyRedemption": "vault"
+        }
+      },
+      "guards": {
+        "reserveBps": 3500,
+        "maxProductBps": 3500,
+        "allowLeverage": false,
+        "allowCrossChain": false,
+        "switchNetGainBps": 20
+      },
+      "allocations": {
+        "usdc": [
+          {
+            "productId": "core-lending",
+            "weightBps": 3500
+          },
+          {
+            "productId": "base-savings",
+            "weightBps": 3000
+          },
+          {
+            "productId": "cash-reserve",
+            "weightBps": 3500
+          }
+        ],
+        "usdt": [
+          {
+            "productId": "core-lending",
+            "weightBps": 3500
+          },
+          {
+            "productId": "base-savings",
+            "weightBps": 3000
+          },
+          {
+            "productId": "cash-reserve",
+            "weightBps": 3500
+          }
+        ]
+      },
+      "rules": [
+        {
+          "name": [
+            "收益择优",
+            "Yield selection"
+          ],
+          "description": [
+            "在稳定币基础借贷与储蓄方向中比较费用与退出成本后的收益，满足净增益条件再调整",
+            "Compare returns after fees and exit costs within the strategy before switching"
+          ]
+        },
+        {
+          "name": [
+            "自动复投",
+            "Auto-compounding"
+          ],
+          "description": [
+            "收益仅复投至本策略允许的资产与方向，先核算Gas与调配成本",
+            "Reinvest only within the strategy after accounting for gas and allocation costs"
+          ]
+        },
+        {
+          "name": [
+            "动态再平衡",
+            "Rebalancing"
+          ],
+          "description": [
+            "单项不超过35%，流动储备不低于35%，偏离目标时按规则调整",
+            "Rebalance within the product cap and liquidity reserve constraints"
+          ]
+        },
+        {
+          "name": [
+            "风险巡检",
+            "Risk controls"
+          ],
+          "description": [
+            "将协议、资产与退出风险纳入检查，异常时暂停新增并收缩敞口",
+            "Check protocol, asset and exit risks; pause new allocations on exceptions"
+          ]
+        }
+      ],
+      "terms": {
+        "lockDays": 1,
+        "maturityDays": 30,
+        "earlyRedemptionBps": 10,
+        "settlementDays": 2,
+        "dayBasis": "calendar",
+        "startsAt": "investment-confirmation",
+        "maturityAction": "redeem"
+      },
+      "strategy": {
+        "id": "stablecoin-base",
+        "name": [
+          "U 本位基础收益",
+          "Stablecoin base income"
+        ],
+        "dispatchMode": "capital_defense",
+        "custodyMode": "pooled_vault",
+        "fundingAuthority": "exact_deposit",
+        "executionAuthority": "vault_scoped",
+        "allocationPolicy": "dynamic_within_mandate"
+      }
+    }
+  ],
+  "referral": {
+    "version": "referral-proposal-1",
+    "status": "proposal",
+    "levels": 1,
+    "rateBps": 2000,
+    "basis": "collected-net-platform-fees",
+    "payout": "monthly",
+    "eligibleKinds": [
+      "management",
+      "performance",
+      "early-redemption"
+    ]
+  }
+}
