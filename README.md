@@ -14,46 +14,7 @@ The execution layer uses a verified decision in two ways. A **configured strateg
 
 The diagram shows the target workflow for research, strategy generation, and execution.
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"system-ui, sans-serif","fontSize":"16px","lineColor":"#7a8da5","primaryTextColor":"#172033","edgeLabelBackground":"#edf2f7"},"flowchart":{"htmlLabels":false,"curve":"linear","nodeSpacing":22,"rankSpacing":24,"diagramPadding":12,"padding":12}}}%%
-flowchart TB
-    accTitle: LensWave shared-brain architecture
-    accDescr: A versioned snapshot feeds market and on-chain checks. Their decision brief drives configured signals or a new beta strategy. Evidence goes directly to candidate generation and versioned outcomes return to shared memory.
-
-    EVIDENCE["Market evidence<br/>On-chain, venues and history"]
-    MEMORY["Shared memory<br/>Living Brain, cases and notes"]
-    SNAP["01 · Brain layer<br/>Pin the cutoff and evidence versions"]
-
-    MARKET["Market check<br/>Price, depth and cost"]
-    CHAIN["On-chain check<br/>Flows and counterevidence"]
-    BRIEF["02 · Thinking layer<br/>Verify trigger, invalidation and expiry"]
-
-    CONFIG["03A · Configure existing strategy<br/>Pin asset, threshold and window"]
-    GEN["03B · Generate new strategy<br/>Use evidence and verified findings"]
-    SIGNAL["Publish triggered signal<br/>User review or authorized execution"]
-    BETA["Publish one beta version<br/>User trials and historical backtests"]
-    RECORD["Versioned outcomes<br/>Signals, fills, trials and backtests"]
-
-    EVIDENCE --> SNAP
-    MEMORY --> SNAP
-    SNAP --> MARKET
-    SNAP --> CHAIN
-    MARKET --> BRIEF
-    CHAIN --> BRIEF
-    SNAP -. Snapshot and cases .-> GEN
-    BRIEF --> CONFIG
-    BRIEF --> GEN
-    CONFIG --> SIGNAL
-    GEN --> BETA
-    SIGNAL --> RECORD
-    BETA --> RECORD
-    RECORD -. Write back .-> MEMORY
-
-    classDef step fill:#f8fafc,stroke:#94a3b8,color:#172033,stroke-width:1px,rx:8px,ry:8px
-    classDef layer fill:#e5edf9,stroke:#42638c,color:#172033,stroke-width:1.5px,rx:8px,ry:8px
-    class EVIDENCE,MEMORY,MARKET,CHAIN,SIGNAL,BETA step
-    class SNAP,BRIEF,CONFIG,GEN,RECORD layer
-```
+[![LensWave in three horizontal layers. The pinned snapshot directly informs new strategies. Both execution routes return versioned outcomes to shared memory.](docs/images/shared-brain-flow.drawio.png)](docs/images/shared-brain-flow.drawio.png)
 
 Living Brain provides persistent memory for cases and plans. The architecture pairs it with an Obsidian-compatible Markdown knowledge base for research notes, rules, and reviews. Agents can use their own working context while handing off source references and open questions. New evidence creates a new snapshot. The original snapshot stays available for replay, and feedback links to the exact strategy and parameter versions that produced the result.
 
