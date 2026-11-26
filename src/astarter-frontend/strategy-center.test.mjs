@@ -75,7 +75,7 @@ test('BOT exits stay blocked during a save and a failed save leaves its input re
  const count=exits.length;events.change({target:{dataset:{strategyRoute:'connectionId'},value:''}});await click('save');assert.equal(drawer.open,false);assert.equal(exits.length,count,'a successful explicit save leaves without an exit decision');assert.equal(desk.calls.armed,0);
 });
 
-test('discarding a saved-plan source editor also restores the alias that reopening actually reads',async t=>{
+async function savedSourceEditor(t){
  const prior={document:globalThis.document,FormData:globalThis.FormData,matchMedia:globalThis.matchMedia,IntersectionObserver:globalThis.IntersectionObserver},events={},exits=[],fields={cap:'250',amount:'40',mode:'auto',researchBudget:'200'},form={reportValidity:()=>true,addEventListener(){}};
  const drawer={innerHTML:'',open:false,dataset:{},classList:{toggle(){}},setAttribute(){},contains:()=>false,querySelector:s=>s==='#sc-config'&&drawer.dataset.phase==='configure'?form:null,querySelectorAll:()=>[],addEventListener:(type,fn)=>events[type]=fn,showModal(){this.open=true;},close(){this.open=false;events.close?.();}};
  let created=false;globalThis.document={activeElement:null,body:{dataset:{page:'execution'},append(){}},addEventListener(){},createElement(){if(!created){created=true;return drawer;}const dialog=editExitStub();exits.push(dialog);return dialog;}};globalThis.FormData=class extends Map{constructor(){super(Object.entries(fields));}};globalThis.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});globalThis.IntersectionObserver=class{observe(){}unobserve(){}disconnect(){}};
@@ -84,15 +84,55 @@ test('discarding a saved-plan source editor also restores the alias that reopeni
  const {saveBotEditor}=await import('./strategy-routing.mjs'),w=new WorkspaceSim({storage}),d=w.createDraft('S01'),desk=deskStub(w),source={type:'signal',id:'draft-exit',revision:1,instrument:{symbol:'BTC',market:'BTC/USDT',venueId:'binance',profileId:'cex-spot'}};
  const key='S01:source:'+JSON.stringify(['signal','draft-exit',1,null,'BTC','BTC/USDT',null,null,null,'binance','cex-spot']),alias='S01:draft:'+d.id;
  const original={id:'S01',draftId:d.id,baseVersion:d.version,variant:'S01-SIM',amount:'40',cap:'250',mode:'auto',protection:protectionConfig(),researchBudget:200,executionRoute:{...route},botParameters:botParameters('S01'),source};saveBotEditor(w,original,key);
+ return {w,d,desk,source,key,alias,original,fields,events,exits,drawer,storage,saveBotEditor,setStorageFault(value){fault=value;}};
+}
+
+test('discarding a saved-plan source editor also restores the alias that reopening actually reads',async t=>{
+ const {w,d,desk,source,key,alias,original,fields,events,exits,drawer,saveBotEditor,setStorageFault}=await savedSourceEditor(t);
  const before=JSON.stringify([w.s.drafts,w.s.risk,w.s.usage,w.available,desk.state]),center=createStrategyCenter({w,desk,root:{querySelector:()=>null,querySelectorAll:()=>[]},go(){},refresh(){},notify(){}}),click=sc=>events.click({target:{closest:()=>({type:'button',dataset:{sc}})}});
- center.openTemplate('S01',null,source);await click('resume-editor');Object.assign(fields,{cap:'400',amount:'70'});events.input({});assert.equal(w.s.botEditors[alias].cap,'400');await click('close');const dialog=exits.at(-1);fault=true;dialog.choose('discard');assert.equal(dialog.open,true);assert.equal(drawer.open,true);assert.equal(w.s.botEditors[alias].cap,'400');assert.equal(fields.cap,'400');fault=false;dialog.choose('discard');assert.equal(drawer.open,false);
+ center.openTemplate('S01',null,source);await click('resume-editor');Object.assign(fields,{cap:'400',amount:'70'});events.input({});assert.equal(w.s.botEditors[alias].cap,'400');await click('close');const dialog=exits.at(-1);setStorageFault(true);dialog.choose('discard');assert.equal(dialog.open,true);assert.equal(drawer.open,true);assert.equal(w.s.botEditors[alias].cap,'400');assert.equal(fields.cap,'400');setStorageFault(false);dialog.choose('discard');assert.equal(drawer.open,false);
  assert.deepEqual(w.s.botEditors[key],original);assert.deepEqual(w.s.botEditors[alias],original);
  Object.assign(fields,{cap:'250',amount:'40'});center.openTemplate('S01',null,source);await click('resume-editor');assert.match(drawer.innerHTML,/name="cap"[^>]*value="250"/);assert.match(drawer.innerHTML,/name="amount"[^>]*value="40"/);
  center.openDraft(d.id);assert.match(drawer.innerHTML,/name="cap"[^>]*value="250"/);assert.match(drawer.innerHTML,/name="amount"[^>]*value="40"/);
- center.openTemplate('S01',null,source);fault=true;Object.assign(fields,{cap:'330',amount:'55'});events.input({});assert.match(center.beforeLeave(),/输入仍保留|inputs are retained/);assert.equal(fields.cap,'330');fault=false;assert.equal(center.beforeLeave(),null,'a failed alias write can recover when storage returns');await click('close');exits.at(-1).choose('discard');Object.assign(fields,{cap:'250',amount:'40'});center.openTemplate('S01',null,source);await click('resume-editor');assert.match(drawer.innerHTML,/name="cap"[^>]*value="250"/);
+ center.openTemplate('S01',null,source);setStorageFault(true);Object.assign(fields,{cap:'330',amount:'55'});events.input({});assert.match(center.beforeLeave(),/输入仍保留|inputs are retained/);assert.equal(fields.cap,'330');setStorageFault(false);assert.equal(center.beforeLeave(),null,'a failed alias write can recover when storage returns');await click('close');exits.at(-1).choose('discard');Object.assign(fields,{cap:'250',amount:'40'});center.openTemplate('S01',null,source);await click('resume-editor');assert.match(drawer.innerHTML,/name="cap"[^>]*value="250"/);
  center.openTemplate('S01',null,source);Object.assign(fields,{cap:'500',amount:'80'});events.input({});const main=structuredClone(w.s.botEditors[key]),later={...w.s.botEditors[alias],cap:'900',source:{...source,id:'later-source'}};saveBotEditor(w,later,alias);await click('close');exits.at(-1).choose('discard');assert.equal(exits.at(-1).open,true);assert.deepEqual(w.s.botEditors[alias],later);assert.deepEqual(w.s.botEditors[key],main);assert.equal(fields.cap,'500');assert.match(exits.at(-1).note.textContent,/其它编辑|another editor/);
  assert.equal(JSON.stringify([w.s.drafts,w.s.risk,w.s.usage,w.available,desk.state]),before);assert.equal(desk.calls.armed,0);
 });
+
+test('saving a new version updates its own editor alias and preserves changes from another editor',async t=>{
+ const {w,d,desk,source,key,alias,fields,events,drawer,storage,saveBotEditor}=await savedSourceEditor(t);
+ const posts=[];
+ t.mock.method(globalThis,'fetch',async(_path,options={})=>{
+  if(options.method==='POST')posts.push(JSON.parse(options.body));
+  return options.method==='POST'?Response.json({memory:true},{status:202}):Response.json({rules:[],lessons:[],choices:[]});
+ });
+ const center=createStrategyCenter({w,desk,root:{querySelector:()=>null,querySelectorAll:()=>[]},go(){},refresh(){},notify(){}});
+ const click=sc=>events.click({target:{closest:()=>({type:'button',dataset:{sc}})}});
+ center.openTemplate('S01',null,source);await click('resume-editor');
+ Object.assign(fields,{cap:'400',amount:'70'});events.input({});
+ const previousVersion=d.version;
+ await click('save');
+ assert.equal(d.version,previousVersion+1);
+ assert.equal(w.persistenceError,'');
+ assert.equal(w.s.botEditors[alias].baseVersion,d.version);
+ assert.equal(w.s.botEditors[key].baseVersion,d.version);
+ assert.equal(new WorkspaceSim({storage}).draft(d.id).cap,400);
+ assert.equal(posts.length,1);
+ center.openTemplate('S01',null,source);await click('resume-editor');
+ Object.assign(fields,{cap:'450',amount:'80'});events.input({});
+ let enter,release;
+ const reachedEntitlement=new Promise(resolve=>{enter=resolve;});
+ w.ensureDraftEntitlement=()=>new Promise(resolve=>{release=resolve;enter();});
+ const saving=click('save');
+ await reachedEntitlement;
+ const concurrent={...w.s.botEditors[alias],cap:'700'};
+ saveBotEditor(w,concurrent,alias);
+ release(null);await saving;
+ assert.deepEqual(w.s.botEditors[alias],concurrent);
+ assert.equal(d.version,previousVersion+1);assert.equal(d.cap,400);assert.equal(posts.length,1);
+ assert.match(drawer.innerHTML,/其它编辑|another editor/);
+});
+
 
 test('the app page opener mounts creation inline, preserves edits on return, and rejects an invalid editor link',async t=>{
  const previous={document:globalThis.document,location:globalThis.location,FormData:globalThis.FormData,matchMedia:globalThis.matchMedia,IntersectionObserver:globalThis.IntersectionObserver};

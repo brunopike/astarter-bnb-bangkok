@@ -232,6 +232,11 @@ export function createStrategyCenter({w,desk,root,go:route,refresh,notify,onRese
  const editFingerprint=()=>botPlanFingerprint({...nativePlan(),mode:nativeEditor()?mode:'signal'})+JSON.stringify([Number(researchBudget),parameterSource,parameterReference]);
  function snapshotEditorAlias(context,buffers){const key=context.id+':draft:'+context.draftId;if(!context.draftId||[context.id,key].includes(context.editorKey||context.id))return null;const restore=structuredClone(buffers[key]||null);return {key,restore,expected:structuredClone(restore)};}
  const aliasMatches=(alias,buffers)=>!alias||[alias.expected,...(alias.pending?[alias.pending]:[])].some(value=>JSON.stringify(buffers[alias.key]||null)===JSON.stringify(value));
+ function requireCurrentEditorAlias(context){
+  if(context.exitAlias&&!aliasMatches(context.exitAlias,loadBotEditors(w))){
+   throw Error(L('原草稿已在其它编辑中更新，当前输入仍保留。请重新核对。','The original draft changed in another editor. Your inputs are retained. Review it again.'));
+  }
+ }
  function acceptEditor(){if(!opened||w.persistenceError)return;const buffers=loadBotEditors(w);opened.exitBaseline=editFingerprint();opened.exitBuffer=structuredClone(buffers[opened.editorKey||opened.id]||null);opened.exitAlias=snapshotEditorAlias(opened,buffers);}
  function beforeLeave(){
   if(openingPage||!opened||!drawer.open||opened.exitDiscarded)return null;
@@ -791,6 +796,7 @@ export function createStrategyCenter({w,desk,root,go:route,refresh,notify,onRese
  async function save(check,context=opened){
   if(check&&!nativeEditor()){feedback=L('该版本仅可保存研究方案，尚未开放创建模拟。','This version is available for research only. Simulation creation is not enabled.');phase='configure';renderDrawer();return;}
   if(check&&(!strategyPlan(context.id,context.variant).flowAvailable||executionRoute.market&&executionRoute.accountId&&!strategyRouteReady(executionRoute,opened?.variant))){feedback=L('所选交易路线暂不支持启动，可以先保存配置。','This trading route cannot run yet. Save the configuration first.');renderDrawer();return;}
+  requireCurrentEditorAlias(context);
   const form=capture(),instrumentIssue=sourceInstrumentIssue(context.source);if(instrumentIssue){feedback=instrumentIssue;renderDrawer();return;}if(!check&&(!executionRoute.connectionId||!executionRoute.accountId||!executionRoute.market)){remember();const key=context.editorKey||context.id,editor=loadBotEditors(w)[key],saved=editor&&saveBotEditor(w,{...editor,localSaved:{scope:w.account?.scope||'local',environment:w.s.setupContext?.environment||'DEMO'}},key);if(!saved){if(editor&&!editor.localSaved)delete w.s.botEditors[key].localSaved;feedback=L('本机草稿尚未确认保存，输入已保留。请检查浏览器存储后重试。','The local draft could not be confirmed saved. Your inputs are retained. Check browser storage and try again.');renderDrawer();return;}acceptEditor();const message=L('草稿已保存，可在“我的 Agent”继续配置。','Draft saved. Continue setup in My Agents.');if(inlineHost){feedback=message;feedbackTone='success';}else{drawer.close();refresh();notify(message,{tone:'success',action:()=>route('execution'),actionLabel:L('我的 Agent','My Agents')});}return;}if(form&&!form.reportValidity())return;const resolvedAmount=nativeEditor()?nativePlan().amount:Number(amount);if(amount!=='')amount=Number(amount);cap=Number(cap);researchBudget=Number(researchBudget);
   if(check){const issue=recommendationIssue(context.source);if(issue){feedback=issue;renderDrawer();return;}}
   if(!executionRoute.connectionId||!executionRoute.accountId||!strategyRouteValid(context.id,executionRoute)){feedback=L('请选择账户、交易市场和资产。','Select an account, market and trading pair.');renderDrawer();return;}
@@ -820,14 +826,20 @@ export function createStrategyCenter({w,desk,root,go:route,refresh,notify,onRese
   const liveRecord=!check&&(liveAccount||walletAccount);
   if(!d){d=await w.createManagedDraft(context.id);if(!d&&liveRecord&&/已达保存上限|saved-item limit/.test(String(w.draftSaveError||''))){w.draftSaveError='';d=w.createDraft(context.id);}if(!d)throw Error(w.draftSaveError||L('草稿未能保存，输入已保留。请检查账户状态后重试。','Could not save this draft. Your inputs are retained. Check account access and try again.'));}
   if(!liveRecord){const entitlementError=await w.ensureDraftEntitlement(d);if(entitlementError){if(opened===context){feedback=entitlementError;renderDrawer();}else notify(entitlementError,{tone:'error'});return;}}
+  requireCurrentEditorAlias(context);
   const priorVersion=d.version,variantChanged=(d.planVariant||'baseline')!==variant;
   const error=w.saveDraft(d.id,intent);
   if(!error){
    if(variantChanged){if(d.version===priorVersion)d.version++;d.validatedVersion=null;d.status='draft';}
    d.planVariant=variant;d.combination=intent.protection.id==='astarter';if(context.source)d.researchSource={...context.source};context.draftId=d.id;
-   const buffer=w.s.botEditors?.[context.editorKey||context.id];
-   if(buffer&&(!buffer.draftId||buffer.draftId===d.id))saveBotEditor(w,{...buffer,draftId:d.id,baseVersion:d.version},context.editorKey||context.id);
-   if(opened===context)remember();else w.touch();
+   if(opened===context){
+    if(remember()===false)throw Error(L('本机草稿尚未确认保存，输入已保留。请检查浏览器存储后重试。','The local draft could not be confirmed saved. Your inputs are retained. Check browser storage and try again.'));
+   }else{
+    const key=context.editorKey||context.id,buffer=loadBotEditors(w)[key];
+    if(buffer&&(!buffer.draftId||buffer.draftId===d.id)){
+     if(!saveBotEditor(w,{...buffer,draftId:d.id,baseVersion:d.version},key))throw Error(w.persistenceError);
+    }else w.touch();
+   }
   }
   if(error){if(opened===context){feedback=error;renderDrawer();}else notify(error,{tone:'error'});return;}
   if(d.executionRoute?.connectionId!==intent.executionRoute.connectionId)throw Error(L('接入绑定未保存，暂不能检查或启动。输入已保留。','The connection binding was not saved. Checking and starting are blocked; your inputs are retained.'));
