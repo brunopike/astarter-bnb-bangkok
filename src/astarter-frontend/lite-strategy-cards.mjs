@@ -129,7 +129,8 @@ export function liteStrategyCard(row, { strategy, stale = false, lang = 'zh' }) 
         <span class="lite-plan-state">${state}</span>
       </header>
       <div class="lite-plan-market"><div class="lite-plan-quote"><div class="sig-stats-quote"><span>${en ? 'Closing price' : '收盘价'}</span><strong class="dot-number">${esc(signalClosePrice(o.price))} <small>${esc(o.unit)}</small></strong></div>
-        <div class="lite-card-source"><span>${provider}</span><time title="${iso}" datetime="${iso}">${iso.slice(11, 16)} UTC</time></div></div>
+        <div class="lite-card-source"><span>${provider}</span><time title="${iso}" datetime="${iso}">${iso.slice(11, 16)} UTC</time>
+          ${Number.isFinite(o.volumeRatio) ? `<span>${en ? 'Relative volume' : '相对成交量'} ${reading.format(o.volumeRatio)}×</span>` : ''}</div></div>
       ${chart}</div>
       <dl class="lite-plan-readings"><div><dt>EMA 20</dt><dd>${reading.format(o.ema20)}</dd></div><div data-change="${Math.sign(o.momentumPct)}"><dt>${en ? '5-bar change' : '5 根涨跌幅'}</dt><dd>${esc(momentum)}</dd></div><div><dt>RSI 14</dt><dd>${esc(reading.format(o.rsi14))}</dd></div></dl>
       <details class="lite-plan-rules-box"><summary>${en ? 'Entry and exit rules' : '入场与退出条件'}</summary>

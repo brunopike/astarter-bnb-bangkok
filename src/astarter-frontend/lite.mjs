@@ -8,6 +8,7 @@ import { tokenIcon } from './brand-icons.mjs';
 
 const desk = createLiteDesk();
 const assets = ['BTC', 'ETH', 'SOL'];
+const amountPresets = [25, 50, 100];
 const names = { BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana' };
 function load(key, fallback) {
   try {
@@ -37,7 +38,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
   const styles = ['lite', 'lite-strategy-cards', 'lite-crew'].map((name) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/' + name + '.css?v=20261127-lite-signal-feed';
+    link.href = '/' + name + '.css?v=20261127-lite-simple-ticket';
     document.head.append(link);
     return link;
   });
@@ -58,14 +59,14 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         <div id="lite-empty" class="lite-empty" role="status" hidden></div>
       </section>
       <aside class="order-dock" id="lite-controls" aria-labelledby="lite-controls-title">
-        <div class="dock-title"><h2 id="lite-controls-title" tabindex="-1">${t('操作台', 'Order ticket')} <span id="lite-order-symbol"></span></h2>
-          <details id="lite-account-menu" class="lite-menu"><summary>${t('练习账户', 'Practice account')}${uiGlyph('chevron')}</summary><div class="lite-popover" id="lite-account-info"></div></details>
+        <div class="dock-title"><h2 id="lite-controls-title" tabindex="-1"><span id="lite-order-symbol"></span></h2>
+          <details id="lite-account-menu" class="lite-menu"><summary>${t('练习账户', 'Practice account')}${uiGlyph('chevron')}</summary><div class="lite-popover" id="lite-account-info"><div id="lite-account-overview"></div>
+            <details id="lite-history" class="lite-history" hidden><summary>${t('最近操作', 'Recent activity')}<span class="history-end"><span id="lite-history-count"></span>${uiGlyph('chevron')}</span></summary><div id="lite-history-list"></div></details>
+          </div></details>
         </div>
         <div id="lite-trade-panel"></div>
-        <div id="lite-queue-tools" class="lite-queue"></div>
-        <div class="market-tools" id="lite-inspect" hidden><button type="button" data-cmd="evidence" aria-controls="lite-evidence" aria-expanded="false">${uiGlyph('layers')}${t('信号依据', 'Evidence')}</button></div>
-        <div id="lite-evidence" class="lite-disclosure" inert><div class="lite-disclosure-clip"><div id="lite-evidence-content" class="lite-inline"></div></div></div>
-        <details id="lite-history" class="lite-history"><summary><span class="history-label">${uiGlyph('history')}${t('最近操作', 'Recent activity')}</span><span class="history-end"><span id="lite-history-count"></span>${uiGlyph('chevron')}</span></summary><div id="lite-history-list"></div></details>
+        <div class="ticket-meta"><button type="button" class="lite-text" data-cmd="breakdown" id="lite-breakdown-toggle" aria-controls="lite-breakdown" aria-expanded="false" hidden></button><div id="lite-queue-tools" class="lite-queue"></div></div>
+        <div id="lite-breakdown" class="order-values" hidden></div>
       </aside>
     </div>
     <section class="lite-brain-floor" aria-label="${t('AI 助手', 'AI assistant')}"><div id="lite-chat-panel"></div></section>
@@ -155,6 +156,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     return typeof saved === 'number' && saved >= 10 && saved <= 1000 ? saved : 50;
   };
   let amountDraft = String(amount());
+  let customAmount = !amountPresets.includes(Number(amountDraft));
   function readCursor() {
     const cursor = load('cursor.' + mode, {}) || {};
     skipped = load('skips.' + mode, []);
@@ -188,15 +190,9 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     );
   }
   function closeDetails() {
-    el('evidence').inert = true;
-    el('evidence-content').replaceChildren();
-    view.querySelector('[data-cmd=evidence]').setAttribute('aria-expanded', 'false');
+    el('breakdown').hidden = true;
+    el('breakdown-toggle').setAttribute('aria-expanded', 'false');
     formError = '';
-  }
-  function sourceLabel(row) {
-    if (row.mode === 'practice' && row.id.startsWith('practice:exit:'))
-      return t('本机卖出演练', 'Local exit scenario');
-    return row.mode === 'practice' ? t('本机演练行情', 'Local practice feed') : row.source;
   }
   function restoreFeed() {
     try {
@@ -238,9 +234,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     });
     feedView.render(items, { selectedId: receipt?.signalId || current?.id || null, busy });
     crew.setActive(items.some(item => item.state === 'current'));
-    el('inspect').hidden = !current || Boolean(receipt);
     const archive = el('archive');
-    archive.hidden = !receipt;
+    archive.hidden = !receipt || items.some(item => item.row.id === receipt.signalId);
     if (receipt && archive.dataset.receipt !== receipt.id) {
       archive.dataset.receipt = receipt.id;
       archive.innerHTML = `<div class="lite-plan-pair">${tokenIcon(receipt.symbol, { size: 28 })}${esc(receipt.market)}</div>
@@ -274,21 +269,6 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     const title = el('signals-title');
     title.focus({ preventScroll: true });
     reveal(title);
-  }
-  function renderEvidence() {
-    const row = current;
-    if (!row) return;
-    const data = [
-      [t('数据来源', 'Source'), sourceLabel(row)],
-      [t('K 线收盘', 'Candle close'), day(row.closedAt) + ' ' + clock(row.closedAt)],
-      ['EMA 20', fmt(row.ema20) + ' USDT'],
-      ['RSI 14', fmt(row.rsi14, 1)],
-      [t('近 5 根涨跌幅', 'Five-bar change'), fmt(row.momentumPct) + '%']
-    ];
-    if (Number.isFinite(row.volumeRatio))
-      data.push([t('相对成交量', 'Relative volume'), fmt(row.volumeRatio) + '×']);
-    el('evidence-content').innerHTML =
-      `<div class="inline-heading"><h3>${t('信号依据', 'Signal evidence')}</h3>${button('evidence', t('收起', 'Close'))}</div>${data.map(([a, b]) => `<div class="lite-detail-row"><span>${a}</span><strong>${esc(b)}</strong></div>`).join('')}<p class="risk-copy">${row.mode === 'practice' ? t('这组演练数据固定 15 分钟，供熟悉操作流程。', 'This practice scenario stays fixed for 15 minutes.') : t('下一根收盘后重新计算。方向改变或观察到期后，需要核对新信号。', 'Recalculated after the next close. A direction change or expiry requires a fresh observation.')}</p>`;
   }
   const errors = {
     EXPIRED: ['这条观察已经过期，请读取新信号。', 'This observation expired. Refresh before continuing.'],
@@ -361,10 +341,20 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     }
     input.setAttribute('aria-invalid', String(Boolean(showError && (invalid || insufficient))));
     for (const preset of el('trade-panel').querySelectorAll('[data-cmd=preset]'))
-      preset.setAttribute('aria-pressed', String(Number(preset.value) === value));
+      preset.setAttribute('aria-pressed', String(!customAmount && Number(preset.value) === value));
     if (showError) {
       const error = invalid ? 'INVALID_AMOUNT' : insufficient ? 'INSUFFICIENT_FUNDS' : formError;
       el('order-note').textContent = error ? errorText(error) : '';
+    }
+  }
+  function setBreakdown(lines, label) {
+    const toggle = el('breakdown-toggle');
+    toggle.hidden = !lines;
+    toggle.innerHTML = esc(label) + uiGlyph('chevron');
+    el('breakdown').innerHTML = lines;
+    if (!lines) {
+      toggle.setAttribute('aria-expanded', 'false');
+      el('breakdown').hidden = true;
     }
   }
   function renderTrade() {
@@ -372,8 +362,9 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     const observed = current?.closedAt || (receipt && feedRows.find(row => row.id === receipt.signalId)?.closedAt);
     const market = current?.market || receipt?.market || '';
     const stamp = observed ? new Date(observed).toISOString() : '';
-    el('order-symbol').textContent = market + (stamp ? ' · ' + stamp.slice(11, 16) + ' UTC' : '');
+    el('order-symbol').innerHTML = esc(market || t('操作台', 'Order ticket')) + (stamp ? ' <small>' + stamp.slice(11, 16) + ' UTC</small>' : '');
     el('order-symbol').title = stamp;
+    el('controls-title').setAttribute('aria-label', [t('操作台', 'Order ticket'), market, stamp && stamp.slice(11, 16) + ' UTC'].filter(Boolean).join(' · '));
     if (receipt) {
       const sold = receipt.side === 'sell';
       const exercise =
@@ -386,71 +377,55 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
           fmt(receipt.amount) + ' USDT'
         ) +
         orderLine(t('手续费', 'Fee'), fmt(receipt.fee) + ' USDT');
+      setBreakdown(details, t('成交明细', 'Fill details'));
       target.innerHTML = `<div class="fill-state"><div class="fill-heading"><span class="fill-check" aria-hidden="true">${uiGlyph('check')}</span><h3>${sold ? t('已记录卖出', 'Sell recorded') : t('已记录买入', 'Buy recorded')}</h3></div>
     ${planLabel ? `<p class="fill-strategy">${esc(planLabel)}</p>` : ''}<strong class="fill-size">${fmt(receipt.quantity, 6)} ${esc(receipt.symbol)}</strong>
-    <div class="order-values">${details}</div><div class="dock-actions">${exercise ? button('practice-exit', t('练习卖出', 'Practice selling'), 'lite-action') : ''}${button('next', t('下一条信号', 'Next signal') + ' →', 'secondary-btn')}</div></div>`;
+    <div class="dock-actions">${exercise ? button('practice-exit', t('练习卖出', 'Practice selling'), 'lite-action') : ''}${button('next', t('下一条信号', 'Next signal') + ' →', 'secondary-btn')}</div></div>`;
       return;
     }
     const holding = currentHolding();
     const plan = validPlan();
-    const buy = plan?.side === 'buy',
-      sell = plan?.side === 'sell';
     const expired = current && Date.now() >= current.validUntil;
-    const needsRefresh = expired || (current && !rows.some(row => row.id === current.id)) || ['EXPIRED', 'QUOTE_CHANGED', 'SIGNAL_CHANGED'].includes(formError);
-    const label =
-      (!expired && selectedStrategy?.label) ||
-      (expired ? t('信号已到期', 'Signal expired') : t('等待可执行信号', 'Waiting for a trade signal'));
+    const skippedCard = current && skipped.includes(current.id);
+    const needsRefresh = current && (expired || !rows.some(row => row.id === current.id) ||
+      ['EXPIRED', 'QUOTE_CHANGED', 'SIGNAL_CHANGED'].includes(formError));
+    const buy = !needsRefresh && plan?.side === 'buy';
+    const sell = !needsRefresh && plan?.side === 'sell';
+    const symbol = current?.symbol || '';
     const balance = orderLine(t('可用资金', 'Available funds'), fmt(account?.balance) + ' USDT');
-    const symbol = current?.symbol || '—';
-    const form = buy
-      ? `<label class="field-label" for="lite-order-amount">${t('投入金额', 'Order amount')}</label>
-    <div class="lite-amount-controls"><div class="order-input"><input id="lite-order-amount" name="amount" aria-describedby="lite-order-note" inputmode="decimal" autocomplete="off" value="${esc(amountDraft)}" ${busy ? 'disabled' : ''}><span>USDT</span></div>
-    <div class="amount-presets">${[25, 50, 100].map((v) => `<button type="button" data-cmd="preset" value="${v}" aria-label="${v} USDT" ${busy ? 'disabled' : ''}>${v}<span class="preset-unit"> USDT</span></button>`).join('')}</div></div>`
-      : sell
-        ? `<div class="field-label">${t('卖出持仓', 'Position to sell')}</div><div class="sell-amount">${fmt(holding?.quantity, 6)} <small>${esc(symbol)}</small></div>`
-        : '';
-    const lines = buy
-      ? `<div class="order-line"><span>${t('预计获得', 'Estimated quantity')}</span><strong id="lite-order-quantity"></strong></div><div class="order-line"><span>${t('预估手续费', 'Est. fee')}</span><strong id="lite-order-fee"></strong></div>`
-      : sell
-        ? orderLine(t('参考收盘价', 'Reference close'), fmt(current.price) + ' USDT')
-        : '';
-    const idle = !current
-      ? loading
-        ? t('正在读取信号…', 'Reading signals…')
-        : t('可操作的推荐将显示在这里。', 'The next actionable strategy will appear here.')
-      : skipped.includes(current.id) ? t('已跳过这张卡。', 'You skipped this signal.')
-      : t(
-          '当前信号适合观察。可以看下一条，或展开信号依据。',
-          'Watch this signal, view the evidence, or move to the next one.'
-        );
-    const act = needsRefresh
-      ? button('fresh', t('查看最新信号', 'View latest signal'), 'lite-action', busy)
-      : buy || sell
-        ? button(
-            sell ? 'sell' : 'buy',
-            busy
-              ? t('正在核对…', 'Checking…')
-              : liteOrderLabel(sell ? 'sell' : 'buy', symbol, readDraft(), lang),
-            'lite-action',
-            busy || !account
-          )
-        : current
-          ? button(
-              queue().some((r) => r.id !== current.id) ? 'cycle' : 'refresh',
-              queue().some((r) => r.id !== current.id)
-                ? t('查看下一条信号', 'View next signal')
-                : t('刷新信号', 'Refresh signals'),
-              'secondary-btn',
-              busy
-            )
-          : button('refresh', t('刷新信号', 'Refresh signals'), 'secondary-btn', busy || loading);
-    target.innerHTML = `<div class="order-config">
-    ${!current || expired ? '<div class="order-plan"><h3>' + esc(label) + '</h3></div>' : ''}
-    ${form}
-    ${!plan && !needsRefresh ? `<p class="order-idle">${idle}</p>` : ''}
-    <div class="order-values">${balance}${lines}</div>
-    <div class="dock-actions">${act}</div>
-    <p class="trade-note error" id="lite-order-note" role="status">${formError ? errorText(formError) : accountError ? errorText('STORAGE_UNAVAILABLE') : ''}</p></div>`;
+    let form = '';
+    let lines = '';
+    let action = '';
+    if (buy) {
+      form = `<fieldset class="ticket-amount"><legend>${t('投入金额', 'Amount')} <span>USDT</span></legend>
+        <div class="amount-presets">${amountPresets.map(value => `<button type="button" data-cmd="preset" value="${value}" aria-label="${value} USDT" ${busy ? 'disabled' : ''}>${value}</button>`).join('')}
+          <button type="button" data-cmd="custom" aria-pressed="${customAmount}" aria-controls="lite-custom-amount" ${busy ? 'disabled' : ''}>${t('自定义', 'Custom')}</button></div>
+        <div class="order-input" id="lite-custom-amount" ${customAmount ? '' : 'hidden'}><input id="lite-order-amount" name="amount" aria-label="${t('自定义投入金额，USDT', 'Custom amount in USDT')}" aria-describedby="lite-order-note" inputmode="decimal" autocomplete="off" value="${esc(amountDraft)}" ${busy ? 'disabled' : ''}><span>USDT</span></div></fieldset>`;
+      lines = balance + `<div class="order-line"><span>${t('预计获得', 'Estimated quantity')}</span><strong id="lite-order-quantity"></strong></div>
+        <div class="order-line"><span>${t('预估手续费', 'Est. fee')}</span><strong id="lite-order-fee"></strong></div>`;
+    } else if (sell) {
+      form = `<p class="position-to-sell"><span>${t('卖出持仓', 'Position to sell')}</span><strong>${fmt(holding?.quantity, 6)} ${esc(symbol)}</strong></p>`;
+      lines = balance + orderLine(t('参考收盘价', 'Reference close'), fmt(current.price) + ' USDT');
+    }
+    if (buy || sell) {
+      action = button(plan.side, busy ? t('正在核对…', 'Checking…') : liteOrderLabel(plan.side, symbol, readDraft(), lang), 'lite-action', busy || !account);
+    } else if (needsRefresh) {
+      form = `<p class="order-idle">${expired ? t('这张信号已到期。', 'This signal has expired.') : t('这张信号需要更新。', 'This signal needs an update.')}</p>`;
+      action = button('fresh', t('查看最新信号', 'View latest signal'), 'lite-action', busy || loading);
+    } else if (current) {
+      const status = skippedCard ? t('已跳过此信号。', 'You skipped this signal.') :
+        current.direction === 'down' && !holding ? t('当前无持仓可卖出。', 'You have no position to sell.') :
+        t('等待入场条件。', 'Waiting for entry conditions.');
+      form = `<p class="order-idle">${status}</p>`;
+      if (queue().some(row => row.id !== current.id))
+        action = button('cycle', t('查看下一张', 'View next card'), 'secondary-btn', busy);
+    } else {
+      form = `<p class="order-idle">${loading ? t('正在读取信号…', 'Loading signals…') : t('等待新信号。', 'Waiting for a new signal.')}</p>`;
+      if (!loading && failed.length) action = button('refresh', t('重新读取', 'Retry'), 'secondary-btn');
+    }
+    setBreakdown(lines, t('订单明细', 'Order details'));
+    target.innerHTML = `<div class="order-config">${form}${action ? '<div class="dock-actions">' + action + '</div>' : ''}
+      <p class="trade-note error" id="lite-order-note" role="status">${formError ? errorText(formError) : accountError ? errorText('STORAGE_UNAVAILABLE') : ''}</p></div>`;
     syncEstimate();
   }
   function queue() {
@@ -461,7 +436,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
   function expiryLabel() {
     const seconds = Math.max(0, Math.ceil((current.validUntil - Date.now()) / 1000));
     const countdown = Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
-    return seconds ? t('有效期剩余 ', 'Expires in ') + countdown : t('观察已过期', 'Observation expired');
+    return t(countdown + ' 后到期', 'Expires in ' + countdown);
   }
   function renderQueue() {
     renderCards();
@@ -480,11 +455,12 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       mode === 'practice' ? t('返回实时行情', 'Back to live feed') : t('体验演练', 'Try practice');
     el('mode-button').disabled = busy;
     const items = [];
-    if (current && !receipt) items.push(`<span id="lite-expires-countdown">${expiryLabel()}</span>`);
+    const canSkip = !receipt && validPlan() && current.validUntil > Date.now() && blockedObservation?.id !== current.id;
+    if (canSkip) items.push(`<span id="lite-expires-countdown">${expiryLabel()}</span>`);
     const actions = [];
-    if (current && !receipt)
-      actions.push(button('skip', t('跳过此信号', 'Dismiss signal'), 'lite-text', busy));
-    if (undoId) actions.push(button('undo', t('撤销跳过', 'Undo dismiss'), 'lite-text', busy));
+    if (canSkip)
+      actions.push(button('skip', t('跳过', 'Skip'), 'lite-text', busy));
+    if (undoId && skippedRow?.validUntil > Date.now() && !receipt) actions.push(button('undo', t('撤销跳过', 'Undo dismiss'), 'lite-text', busy));
     if (actions.length) items.push('<span class="queue-actions">' + actions.join('') + '</span>');
     if (handoffNotice) items.push('<span>' + esc(handoffNotice) + '</span>');
     el('queue-tools').innerHTML = items.join('');
@@ -496,8 +472,9 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     const positions = holdings.length
       ? `<div class="account-holdings"><small>${t('持仓', 'Positions')}</small>${holdings.map((h) => `<div><b>${esc(h.symbol)}</b><span>${fmt(h.quantity, 6)}</span>${mode === 'practice' ? `<button type="button" data-cmd="practice-exit" data-symbol="${esc(h.symbol)}">${t('练习卖出', 'Practice selling')}</button>` : ''}</div>`).join('')}</div>`
       : '';
-    el('account-info').innerHTML =
+    el('account-overview').innerHTML =
       `<h3>${t('本机练习账户', 'Local practice account')}</h3><small>${feed} · ${t('可用余额', 'Available')}</small><strong class="account-number">${fmt(account?.balance)} USDT</strong>${positions}<p>${t('两种行情独立记账。操作仅记录在此浏览器。', 'Each feed has its own balance. Trades are recorded only in this browser.')}</p>`;
+    el('history').hidden = !receipts.length;
     el('history-count').textContent = String(receipts.length);
     el('history-list').innerHTML = receipts.length
       ? receipts
@@ -599,7 +576,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         explicitSelection || chat.isInteracting() ||
         draftTouched ||
         editingAmount() ||
-        !el('evidence').inert ||
+        !el('breakdown').hidden ||
+        el('ticket').querySelector('.lite-feed-detail')?.open ||
         el('ticket').contains(document.activeElement) ||
         el('controls').contains(document.activeElement);
       if (updated && updated.id !== current.id && !isReading && (current.validUntil <= at || updated.closedAt > current.closedAt || (!planFor(current)?.actionable && planFor(updated)?.actionable))) {
@@ -825,9 +803,24 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       case 'next':
         advance();
         break;
+      case 'custom': {
+        const input = el('order-amount');
+        if (!input) return;
+        customAmount = true;
+        draftTouched = true;
+        el('custom-amount').hidden = false;
+        element.setAttribute('aria-pressed', 'true');
+        syncEstimate();
+        input.focus();
+        input.select();
+        break;
+      }
       case 'preset':
         if (!el('order-amount')) return;
         draftTouched = true;
+        customAmount = false;
+        el('custom-amount').hidden = true;
+        el('trade-panel').querySelector('[data-cmd=custom]').setAttribute('aria-pressed', 'false');
         amountDraft = element.value;
         el('order-amount').value = amountDraft;
         formError = '';
@@ -851,20 +844,10 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         focusCard();
         break;
       }
-      case 'evidence': {
-        const panel = el('evidence');
-        const trigger = view.querySelector('#lite-inspect [data-cmd=evidence]');
-        const opening = panel.inert;
-        if (!opening) trigger.focus({ preventScroll: true });
-        panel.inert = !opening;
-        trigger.setAttribute('aria-expanded', String(opening));
-        if (opening) {
-          renderEvidence();
-          const observation = current;
-          Promise.allSettled(panel.getAnimations().map((animation) => animation.finished)).then(() => {
-            if (panel.isConnected && !panel.inert && current === observation) reveal(panel);
-          });
-        }
+      case 'breakdown': {
+        const panel = el('breakdown');
+        panel.hidden = !panel.hidden;
+        element.setAttribute('aria-expanded', String(!panel.hidden));
         break;
       }
     }
@@ -932,15 +915,9 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     const expired = current && Date.now() >= current.validUntil ? current.id : null;
     if (expired && expired !== expiredId && !busy && !receipt) {
       renderQueue();
-      if (el('order-amount') && (draftTouched || editingAmount())) {
-        syncEstimate();
-        const actions = el('trade-panel').querySelector('.dock-actions');
-        actions.querySelector('[data-cmd=buy]')?.setAttribute('disabled', '');
-        if (!actions.querySelector('[data-cmd=fresh]')) {
-          actions.insertAdjacentHTML('beforeend', button('fresh', t('查看最新信号', 'View latest signal'), 'secondary-btn'));
-        }
-        el('order-note').textContent = t('上一根 K 线已结束，已保留输入金额。', 'The candle closed. Your amount is saved in this ticket.');
-      } else renderTrade();
+      const wasEditing = el('trade-panel').contains(document.activeElement);
+      renderTrade();
+      if (wasEditing) el('trade-panel').querySelector('[data-cmd=fresh]')?.focus({ preventScroll: true });
       expiredId = expired;
     }
     if (!request && !busy && Date.now() >= nextReadAt) void refresh();

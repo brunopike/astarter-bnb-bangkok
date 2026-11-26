@@ -1,4 +1,3 @@
-import { mountParticlePortrait } from './brain-particle-portrait.mjs';
 import { courierFigure } from './collection-motion.mjs';
 
 const preferenceKey = 'astarter.lite.crew.hidden';
@@ -20,36 +19,6 @@ function pairMarkup(colors, pair) {
   </span>`).join('');
 }
 
-function mountBrainSky(host, signal) {
-  const main = host.closest('.lite-main');
-  const layer = document.createElement('div');
-  layer.className = 'lite-brain-sky';
-  layer.setAttribute('aria-hidden', 'true');
-  const canvas = document.createElement('canvas');
-  layer.append(canvas);
-  main.prepend(layer);
-  const portrait = mountParticlePortrait(canvas);
-  const root = document.documentElement;
-  const motion = matchMedia('(prefers-reduced-motion: reduce)');
-  const contrast = matchMedia('(forced-colors: active)');
-  const refresh = () => {
-    const reduced = motion.matches || root.dataset.reducedMotion === 'true';
-    const visible = !document.hidden && !contrast.matches;
-    layer.dataset.paused = String(!visible || reduced);
-    portrait.update({ visible, reduced, light: root.dataset.theme === 'light' });
-  };
-  const observer = new MutationObserver(refresh);
-  observer.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-reduced-motion'] });
-  for (const preference of [motion, contrast]) preference.addEventListener('change', refresh, { signal });
-  document.addEventListener('visibilitychange', refresh, { signal });
-  refresh();
-  return () => {
-    observer.disconnect();
-    portrait.dispose();
-    layer.remove();
-  };
-}
-
 export function mountLiteCrew(host, { lang = 'en' } = {}) {
   const zh = /^zh/i.test(lang);
   const hiddenText = zh ? '显示采集小队' : 'Show signal crew';
@@ -63,7 +32,6 @@ export function mountLiteCrew(host, { lang = 'en' } = {}) {
   host.append(root);
   const button = root.querySelector('button');
   const controller = new AbortController();
-  const removeSky = mountBrainSky(host, controller.signal);
   let hidden = readHidden();
   let inView = true;
 
@@ -98,7 +66,6 @@ export function mountLiteCrew(host, { lang = 'en' } = {}) {
     setActive,
     destroy() {
       controller.abort();
-      removeSky();
       observer?.disconnect();
       root.remove();
     },

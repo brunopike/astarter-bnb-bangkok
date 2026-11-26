@@ -219,88 +219,8 @@
   43%, 58% { opacity: 1; transform: translate(1px, -1px) rotate(-8deg); }
 }
 
-.lite-main:has(> .lite-brain-sky) {
-  isolation: isolate;
-}
-.lite-brain-sky {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-  user-select: none;
-  --sky-star: #a4c8e0;
-  --sky-edge: #a598e3;
-  background:
-    radial-gradient(ellipse at 72% 56%, #5144792b, transparent 53%),
-    radial-gradient(ellipse at 32% 24%, #2352662f, transparent 58%);
-}
-.lite-brain-sky::before,
-.lite-brain-sky::after {
-  content: '';
-  position: absolute;
-  inset: -30px;
-  opacity: .4;
-  background:
-    radial-gradient(circle at 13px 16px, var(--sky-star) .8px, transparent 1.45px) 0 0 / 113px 99px,
-    radial-gradient(circle at 32px 68px, var(--sky-edge) .75px, transparent 1.2px) 0 0 / 163px 137px,
-    radial-gradient(circle at 49px 31px, var(--sky-star) .5px, transparent 1px) 0 0 / 71px 107px;
-}
-.lite-brain-sky::after {
-  opacity: .22;
-  background-size: 213px 157px, 173px 239px, 133px 179px;
-  background-position: 47px 16px, 139px 12px, 19px 44px;
-}
-.lite-brain-sky canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: .94;
-  transform: translate(13%, -1%);
-}
-:root[data-theme='light'] .lite-brain-sky {
-  --sky-star: #849cb3;
-  --sky-edge: #7b76aa;
-  background:
-    radial-gradient(ellipse at 72% 56%, #aca3c731, transparent 55%),
-    radial-gradient(ellipse at 32% 24%, #a4c5d23b, transparent 58%);
-}
 .lite-main .lite-brain-floor { margin-top: 16px; }
-.lite-brain-floor #lite-chat-panel { min-width: 0; }
 body #product-page .lite-brain-floor #lite-chat-panel > .chat-app {
   width: 100%;
   margin: 0;
-  background: color-mix(in srgb, var(--b-panel) 37%, transparent) !important;
-}
-#product-page #lite-chat-panel .chat-app .chat-main {
-  background: linear-gradient(110deg, color-mix(in srgb, var(--b-panel) 58%, transparent), transparent 82%);
-}
-#product-page #lite-chat-panel .chat-app .chat-main:not(:has(.chat-welcome)) {
-  background: color-mix(in srgb, var(--b-panel) 79%, transparent);
-}
-#product-page #lite-chat-panel .chat-app .chat-history {
-  background: color-mix(in srgb, var(--b-panel) 94%, transparent);
-}
-@media (max-width: 680px) {
-  .lite-brain-sky canvas {
-    transform: translate(13%, clamp(-225px, calc(58vw - 50dvh + 42px), -20px));
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  html:not([data-reduced-motion='true']) .lite-brain-sky::before {
-    animation: lite-sky-drift 13s linear infinite alternate;
-  }
-  html:not([data-reduced-motion='true']) .lite-brain-sky::after {
-    animation: lite-sky-drift 17s -9s linear infinite alternate-reverse;
-  }
-}
-@keyframes lite-sky-drift {
-  from { transform: translate3d(-9px, 6px, 0); }
-  to { transform: translate3d(13px, -10px, 0); }
-}
-.lite-brain-sky[data-paused='true']::before,
-.lite-brain-sky[data-paused='true']::after { animation-play-state: paused !important; }
-@media (forced-colors: active) {
-  .lite-brain-sky { display: none; }
 }
