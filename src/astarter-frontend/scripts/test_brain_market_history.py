@@ -19,7 +19,7 @@ class MarketHistory(unittest.TestCase):
             dest=Path(tmp)
             orig={'version':1,'series':[{'id':'wti','end':'2020-04-20','count':1}]}
             market.save(dest/'catalog.json',orig)
-            with patch.object(market,'SPECS',[next(s for s in market.SPECS if s[0]=='wti')]),patch.object(market,'world_bank',return_value=('https://example.test',{})),patch.object(market,'fetch_fred',side_effect=ValueError('offline')):
+            with patch.object(market,'SPECS',[next(s for s in market.SPECS if s[0]=='wti')]),patch.object(market,'world_bank',return_value=('https://example.test',{})),patch.object(market,'fetch_agency',side_effect=ValueError('publisher unavailable')),patch.object(market,'fetch_fred',side_effect=ValueError('offline')):
                 with self.assertRaisesRegex(RuntimeError,'offline'):
                     market.build(dest,date(2020,4,21))
             self.assertEqual(json.loads((dest/'catalog.json').read_bytes()),orig)

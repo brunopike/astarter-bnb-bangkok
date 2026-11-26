@@ -18,6 +18,7 @@ import openpyxl
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from brain_tradfi_agencies import fetch_agency
 
 START = date(2016, 1, 1)
 TWSE = 'https://www.twse.com.tw/exchangeReport/FMTQIK'
@@ -154,7 +155,11 @@ def fetch_fx(code):
 
 def fetch_fred(code):
     url='https://fred.stlouisfed.org/series/'+code
-    rows=csv.DictReader(io.StringIO(get(FRED,params={'id':code,'cosd':START.isoformat()}).text))
+    with requests.get(FRED,params={'id':code,'cosd':START.isoformat()},timeout=(5,12)) as response:
+        response.raise_for_status()
+        rows=csv.DictReader(io.StringIO(response.text))
+    if not rows.fieldnames or code not in rows.fieldnames:
+        raise ValueError('Unexpected FRED series for '+code)
     return url,[[r['observation_date'],number(r[code])] for r in rows if r[code] not in ('','.','NA')]
 
 
@@ -188,8 +193,14 @@ def build(dest, until):
             elif group=='fx':
                 source='ECB';url,rows=fetch_fx(code);statistic='reference'
             else:
-                source='Federal Reserve Board · FRED' if code in {'DTWEXBGS','DGS2','DGS10'} else 'U.S. EIA · FRED'
-                url,rows=fetch_fred(code);statistic='yield' if group=='rates' else 'index' if code=='DTWEXBGS' else 'spot'
+                source='Federal Reserve Board' if code in {'DTWEXBGS','DGS2','DGS10'} else 'U.S. EIA'
+                try:
+                    url,rows=fetch_agency(code)
+                except Exception as agency_error:
+                    print(f'{key}: {source} unavailable ({agency_error}); using FRED',flush=True)
+                    url,rows=fetch_fred(code)
+                    source+=' · FRED'
+                statistic='yield' if group=='rates' else 'index' if code=='DTWEXBGS' else 'spot'
             filtered={d:v for d,v in rows if START<=date.fromisoformat(d)<=until}
             if not filtered and old and code=='TAIEX' and (until-date.fromisoformat(max(old))).days<=14:
                 continue

@@ -196,6 +196,9 @@ astarter-brain .br-raw-ranges select {max-width:100%;flex:1}
 }
 
 astarter-brain button[data-raw-open=tradfi] {margin-inline-start:12px}
+@media(max-width:600px){
+  astarter-brain button[data-raw-open=tradfi] {display:flex;width:fit-content;margin-inline-start:0}
+}
 astarter-brain #brain-tradfi-dialog .br-raw-filters {grid-template-columns:minmax(0,2fr) minmax(5.5rem,1fr)}
 astarter-brain #brain-tradfi-dialog td small {display:block;max-width:22ch;white-space:normal;overflow-wrap:anywhere;color:var(--b-muted);font-size:11px}
 astarter-brain #brain-tradfi-dialog [data-provenance] button {background:transparent;border:0;color:var(--b-ink);text-decoration:underline;cursor:pointer}

@@ -45,10 +45,10 @@ if __name__ == '__main__':
     updaters=(brain_tradfi.build,brain_tradfi_tw.build,update_issuers,brain_tradfi_holdings.build,
               brain_tradfi_trades.build,brain_tradfi_oracles.build)
     for updater in updaters:
+        print(f'Refreshing {updater.__module__}.{updater.__name__} through {args.until}',flush=True)
         try:
             updater(args.root,args.until)
         except Exception as exc:
             errors.append(f'{updater.__module__}.{updater.__name__}: {exc}')
-    for error in errors:
-        print(error,file=sys.stderr)
+            print(errors[-1],file=sys.stderr,flush=True)
     sys.exit(bool(errors))

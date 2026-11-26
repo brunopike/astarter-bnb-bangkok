@@ -43,7 +43,9 @@ export function mountTradfiArchive(root,en){
   const el=(tag,text)=>{const node=doc.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
   const link=(label,href)=>{const a=el('a',label);a.href=href;a.target='_blank';a.rel='noopener noreferrer';return a;};
   const open=el('button');open.type='button';open.dataset.rawOpen='tradfi';open.setAttribute('aria-haspopup','dialog');
-  open.setAttribute('aria-controls','brain-tradfi-dialog');open.append(el('span',t('传统市场','Traditional markets')),el('span','↗'));
+  const title=el('span','TradFi Markets'),arrow=el('span','↗');
+  title.lang='en';title.translate=false;
+  arrow.setAttribute('aria-hidden','true');open.setAttribute('aria-controls','brain-tradfi-dialog');open.append(title,arrow);
   root.querySelector('.ct-heading').append(open);
   const dialog=el('dialog');dialog.id='brain-tradfi-dialog';dialog.dataset.rawDialog='';dialog.setAttribute('aria-labelledby','br-market-title');
   dialog.innerHTML=`<header class="br-raw-head"><h2 id="br-market-title">${t('传统市场历史','Traditional market history')}</h2><button type="button" data-close aria-label="${t('关闭','Close')}">×</button></header>
@@ -56,6 +58,25 @@ export function mountTradfiArchive(root,en){
     info=q('[data-provenance]'),tbody=q('tbody'),paging=q('footer'),retry=q('[data-retry]');
   const number=new Intl.NumberFormat(en?'en':'zh',{maximumFractionDigits:8}),cache=new Map();
   let series=[],rows=[],page=0,controller,revision=0;
+  const lifetime=new AbortController();
+  let catalog,catalogRequest,checkedAt=0;
+  function getCatalog(force=false){
+    if(!force&&catalog&&Date.now()-checkedAt<60_000)return Promise.resolve(catalog);
+    if(!catalogRequest){
+      catalogRequest=fetch(url+'catalog.json',{signal:lifetime.signal,cache:'no-cache'}).then(async response=>{
+        if(!response.ok)throw Error('Market catalog unavailable');
+        const entries=validateSeries(await response.json());
+        const count=number.format(entries.reduce((sum,s)=>sum+s.count,0));
+        title.textContent=count+' TradFi Markets';
+        open.title=t(count+' 条历史观测记录，覆盖 '+entries.length+' 个数据序列',count+' historical observations across '+entries.length+' series');
+        open.setAttribute('aria-label',title.textContent+' · '+open.title);
+        catalog=entries;checkedAt=Date.now();return entries;
+      }).finally(()=>{catalogRequest=undefined;});
+    }
+    return catalogRequest;
+  }
+  const refreshHeading=()=>{if(!doc.hidden)void getCatalog().catch(()=>{});};
+  refreshHeading();doc.addEventListener('visibilitychange',refreshHeading,{signal:lifetime.signal});
   const chosen=()=>series.find(s=>s.id===instrument.value);
   const clear=()=>{rows=[];tbody.replaceChildren();q('thead tr').replaceChildren();paging.hidden=true;year.replaceChildren();info.replaceChildren();};
   function render(){
@@ -130,10 +151,10 @@ export function mountTradfiArchive(root,en){
     controller?.abort();controller=new AbortController();const signal=controller.signal,id=++revision;
     clear();retry.hidden=true;status.textContent=t('正在读取历史数据…','Loading history…');
     try{
-      if(!series.length||refresh===true){
+      const all=await getCatalog(refresh===true);if(id!==revision)return;
+      if(series!==all){
         const previous=instrument.value;
-        const res=await fetch(url+'catalog.json',{signal,cache:'no-cache'});if(!res.ok)throw Error();
-        const all=validateSeries(await res.json());if(id!==revision)return;series=all;instrument.replaceChildren();
+        series=all;instrument.replaceChildren();
         for(const [group,names] of Object.entries(groups)){
           const opts=el('optgroup');opts.label=t(...names);
           const rank=s=>s.statistic==='oracle'?2:s.statistic==='dilutedEps'||s.statistic==='reportedValuePerShare'?1:0;
@@ -154,5 +175,5 @@ export function mountTradfiArchive(root,en){
   open.onclick=()=>{dialog.showModal();load();};instrument.onchange=load;year.onchange=()=>{page=0;render();};retry.onclick=()=>load(true);
   q('[data-prev]').onclick=()=>{page--;render();};q('[data-next]').onclick=()=>{page++;render();};q('[data-close]').onclick=()=>dialog.close();
   dialog.onclose=()=>{revision++;controller?.abort();open.focus({preventScroll:true});};
-  return ()=>{revision++;controller?.abort();dialog.remove();open.remove();};
+  return ()=>{revision++;controller?.abort();lifetime.abort();dialog.remove();open.remove();};
 }
