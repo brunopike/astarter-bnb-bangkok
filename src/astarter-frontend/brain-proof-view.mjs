@@ -118,31 +118,32 @@ export function linksLearningReceipt(before,after){
 }
 
 const learningGlyphs={
-  stop_loss:'<path class="bl-threshold" d="M3.5 18.5h17"/><path d="m4 5.5 4.5 5 3-2.5 5.5 10.5"/><circle cx="17" cy="18.5" r="2" class="bl-hit"/>',
-  session_close:'<circle cx="12" cy="12" r="8.5"/><path d="M12 6.5V12l4 2.5"/>',
-  cash:'<path class="bl-secondary" d="M3 9v10h16"/><rect x="5.5" y="5.5" width="15.5" height="10.5" rx="2"/><circle cx="13.25" cy="10.75" r="2.25"/><path d="M8 10.75h.3m9.9 0h.3"/>',
-  blocked:'<path d="m12 3 8 3v5.5c0 4.6-3.9 7.8-8 9.5-4.1-1.7-8-4.9-8-9.5V6z"/><path d="M8.5 11.5h7"/>',
-  trend:'<path d="m3 17 6-6 4 3 7-8m-5 0h5v5"/>',
-  breakout:'<path class="bl-threshold" d="M3 10h18"/><path d="m3 17 5-3 4 2L19 5m-5 1 5-1 1 5"/>',
-  pullback:'<path d="m3 17 6-9 5 6 6-9m-4 .5 4-.5.5 4"/>',
-  strategy:'<circle cx="5" cy="12" r="2"/><path d="M7 12h3c3 0 3-6 7-6m-7 6c3 0 3 6 7 6"/><path d="m16 3 3 3-3 3m0 6 3 3-3 3"/>',
-  receipt:'<path d="M5 4h14v16l-3-1.5-4 1.5-4-1.5L5 20z"/><path d="M8.5 9h7m-7 4h4"/>'
+  stop_loss:`<g opacity=".52"><rect x="4" y="5" width="6" height="9" rx="1.3"/><rect x="12" y="10" width="6" height="11" rx="1.3"/></g>
+    <g class="bl-drop"><rect x="21" y="14" width="7" height="10" rx="1.3"/><rect x="23.5" y="11" width="2" height="16" rx=".8"/></g>
+    <rect class="bl-stop-floor" x="3" y="27" width="27" height="3.5" rx="1.4"/>`,
+  session_close:'<path fill-rule="evenodd" d="M16 2.5a13.5 13.5 0 1 1 0 27 13.5 13.5 0 0 1 0-27Zm-1.8 5v10.1l7 4.3 1.8-2.9-5.3-3.2V7.5z"/>',
+  cash:`<path opacity=".48" d="M2 11.5 23 4.8a2 2 0 0 1 2.5 1.3l.9 2.8-22.6 7.2L1.3 14a2 2 0 0 1 .7-2.5Z"/>
+    <path class="bl-banknote" fill-rule="evenodd" d="M5 10h23a2.5 2.5 0 0 1 2.5 2.5v12A2.5 2.5 0 0 1 28 27H5a2.5 2.5 0 0 1-2.5-2.5v-12A2.5 2.5 0 0 1 5 10Zm11.5 3.9c-2.2 0-3.85 2.1-3.85 4.6s1.65 4.6 3.85 4.6 3.85-2.1 3.85-4.6-1.65-4.6-3.85-4.6Zm-10.7-.8v3.5a3.5 3.5 0 0 0 3.5-3.5Zm21.4 10.8v-3.5a3.5 3.5 0 0 0-3.5 3.5Z"/>`,
+  blocked:'<path fill-rule="evenodd" d="m16 2 11.5 4.8V15c0 7-5.8 12-11.5 15C10.3 27 4.5 22 4.5 15V6.8zM10 14.2v3.6h12v-3.6z"/>',
+  trend:'<path opacity=".45" d="M3 22h6v7H3zm9-5h6v12h-6z"/><path d="m16 12 8-9 8 9h-5v17h-6V12z"/>',
+  breakout:'<rect x="2" y="15" width="13" height="4" rx="1" opacity=".45"/><path d="m13 11 9-9 9 9h-5v14h-9V11z"/><rect x="3" y="22" width="9" height="6" rx="1.5" opacity=".65"/>',
+  pullback:'<path opacity=".55" d="m2 7 6-2 5 10-4 6z"/><path d="m8 23 5 4 10-12 4 3 3-14-14 5 4 3z"/>',
+  strategy:'<rect x="2" y="12" width="9" height="9" rx="2"/><rect x="17" y="3" width="12" height="11" rx="2"/><rect x="17" y="19" width="12" height="11" rx="2" opacity=".5"/>',
+  receipt:'<path fill-rule="evenodd" d="M5 3h22v27l-5-2.2-6 2.2-6-2.2L5 30zm5 6v3h12V9zm0 6v3h8v-3z"/>'
 };
 function learningGlyph(kind){
   const key=Object.hasOwn(learningGlyphs,kind)?kind:'receipt';
-  return `<svg class="bl-symbol" data-glyph="${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${learningGlyphs[key]}</svg>`;
+  return `<svg class="bl-symbol" data-glyph="${key}" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">${learningGlyphs[key]}</svg>`;
 }
 
-function scoreDial(before,after,range){
-  const angle=value=>Number((value/range*64).toFixed(2));
-  const previous=angle(before),current=angle(after);
-  return `<svg class="bl-dial" viewBox="0 0 56 46" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
-    <path class="bl-dial-track" d="M6.4 30.2a24 24 0 0 1 43.2 0"/>
-    ${[-64,-32,0,32,64].map(tick=>`<path class="bl-dial-tick" d="M28 16v-3" transform="rotate(${tick} 28 40)"/>`).join('')}
-    <g transform="rotate(${previous} 28 40)"><path class="bl-dial-prior" d="M28 37V20"/><circle class="bl-old-dot" cx="28" cy="18.5" r="2"/></g>
-    <g transform="rotate(${current} 28 40)"><g class="bl-needle" style="--bl-origin:${previous-current}deg">
-      <path d="m26.35 38.8 1.65-18 1.65 18z" fill="currentColor"/><circle cx="28" cy="39.5" r="2.8" fill="currentColor"/></g></g>
-  </svg>`;
+function scoreDial(before,after){
+  const extent=Math.max(Math.abs(before),Math.abs(after))||1;
+  const y=value=>Number((16-10*value/extent).toFixed(2));
+  const previous=y(before),current=y(after);
+  return `<svg class="bl-dial" viewBox="0 0 40 32" fill="currentColor" aria-hidden="true">
+    <path opacity=".36" d="M7 4h18v5H7zm0 19h18v5H7z"/><rect x="7" y="13.5" width="18" height="5" rx="1" opacity=".7"/>
+    <circle cx="3" cy="${previous}" r="1.8" opacity=".65"/>
+    <g transform="translate(0 ${current})"><path class="bl-needle" style="--bl-origin:${previous-current}px" d="M26 0 34-5.2q2-1.2 2 1.1v8.2q0 2.3-2 1.1z"/></g></svg>`;
 }
 
 // Native adaptation of Klyv Animated Beam (21st.dev/@klyv-ui/components/klyv-animated-beam).
@@ -169,37 +170,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-function mountLearningBeam(flow,replay,signal){
-  const svg=flow.querySelector('.bl-links');
-  const nodes=[...flow.querySelectorAll('.bl-node')];
-  const links=[...svg.querySelectorAll('g')];
-  function measure(){
-    const bounds=flow.getBoundingClientRect();
-    if(!bounds.width || !bounds.height)return;
-    const centers=nodes.map(node=>{
-      const r=node.getBoundingClientRect();
-      return {x:r.left-bounds.left+r.width/2,y:r.top-bounds.top+r.height/2};
-    });
-    svg.setAttribute('viewBox',`0 0 ${bounds.width} ${bounds.height}`);
-    links.forEach((group,i)=>{
-      const a=centers[i],b=centers[i+1],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
-      const bend=Math.min(29,len*.13)*(i===0?1:-1);
-      for(const path of group.children){
-        const bow=bend*Number(path.dataset.bow);
-        const cx=(a.x+b.x)/2-dy/len*bow,cy=(a.y+b.y)/2+dx/len*bow;
-        path.setAttribute('d',`M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`);
-      }
-    });
-  }
-  measure();
-  const resize=new ResizeObserver(measure);
-  for(const element of [flow,...nodes])resize.observe(element);
+function mountLearningSequence(flow,replay,signal){
   let inView=false;
   function updatePlayback(){
     flow.toggleAttribute('data-visible',inView&&!document.hidden);
-    if(inView&&!document.hidden)flow.setAttribute('data-play','');
   }
-  const observer=new IntersectionObserver(([entry])=>{inView=entry.intersectionRatio>=.25;updatePlayback();},{threshold:.25});
+  flow.setAttribute('data-play','');
+  const observer=new IntersectionObserver(([entry])=>{
+    inView=entry.isIntersecting;
+    updatePlayback();
+  },{rootMargin:'0px 0px -18% 0px'});
   observer.observe(flow);
   document.addEventListener('visibilitychange',updatePlayback,{signal});
   replay.hidden=false;
@@ -208,7 +188,7 @@ function mountLearningBeam(flow,replay,signal){
     void flow.offsetWidth;
     flow.setAttribute('data-play','');
   },{signal});
-  signal.addEventListener('abort',()=>{resize.disconnect();observer.disconnect();replay.hidden=true;},{once:true});
+  signal.addEventListener('abort',()=>{observer.disconnect();replay.hidden=true;},{once:true});
 }
 
 export function mountProofView(host,replayHost,learningHost,en){
@@ -665,7 +645,7 @@ export function mountProofView(host,replayHost,learningHost,en){
     const cell=(icon,label,main,detail,inspect=false)=>`<div class="bl-cell">${inspect
       ?`<button type="button" class="bl-node bl-inspect" aria-label="${inspectLabel}" title="${inspectLabel}" aria-controls="bl-calibration" aria-expanded="false">${icon}</button>`
       :`<div class="bl-node" aria-hidden="true">${icon}</div>`}
-      <div class="bl-copy"><h3>${e(label)}</h3><strong>${main}</strong><p>${e(detail)}</p></div></div>`;
+      <span class="bl-handoff" aria-hidden="true"></span><div class="bl-copy"><h3>${e(label)}</h3><strong>${main}</strong><p>${e(detail)}</p></div></div>`;
     const outcome=receipt.reason==='cash_selected'?'cash':receipt.status==='skipped'?'blocked':receipt.reason;
     const observed=cell(learningGlyph(outcome),t('模拟执行结果','Paper outcome'),e(reason(receipt.reason)),
       name(record.selected)+' · '+t('净损益 ','Net P&L ')+amount(receipt.netPnl,activeRun.asset.quote));
@@ -687,21 +667,18 @@ export function mountProofView(host,replayHost,learningHost,en){
         record.candidates.find(c=>c.id===record.selected);
       const update=after.candidates.find(c=>c.id===focus?.id);
       if(!update || !Number.isFinite(update.score) || !Number.isFinite(focus.score))throw Error('Missing calibration');
-      const range=Math.max(...[...record.candidates,...after.candidates].map(c=>c.score).filter(Number.isFinite).map(Math.abs),.000001);
-      const change=cell(scoreDial(focus.score,update.score,range),t('策略评分','Strategy score'),`<span class="bl-prior">${e(score(focus.score))}</span> <i>→</i> <span class="bl-updated">${e(score(update.score))}</span>`,
+      const change=cell(scoreDial(focus.score,update.score),t('策略评分','Strategy score'),`<span class="bl-prior">${e(score(focus.score))}</span> <i>→</i> <span class="bl-updated">${e(score(update.score))}</span>`,
         name(focus.id)+' · '+t('有效样本 ','Qualifying samples ')+number(focus.sampleCount,0)+' → '+number(update.sampleCount,0),true);
       const choice=cell(learningGlyph(Object.hasOwn(strategies,after.selected)?after.selected:'strategy'),t('后续模拟决策','Subsequent decision'),e(name(after.selected)),date(after.barOpenAt)+' UTC · '+reason(after.reason));
       const calibration=number(activeRun.assumptions.calibrationBars,0);
-      const link=`<g><path class="bl-fiber" data-bow="-1"/><path class="bl-fiber" data-bow="0"/><path class="bl-track" data-bow="1"/>
-        <path class="bl-comet bl-halo" data-bow="1" pathLength="100"/><path class="bl-comet" data-bow="1" pathLength="100"/></g>`;
-      learningBody.innerHTML=`<div class="bl-grid bl-flow"><svg class="bl-links" fill="none" aria-hidden="true">${link}${link}</svg>${observed}${change}${choice}</div>
+      learningBody.innerHTML=`<div class="bl-grid bl-flow">${observed}${change}${choice}</div>
         <details class="bl-comparison" id="bl-calibration"><summary>${inspectLabel}</summary>
         <p>${e(t('评分使用最近 '+calibration+' 场的扣费后表现，并计入下行风险。','Scores use the last '+calibration+' sessions of after-cost returns and account for downside risk.'))}</p>
         <table><thead><tr><th>${t('候选策略','Candidate')}</th><th>${date(record.asOf)}</th><th>${date(after.asOf)}</th></tr></thead><tbody>
         ${record.candidates.map(c=>{const revised=after.candidates.find(v=>v.id===c.id);return `<tr><th scope="row">${e(name(c.id))}</th><td>${e(score(c.score))}</td><td>${e(revised?score(revised.score):'—')}</td></tr>`;}).join('')}</tbody></table></details>
         <footer class="bl-footer"><div>${origin} ${sourceLink(reviewUrl(after),t('后续决策原件','Subsequent decision record'))}</div>
         <button type="button" class="bp-refresh" data-next-learning>${t('复盘这次决策','Review this decision')} →</button></footer>`;
-      mountLearningBeam(learningBody.querySelector('.bl-flow'),learningHost.querySelector('.bl-replay'),signal);
+      mountLearningSequence(learningBody.querySelector('.bl-flow'),learningHost.querySelector('.bl-replay'),signal);
       const dial=learningBody.querySelector('.bl-inspect'),comparison=learningBody.querySelector('.bl-comparison');
       dial.onclick=()=>{comparison.open=!comparison.open;};
       comparison.ontoggle=()=>dial.setAttribute('aria-expanded',String(comparison.open));
