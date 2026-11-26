@@ -290,7 +290,15 @@ function restoredMarketContext(turn){
 }
 export function normalizeChatStore(value){
  if(value?.schema!==1||!Array.isArray(value.threads))return {schema:1,threads:[],active:''};
- const threads=value.threads.filter(t=>t&&typeof t.id==='string'&&Array.isArray(t.turns)).slice(0,CHAT_LIMITS.threads).map(t=>({
+ let standardCount=0;
+ const legacyKeys=new Set();
+ const threads=value.threads.filter(t=>{
+  if(!t||typeof t.id!=='string'||!Array.isArray(t.turns))return false;
+  if(!t.legacyLiteKey)return ++standardCount<=CHAT_LIMITS.threads;
+  if(typeof t.legacyLiteKey!=='string'||legacyKeys.has(t.legacyLiteKey)||legacyKeys.size>=12)return false;
+  legacyKeys.add(t.legacyLiteKey);return true;
+ }).map(t=>({
+  ...(t.legacyLiteKey?{legacyLiteKey:clipText(t.legacyLiteKey,120)}:{}),
   id:clipText(t.id,100),title:clipText(t.title,80),at:Number.isFinite(t.at)?t.at:0,pinned:!!t.pinned,providerTask:providerTask(t.providerTask),
   mode:['ask','material','technical'].includes(t.mode)?t.mode:'ask',draft:clipText(t.draft,CHAT_LIMITS.questionLength),
   sources:(Array.isArray(t.sources)?t.sources:[]).map(cleanSource).filter(Boolean).slice(0,CHAT_LIMITS.sources),

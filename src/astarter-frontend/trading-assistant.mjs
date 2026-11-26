@@ -8,7 +8,7 @@ import {createAssistantTeam} from './assistant-team.mjs';
 import {uiGlyph as icon} from './product-composition.mjs';
 import {venueIcon,tokenIcon} from './brand-icons.mjs';
 import {MARKET,METRICS,NEWS,SNAPSHOT,DATA_PAGES} from './data-center-fixtures.mjs';
-import {chartPanel,makeBars} from './product-chart-ui.mjs';
+import {chartPanel,makeBars,mountCharts} from './product-chart-ui.mjs';
 import {tradingChartPanel,captureTradingChart} from './trading-chart.mjs';
 import {L} from './execution-views.mjs';
 import {forceLocale} from './locale.mjs';
@@ -126,6 +126,9 @@ export function assistantBars(asset,period='1H'){
  const result=[];for(let i=0;i<raw.length;i+=4){const g=raw.slice(i,i+4);if(g.length<4)break;result.push({time:g.at(-1).time,open:g[0].open,close:g.at(-1).close,high:Math.max(...g.map(b=>b.high)),low:Math.min(...g.map(b=>b.low)),volume:g.reduce((s,b)=>s+b.volume,0)});}return result;
 }
 export function createTradingAssistant({root,account,refresh,go,notify,context,returnTo=()=>null,signalSource=()=>null,getTeamContext=()=>null,getWatchKeys=()=>[]}){
+ const fullRoot=root;
+ let inline=null;
+ const visibleSurface=()=>!!inline?.host.isConnected||document.body.dataset.page==='assistant';
  const team=createAssistantTeam({getContext:getTeamContext});
  let exchangeTools=null,exchangeLoadTicket=0,pickerListeners=null;
  const toolSelections=new Map();
@@ -146,12 +149,19 @@ export function createTradingAssistant({root,account,refresh,go,notify,context,r
  let drawerOpen=false,petPrompt=0,storageError=false,restoreScroll=null,sourceDialog=null,origin=null,providerDialog=null,providerOrigin=null,shareDialog=null,shareOrigin=null,shareVersion=0;
  let sharedView=null,sharedLoading=false,sharedError=false,freshTurnId='';
  const selected=()=>store.threads.find(t=>t.id===store.active);
+ const fullThreadCount=()=>store.threads.filter(thread=>!thread.legacyLiteKey).length;
  const sourceReturn=()=>selected()?.sources.at(-1)?.href||selected()?.turns.at(-1)?.sources.at(-1)?.href||returnTo();
  const selectedReport=(thread=selected())=>{const reports=thread.turns.filter(t=>t.mode==='material');return reports.find(t=>t.id===thread.reportId)||reports.at(-1);};
  const newThread=()=>({id:crypto.randomUUID(),at:Date.now(),title:'',pinned:false,mode:'ask',draft:'',sources:[],turns:[],asset:'BTC',period:'1H',providerTask:null,research:normalizeResearchConfig(),reportId:'',reportOpen:true,chartOpen:true});
  const ensureThread=()=>{if(!selected()){const thread=newThread();store.threads.unshift(thread);store.active=thread.id;}};ensureThread();
  function persist(){try{localStorage.setItem(key,JSON.stringify(store));storageError=false;}catch{storageError=true;}}
- function repaint(focus=''){const feed=root.querySelector('.chat-feed');restoreScroll=feed?.scrollTop??null;refresh();if(focus)root.querySelector(focus)?.focus();}
+ function repaint(focus=''){
+  const feed=root.querySelector('.chat-feed');restoreScroll=feed?.scrollTop??null;
+  const input=root.querySelector('[data-chat-input]'),caret=inline&&input===document.activeElement?[input.selectionStart,input.selectionEnd]:null;
+  if(inline)renderInline();else refresh();
+  if(focus)root.querySelector(focus)?.focus({preventScroll:!!inline});
+  else if(caret){const next=root.querySelector('[data-chat-input]');next?.focus({preventScroll:true});next?.setSelectionRange(...caret);}
+ }
  function repaintAnswer(turn){
   const feed=root.querySelector('.chat-feed');
   const following=turn&&selected()?.turns.at(-1)===turn&&feed&&feed.scrollHeight-feed.scrollTop-feed.clientHeight<=60;
@@ -162,7 +172,7 @@ export function createTradingAssistant({root,account,refresh,go,notify,context,r
  }
  function capture(){if(sharedToken&&typeof location!=='undefined'&&!new URLSearchParams(location.hash.slice(1)).get('astarter-share')){store=readStore();ensureThread();sharedToken=null;sharedView=null;}const input=root.querySelector('[data-chat-input]');if(input)selected().draft=input.value;const chart=root.querySelector('[data-chart="assistant-window"]');if(chart&&Number(chart.dataset.visibleCount)>0)selected().range={start:Number(chart.dataset.rangeStart),count:Number(chart.dataset.visibleCount)};}
  function startChat(draft=''){
-  capture();if(store.threads.length>=CHAT_LIMITS.threads){notify(L('已保留 12 个对话，请选择已有对话继续；记录可以导出。','All 12 chat slots are in use. Continue in an existing chat; records can be exported.'));return false;}
+  capture();if(fullThreadCount()>=CHAT_LIMITS.threads){notify(L('已保留 12 个对话，请选择已有对话继续；记录可以导出。','All 12 chat slots are in use. Continue in an existing chat; records can be exported.'));return false;}
   const thread=newThread();thread.draft=draft;store.threads.unshift(thread);store.active=thread.id;drawerOpen=false;persist();restoreScroll=0;repaint('[data-chat-input]');return true;
  }
  function sourcesHTML(sources,removable=false){return sources.length?`<div class="chat-sources">${sources.map((s,i)=>{
@@ -432,20 +442,21 @@ export function createTradingAssistant({root,account,refresh,go,notify,context,r
    else{
     const priorTurns=thread.turns.slice(0,thread.turns.indexOf(turn));
     const previous=priorTurns.map(t=>t.question),decision=assistantDecisionContext(turn.question,priorTurns);
-    const rows=turn.sources.length?[]:await readAssistantMarketContext({question:decision.question,previousQuestions:previous,locale:questionLanguage(decision.question)||getLocale()}).catch(()=>[]);
-    if(!turn.sources.length&&decision.needsAsset){turn.needsMarketAsset=true;delete turn.modelReply;delete turn.evidence;delete turn.evidenceStatus;}
+    const cardEvidence=turn.evidence?.find(item=>item.turnId?.startsWith('lite:'));
+    const rows=cardEvidence?[cardEvidence]:turn.sources.length?[]:await readAssistantMarketContext({question:decision.question,previousQuestions:previous,locale:questionLanguage(decision.question)||getLocale()}).catch(()=>[]);
+    if(!turn.sources.length&&!cardEvidence&&decision.needsAsset){turn.needsMarketAsset=true;delete turn.modelReply;delete turn.evidence;delete turn.evidenceStatus;}
     else {
     turn.evidence=cleanAnswerEvidence(rows);
     const observed=turn.evidence.filter(r=>r.status==='observed');
     turn.evidenceStatus=turn.evidence.length?(observed.length===turn.evidence.length?'available':observed.length?'partial':'unavailable'):undefined;
     if(!visible())return;
-    turn.modelReply={state:'complete',...await requestAssistantAnswer(assistantConversationMessages(thread.turns,{...turn,question:decision.question}))};
+    turn.modelReply={state:'complete',...await requestAssistantAnswer(assistantConversationMessages(thread.turns,{...turn,question:cardEvidence||turn.sources.some(row=>row.id.startsWith('public-market:lite:'))?turn.question:decision.question}))};
     }
    }
    turn.answeredAt=Date.now();
   }catch(error){turn.modelReply={state:'error',code:error.code||'MODEL_UNAVAILABLE'};}
   if(!visible())return;
-  persist();if(selected()===thread&&!sharedToken&&document.body.dataset.page==='assistant')repaintAnswer(turn);
+  persist();if(selected()===thread&&!sharedToken&&visibleSurface())repaintAnswer(turn);
  }
  const pendingThreads=new Set();
  function busy(thread){return pendingThreads.has(thread);}
@@ -467,15 +478,25 @@ export function createTradingAssistant({root,account,refresh,go,notify,context,r
   const generatedQuestion=!question;if(!question)question=thread.mode==='technical'?L('解读这段行情，列出重点与风险','Explain this price move, key levels and risks'):report?researchSummary(report.config)+' · '+L(...RESEARCH_OPTIONS.focus[report.config.focus]):L('整理这些资料的重点和待确认内容','Summarize these sources and the missing information');
   const turn={id:crypto.randomUUID(),question,generatedQuestion,topic:questionTopic(translate(question,'en')),mode:thread.mode,providerTask:thread.providerTask||null,sources:thread.sources.map(x=>({...x})),technical,marketContext:evidence,report,followup,context:context()};
   if(turn.mode==='ask'&&!turn.providerTask&&!generatedQuestion){
-   const decision=assistantDecisionContext(question,thread.turns);
-   const symbols=decision.quoteSymbols??questionQuoteSymbols(question,turn.topic);
+   const source=inline?.enabled&&!continueId?inline.readSource():null;
+   const explicit=questionQuoteSymbols(question);
+   const relevant=source&&(!explicit.length||explicit.includes(source.symbol))&&(
+    ['market','strategy','risk','returns','signal'].includes(turn.topic)||asksMarketDecision(question)||
+    /这[一条张个只]|它|信号|触发|入场|离场|失效|到期|收盘|抄底|动量|价格|行情|报价|能买|能卖|\b(?:this|it|signal|card|setup|entry|exit|expire|momentum|quote|price)\b/i.test(question));
+   const decision=assistantDecisionContext(question,relevant?[{question:source.symbol}]:thread.turns);
+   const symbols=relevant?(explicit.length?explicit:[source.symbol]):decision.quoteSymbols??questionQuoteSymbols(question,turn.topic);
    const wantsQuote=!!decision.quoteSymbols||/现价|市价|价格|报价|多少钱|现在多少|price|quote|how much/i.test(question)||
     symbols.some(s=>s.toLowerCase()===question.trim().toLowerCase());
    const wantsExplanation=/为什么|为何|原理|解释|区别|比较|意味着|信号|策略|分析|新闻|社媒|清算|充提|成交量|资金流|故事|写一|翻译|\b(?:ETF|why|explain|compare|signals?|strategy|news|social|funding|liquidations?|write|story|translate)\b|analy[sz]/i.test(question);
+   const pureQuote=symbols.length&&wantsQuote&&!wantsExplanation&&!asksMarketDecision(decision.question)&&!asksOtherMarketTime(question);
+   if(relevant&&!pureQuote&&!turn.sources.length){
+    if(source.href)turn.evidence=cleanAnswerEvidence([{...source,turnId:'lite:'+source.id,kind:'signal'}]);
+    else turn.sources=[source];
+   }
    const attached=turn.sources.length>0,publicAttachments=assistantPublicSources(turn.sources);
    if(!attached&&explicitThreadRecall(question,thread.turns)!==null)turn.localRecall=true;
-   else if(!attached&&decision.needsAsset)turn.needsMarketAsset=true;
-   else if(!attached&&symbols.length&&wantsQuote&&!wantsExplanation&&!asksMarketDecision(decision.question)&&!asksOtherMarketTime(question))turn.quotes=symbols.map(symbol=>({symbol,state:'pending'}));
+   else if(!attached&&!turn.evidence?.length&&decision.needsAsset)turn.needsMarketAsset=true;
+   else if(!attached&&pureQuote)turn.quotes=symbols.map(symbol=>({symbol,state:'pending'}));
    else if(publicAttachments.length===turn.sources.length&&(attached||!(orderRuleQuestion(question)&&/区别|什么是|是什么|差[别异]|\b(differ\w*|what (?:is|are))\b/i.test(question))&&!(turn.topic==='credits'&&/积分|credits?|クレジット|크레딧/i.test(question))))
     turn.modelReply={state:'pending'};
   }
@@ -498,10 +519,10 @@ export function createTradingAssistant({root,account,refresh,go,notify,context,r
   const input=job.input;if(input?.source!=='assistant'||!input.turn)continue;
   if(!account.s.person||job.actor!==account.s.person||!clientId(input.threadId)||!clientId(input.turn.id))continue;
   const saved=normalizeChatStore({schema:1,threads:[{...newThread(),id:input.threadId,title:input.title,turns:[input.turn]}]}).threads[0],turn=saved?.turns[0];if(!turn)continue;
-  let thread=store.threads.find(t=>t.id===input.threadId);if(!thread){if(store.threads.length>=CHAT_LIMITS.threads)continue;thread={...saved,mode:turn.mode,chartOpen:turn.mode!=='technical',asset:turn.technical?.asset||saved.asset,period:turn.technical?.period||saved.period,turns:[]};store.threads.push(thread);}
+  let thread=store.threads.find(t=>t.id===input.threadId);if(!thread){if(fullThreadCount()>=CHAT_LIMITS.threads)continue;thread={...saved,mode:turn.mode,chartOpen:turn.mode!=='technical',asset:turn.technical?.asset||saved.asset,period:turn.technical?.period||saved.period,turns:[]};store.threads.push(thread);}
   const existing=thread.turns.find(t=>t.billingJob===job.id);if(!existing&&thread.turns.length<CHAT_LIMITS.turns){thread.turns.push({...turn,billingJob:job.id});changed=true;}else if(existing&&job.status==='complete'&&(!existing.report&&turn.report||!existing.technical&&turn.technical)){Object.assign(existing,turn,{billingJob:job.id});changed=true;}
  }
- if(changed)persist();const next=account.s.tasks.map(j=>j.id+j.status+j.settled).join('|');if(next!==billingStamp){billingStamp=next;if(document.body.dataset.page==='assistant'&&!document.querySelector('.commerce-flow[open]')){capture();repaint();}}
+ if(changed)persist();const next=account.s.tasks.map(j=>j.id+j.status+j.settled).join('|');if(next!==billingStamp){billingStamp=next;if(visibleSurface()&&!document.querySelector('.commerce-flow[open]')){capture();repaint();}}
  }
  account?.subscribe(recoverJobs);queueMicrotask(recoverJobs);
  function attach(source){const thread=selected(),result=addSource(thread.sources,source);if(result.error){notify(L(({empty:'资料内容为空',duplicate:'这份资料已经添加',limit:'最多同时分析 6 份资料'})[result.error],({empty:'The source is empty',duplicate:'This source is already attached',limit:'Up to 6 sources per message'})[result.error]));return false;}thread.sources=result.sources;persist();return true;}
@@ -623,14 +644,14 @@ export function createTradingAssistant({root,account,refresh,go,notify,context,r
   root.querySelectorAll('[data-chat-citation]').forEach(b=>b.onclick=()=>{const body=b.closest('.chat-answer-body'),evidence=body.querySelector('.chat-evidence'),source=evidence?.querySelectorAll('.chat-source details')[Number(b.dataset.chatCitation)];if(!source)return;evidence.open=true;source.open=true;source.scrollIntoView({block:'nearest'});});
   root.querySelectorAll('[data-chat-copy]').forEach(b=>b.onclick=async()=>{const text=resultText(b.closest('.chat-answer-body').querySelector('.chat-result'));try{await navigator.clipboard.writeText(text);notify(L('回答已复制','Answer copied'),{tone:'success'});}catch{notify(L('复制未成功，可直接选中回答文字','Copy failed. Select the answer text to copy it.'),{tone:'error'});}});
   root.querySelectorAll('[data-chat-share]').forEach(button=>button.onclick=()=>openShare(button));
-  root.querySelector('[data-chat-file]').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>CHAT_LIMITS.fileBytes||!/[.](txt|md|csv|json)$/i.test(file.name)){notify(L('支持 64 KB 以内的 TXT、MD、CSV、JSON 文件','Use a TXT, MD, CSV or JSON file up to 64 KB'),{tone:'error'});return;}try{const text=await file.text();if(document.body.dataset.page!=='assistant'||selected().id!==thread.id)return;if(text.includes('\u0000')){notify(L('这个文件不是可读取的文本','This file is not readable text'),{tone:'error'});return;}if(text.length>6000){notify(L('资料超过 6,000 字，请先摘取需要的部分','Source exceeds 6,000 characters. Paste the relevant excerpt instead.'),{tone:'error'});return;}if(attach({id:crypto.randomUUID(),title:file.name,text,kind:'file'})){thread.providerTask=null;thread.mode='material';persist();repaint();}}catch{if(document.body.dataset.page!=='assistant'||selected().id!==thread.id)return;notify(L('没有读到文件，请换一份文本资料','Could not read the file. Try another text source.'),{tone:'error'});}};
+  root.querySelector('[data-chat-file]').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>CHAT_LIMITS.fileBytes||!/[.](txt|md|csv|json)$/i.test(file.name)){notify(L('支持 64 KB 以内的 TXT、MD、CSV、JSON 文件','Use a TXT, MD, CSV or JSON file up to 64 KB'),{tone:'error'});return;}try{const text=await file.text();if(!visibleSurface()||selected().id!==thread.id)return;if(text.includes('\u0000')){notify(L('这个文件不是可读取的文本','This file is not readable text'),{tone:'error'});return;}if(text.length>6000){notify(L('资料超过 6,000 字，请先摘取需要的部分','Source exceeds 6,000 characters. Paste the relevant excerpt instead.'),{tone:'error'});return;}if(attach({id:crypto.randomUUID(),title:file.name,text,kind:'file'})){thread.providerTask=null;thread.mode='material';persist();repaint();}}catch{if(!visibleSurface()||selected().id!==thread.id)return;notify(L('没有读到文件，请换一份文本资料','Could not read the file. Try another text source.'),{tone:'error'});}};
  }
  function accept(source){
   capture();const current=selected(),checked=addSource([],source);
   if(checked.error){notify(L('资料内容为空','The source is empty'),{tone:'error'});return false;}
   if(current.sources.some(item=>item.text===checked.sources[0].text&&item.title===checked.sources[0].title)){persist();return true;}
   if(sourceNeedsNewThread(current)){
-   if(store.threads.length>=CHAT_LIMITS.threads){notify(L('已保留 12 个对话，请选择已有对话继续；记录可以导出。','All 12 chat slots are in use. Continue in an existing chat; records can be exported.'));return false;}
+   if(fullThreadCount()>=CHAT_LIMITS.threads){notify(L('已保留 12 个对话，请选择已有对话继续；记录可以导出。','All 12 chat slots are in use. Continue in an existing chat; records can be exported.'));return false;}
    const thread=newThread();store.threads.unshift(thread);store.active=thread.id;
   }
   const thread=selected();thread.sources=checked.sources;thread.providerTask=null;thread.mode='ask';
@@ -654,6 +675,55 @@ export function createTradingAssistant({root,account,refresh,go,notify,context,r
   if(!DATA_PAGES.includes(page)&&!['signals','opportunities','strategies','my-strategies','validation'].includes(page))return;const header=root.querySelector('.sc-heading-end,.sig-page-header>div,.da-breadcrumb,.dc-market-heading,.dc-head,.df-page-head,.df-top,.p-head');if(!header||header.querySelector('[data-chat-context]'))return;
   const b=document.createElement('button');b.type='button';b.className='chat-context-button';b.dataset.chatContext='';b.setAttribute('aria-label',L('问 AI','Ask AI'));b.title=L('问 AI','Ask AI');b.innerHTML=icon('chat')+`<span class="chat-context-long">${L('问 AI','Ask AI')}</span><span class="chat-context-short">${L('问 AI','Ask AI')}</span>`;b.setAttribute('data-localized-ui','');let selection='';b.onpointerdown=()=>{selection=window.getSelection()?.toString().trim()||'';};b.onclick=()=>{const source=pageSource(page,selection);if(page==='signals'&&!source){notify(L('调整筛选或研究偏好，也可以查看全市场。','Adjust your filters or preferences, or view all markets.'));return;}if(accept(source))go('assistant');};header.append(b);
  }
- document.addEventListener('keydown',e=>{if(e.key==='Tab'&&drawerOpen&&matchMedia('(max-width:900px)').matches&&document.body.dataset.page==='assistant'){const items=[...root.querySelectorAll('.chat-history button:not(:disabled),.chat-history a[href]')].filter(el=>el.getClientRects().length),first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}if(e.key==='Escape'&&drawerOpen&&document.body.dataset.page==='assistant'){capture();drawerOpen=false;persist();repaint('[data-chat-history]');}});
- return {render,bind,decorate,accept,capture,compose(prompt){return startChat(clipText(prompt,2000));},closeSource(){team.close(false);exchangeLoadTicket++;exchangeTools?.dispose();pickerListeners?.abort();sourceDialog?.close();providerDialog?.close();shareDialog?.close();drawerOpen=false;}};
+ document.addEventListener('keydown',e=>{if(e.key==='Tab'&&drawerOpen&&matchMedia('(max-width:900px)').matches&&visibleSurface()){const items=[...root.querySelectorAll('.chat-history button:not(:disabled),.chat-history a[href]')].filter(el=>el.getClientRects().length),first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}if(e.key==='Escape'&&drawerOpen&&visibleSurface()){capture();drawerOpen=false;persist();repaint('[data-chat-history]');}});
+ function closeSource(){
+  team.close(false);exchangeLoadTicket++;exchangeTools?.dispose();pickerListeners?.abort();
+  sourceDialog?.close();providerDialog?.close();shareDialog?.close();drawerOpen=false;
+ }
+ function updateInlineContext(){
+  if(!inline)return;
+  const button=root.querySelector('[data-chat-inline-source]');if(!button)return;
+  const source=inline.readSource();
+  button.hidden=!source;
+  if(!source)return;
+  button.textContent=source.symbol;
+  button.setAttribute('aria-pressed',String(inline.enabled));
+  const label=L('引用当前策略卡','Use selected strategy card')+' · '+source.title;
+  button.setAttribute('aria-label',label);button.title=label;
+ }
+ function renderInline(){
+  inline.disposeCharts?.();
+  root.innerHTML=render();
+  const composer=root.querySelector('.chat-composer-tools>div');
+  if(composer){
+   const button=document.createElement('button');button.type='button';button.className='chat-inline-context';button.dataset.chatInlineSource='';
+   button.onclick=()=>{inline.enabled=!inline.enabled;updateInlineContext();};
+   composer.append(button);updateInlineContext();
+  }
+  inline.disposeCharts=mountCharts(root);
+  bind();
+ }
+ function mountInline(host,readSource,oldThreads=[]){
+  const view={host,readSource,enabled:true,disposeCharts:null};
+  if(oldThreads.length){
+   const existing=new Set(store.threads.map(thread=>thread.legacyLiteKey));
+   const imported=normalizeChatStore({schema:1,threads:oldThreads}).threads.filter(thread=>thread.legacyLiteKey&&!existing.has(thread.legacyLiteKey));
+   const hasActiveWork=store.threads.some(thread=>sourceNeedsNewThread(thread)||thread.title);
+   store.threads.push(...imported);
+   if(!hasActiveWork&&imported.length)store.active=(imported.find(thread=>thread.draft)||imported[0]).id;
+   persist();
+  }
+  inline=view;root=host;restoreScroll=null;renderInline();
+  return {
+   importedHistory:oldThreads.length>0&&!storageError,
+   updateContext(){if(inline===view)updateInlineContext();},
+   focus(){if(inline===view)root.querySelector('[data-chat-input]')?.focus({preventScroll:true});},
+   isInteracting(){return inline===view&&(root.contains(document.activeElement)||busy(selected())||drawerOpen||!!document.querySelector('.chat-source-dialog[open],.chat-provider-dialog[open],.chat-share-dialog[open],.assistant-team-dialog[open]'));},
+   destroy(){
+    if(inline!==view)return;capture();persist();closeSource();view.disposeCharts?.();host.replaceChildren();
+    inline=null;root=fullRoot;restoreScroll=null;
+   }
+  };
+ }
+ return {render,bind,decorate,accept,capture,mountInline,closeSource,compose(prompt){return startChat(clipText(prompt,2000));}};
 }

@@ -106,16 +106,32 @@ export function liteStrategyCard(row, { strategy, stale = false, lang = 'zh' }) 
   const reading = readingFormats[en ? 'en' : 'zh'];
   const momentum = (o.momentumPct > 0 ? '+' : '') + reading.format(o.momentumPct) + '%';
   const series = o.priceSeries;
-  const chart = Array.isArray(series) && series.length >= 2 && series.at(-1) === o.price && series.every(n => Number.isFinite(n) && n > 0)
-    ? `<figure class="sig-live-chart" aria-label="${en ? 'Minute closing prices' : '分钟收盘走势'}"><div aria-hidden="true">${sparkline(series, { width: 208, height: 45, color: 'var(--chart-accent)', fill: false })}</div></figure>` : '';
+  let chart = '';
+  if (Array.isArray(series) && series.length >= 2 && series.at(-1) === o.price && series.every(n => Number.isFinite(n) && n > 0)) {
+    const width = 208, height = 45;
+    const points = sparklinePoints(series, width, height);
+    const high = Math.max(...series), low = Math.min(...series);
+    const prices = high === low ? [high] : [high, low];
+    const axis = prices.map(price => {
+      const top = points[series.indexOf(price)][1] / height * 100;
+      return `<span style="top:${top.toFixed(2)}%">${reading.format(price)}</span>`;
+    }).join('');
+    const start = new Date(o.closedAt - (series.length - 1) * 60000).toISOString();
+    chart = `<figure class="sig-live-chart" aria-label="${en ? 'Minute closing prices' : '分钟收盘走势'}">
+      <div class="lite-chart-plot" aria-hidden="true">${sparkline(series, { width, height, color: 'var(--chart-accent)', fill: false })}<div class="lite-chart-scale">${axis}</div></div>
+      <div class="lite-chart-times" aria-hidden="true"><span>${start.slice(11, 16)}</span><span>${iso.slice(11, 16)} UTC</span></div>
+    </figure>`;
+  }
   return `<article class="sig-event sig-live-observation lite-plan-card" data-freshness="${stale ? 'previous' : 'current'}" data-side="${strategy.side}" data-live-direction="${esc(o.direction)}" data-lite-asset="${esc(o.symbol)}" data-lite-id="${esc(o.id)}">
     <div class="lite-plan-body">
-      <div class="lite-plan-pairline"><span class="lite-plan-pair">${tokenIcon(o.symbol, { size: 28, className: 'sig-coin' })}${esc(o.market)}</span><span class="lite-plan-state">${state}</span></div>
-      <h3 class="lite-plan-title">${esc(strategy.label)}</h3>
+      <header class="lite-plan-pairline">${tokenIcon(o.symbol, { size: 38, className: 'sig-coin' })}
+        <div class="lite-plan-identity"><span class="lite-plan-pair">${esc(o.market)}</span><h3 class="lite-plan-title">${esc(strategy.label)}</h3></div>
+        <span class="lite-plan-state">${state}</span>
+      </header>
       <div class="lite-plan-market"><div class="lite-plan-quote"><div class="sig-stats-quote"><span>${en ? 'Closing price' : '收盘价'}</span><strong class="dot-number">${esc(signalClosePrice(o.price))} <small>${esc(o.unit)}</small></strong></div>
-        <dl class="lite-plan-readings"><div><dt>${en ? '5-bar change' : '5 根涨跌幅'}</dt><dd>${esc(momentum)}</dd></div><div><dt>RSI 14</dt><dd>${esc(reading.format(o.rsi14))}</dd></div></dl></div>
+        <div class="lite-card-source"><span>${provider}</span><time title="${iso}" datetime="${iso}">${iso.slice(11, 16)} UTC</time></div></div>
       ${chart}</div>
-      <div class="lite-card-source"><span>${provider}</span><time title="${iso}" datetime="${iso}">${iso.slice(11, 16)} UTC</time></div>
+      <dl class="lite-plan-readings"><div><dt>EMA 20</dt><dd>${reading.format(o.ema20)}</dd></div><div data-change="${Math.sign(o.momentumPct)}"><dt>${en ? '5-bar change' : '5 根涨跌幅'}</dt><dd>${esc(momentum)}</dd></div><div><dt>RSI 14</dt><dd>${esc(reading.format(o.rsi14))}</dd></div></dl>
       <details class="lite-plan-rules-box"><summary>${en ? 'Entry and exit rules' : '入场与退出条件'}</summary>
         <dl class="lite-plan-rules"><div><dt>${en ? 'Entry' : '入场'}</dt><dd>${enter}</dd></div><div><dt>${en ? 'Exit' : '退出'}</dt><dd>${exit}</dd></div></dl></details>
     </div>

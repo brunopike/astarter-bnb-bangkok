@@ -601,7 +601,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   import('./lite.mjs').then(({mountLiteWorkspace})=>{
    if(liteMount!==mount||!host.isConnected)return;
    host.replaceChildren();
-   mount.instance=mountLiteWorkspace(host,{lang});
+   mount.instance=mountLiteWorkspace(host,{lang,mountAssistant:assistant.mountInline});
   }).catch(()=>{
    if(liteMount!==mount||!host.isConnected)return;
    host.replaceChildren(status);

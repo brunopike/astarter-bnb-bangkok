@@ -28,7 +28,7 @@ function shared(key) {
     return null;
   }
 }
-export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
+export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant } = {}) {
   const english = !/^zh/i.test(locale);
   const lang = english ? 'en' : 'zh';
   const t = (zh, en) => (english ? en : zh);
@@ -37,7 +37,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   const styles = ['lite', 'lite-strategy-cards', 'lite-crew'].map((name) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/' + name + '.css?v=20261127-lite-workspace';
+    link.href = '/' + name + '.css?v=20261127-lite-trading-desk';
     document.head.append(link);
     return link;
   });
@@ -72,7 +72,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
         <details id="lite-history" class="lite-history"><summary><span class="history-label">${uiGlyph('history')}${t('最近操作', 'Recent activity')}</span><span class="history-end"><span id="lite-history-count"></span>${uiGlyph('chevron')}</span></summary><div id="lite-history-list"></div></details>
       </aside>
     </div>
-    <div id="lite-chat-panel"></div>
+    <section class="lite-brain-floor" aria-label="${t('AI 助手', 'AI assistant')}"><div id="lite-chat-panel"></div></section>
     <p class="sr-only" role="status" id="lite-announcement"></p>
   </div>`;
   const view = host.firstElementChild;
@@ -126,7 +126,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     current = null,
     account = null,
     receipt = null;
-  const chat = mountLiteChat(el('chat-panel'), { lang });
+  const chat = mountLiteChat(el('chat-panel'), { lang, mountAssistant });
   let busy = false,
     loading = false,
     formError = '',
@@ -451,8 +451,9 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     ${!current || expired ? '<div class="order-plan"><h3>' + esc(label) + '</h3></div>' : ''}
     ${form}
     ${!plan && !needsRefresh ? `<p class="order-idle">${idle}</p>` : ''}
+    <div class="order-values">${balance}${lines}</div>
     <div class="dock-actions">${act}</div>
-    <div class="order-values">${balance}${lines}</div><p class="trade-note error" id="lite-order-note" role="status">${formError ? errorText(formError) : accountError ? errorText('STORAGE_UNAVAILABLE') : ''}</p></div>`;
+    <p class="trade-note error" id="lite-order-note" role="status">${formError ? errorText(formError) : accountError ? errorText('STORAGE_UNAVAILABLE') : ''}</p></div>`;
     syncEstimate();
   }
   function queue(includePreviousClose = false) {
