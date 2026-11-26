@@ -266,7 +266,7 @@ export function createMarketScanner(onChange,{subscribe=subscribeCandles,subscri
    for(const [symbol,entry]of entries)if(!symbols.has(symbol)){stop(entry);entries.delete(symbol);}
    for(const asset of assets){
     let entry=entries.get(asset.symbol);if(!entry){entry={symbol:asset.symbol,token:0,bars:[],sample:{state:'loading'},meta:{},stop:null};entries.set(asset.symbol,entry);}
-    const request=candleRequest(asset.domain==='Crypto'?{market:asset.symbol+'/USDT',period:'1D'}:{market:asset.symbol,period:'1D',profileId:'public-market',venueId:asset.symbol==='XAU'?'dukascopy':'yahoo'});
+    const request=candleRequest(asset.domain==='Crypto'?{market:asset.symbol+'/USDT',period:'1D'}:{market:asset.symbol,period:'1D',profileId:'public-market',venueId:'yahoo'});
     if(!request){entry.sample={state:'unsupported'};continue;}
     if(!active){if(entry.stop||entry.depthStop)stop(entry);continue;}if(entry.stop)continue;
     const token=++entry.token;entry.sample={...entry.sample,state:'loading'};entry.meta={...entry.meta,source:request.source||'Binance Spot',timezone:request.timezone||'UTC',unit:request.unit||'USDT'};

@@ -13,7 +13,7 @@ test('gold spot uses the provider timestamp, one troy ounce in USD, and an indep
   assert.throws(()=>spec.decode([{...raw,...changed}],time),/INVALID_GOLD_QUOTE/);
  }
  assert.equal(publicGoldSpotRequest(new URLSearchParams({asset:'BTC'})),null);
- assert.equal(new URL(crossMarketPolicy('XAU',time).urls[1]).searchParams.get('from'),String(Date.parse('2026-11-18T19:00:00Z')));
+ assert.deepEqual(crossMarketPolicy('XAU',time).urls,['https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=2y&interval=1d']);
  assert.equal(spec.decode([raw],time+86400000).asOf,body.asOf);
 });
 const at=Date.parse('2026-11-07T12:00:00Z'),time=Date.parse('2026-11-06T14:30:00Z')/1000;
@@ -64,12 +64,21 @@ test('only exact market/profile/venue and daily source requests are enabled',()=
  for(const [symbol,spec] of Object.entries(CROSS_MARKETS))assert.equal(crossMarketRequest({market:symbol,period:'1D',profileId:'public-market',venueId:spec.venueId}).symbol,symbol);
  for(const bad of [{market:'SPY'},{period:'1H'},{profileId:'cex-spot'},{venueId:'binance'}])assert.equal(crossMarketRequest({market:'SPX',period:'1D',profileId:'public-market',venueId:'yahoo',...bad}),null);
  assert.equal(crossMarketPolicy('https://attacker'),null);assert.equal(crossMarketPolicy('__proto__'),null);
- assert.equal(crossMarketPolicy('XAU',at).urls.length,2);assert.ok(crossMarketPolicy('SPX',at).urls[0].includes('%5EGSPC'));
+ assert.equal(crossMarketPolicy('XAU',at).urls.length,1);assert.ok(crossMarketPolicy('SPX',at).urls[0].includes('%5EGSPC'));
 });
 test('gold delta decoding preserves source dates and tick precision without filled weekends',()=>{
  const bars=decodeDukascopy(gold);assert.equal(bars.length,3);assert.equal(bars[1].open,4347.798);assert.equal(bars[2].open,4360.875);assert.equal(bars[2].time-bars[1].time,172800);assert.ok(bars.every(b=>b.volume===null));
  assert.throws(()=>decodeDukascopy({...gold,times:[0,1,0]}));assert.throws(()=>decodeDukascopy({...gold,opens:[0,1,NaN]}));assert.throws(()=>decodeDukascopy({...gold,highs:[0,-100000,0]}));
  assert.throws(()=>normalizeCrossMarket([gold,gold],'XAU',at),/OVERLAPPING/);
+ const session=Date.parse('2026-11-06T05:00:00Z')/1000,earlier=session-86400;
+ const priced=p=>p==null?null:p,comex=(times,closes,mutate=x=>x)=>{const raw={chart:{error:null,result:[{meta:{symbol:'GC=F',instrumentType:'FUTURE',currency:'USD',exchangeName:'CMX',exchangeTimezoneName:'America/New_York'},timestamp:times,indicators:{quote:[{open:closes.map(priced),high:closes.map(p=>p==null?null:p+1),low:closes.map(p=>p==null?null:p-1),close:closes.map(priced),volume:closes.map(()=>1)}]}}]}};return mutate(raw);};
+ const body=normalizeCrossMarket(comex([earlier,session,session+86400],[4300,null,4310]),'XAU',at);
+ assert.equal(body.source,'Yahoo Finance · COMEX Gold Futures (GC=F)');assert.equal(body.timezone,'America/New_York');assert.equal(body.unit,'USD/oz');assert.equal(body.session,'last-close');assert.equal(body.asOfKind,'bar-close');assert.equal(body.bars.length,2);assert.equal(body.bars[1].close,4310);assert.equal(body.bars[1].volume,null);assert.equal(body.closeTimeBasis,'source-daily-bound');
+ const request=venueId=>crossMarketRequest({market:'XAU',period:'1D',profileId:'public-market',venueId});
+ assert.equal(validateCrossSnapshot(body,request('yahoo'),at),body);
+ assert.throws(()=>validateCrossSnapshot(body,request('dukascopy'),at),/INVALID_MARKET_SNAPSHOT/);
+ assert.throws(()=>normalizeCrossMarket(comex([session],[4300],raw=>{raw.chart.result[0].meta.symbol='XAU';return raw;}),'XAU',at),/INVALID_GOLD_DATA/);
+ assert.throws(()=>normalizeCrossMarket(comex([session],[4300],raw=>{raw.chart.result[0].indicators.quote[0].high[0]=null;return raw;}),'XAU',at),/INVALID_GOLD_PRICE/);
 });
 test('US10Y is already percentage yield and source volume never becomes comparable trading volume',()=>{
  const raw=yahoo('US10Y'),body=normalizeCrossMarket(raw,'US10Y',at);

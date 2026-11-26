@@ -1,5 +1,5 @@
 import {tokenIcon} from './brand-icons.mjs';
-import {CROSS_MARKETS} from './cross-market-data.mjs';
+import {crossMarketSource} from './cross-market-data.mjs';
 import {getLocale,localeInfo,pair as L} from './locale.mjs';
 import {sparkline} from './product-charts.mjs';
 import {uiGlyph} from './product-composition.mjs';
@@ -33,7 +33,7 @@ function timestamp(ms){
 function publicText(text){return typeof text==='string'&&text.length>0&&text.length<=120&&!/[<>\r\n]/.test(text);}
 function sourceURL({symbol,market,source}){
  if(source.startsWith('Binance')&&/^[A-Z0-9]+\/[A-Z0-9]+$/.test(market))return 'https://www.binance.com/en/trade/'+market.replace('/','_');
- const spec=CROSS_MARKETS[symbol];
+ const spec=crossMarketSource(symbol,source);
  if(spec?.venueId==='yahoo'&&source.startsWith('Yahoo Finance'))return 'https://finance.yahoo.com/quote/'+encodeURIComponent(spec.id)+'/history/';
  if(spec?.venueId==='dukascopy'&&source.startsWith('Dukascopy'))return 'https://www.dukascopy.com/swiss/english/marketwatch/historical/';
  return '';

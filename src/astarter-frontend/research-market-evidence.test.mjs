@@ -13,6 +13,12 @@ function yahoo(symbol){
  const start=times.at(-1),price=symbol==='US10Y'?4.5:100;
  return {chart:{error:null,result:[{meta:{symbol:spec.id,instrumentType:'INDEX',exchangeTimezoneName:spec.timezone,regularMarketTime:start+23400,currentTradingPeriod:{regular:{start,end:start+23400}}},timestamp:times,indicators:{quote:[{open:times.map(()=>price),high:times.map(()=>price+1),low:times.map(()=>price-1),close:times.map(()=>price),volume:times.map(()=>0)}]}}]}};
 }
+function goldChart(){
+ const dates=[];
+ for(let date=day-400*DAY;date<day;date+=DAY)if(new Date(date).getUTCDay()!==6)dates.push(date);
+ const times=dates.slice(-300).map(date=>date/1000),price=100,column=()=>times.map(()=>price);
+ return {chart:{error:null,result:[{meta:{symbol:'GC=F',instrumentType:'FUTURE',currency:'USD',exchangeName:'CMX',exchangeTimezoneName:'America/New_York'},timestamp:times,indicators:{quote:[{open:column(),high:times.map(()=>101),low:times.map(()=>99),close:column(),volume:times.map(()=>0)}]}}]}};
+}
 function gold(year){
  const start=Date.UTC(year,0,1),end=year===2026?day:Date.UTC(year+1,0,1),dates=[];
  for(let date=start;date<end;date+=DAY)if(new Date(date).getUTCDay()!==6)dates.push(date);
@@ -23,6 +29,7 @@ function transport(calls=[]){return async(url,options)=>{
  calls.push({url,options});const u=new URL(url);
  if(u.hostname==='data-api.binance.vision')return json(bars({BTCUSDT:100,ETHUSDT:200,SOLUSDT:50}[u.searchParams.get('symbol')]));
  if(u.hostname==='jetta.dukascopy.com')return json(gold(u.pathname.endsWith('/2025')?2025:2026));
+ if(u.hostname==='query1.finance.yahoo.com'&&decodeURIComponent(u.pathname.split('/').at(-1))==='GC=F')return json(goldChart());
  const symbol=Object.keys(CROSS_MARKETS).find(key=>CROSS_MARKETS[key].id===decodeURIComponent(u.pathname.split('/').at(-1)));return json(yahoo(symbol));
 };}
 
@@ -45,12 +52,12 @@ test('fixed official GET routes ignore caller URLs and prices and calculate an i
 
 test('all eight assets use exact source identities and common scanner mathematics, without inventing TradFi volume',async()=>{
  const selected=['BTC','ETH','SOL','SPX','NDX','XAU','DXY','US10Y'],calls=[],rows=await createResearchMarketEvidence({fetchImpl:transport(calls),now:()=>NOW}).loadEvidence(selected);
- assert.equal(calls.length,9);assert.deepEqual(rows.map(row=>row.symbol),selected);assert.ok(rows.every(row=>row.state==='ready'&&row.period==='1D'&&row.methodVersion==='ema20-atr14-rsi14-v1'));
- assert.equal(rows[1].price,200);assert.equal(rows[2].price,50);assert.equal(rows[7].price,4.5);assert.equal(rows[7].unit,'%');assert.equal(rows[7].timezone,'America/Chicago');assert.equal(rows[5].source,'Dukascopy · XAU/USD BID');
+ assert.equal(calls.length,8);assert.deepEqual(rows.map(row=>row.symbol),selected);assert.ok(rows.every(row=>row.state==='ready'&&row.period==='1D'&&row.methodVersion==='ema20-atr14-rsi14-v1'));
+ assert.equal(rows[1].price,200);assert.equal(rows[2].price,50);assert.equal(rows[7].price,4.5);assert.equal(rows[7].unit,'%');assert.equal(rows[7].timezone,'America/Chicago');assert.equal(rows[5].source,'Yahoo Finance · COMEX Gold Futures (GC=F)');
  assert.equal(validateResearchEvidence(rows,selected,NOW).length,8);assert.ok(rows.slice(3).every(row=>row.bars>=250&&row.asOfKind));
 });
 
-test('transport concurrency stays at eight even across simultaneous loads and XAU windows',async()=>{
+test('transport concurrency stays at eight across simultaneous loads',async()=>{
  let active=0,peak=0;const real=transport();const fetchImpl=async(...args)=>{active++;peak=Math.max(peak,active);await new Promise(resolve=>setImmediate(resolve));try{return await real(...args);}finally{active--;}};
  const loader=createResearchMarketEvidence({fetchImpl,now:()=>NOW});const selection=['BTC','ETH','SOL','SPX','NDX','XAU','DXY','US10Y'];
  const results=await Promise.all([loader.loadEvidence(selection),loader.loadEvidence(selection)]);assert.equal(peak,8);assert.ok(results.flat().every(row=>row.state==='ready'));
@@ -90,15 +97,15 @@ test('a complete network failure retains the selected identities without any num
  assert.doesNotMatch(JSON.stringify(rows),/private transport diagnostic/);assert.throws(()=>validateResearchEvidence(rows,selected,NOW));
 });
 
-test('body reads and both XAU windows share the same total deadline',async()=>{
+test('body reads and the XAU request share the same total deadline',async()=>{
  let cancelled=false;const response=new Response(new ReadableStream({cancel(){cancelled=true;}}),{headers:{'Content-Type':'application/json'}});
  const [hung]=await createResearchMarketEvidence({timeoutMs:20,now:()=>NOW,fetchImpl:async()=>response}).loadEvidence(['BTC']);assert.equal(hung.reason,'SOURCE_TIMEOUT');await new Promise(resolve=>setImmediate(resolve));assert.equal(cancelled,true);
- let calls=0;const [goldRow]=await createResearchMarketEvidence({timeoutMs:25,now:()=>NOW,fetchImpl:async()=>{const n=++calls;await new Promise(resolve=>setTimeout(resolve,n===1?15:20));return json(gold(n===1?2025:2026));}}).loadEvidence(['XAU']);
- assert.equal(calls,2);assert.equal(goldRow.reason,'SOURCE_TIMEOUT');assert.equal(goldRow.price,undefined);
+ let calls=0;const [goldRow]=await createResearchMarketEvidence({timeoutMs:25,now:()=>NOW,fetchImpl:async()=>{calls++;await new Promise(resolve=>setTimeout(resolve,40));return json(goldChart());}}).loadEvidence(['XAU']);
+ assert.equal(calls,1);assert.equal(goldRow.reason,'SOURCE_TIMEOUT');assert.equal(goldRow.price,undefined);
 });
 
-test('partial XAU transport and a changed daily boundary cannot reuse a previous successful sample',async()=>{
- let calls=0;const [goldRow]=await createResearchMarketEvidence({now:()=>NOW,fetchImpl:async()=>++calls===1?json(gold(2025)):new Response('offline',{status:503})}).loadEvidence(['XAU']);assert.equal(goldRow.state,'error');assert.equal(goldRow.price,undefined);
+test('an unavailable XAU read and a changed daily boundary cannot publish a sample',async()=>{
+ const [goldRow]=await createResearchMarketEvidence({now:()=>NOW,fetchImpl:async()=>new Response('offline',{status:503})}).loadEvidence(['XAU']);assert.equal(goldRow.state,'error');assert.equal(goldRow.price,undefined);
  let at=day+DAY-1;const [btc]=await createResearchMarketEvidence({now:()=>at,fetchImpl:async()=>{at=day+DAY;return json(bars());}}).loadEvidence(['BTC']);assert.equal(btc.state,'stale');assert.equal(btc.price,undefined);
 });
 

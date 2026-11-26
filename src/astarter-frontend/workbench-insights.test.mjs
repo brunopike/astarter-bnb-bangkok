@@ -8,7 +8,7 @@ test('market view is read-only and never substitutes crypto data for TradFi',()=
  for(const symbol of ['SPX','NDX','XAU','DXY','US10Y']){
   const config=workbenchInsights({task:{...task,symbol,domain:'TradFi'}}).marketConfig;
   assert.equal(config.market,symbol);assert.equal(config.period,'1D');assert.equal(config.sessionBased,true);
-  assert.equal(config.venueId,symbol==='XAU'?'dukascopy':'yahoo');assert.equal(config.trade,null);
+  assert.equal(config.venueId,'yahoo');assert.equal(config.trade,null);
  }
  assert.equal(workbenchInsights({task:{...task,symbol:'UNKNOWN'}}).marketConfig,null);
  assert.equal(workbenchInsights({task:{...task,symbol:'XAU',domain:'TradFi'}}).evidence.find(item=>item.key==='chain').status,'na');

@@ -29,14 +29,11 @@ function daily(symbol, at) {
   }
   let body;
   if (symbol === 'XAU') {
-    const bars = times.slice(0, -1).map((time, i) => ({time, open: 100 + i, high: 101 + i, low: 99 + i,
-      close: 100 + i, volume: null, closedAt: time + 86_400, validUntil: time + 2 * 86_400 + 1800,
-      closeTimeBasis: 'source-daily-bound'}));
-    const last = bars.at(-1);
-    body = {schema: 'cross-market-daily-v1', symbol, period: '1D', source: spec.source, unit: spec.unit,
-      timezone: spec.timezone, receivedAt: at, volumeKind: 'unavailable', session: 'last-close',
-      quoteAsOf: last.closedAt, asOfKind: 'bar-close', closedAt: last.closedAt, validUntil: last.validUntil,
-      closeTimeBasis: last.closeTimeBasis, sessionDate: new Date(last.time * 1000).toISOString().slice(0, 10), bars};
+    const timestamp = times.map(time => time + 5 * 3600);
+    const closes = timestamp.map((_,i) => 100 + i);
+    const quote = {open:closes, high:closes.map(c => c+1), low:closes.map(c => c-1), close:closes};
+    const meta = {symbol:'GC=F',instrumentType:'FUTURE',currency:'USD',exchangeName:'CMX',exchangeTimezoneName:spec.timezone};
+    body = normalizeCrossMarket({chart:{result:[{meta,timestamp,indicators:{quote:[quote]}}]}}, symbol, at);
   } else {
     const timestamp = times.map(time => time + 14.5 * 3600), start = timestamp.at(-1);
     const closes = timestamp.map((_, i) => i === timestamp.length - 1 ? 9_000 : 100 + i);

@@ -1,10 +1,15 @@
 export const CROSS_MARKETS=Object.freeze({
  SPX:{id:'^GSPC',venueId:'yahoo',source:'Yahoo Finance · S&P 500',unit:'index',timezone:'America/New_York'},
  NDX:{id:'^NDX',venueId:'yahoo',source:'Yahoo Finance · Nasdaq 100',unit:'index',timezone:'America/New_York'},
- XAU:{id:'XAU-USD',venueId:'dukascopy',source:'Dukascopy · XAU/USD BID',unit:'USD/oz',timezone:'UTC'},
+ XAU:{id:'GC=F',venueId:'yahoo',source:'Yahoo Finance · COMEX Gold Futures (GC=F)',unit:'USD/oz',timezone:'America/New_York'},
  DXY:{id:'DX-Y.NYB',venueId:'yahoo',source:'Yahoo Finance · ICE USD Index',unit:'index',timezone:'America/New_York'},
  US10Y:{id:'^TNX',venueId:'yahoo',source:'Yahoo Finance · US 10Y yield',unit:'%',timezone:'America/Chicago'}
 });
+const dukascopyGold=Object.freeze({id:'XAU-USD',venueId:'dukascopy',source:'Dukascopy · XAU/USD BID',unit:'USD/oz',timezone:'UTC'});
+export function crossMarketSource(symbol,source){
+ if(symbol==='XAU'&&source===dukascopyGold.source)return dukascopyGold;
+ return Object.hasOwn(CROSS_MARKETS,symbol)?CROSS_MARKETS[symbol]:null;
+}
 const fields=['open','high','low','close'],day=86400,formatters=new Map();
 // Only these observed empty weekday buckets were cross-checked against ICE's published calendar; this is not a full holiday calendar.
 const emptyDxySessions=new Set(['2025-6-19','2025-7-4']);
@@ -22,17 +27,12 @@ function nextSessionEnd(time,hour,minute,zone,gold=false){
  return gold?Math.floor(cursor/day)*day+day:localTime(parts(cursor,zone),hour,minute,zone);
 }
 export function crossMarketRequest({market,period,profileId,venueId}={}){
- const spec=Object.hasOwn(CROSS_MARKETS,market||'')&&CROSS_MARKETS[market];
+ const spec=market==='XAU'&&venueId===dukascopyGold.venueId?dukascopyGold:crossMarketSource(market);
  return spec&&period==='1D'&&profileId==='public-market'&&venueId===spec.venueId?{...spec,market,symbol:market,period,interval:'1d',seconds:day,profileId,sessionBased:true}:null;
 }
 export function crossMarketPolicy(symbol,now=Date.now()){
  const spec=Object.hasOwn(CROSS_MARKETS,symbol||'')&&CROSS_MARKETS[symbol];if(!spec)return null;
- const year=new Date(now).getUTCFullYear();
- return {urls:spec.venueId==='yahoo'?[`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(spec.id)}?range=2y&interval=1d`]:[
-  `https://jetta.dukascopy.com/v1/candles/day/XAU-USD/BID/${year-1}`,
-  // The endpoint returns the UTC year's shard. A fixed January URL can retain yesterday's version.
-  `https://jetta.dukascopy.com/v1/candles/day/XAU-USD/BID?from=${Math.floor(now/3600000)*3600000}`
- ],headers:{'User-Agent':'Mozilla/5.0',...(spec.venueId==='dukascopy'?{Referer:'https://widgets.dukascopy.com/en/historical-data-export'}:{})},interval:60000,maxBytes:600000};
+ return {urls:[`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(spec.id)}?range=2y&interval=1d`],headers:{'User-Agent':'Mozilla/5.0'},interval:60000,maxBytes:600000};
 }
 export const GOLD_SPOT=Object.freeze({source:'Gold API',sourceUrl:'https://gold-api.com/',url:'https://api.gold-api.com/price/XAU',interval:15000,stale:120000});
 export function validateGoldSpot(body,now){
@@ -60,12 +60,32 @@ export function decodeDukascopy(body){
   if(!validPrice(bar))throw Error('INVALID_GOLD_PRICE');return bar;
  });
 }
+// COMEX prints no candle on some holidays. Those empty rows are omitted; a partial price is rejected.
+function decodeYahooGold(raw){
+ const result=raw?.chart?.result,source=result?.[0],meta=source?.meta,quote=source?.indicators?.quote?.[0],times=source?.timestamp;
+ if(raw?.chart?.error||result?.length!==1||meta?.symbol!=='GC=F'||meta.instrumentType!=='FUTURE'||meta.currency!=='USD'||meta.exchangeName!=='CMX'||meta.exchangeTimezoneName!=='America/New_York'||!Array.isArray(times)||!times.length||times.length>800||!quote||fields.some(k=>!Array.isArray(quote[k])||quote[k].length!==times.length))throw Error('INVALID_GOLD_DATA');
+ const bars=[];
+ for(let i=0;i<times.length;i++){
+  const time=times[i];
+  if(!Number.isSafeInteger(time)||time<0||i&&time<=times[i-1])throw Error('INVALID_GOLD_TIME');
+  const values=Object.fromEntries(fields.map(k=>[k,quote[k][i]]));
+  if(fields.every(k=>values[k]===null))continue;
+  const bar={time,volume:null,...values,closedAt:time+day,closeTimeBasis:'source-daily-bound',validUntil:nextSessionEnd(time,0,0,'UTC',true)+1800};
+  if(!validPrice(bar))throw Error('INVALID_GOLD_PRICE');
+  bars.push(bar);
+ }
+ if(!bars.length)throw Error('INVALID_GOLD_DATA');
+ return bars;
+}
 export function normalizeCrossMarket(raw,symbol,receivedAt=Date.now()){
- const spec=Object.hasOwn(CROSS_MARKETS,symbol||'')&&CROSS_MARKETS[symbol];if(!spec||!Number.isFinite(receivedAt))throw Error('INVALID_MARKET');
+ const spec=symbol==='XAU'&&Array.isArray(raw)?dukascopyGold:crossMarketSource(symbol);if(!spec||!Number.isFinite(receivedAt))throw Error('INVALID_MARKET');
  let bars,quoteAsOf,session='last-close',asOfKind='bar-close';
- if(spec.venueId==='dukascopy'){
-  if(!Array.isArray(raw)||raw.length!==2)throw Error('INVALID_GOLD_WINDOWS');
-  bars=raw.flatMap(decodeDukascopy);if(bars.some((b,i)=>i&&b.time<=bars[i-1].time))throw Error('OVERLAPPING_GOLD_WINDOWS');
+ if(symbol==='XAU'){
+  if(!Array.isArray(raw))bars=decodeYahooGold(raw);
+  else{
+   if(raw.length!==2)throw Error('INVALID_GOLD_WINDOWS');
+   bars=raw.flatMap(decodeDukascopy);if(bars.some((b,i)=>i&&b.time<=bars[i-1].time))throw Error('OVERLAPPING_GOLD_WINDOWS');
+  }
   quoteAsOf=Math.min(bars.at(-1).closedAt,receivedAt/1000);
  }else{
   const result=raw?.chart?.result,source=result?.[0],meta=source?.meta,quote=source?.indicators?.quote?.[0],times=source?.timestamp,regular=meta?.currentTradingPeriod?.regular;
@@ -97,7 +117,7 @@ export function normalizeCrossMarket(raw,symbol,receivedAt=Date.now()){
  if(!bars.length||bars.some((b,i)=>b.time>receivedAt/1000+60||!Number.isSafeInteger(b.time)||i&&b.time-bars[i-1].time>day*4+3600)||quoteAsOf>receivedAt/1000+60)throw Error('INVALID_MARKET_WINDOW');
  const last=bars.filter(b=>b.closedAt<=receivedAt/1000).at(-1);
  if(!last)throw Error('NO_CLOSED_SESSION');
- if(spec.venueId==='dukascopy')quoteAsOf=last.closedAt;
+ if(symbol==='XAU')quoteAsOf=last.closedAt;
  return {schema:'cross-market-daily-v1',symbol,source:spec.source,timezone:spec.timezone,unit:spec.unit,volumeKind:'unavailable',period:'1D',session,quoteAsOf,asOfKind,receivedAt,closedAt:last.closedAt,closeTimeBasis:last.closeTimeBasis,sessionDate:sessionDate(last.time,spec.timezone),validUntil:last.validUntil,bars:bars.slice(-500)};
 }
 export function validateCrossSnapshot(body,request,now=Date.now()){

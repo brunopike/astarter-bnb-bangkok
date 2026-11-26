@@ -5,7 +5,8 @@ import handleAssistantChat from './api/assistant-chat.mjs';
 import {handleCommerce} from './commerce-api.mjs';
 import {handleNotifications,startNotifications} from './notification-service.mjs';
 import {loadNotificationConfig} from './notification-config.mjs';
-import {readFile} from 'node:fs/promises';
+import {readFile,stat} from 'node:fs/promises';
+import {staticCacheControl,staticEtag,staticNotModified} from './static-cache.mjs';
 import path from 'node:path';
 import {homedir} from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -102,16 +103,30 @@ http.createServer(async (req, res) => {
     return;
   }
   const rawFile=req.url.split('?')[0].slice(1);
-  if (rawFile.startsWith('wallet-ui/')?!walletAsset(rawFile):!allowed.has(file)&&!isBrainHistoryFile(file)) { res.writeHead(404); res.end('Not found'); return; }
+  const bootAsset=/^boot\/(?:app|part-[A-Z0-9]+)\.js$/.test(file);
+  if (rawFile.startsWith('wallet-ui/')?!walletAsset(rawFile):!allowed.has(file)&&!bootAsset&&!isBrainHistoryFile(file)) { res.writeHead(404); res.end('Not found'); return; }
   try {
-    let content;
+    let full=path.join(root,file);
+    let info;
     if(isBrainHistoryFile(file)){
       const mirror=process.env.ASTARTER_HISTORY_ROOT || path.join(homedir(),'.local','share','astarter','history');
-      try{content=await readFile(path.join(mirror,file.slice('brain-evidence/'.length)));}
+      const external=path.join(mirror,file.slice('brain-evidence/'.length));
+      try{info=await stat(external);full=external;}
       catch(error){if(error.code!=='ENOENT')throw error;}
     }
-    content??=await readFile(path.join(root,file));
+    info??=await stat(full);
+    if(!info.isFile())throw Error('NOT_A_FILE');
+    const cache=staticCacheControl(file,req.url);
+    if(cache!=='no-store'){
+      const etag=staticEtag(info.size,info.mtimeMs);
+      res.setHeader('Cache-Control',cache);
+      res.setHeader('ETag',etag);
+      if((req.method==='GET'||req.method==='HEAD')&&staticNotModified(req.headers['if-none-match'],etag)){
+        res.writeHead(304);res.end();return;
+      }
+    }
+    const content=req.method==='HEAD'?undefined:await readFile(full);
     res.writeHead(200, { 'Content-Type': path.extname(file)==='.glb'?'model/gltf-binary':types[path.extname(file)] || 'application/octet-stream' });
-    res.end(req.method === 'HEAD' ? undefined : content);
-  } catch { res.writeHead(404); res.end('Not found'); }
+    res.end(content);
+  } catch { res.writeHead(404,{'Cache-Control':'no-store'}); res.end('Not found'); }
 }).listen(port, '127.0.0.1', () => console.log(`Hive motion study: http://127.0.0.1:${port} · SIMULATION ONLY`));

@@ -69,6 +69,26 @@ const fixtures={
 };
 const response=(body,status=200,retry=null)=>({ok:status===200,status,headers:{get:key=>key==='Retry-After'?retry:null},text:async()=>JSON.stringify(body)});
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
+test('market reads retain the relay provider on an asset quote and after a client restart',async()=>{
+ const entries=new Map();
+ const storage={getItem:key=>entries.get(key),setItem:(key,value)=>entries.set(key,value)};
+ const make=source=>createMarketHubClient({resources:['assets'],now:()=>NOW,WebSocketImpl:null,storageImpl:storage,fetchImpl:async url=>{
+  if(url===HUB_RESOURCES.assets.url)throw new TypeError('Use the relay');
+  return response({schema:'public-market-relay-v1',resource:'assets',source,receivedAt:NOW,body:fixtures.assets});
+ }});
+ for(const [source,provider] of [['coinmarketcap','CoinMarketCap'],['coingecko','CoinGecko']]){
+  const client=make(source);
+  try{client.setActive(true);await settle();assert.equal(client.quote(client.read('assets').snapshot.data[0]).provider,provider);}
+  finally{client.dispose();}
+  const next=make(source);
+  try{
+   const cached=next.read('assets');
+   assert.equal(cached.fromCache,true);
+   assert.equal(cached.snapshot.source,source);
+   assert.equal(next.quote(cached.snapshot.data[0]).provider,provider);
+  }finally{next.dispose();}
+ }
+});
 function harness({fetchImpl,websocket=true,storageImpl,startAt=NOW}={}){
  let at=startAt;const calls=[],sockets=[];
  class Socket{constructor(url){this.url=url;this.closed=false;sockets.push(this);}close(){this.closed=true;this.onclose?.();}send(price,stamp=at){this.onmessage?.({data:JSON.stringify({data:{s:'BTCUSDT',c:String(price),o:'100',q:'200',E:stamp}})});}}
@@ -641,6 +661,12 @@ const bgResponse=value=>new Response(JSON.stringify(value),{headers:{'Content-Ty
 test('background projection reuses the existing metrics with original source clocks and exact limited units',()=>{
  for(const resource of RESEARCH_BACKGROUND_RESOURCES){const input=bgEnvelope(resource),before=structuredClone(input),value=normalizeResearchBackground(input,resource,BG_NOW);assert.deepEqual(input,before);assert.equal(value.receivedAt,BG_NOW);assert.equal(value.provider,HUB_RESOURCES[resource].provider);assert.deepEqual(validateResearchBackground(value,resource,BG_NOW),value);assert.equal(value.validUntil,(resource==='chains'?BG_NOW:BG_DAY)+HUB_RESOURCES[resource].stale);}
  assert.deepEqual(normalizeResearchBackground(bgEnvelope('sentiment'),'sentiment',BG_NOW).data,{value:37});
+ for(const [source,provider] of [['alternative.me','Alternative.me'],['coinmarketcap','CoinMarketCap']]){
+  const value=normalizeResearchBackground({...bgEnvelope('sentiment'),source},'sentiment',BG_NOW);
+  assert.equal(value.provider,provider);
+  assert.deepEqual(validateResearchBackground(value,'sentiment',BG_NOW),value);
+ }
+ assert.throws(()=>normalizeResearchBackground({...bgEnvelope('sentiment'),source:'unverified'},'sentiment',BG_NOW),/BACKGROUND_INVALID/);
  assert.deepEqual(normalizeResearchBackground(bgEnvelope('stablecoins'),'stablecoins',BG_NOW).data,{totalUsd:120});
  assert.deepEqual(normalizeResearchBackground(bgEnvelope('chains'),'chains',BG_NOW).data,[{name:'Ethereum',tvl:1000},{name:'Solana',tvl:500}]);
 });

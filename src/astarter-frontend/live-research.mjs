@@ -1,3 +1,4 @@
+import {crossMarketSource} from './cross-market-data.mjs';
 import {ASSETS} from './product-data.mjs';
 import {DIMENSIONS,RESEARCH_GROUPS} from './multi-research.mjs';
 import {candleRequest} from './trading-chart-data.mjs';
@@ -11,7 +12,7 @@ const METHOD='ema20-atr14-rsi14-v1',MODE='live_readonly';
 const DEPTH_SYMBOLS=new Set(['BTC','ETH','SOL']);
 const signals=new Set(['breakout-up','breakout-down','overbought','oversold','balanced']);
 const assets=new Map(ASSETS.map(([symbol,name,domain])=>{
- const request=candleRequest(domain==='Crypto'?{market:symbol+'/USDT',period:'1D'}:{market:symbol,period:'1D',profileId:'public-market',venueId:symbol==='XAU'?'dukascopy':'yahoo'});
+ const request=candleRequest(domain==='Crypto'?{market:symbol+'/USDT',period:'1D'}:{market:symbol,period:'1D',profileId:'public-market',venueId:'yahoo'});
  return [symbol,{symbol,name,domain,request,source:request?.source||'Binance Spot',timezone:request?.timezone||'UTC',unit:request?.unit||'USDT'}];
 }));
 const missingText={
@@ -59,15 +60,16 @@ export function marketDepthObservation(row,now=Date.now()/1000){
 export function marketResearchObservation(row,now=Date.now()/1000){
  const asset=assets.get(row?.symbol);
  if(!asset)return null;
- const unavailable=state=>({state,source:asset.source,timezone:asset.timezone,unit:asset.unit,period:'1D',methodVersion:METHOD});
+ const identity=crossMarketSource(row.symbol,row.source)||asset;
+ const unavailable=state=>({state,source:identity.source,timezone:identity.timezone,unit:identity.unit,period:'1D',methodVersion:METHOD});
  if(!finite(now)||now<0)return unavailable('invalid');
  if(row.state!=='ready')return unavailable(Object.hasOwn(stateText,row.state)?row.state:'invalid');
- if(typeof row.paused!=='boolean'||row.source!==asset.source||row.timezone!==asset.timezone||row.unit!==asset.unit||row.period!=='1D'||row.methodVersion!==METHOD||!['snapshot','live'].includes(row.feedState))return unavailable('invalid');
+ if(typeof row.paused!=='boolean'||row.source!==identity.source||row.timezone!==identity.timezone||row.unit!==identity.unit||row.period!=='1D'||row.methodVersion!==METHOD||!['snapshot','live'].includes(row.feedState))return unavailable('invalid');
  if(!['price','x','y','change','sampleAt','closedAt','validUntil'].every(key=>finite(row[key]))||row.price<=0||row.y<0||row.y>100||!Number.isSafeInteger(row.bars)||row.bars<250||row.bars>500||row.sampleAt<0||row.sampleAt>=row.closedAt||row.closedAt>now||row.validUntil<=row.closedAt||!signals.has(row.signal))return unavailable('invalid');
  if(asset.domain==='Crypto'&&(row.sampleAt%86400!==0||row.closedAt!==row.sampleAt+86400||row.validUntil!==row.sampleAt+172800))return unavailable('invalid');
  if(now>row.validUntil||asset.domain==='Crypto'&&row.sampleAt!==Math.floor(now/86400)*86400-86400)return unavailable('stale');
  if(row.paused)return unavailable('paused');
- return {state:'ready',symbol:row.symbol,source:asset.source,timezone:asset.timezone,unit:asset.unit,period:'1D',methodVersion:METHOD,price:row.price,trend:row.x,rsi:row.y,change:row.change,signal:row.signal,bars:row.bars,sampleAt:row.sampleAt,closedAt:row.closedAt,validUntil:row.validUntil};
+ return {state:'ready',symbol:row.symbol,source:identity.source,timezone:identity.timezone,unit:identity.unit,period:'1D',methodVersion:METHOD,price:row.price,trend:row.x,rsi:row.y,change:row.change,signal:row.signal,bars:row.bars,sampleAt:row.sampleAt,closedAt:row.closedAt,validUntil:row.validUntil};
 }
 
 export class MarketResearch{

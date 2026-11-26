@@ -34,7 +34,7 @@ export function workbenchInsights({task,focus={},trade=null,risk=null}={}){
  });
  const run=focus.linked&&focus.task?.symbol===task?.symbol&&trade?.session?.market?.split('/')[0]===task?.symbol?trade.session:null;
  const account=workbenchAccount(trade),{known,cash,held,reserved,available}=account,orders=run?(trade.orders||[]).filter(order=>order.runId===run.id):[];
- const macroConfig=asset&&domain!=='Crypto'?candleRequest({market:task.symbol,period:'1D',profileId:'public-market',venueId:task.symbol==='XAU'?'dukascopy':'yahoo'}):null;
+ const macroConfig=asset&&domain!=='Crypto'?candleRequest({market:task.symbol,period:'1D',profileId:'public-market',venueId:'yahoo'}):null;
  const allocations=known?[available,held,reserved]:[],allocationMax=Math.max(0,...allocations);
  return {
   symbol:task?.symbol||null,domain:domain||null,phase:task?.phase||'queued',outcome:task?.phase==='complete'?task.outcome:null,

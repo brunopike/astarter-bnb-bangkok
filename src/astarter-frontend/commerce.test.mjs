@@ -35,6 +35,13 @@ test('the public site can read the simulated ledger and other hosts cannot',asyn
  const call=async(host,headers={})=>{let status,body;const req={url:'/api/commerce/state',method:'GET',headers:{host,...headers}};const res={setHeader(){},writeHead(code){status=code;},end(payload){body=payload;}};assert.equal(await handler(req,res),true);return {status,body:JSON.parse(body)};};
  const site=await call('ipfund.art');assert.equal(site.status,200);assert.equal(site.body.state.realPayments,false);
  assert.equal((await call('www.ipfund.art')).status,200);
+ for(const host of ['dapp.ipfund.art','demo.astarter.io']){
+  assert.equal((await call(host)).status,200);
+  assert.equal((await call(host,{origin:'https://'+host})).status,200);
+  const sibling=host==='dapp.ipfund.art'?'demo.astarter.io':'dapp.ipfund.art';
+  assert.equal((await call(host,{origin:'https://'+sibling})).status,403);
+  assert.equal((await call(host+'.example.com')).status,403);
+ }
  const denied=await call('example.com');assert.equal(denied.status,403);assert.equal(denied.body.error,'local-only');
  const forged=await call('ipfund.art',{origin:'https://evil.example'});assert.equal(forged.status,403);assert.equal(forged.body.error,'origin');
 });
@@ -67,10 +74,10 @@ test('membership cycle usage excludes work completed before activation on the sa
  const other=x.store.session().person;assert.equal(x.store.snapshot(other).usage.period,null);x.advance(30*DAY);assert.equal(x.state().usage.period,null);
 });
 
-test('subscription prices use exact cents across billing intervals',()=>{
- const expected={starter:[900,2430,7560],pro:[2900,7830,24360]};
+test('subscription intervals and future AST prices use exact cents with stacked discounts',()=>{
+ const expected={starter:[[900,720],[2430,1944],[7560,6048]],pro:[[2900,2320],[7830,6264],[24360,19488]]};
  for(const [product,amounts]of Object.entries(expected))for(const [i,interval]of ['monthly','quarterly','yearly'].entries()){
-  const q=subscriptionPrice(product,interval);assert.equal(q.cents,amounts[i]);assert.equal(q.baseCents-q.discountCents,q.cents);
+  const q=subscriptionPrice(product,interval);assert.deepEqual([q.cents,q.astCents],amounts[i]);assert.equal(q.baseCents-q.discountCents,q.cents);
  }
 });
 test('billing months retain UTC+8 anchor, month end and leap day without drifting',()=>{
@@ -79,11 +86,11 @@ test('billing months retain UTC+8 anchor, month end and leap day without driftin
  const leap=Date.UTC(2028,1,29,0);assert.equal(addBillingMonths(leap,12),Date.UTC(2029,1,28,0));
  const late=Date.UTC(2027,0,30,20);assert.equal(addBillingMonths(late,1),Date.UTC(2027,1,27,20));
 });
-test('billing validation rejects unsupported methods and stale prices',t=>{
+test('new interval validation and future AST quotes never enable a payment',t=>{
  const x=setup(t),purchase={kind:'plan',product:'pro',interval:'yearly'};
  for(const interval of ['legacy','weekly','__proto__',null,3])assert.throws(()=>x.cmd('order-create',{...purchase,interval}),/billing-interval|invalid-field/);
- const q=x.cmd('order-quote',purchase);assert.equal(q.cents,24360);assert.equal(q.paymentAvailable,true);
- assert.throws(()=>x.cmd('order-create',{...purchase,paymentMethod:'unsupported'}),/payment-method/);assert.throws(()=>x.cmd('order-create',{...purchase,expectedCents:2900}),/order-quote-changed/);
+ const q=x.cmd('order-quote',{...purchase,paymentMethod:'ast'});assert.equal(q.cents,24360);assert.equal(q.astCents,19488);assert.equal(q.paymentAvailable,false);
+ assert.throws(()=>x.cmd('order-create',{...purchase,paymentMethod:'ast'}),/payment-unavailable/);assert.throws(()=>x.cmd('order-create',{...purchase,expectedCents:2900}),/order-quote-changed/);
  assert.throws(()=>x.cmd('order-create',{kind:'topup',dollars:10,interval:'yearly'}),/billing-interval/);assert.equal(x.state().orders.length,0);assert.equal(x.state().realPayments,false);
 });
 test('quarterly Credit is monthly, recovers missed months once and reports the current grant cycle',t=>{
@@ -126,7 +133,7 @@ test('discounted subscription quote, simulated payment and monthly readback use 
  const base=`http://127.0.0.1:${server.address().port}`,initial=await fetch(base+'/api/commerce/state'),cookie=initial.headers.get('set-cookie').split(';')[0];
  const post=async(action,payload)=>{const r=await fetch(base+'/api/commerce/command',{method:'POST',headers:{Cookie:cookie,Origin:base,'Content-Type':'application/json','Idempotency-Key':randomUUID()},body:JSON.stringify({action,payload})});return {status:r.status,body:await r.json()};};
  const purchase={kind:'plan',product:'pro',interval:'quarterly'},quote=await post('order-quote',purchase);assert.equal(quote.status,200);assert.equal(quote.body.state.orders.length,0);assert.equal(quote.body.result.cents,7830);
- const unsupported=await post('order-create',{...purchase,paymentMethod:'unsupported'});assert.equal(unsupported.status,400);assert.equal(unsupported.body.error,'payment-method');
+ const ast=await post('order-create',{...purchase,paymentMethod:'ast'});assert.equal(ast.status,409);assert.equal(ast.body.error,'payment-unavailable');
  const created=await post('order-create',{...purchase,expectedCents:quote.body.result.cents,expectedPlanUntil:quote.body.result.planUntil});assert.equal(created.status,200);
  const paid=await post('order-pay',{id:created.body.result.id,expectedPlanUntil:quote.body.result.planUntil});assert.equal(paid.status,200);assert.equal(paid.body.state.balance.available,12600);assert.equal(paid.body.state.subscription.creditUntil,Date.UTC(2027,1,28,4));
  const state=await(await fetch(base+'/api/commerce/state',{headers:{Cookie:cookie}})).json();assert.equal(state.state.orders[0].billing_interval,'quarterly');assert.equal(state.state.orders[0].cents,7830);assert.equal(state.state.planUntil,Date.UTC(2027,3,30,4));assert.equal(state.state.realPayments,false);

@@ -15,7 +15,7 @@ const cookie=(req,name)=>req.headers.cookie?.split(';').map(x=>x.trim()).find(x=
 function requestOrigin(host){
  const name=String(host||'').toLowerCase();
  if(/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(name))return `http://${name}`;
- if(name==='ipfund.art'||name==='www.ipfund.art'||name==='dapp.ipfund.art'||name==='astarter.imstark.site')return `https://${name}`;
+ if(name==='ipfund.art'||name==='www.ipfund.art'||name==='dapp.ipfund.art'||name==='astarter.imstark.site'||name==='demo.astarter.io')return `https://${name}`;
  return '';
 }
 export function createWalletAuth({file=fileURLToPath(new URL('./.goodway/wallet/auth.sqlite',import.meta.url)),now=Date.now,verifySignature=verifyMessage}={}){

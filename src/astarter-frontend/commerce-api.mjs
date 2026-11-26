@@ -5,7 +5,7 @@ let sharedStore;
 function requestOrigin(host){
  const name=String(host||'').toLowerCase();
  if(/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(name))return `http://${name}`;
- if(/^(?:ipfund\.art|www\.ipfund\.art)(?::\d+)?$/.test(name))return `https://${name.replace(/:\d+$/,'')}`;
+ if(/^(?:ipfund\.art|www\.ipfund\.art|dapp\.ipfund\.art|demo\.astarter\.io)(?::\d+)?$/.test(name))return `https://${name.replace(/:\d+$/,'')}`;
  return '';
 }
 export const getCommerceStore=()=>sharedStore||=new CommerceStore(defaultFile);

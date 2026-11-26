@@ -94,14 +94,14 @@ const CMC_ROUTES={
 export function coinMarketCapRequest(resource){
  const route=CMC_ROUTES[resource],key=coinMarketCapKey();
  if(!route||!key)return null;
- const original=HUB_RESOURCES[resource].url;
- return {source:'coinmarketcap',maxBytes:route.maxBytes,async collect(load){
+ const fallback=HUB_RESOURCES[resource];
+ return {maxBytes:route.maxBytes,async collectSnapshot(load){
   try{
    const raw=await load({url:CMC+route.path,headers:{'X-CMC_PRO_API_KEY':key},maxBytes:route.maxBytes});
    const body=route.map(raw);
    if(!body)throw Error('INVALID_DATA');
-   return body;
-  }catch{return load(original);}
+   return {body,source:'coinmarketcap'};
+  }catch{return {body:await load(fallback.url),source:fallback.source};}
  }};
 }
 

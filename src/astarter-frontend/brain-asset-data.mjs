@@ -45,7 +45,7 @@ function coinAsset(row, receivedAt=null) {
   const time=row.asOf!=null ? new Date(row.asOf) : null;
   return {
     id:row.id, symbol:row.symbol.toUpperCase(), name:row.name, chain, address:null, kind:chain?'native':'market',
-    provider:'CoinGecko', sourceUrl:'https://www.coingecko.com/en/coins/'+encodeURIComponent(row.id),
+    provider:row.provider, sourceUrl:row.provider==='CoinMarketCap'?'https://coinmarketcap.com/':'https://www.coingecko.com/en/coins/'+encodeURIComponent(row.id),
     rank:Number.isSafeInteger(row.rank)&&row.rank>0?row.rank:null,cap:positiveOrZero(row.cap),image:approvedTokenImageURL(row.image),
     price:positiveOrZero(row.price), change:quoteNumber(row.change), volume:positiveOrZero(row.volume),
     liquidity:null, venue:null, series:hourlySeries(row.series),
@@ -53,10 +53,10 @@ function coinAsset(row, receivedAt=null) {
   };
 }
 
-function marketCapRanking(body,at) {
+function marketCapRanking(body,at,source) {
   if(!Number.isFinite(at))throw new Error('INVALID_RANKING_TIME');
   const receivedAt=new Date(at).toISOString();
-  const rows=normalizeHubResource('assets',body,at).data.filter(row=>Number.isInteger(row.rank)&&row.rank>=1&&row.rank<=20)
+  const rows=normalizeHubResource('assets',body,at,source).data.filter(row=>Number.isInteger(row.rank)&&row.rank>=1&&row.rank<=20)
     .sort((a,b)=>a.rank-b.rank).map(row=>coinAsset(row,receivedAt));
   if(rows.length!==20||!rows.every((row,i)=>row?.rank===i+1 && row.cap>0))throw new Error('INCOMPLETE_RANKING');
   return {rows,at};
@@ -68,7 +68,7 @@ export async function fetchBrainRanking({signal,fetchImpl=globalThis.fetch}={}) 
   if(!response.ok)throw new Error('MARKET_CAP_UNAVAILABLE');
   const data=await response.json();
   if(data.schema!=='public-market-relay-v1'||data.resource!=='assets')throw new Error('INVALID_RANKING_SOURCE');
-  return marketCapRanking(data.body,data.receivedAt);
+  return marketCapRanking(data.body,data.receivedAt,data.source);
 }
 
 // An earlier visit may be all that is available on an offline reload. Restore
@@ -78,7 +78,7 @@ export function readSavedBrainAsset(row) {
   const iso=value=>typeof value==='string' && Number.isFinite(Date.parse(value))?new Date(value).toISOString():null;
   const receivedAt=iso(row.receivedAt);
   if (!row.address) {
-    if (row.provider!=='CoinGecko') return null;
+    if (!['CoinGecko','CoinMarketCap'].includes(row.provider)) return null;
     return coinAsset({...row,asOf:iso(row.asOf)},receivedAt);
   }
   if (row.provider!=='DEX Screener') return null;
