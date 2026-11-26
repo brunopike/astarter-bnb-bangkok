@@ -118,6 +118,34 @@ export function linksLearningReceipt(before,after){
     Date.parse(after.asOf)>=Date.parse(before.execution.barCloseAt));
 }
 
+const learningGlyphs={
+  stop_loss:'<path class="bl-threshold" d="M3.5 18.5h17"/><path d="m4 5.5 4.5 5 3-2.5 5.5 10.5"/><circle cx="17" cy="18.5" r="2" class="bl-hit"/>',
+  session_close:'<circle cx="12" cy="12" r="8.5"/><path d="M12 6.5V12l4 2.5"/>',
+  cash:'<path class="bl-secondary" d="M3 9v10h16"/><rect x="5.5" y="5.5" width="15.5" height="10.5" rx="2"/><circle cx="13.25" cy="10.75" r="2.25"/><path d="M8 10.75h.3m9.9 0h.3"/>',
+  blocked:'<path d="m12 3 8 3v5.5c0 4.6-3.9 7.8-8 9.5-4.1-1.7-8-4.9-8-9.5V6z"/><path d="M8.5 11.5h7"/>',
+  trend:'<path d="m3 17 6-6 4 3 7-8m-5 0h5v5"/>',
+  breakout:'<path class="bl-threshold" d="M3 10h18"/><path d="m3 17 5-3 4 2L19 5m-5 1 5-1 1 5"/>',
+  pullback:'<path d="m3 17 6-9 5 6 6-9m-4 .5 4-.5.5 4"/>',
+  strategy:'<circle cx="5" cy="12" r="2"/><path d="M7 12h3c3 0 3-6 7-6m-7 6c3 0 3 6 7 6"/><path d="m16 3 3 3-3 3m0 6 3 3-3 3"/>',
+  receipt:'<path d="M5 4h14v16l-3-1.5-4 1.5-4-1.5L5 20z"/><path d="M8.5 9h7m-7 4h4"/>'
+};
+function learningGlyph(kind){
+  const key=Object.hasOwn(learningGlyphs,kind)?kind:'receipt';
+  return `<svg class="bl-symbol" data-glyph="${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${learningGlyphs[key]}</svg>`;
+}
+
+function scoreDial(before,after,range){
+  const angle=value=>Number((value/range*64).toFixed(2));
+  const previous=angle(before),current=angle(after);
+  return `<svg class="bl-dial" viewBox="0 0 56 46" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+    <path class="bl-dial-track" d="M6.4 30.2a24 24 0 0 1 43.2 0"/>
+    ${[-64,-32,0,32,64].map(tick=>`<path class="bl-dial-tick" d="M28 16v-3" transform="rotate(${tick} 28 40)"/>`).join('')}
+    <g transform="rotate(${previous} 28 40)"><path class="bl-dial-prior" d="M28 37V20"/><circle class="bl-old-dot" cx="28" cy="18.5" r="2"/></g>
+    <g transform="rotate(${current} 28 40)"><g class="bl-needle" style="--bl-origin:${previous-current}deg">
+      <path d="m26.35 38.8 1.65-18 1.65 18z" fill="currentColor"/><circle cx="28" cy="39.5" r="2.8" fill="currentColor"/></g></g>
+  </svg>`;
+}
+
 // Native adaptation of Klyv Animated Beam (21st.dev/@klyv-ui/components/klyv-animated-beam).
 /*
 MIT License
@@ -646,7 +674,8 @@ export function mountProofView(host,replayHost,learningHost,en){
       ?`<button type="button" class="bl-node bl-inspect" aria-label="${inspectLabel}" title="${inspectLabel}" aria-controls="bl-calibration" aria-expanded="false">${icon}</button>`
       :`<div class="bl-node" aria-hidden="true">${icon}</div>`}
       <div class="bl-copy"><h3>${e(label)}</h3><strong>${main}</strong><p>${e(detail)}</p></div></div>`;
-    const observed=cell(uiGlyph('file'),t('模拟执行结果','Paper outcome'),e(reason(receipt.reason)),
+    const outcome=receipt.reason==='cash_selected'?'cash':receipt.status==='skipped'?'blocked':receipt.reason;
+    const observed=cell(learningGlyph(outcome),t('模拟执行结果','Paper outcome'),e(reason(receipt.reason)),
       name(record.selected)+' · '+t('净损益 ','Net P&L ')+amount(receipt.netPnl,activeRun.asset.quote));
     const origin=sourceLink(reviewUrl(record),t('原始决策与回执','Decision and receipt'));
     learningBody.innerHTML=`<div class="bl-grid">${observed}</div><div class="bl-feedback"></div>`;
@@ -666,20 +695,10 @@ export function mountProofView(host,replayHost,learningHost,en){
         record.candidates.find(c=>c.id===record.selected);
       const update=after.candidates.find(c=>c.id===focus?.id);
       if(!update || !Number.isFinite(update.score) || !Number.isFinite(focus.score))throw Error('Missing calibration');
-      // Zero is twelve o'clock. Both score markers share the candidates' symmetric scale.
       const range=Math.max(...[...record.candidates,...after.candidates].map(c=>c.score).filter(Number.isFinite).map(Math.abs),.000001);
-      const rim=score=>{const angle=score/range*2.1;return [32+27*Math.sin(angle),32-27*Math.cos(angle)];};
-      const [x1,y1]=rim(focus.score),[x2,y2]=rim(update.score);
-      const arc=`M ${x1} ${y1} A 27 27 0 ${Math.abs(update.score-focus.score)/range*2.1>Math.PI?1:0} ${update.score>focus.score?1:0} ${x2} ${y2}`;
-      const nucleus=`<svg class="bl-nucleus" viewBox="0 0 64 64" fill="none" stroke="currentColor" aria-hidden="true">
-        <circle cx="32" cy="32" r="27" stroke-dasharray=".8 3.25" opacity=".55"/><path d="M32 2v5" opacity=".8"/>
-        <path class="bl-score-arc" d="${arc}" pathLength="1"/><circle cx="${x1}" cy="${y1}" r="1.8" fill="var(--b-panel)"/>
-        <circle cx="${x2}" cy="${y2}" r="2.2" fill="currentColor"/>
-        <g class="bl-orbits">${[0,60,120].map(angle=>`<ellipse cx="32" cy="32" rx="19" ry="7.5" transform="rotate(${angle} 32 32)"/>`).join('')}</g>
-        <circle cx="32" cy="32" r="4" fill="currentColor"/></svg>`;
-      const change=cell(nucleus,t('策略评分','Strategy score'),`<span class="bl-prior">${e(score(focus.score))}</span> <i>→</i> <span class="bl-updated">${e(score(update.score))}</span>`,
+      const change=cell(scoreDial(focus.score,update.score,range),t('策略评分','Strategy score'),`<span class="bl-prior">${e(score(focus.score))}</span> <i>→</i> <span class="bl-updated">${e(score(update.score))}</span>`,
         name(focus.id)+' · '+t('有效样本 ','Qualifying samples ')+number(focus.sampleCount,0)+' → '+number(update.sampleCount,0),true);
-      const choice=cell(uiGlyph(after.selected==='cash'?'pause':'strategy'),t('后续模拟决策','Subsequent decision'),e(name(after.selected)),date(after.barOpenAt)+' UTC · '+reason(after.reason));
+      const choice=cell(learningGlyph(Object.hasOwn(strategies,after.selected)?after.selected:'strategy'),t('后续模拟决策','Subsequent decision'),e(name(after.selected)),date(after.barOpenAt)+' UTC · '+reason(after.reason));
       const calibration=number(activeRun.assumptions.calibrationBars,0);
       const link=`<g><path class="bl-fiber" data-bow="-1"/><path class="bl-fiber" data-bow="0"/><path class="bl-track" data-bow="1"/>
         <path class="bl-comet bl-halo" data-bow="1" pathLength="100"/><path class="bl-comet" data-bow="1" pathLength="100"/></g>`;

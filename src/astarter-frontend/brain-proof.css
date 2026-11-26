@@ -225,15 +225,23 @@ astarter-brain .br-learning {--layer-color:var(--ct-lilac,var(--b-violet))}
 .bl-cell {--node-color:var(--ct-ice);position:relative;min-width:0;display:grid;justify-items:center;align-content:start;grid-template-rows:84px auto;text-align:center;padding:4px 6px 10px}
 .bl-flow .bl-cell:nth-of-type(2) {--node-color:var(--layer-color)}
 .bl-flow .bl-cell:last-child {--node-color:color-mix(in srgb,var(--layer-color) 66%,var(--ct-ice))}
-.bl-node {position:relative;align-self:center;box-sizing:border-box;display:grid;place-items:center;width:46px;height:46px;border-radius:50%;color:var(--node-color);border:1px solid color-mix(in srgb,currentColor 55%,var(--b-line));background:var(--b-panel);
-  box-shadow:inset 0 0 14px color-mix(in srgb,currentColor 13%,transparent),0 0 0 4px var(--b-panel),0 0 0 5px color-mix(in srgb,currentColor 18%,transparent)}
-.bl-node::after {content:"";position:absolute;inset:-5px;border:1px solid currentColor;border-radius:inherit;opacity:0;pointer-events:none}
-.bl-node>svg {width:21px;height:21px}
-.bl-node.bl-inspect {width:67px;height:67px;padding:0;background:radial-gradient(circle,color-mix(in srgb,var(--node-color) 19%,var(--b-panel)),var(--b-panel) 76%);box-shadow:0 0 0 4px var(--b-panel),0 0 0 5px color-mix(in srgb,currentColor 28%,transparent),0 0 32px color-mix(in srgb,currentColor 15%,transparent)}
-.bl-node.bl-inspect:is(:hover,:focus-visible,[aria-expanded=true]) {border-color:currentColor;box-shadow:0 0 0 4px var(--b-panel),0 0 0 5px currentColor,0 0 27px color-mix(in srgb,currentColor 30%,transparent)}
-.bl-node>.bl-nucleus {width:57px;height:57px}
-.bl-score-arc {stroke-width:2;stroke-linecap:round}
-.bl-orbits {transform-origin:32px 32px}
+.bl-node {position:relative;align-self:center;box-sizing:border-box;display:grid;place-items:center;width:48px;height:48px;border-radius:12px;color:var(--node-color);
+ border:1px solid color-mix(in srgb,currentColor 38%,var(--b-line));background:color-mix(in srgb,currentColor 6%,var(--b-panel))}
+.bl-node:has([data-glyph="stop_loss"]) {color:var(--b-down)}
+.bl-node:has([data-glyph="cash"]) {color:color-mix(in srgb,var(--b-up) 55%,var(--b-ink))}
+.bl-node::after {content:"";position:absolute;inset:-2px;border:1px solid currentColor;border-radius:inherit;opacity:0;pointer-events:none}
+.bl-symbol {width:29px;height:29px}
+.bl-threshold {stroke-dasharray:2 2.6;opacity:.72}
+.bl-secondary {opacity:.62}
+.bl-hit,.bl-old-dot {fill:var(--b-panel)}
+.bl-node.bl-inspect {width:62px;height:52px;padding:0;border-radius:13px;cursor:pointer}
+.bl-node.bl-inspect:is(:hover,:focus-visible,[aria-expanded=true]) {border-color:currentColor;background:color-mix(in srgb,currentColor 13%,var(--b-panel))}
+.bl-node.bl-inspect:focus-visible {outline:2px solid currentColor;outline-offset:3px}
+.bl-dial {width:50px;height:42px}
+.bl-dial-track {stroke-width:2;opacity:.57}
+.bl-dial-tick,.bl-old-dot {stroke-width:1.4}
+.bl-dial-prior {stroke-dasharray:2 3;opacity:.7}
+.bl-needle {transform-origin:28px 40px}
 .bl-links {position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .bl-links g {color:var(--ct-ice)}
 .bl-links g+g {color:var(--layer-color);--beam-delay:1.65s}
@@ -265,26 +273,25 @@ astarter-brain .br-learning {--layer-color:var(--ct-lilac,var(--b-violet))}
   100% {stroke-dashoffset:-101;opacity:0}
 }
 @keyframes bl-arrive {0% {transform:scale(.88);opacity:0}22% {opacity:.72}100% {transform:scale(1.38);opacity:0}}
-@keyframes bl-calibrate {from {transform:rotate(-60deg)}to {transform:rotate(60deg)}}
-@keyframes bl-mark-score {from {stroke-dashoffset:1}to {stroke-dashoffset:0}}
+@keyframes bl-read-score {from {transform:rotate(var(--bl-origin))}to {transform:rotate(0deg)}}
 @keyframes bl-score-settle {0% {transform:translateY(3px);color:var(--b-ink)}100% {transform:translateY(0);color:var(--layer-color)}}
 @media(prefers-reduced-motion:no-preference){
  :root:not([data-reduced-motion=true]) .bl-flow[data-play] .bl-comet {animation:bl-transmit 1.55s cubic-bezier(.35,.05,.42,1) var(--beam-delay,.18s) both}
  :root:not([data-reduced-motion=true]) .bl-flow[data-play] .bl-node::after {animation:bl-arrive 1.05s var(--arrival,0s) ease-out both}
  .bl-flow .bl-cell:nth-of-type(2) {--arrival:1.45s}.bl-flow .bl-cell:last-child {--arrival:3s}
- :root:not([data-reduced-motion=true]) .bl-flow[data-play] .bl-orbits {animation:bl-calibrate 1.6s .9s cubic-bezier(.32,0,.2,1) both}
- :root:not([data-reduced-motion=true]) .bl-flow[data-play] .bl-score-arc {stroke-dasharray:1;animation:bl-mark-score .92s 1.35s ease-out both}
+ :root:not([data-reduced-motion=true]) .bl-flow[data-play] .bl-needle {animation:bl-read-score .72s 1.14s cubic-bezier(.2,.7,.2,1) backwards}
  :root:not([data-reduced-motion=true]) .bl-flow[data-play] .bl-updated {animation:bl-score-settle .65s 1.42s ease-out backwards}
- .bl-flow[data-play]:not([data-visible]) :is(.bl-comet,.bl-orbits,.bl-score-arc,.bl-updated),.bl-flow[data-play]:not([data-visible]) .bl-node::after {animation-play-state:paused!important}
+ .bl-flow[data-play]:not([data-visible]) :is(.bl-comet,.bl-needle,.bl-updated),.bl-flow[data-play]:not([data-visible]) .bl-node::after {animation-play-state:paused!important}
 }
 :root[data-reduced-motion=true] .bl-replay {display:none}
 @media(prefers-reduced-motion:reduce){.bl-replay {display:none}}
 @media(max-width:700px){
  .bl-grid {grid-template-columns:1fr;gap:8px}
  .bl-cell {grid-template: auto / 72px minmax(0,1fr);align-items:center;justify-items:start;text-align:start;column-gap:14px;padding:5px 0;min-height:76px}
- .bl-node {justify-self:center;width:37px;height:37px}
- .bl-node.bl-inspect {width:52px;height:52px}
- .bl-node>.bl-nucleus {width:46px;height:46px}
+ .bl-node {justify-self:center;width:42px;height:42px;border-radius:10px}
+ .bl-node.bl-inspect {width:51px;height:44px;border-radius:11px}
+ .bl-dial {width:44px;height:36px}
+ .bl-symbol {width:26px;height:26px}
  .bl-copy {padding:0}.bl-cell strong {margin:3px 0}
  .bl-flow::before {mask-image:radial-gradient(ellipse at 40px 50%,#000,transparent 68%)}
  .bl-period {font-size:12px}
