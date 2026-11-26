@@ -95,10 +95,13 @@ const fact=(label,value)=>`<div><dt>${e(label)}</dt><dd>${e(value)}</dd></div>`;
 
 export function frozenChartBars(archive,assetKey,evidence){
   const asset=archive?.assets?.find(row=>row.key===assetKey && row.market===evidence.market && row.venue===evidence.venue && row.quote===evidence.quote);
+  return closedChartBars(asset?.bars,evidence);
+}
+function closedChartBars(bars,evidence){
   const end=Date.parse(evidence.asOf),day=86400000,count=evidence.barCount;
-  if(!Array.isArray(asset?.bars) || !Number.isSafeInteger(count) || count<1 || !Number.isFinite(end))return [];
+  if(!Array.isArray(bars) || !Number.isSafeInteger(count) || count<1 || !Number.isFinite(end))return [];
   const start=end+1-count*day;
-  const rows=asset.bars.filter(row=>Array.isArray(row) && row[0]*1000>=start && row[0]*1000+day-1<=end);
+  const rows=bars.filter(row=>Array.isArray(row) && row[0]*1000>=start && row[0]*1000+day-1<=end);
   if(rows.length!==count || !rows.every(([time,o,h,l,c,v],i)=>time*1000===start+i*day &&
     [o,h,l,c,v].every(Number.isFinite) && l>0 && h>=Math.max(o,c) && l<=Math.min(o,c) && v>=0))return [];
   return rows.map(([time,open,high,low,close,volume])=>({time:time*1000,open,high,low,close,volume}));
@@ -193,22 +196,21 @@ export function mountProofView(host,replayHost,learningHost,en){
   const q=selector=>host.querySelector(selector)??replayHost.querySelector(selector);
   host.innerHTML=`
     <header class="bp-heading"><h2 id="br-proof-title">${t('决策依据','Decision proof')}</h2>
-      <div class="bp-controls"><button type="button" class="ft-launch" data-open-fill aria-expanded="false" aria-controls="bp-fill-tour">${uiGlyph('play')}${t('看一次模拟成交','Watch a paper trade')}</button><label>${t('市场','Market')}<select data-market data-native-select></select></label></div>
+      <div class="bp-controls"><label>${t('市场','Market')}<select data-market data-native-select></select></label></div>
     </header>
     <div class="bp-panel bp-current" data-current>
       <div class="bp-state" data-current-state role="status"></div><div data-current-result hidden></div>
-    </div>
-    <section class="bp-panel ft-tour" id="bp-fill-tour" data-fill-tour hidden>
-      <header class="ft-head"><div><span class="bp-market-name" data-fill-period></span><h3>${t('模拟成交回放','Paper trade replay')}</h3></div>
-        <button type="button" class="bp-refresh" data-close-fill>← ${t('返回所选交易日','Back to selected session')}</button></header>
-      <div class="bp-state" data-fill-status role="status"></div><div data-fill-body></div>
-    </section>
-    `;
+    </div>`;
   replayHost.innerHTML=`
     <header class="br-layer-head"><div class="br-layer-title"><h2 id="br-backtest-title">${t('回测复盘','Backtest review')}</h2></div>
-      <div class="bp-controls"><label><span class="bp-sr">${t('市场','Market')}</span><select data-replay-market data-native-select></select></label>
+      <div class="bp-controls"><button type="button" class="ft-launch" data-open-fill aria-expanded="false" aria-controls="bp-fill-tour">${uiGlyph('play')}${t('看一次模拟成交','Watch a paper trade')}</button><label><span class="bp-sr">${t('市场','Market')}</span><select data-replay-market data-native-select></select></label>
         <label><span class="bp-sr">${t('回测窗口','Window')}</span><select data-window data-native-select></select></label></div>
     </header>
+    <section class="bp-panel ft-tour" id="bp-fill-tour" data-fill-tour hidden>
+      <header class="ft-head"><div><span class="bp-market-name" data-fill-period></span><h3>${t('模拟成交回放','Paper trade replay')}</h3></div>
+        <button type="button" class="bp-refresh" data-close-fill>← ${t('关闭成交回放','Close trade replay')}</button></header>
+      <div class="bp-state" data-fill-status role="status"></div><div data-fill-body></div>
+    </section>
     <div class="bp-replay">
       <div class="bp-state" data-state role="status"></div>
       <div data-result hidden>
@@ -452,7 +454,7 @@ export function mountProofView(host,replayHost,learningHost,en){
     reviewDate='';latestSession='';
     const controller=mainRequest=new AbortController();
     currentResult.hidden=true;currentResult.replaceChildren();
-    notice(currentState,t('正在核对事前记录…','Checking the registered decision…'));
+    notice(currentState,t('正在核对市场记录…','Checking market evidence…'));
     try{
       directory??=await request(null,controller.signal);
       if(disposed || controller.signal.aborted)return;
@@ -475,12 +477,12 @@ export function mountProofView(host,replayHost,learningHost,en){
     currentRequest?.abort();
     const controller=currentRequest=new AbortController();
     try{
-      const params={current:1,asset:selectedMarket};
+      const params={marketEvidence:1,asset:selectedMarket};
       if(reviewDate)params.date=reviewDate;
       const response=await request(params,controller.signal);
       if(disposed || controller.signal.aborted)return;
-      if(response.assetKey!==selectedMarket || !response.decisionProof || (reviewDate && response.targetDate!==reviewDate))throw new Error('Invalid decision proof');
-      if(!reviewDate)latestSession=response.targetDate;
+      if(response.assetKey!==selectedMarket || response.version!=='market-evidence-v1' || (reviewDate && response.date!==reviewDate))throw new Error('Invalid decision proof');
+      latestSession=response.today;
       renderCurrent(response);
     }catch(error){
       if(disposed || controller.signal.aborted)return;
@@ -492,34 +494,26 @@ export function mountProofView(host,replayHost,learningHost,en){
   function stage(title,main,body){
     return `<article class="bp-stage" tabindex="-1" data-proof-layer="${title.split(' ')[0].toLowerCase()}"><h4>${title}</h4><strong>${e(main)}</strong>${body}</article>`;
   }
-  function mountFrozenChart(target,response,signal){
+  function mountFrozenChart(target,marketData,signal){
     const observer=new IntersectionObserver(entries=>{
       if(!entries.some(entry=>entry.isIntersecting))return;
-      observer.disconnect();
-      load();
+      observer.disconnect();draw();
     },{rootMargin:'180px'});
-    observer.observe(target);
     let disposeChart;
+    observer.observe(target);
     signal.addEventListener('abort',()=>{observer.disconnect();disposeChart?.();},{once:true});
-    async function load(){
-      if(signal.aborted)return;
-      target.textContent=t('读取冻结日线…','Loading daily candles…');
+    async function draw(){
       try{
-        const [archive,charts]=await Promise.all([
-          fetch(response.evidenceUrl,{signal}).then(result=>{
-            if(!result.ok)throw Error('Frozen evidence unavailable');
-            return result.json();
-          }),import('./product-chart-ui.mjs')
-        ]);
+        const charts=await import('./product-chart-ui.mjs');
         if(signal.aborted || !target.isConnected)return;
-        const evidence=response.decisionProof.evidence,bars=frozenChartBars(archive,response.assetKey,evidence);
-        if(!bars.length)throw Error('Frozen window does not match the decision');
+        const bars=closedChartBars(marketData.bars,marketData);
+        if(!bars.length)throw new Error('Incomplete candle window');
         const count=Math.min(30,bars.length);
-        target.innerHTML=charts.chartPanel('brain-frozen-candles',{title:evidence.market,unit:evidence.quote,
+        target.innerHTML=charts.chartPanel('brain-frozen-candles',{title:marketData.market,unit:marketData.quote,
           bars,period:'1D',height:156,compact:true,showPresets:false,initialRange:{start:bars.length-count,count}});
         disposeChart=charts.mountCharts(target);
       }catch{
-        if(!signal.aborted && target.isConnected)notice(target,t('暂时无法读取冻结日线。','Frozen candles unavailable.'),load);
+        if(!signal.aborted && target.isConnected)notice(target,t('暂时无法绘制日线。','Could not draw the daily candles.'),draw);
       }
     }
   }
@@ -541,208 +535,48 @@ export function mountProofView(host,replayHost,learningHost,en){
     return `<div class="dp-plot-caption"><span>${t('策略评分','Strategy scores')}</span><span>${t('现金基准 = 0','Cash baseline = 0')}</span></div><ul class="dp-scores">${rows}</ul>
       <div class="dp-signal-count"><span aria-hidden="true">${signals.map(row=>`<i data-fired="${row.signal===true}"></i>`).join('')}</span>${fired} / ${signals.length} ${t('个信号触发','signals triggered')}</div>`;
   }
-  function venueDetail(response){
-    const source=response.decisionProof.assurance?.source,review=response.venueReview;
-    if(!source && !review)return '';
-    const bound=source?.status==='verified';
-    const legacy=source?.status==='not_recorded_at_registration';
-    const records=[];
-    if(bound)records.push([t('登记前逐根核对','Cross-check at registration'),source,review?.id===source.id?review:null]);
-    if(review && (!bound || review.id!==source.id)){
-      const afterRegistration=Date.parse(review.observedAt)>Date.parse(response.decisionProof.recordedAt);
-      const label=afterRegistration?t('登记后补查','Post-registration cross-check'):t('交易所复查','Venue cross-check');
-      records.push([label,review,review]);
-    }
-    const registration=legacy?fact(t('登记时来源','At registration'),t('原始登记未绑定交易所复查','No venue observation was bound to the original registration')):
-      source?.status==='blocked'?fact(t('登记时来源','At registration'),reason(source.reason)):'';
-    return `<div data-venue-audit>${registration?`<dl class="bp-facts">${registration}</dl>`:''}${records.map(([label,row,links])=>{
-      const total=row.totalBars??response.decisionProof.evidence?.barCount;
-      const matched=Number.isSafeInteger(row.matchedBars) && Number.isSafeInteger(total)?
-        t(row.matchedBars+' / '+total+' 根日线匹配',row.matchedBars+' / '+total+' daily bars matched'):'';
-      const result=[row.venue,matched,row.status && row.status!=='verified' && row.status!=='matched'?(row.status==='unavailable'?t('无法取得行情','Venue data unavailable'):reason(row.status)):''].filter(Boolean).join(' · ');
-      return `<dl class="bp-facts">${fact(label,result || '—')}${fact(t('观测时间','Observed at'),stamp(row.observedAt))}</dl>
-        <div class="bp-sources">${sourceLink(links?.documentUrl,t('核对记录','Observation'))} ${sourceLink(links?.responseUrl,t('交易所原始响应','Venue response'))}</div>`;
-    }).join('')}</div>`;
-  }
-  function policyDetail(witness,quote){
-    const risk=witness?.risk;
-    if(witness?.status!=='verified' || !risk?.profiles?.length)return '';
-    return `<details data-policy-audit><summary>${t('风控方案','Risk policies')} · ${e(reason(risk.effectiveProfile))}</summary>
-      <table><thead><tr><th>${t('方案','Policy')}</th><th>${t('风险预算','Risk budget')}</th><th>${t('最高额度','Order limit')}</th></tr></thead>
-      <tbody>${risk.profiles.map(row=>`<tr><th scope="row">${e(reason(row.mode))}${row.applies?' · '+t('已选','Selected'):''}</th><td>${e(amount(row.riskBudget,quote))}</td><td>${e(amount(row.maxNotional,quote))}</td></tr>`).join('')}</tbody></table></details>`;
-  }
-  function comparisonDetail(comparison,quote){
-    if(!comparison || !['verified','pending'].includes(comparison.status) || !comparison.planId)return '';
-    const results=comparison.results;
-    const cashLabel=t('持有现金','Hold cash');
-    const allocation=results?.cappedHold?.allocationPct??10;
-    const holdLabel=t(allocation+'% 仓位开盘买、收盘卖',allocation+'% open-to-close hold');
-    const unit=comparison.quote??quote;
-    const content=comparison.status==='verified' && results?`<dl class="bp-facts">${[
-      fact(t('策略净损益','Strategy net P&L'),amount(results.strategyNetPnl,unit)),fact(cashLabel,amount(results.cash.netPnl,unit)),
-      fact(holdLabel,amount(results.cappedHold.netPnl,unit)),fact(t('相对持有的差额','Difference vs hold'),amount(results.excessVsCappedHold,unit))
-    ].join('')}</dl>`:`<p class="bp-current-note">${t('对照组已在开盘前固定，等待模拟回执。','The controls were set before the open. Awaiting the paper receipt.')} ${e(cashLabel)} · ${e(holdLabel)}</p>`;
-    return `<details data-forward-controls><summary>${t('事前对照','Pre-registered controls')}</summary>${content}</details>`;
-  }
   function renderCurrent(response){
-    const proof=response.decisionProof,ev=proof.evidence,d=proof.decision,x=proof.execution;
-    const checks=Array.isArray(proof.checks)?proof.checks:[];
-    const refusal=!response.commitId && proof.status==='blocked'?response.refusal?.document:null;
-    const veto=proof.reason==='venue_conflict_veto',blocked=proof.status==='blocked'||veto;
-    const dispatch=blocked?null:response.dispatch?.document;
-    const receipt=blocked?null:response.receipt,asset=directory.assets.find(row=>row.key===selectedMarket);
-    const quote=ev?.quote??x?.quote??asset?.quote??'';
-    const cash=d?.selected==='cash',r=d?.risk,f=d?.features;
-    const candidates=Array.isArray(d?.candidates)?d.candidates:[];
-    const marketName=ev?.market??asset?.market??scopeLabel;
-    const why=code=>reason(code)||'—';
-    const waitingForRegistration=!proof.commitId&&!response.commitId&&!blocked;
-    const status=veto?t('暂停执行','Execution paused'):refusal?t('未予登记','Registration declined'):blocked?t('执行已拦截','Execution blocked'):waitingForRegistration?t('等待事前登记','Awaiting registration'):
-      cash?t('持有现金','Hold cash'):d?.selected?name(d.selected):why(proof.reason);
-    const disposition=dispatch?.disposition;
-    const dispatchText=blocked?t('执行已拦截','Execution blocked'):disposition==='hold_cash'?t('已登记维持现金','Cash hold recorded'):
-      disposition==='admit_paper'?t('已登记模拟执行额度','Paper allocation recorded'):t('尚未下达执行指令','No dispatch recorded');
-    const outcome=receipt?.document??receipt;
-    const paperResult=outcome?.execution??outcome;
-    const settled=Boolean(x?.receiptId && paperResult);
-    const facts=rows=>'<dl class="bp-facts">'+rows.join('')+'</dl>';
-    const allowed=disposition==='admit_paper'||disposition==='hold_cash';
-    const execHeadline=veto?t('原模拟指令已撤销','Original paper dispatch revoked'):blocked?dispatchText:settled?why(paperResult.status):dispatchText;
-    const tradeCandidates=candidates.filter(row=>row.id!=='cash');
-    const noSignals=tradeCandidates.length>0 && tradeCandidates.every(row=>row.signal===false);
-    const cutoff=ev?.asOf,ruleText=d?why(d.reason??(cash?'no_candidate_beats_cash':'highest_eligible_score')):'';
-    const trigger={
-      trend:t('收盘价 > 10 日均线 > 30 日均线','Close > 10-day MA > 30-day MA'),
-      breakout:t('收盘价 > 前 10 日最高价 ','Close > previous 10-day high of ')+number(f?.priorHigh,6),
-      pullback:t('收盘价低于回调线 ','Close below pullback threshold ')+number(f?.average10*(1-f?.atrPct/2),6)+
-        t('，且高于前收盘 ',' and above prior close ')+number(d?.previousClose,6)
-
-    };
-    const labels={
-      registration:t('登记完整性','Registration integrity'),source:t('行情来源','Market provenance'),cutoff:t('数据时序','Data chronology'),
-      candidates:t('候选复算','Candidate recomputation'),risk:t('风控复算','Risk recomputation'),
-      authority:t('执行授权','Execution authority'),receipt:t('回执核对','Receipt reconciliation')
-    };
-    const audit=checks.map(row=>`<li><div><b>${e(labels[row.id]??residual(row.id))}</b><span>${e(why(row.status))}</span></div>
-        <small>${e(why(row.reason))}</small></li>`).join('');
-    const alternatives=candidates.filter(row=>row.id!=='cash').map(row=>`<li><div><b>${e(name(row.id))}</b>
-      <span>${e(row.id===d.selected?t('入选','Selected'):row.eligible?t('可选','Eligible'):t('未通过','Ineligible'))}</span></div>
-      <small>${e(why(row.reason))}${row.signal && Number.isFinite(row.score)?' · '+t('得分 ','Score ')+e(number(row.score,4)):''}</small><small>${e(trigger[row.id]??'')}</small></li>`).join('');
-    const detailIntro=noSignals?t(tradeCandidates.length+' 种交易策略均未触发，保留现金。',tradeCandidates.length+' trade signals checked. None fired.'):ruleText;
-    const executionWitness=proof.assurance?.execution;
-    const independent=blocked?null:executionWitness?.status==='verified'?t('数量、费用与权益已独立复算','Quantity, costs and equity reconciled'):
-      executionWitness?.status==='waiting'?t('暂无可结算回执','No settled receipt yet'):
-      executionWitness?.status==='blocked'?t('回执未通过核对','Receipt failed verification'):null;
-    const paperState=veto?t('已暂停','Paused'):settled?why(paperResult.status):waitingForRegistration?t('尚无登记','Awaiting registration'):
-      why(proof.reason);
-    const empty=(message)=>`<p class="bp-current-note">${e(message)}</p>`;
-    const percentFraction=value=>Number.isFinite(value)?percent(value*100):'—';
+    const {observation,marketData,date:sessionDate}=response;
+    const frozen=observation?.status==='matched' && marketData;
+    const features=frozen?.features;
+    const marketName=observation?.market??directory.assets.find(asset=>asset.key===selectedMarket)?.market??scopeLabel;
+    const rules=features?[
+      ['trend',t('收盘价 > 10 日均线 > 30 日均线','Close > 10-day MA > 30-day MA')],
+      ['breakout',t('收盘价 > 前 10 日最高价','Close > prior 10-day high')+' · '+number(features.priorHigh)],
+      ['pullback',t('收盘价高于前收盘且低于回调线','Prior close < close < pullback threshold')+' · '+number(features.previousClose)+' / '+number(features.average10*(1-features.atrPct/2))]
+    ]:[];
+    const triggered=rules.filter(([id])=>features.signal[id]);
+    const facts=rows=>'<dl class="bp-facts">'+rows.map(([label,value])=>fact(label,value)).join('')+'</dl>';
     const drawer=(label,body)=>`<details class="dp-detail"><summary>${e(label)}</summary><div>${body}</div></details>`;
-    const change=Number.isFinite(f?.close) && d.previousClose>0?(f.close/d.previousClose-1)*100:null;
-    const marketPlot=ev && response.evidenceUrl?`<div class="dp-plot-caption"><span>${e(ev.venue)} · 1D</span>
-      ${Number.isFinite(change)?`<b class="${signClass(change)}">${e(percent(change,true))}</b>`:''}</div>
-      <div class="dp-candles" data-frozen-chart></div>`:'';
-    const orderLimit=allowed && Number.isFinite(dispatch.maxNotional)?dispatch.maxNotional:null;
-    const share=orderLimit!==null && d?.equityBefore>0?100*orderLimit/d.equityBefore:null;
-    const exposure=share===null?'':`<div class="dp-allocation"><div class="dp-ring" style="--share:${Math.min(100,Math.max(0,share))}%">
-      <b>${e(percent(share))}</b></div><div><strong>${e(amount(orderLimit,dispatch.quote??quote))}</strong>
-      <span>${t('下达额度 / 模拟权益','Dispatch limit / paper equity')}</span></div></div>`;
-    const flow=[
-      [t('登记','Register'),Boolean(response.commitId)],
-      [t('指令','Dispatch'),allowed],
-      [t('回执','Receipt'),settled]
-    ];
-    const journey=`<ol class="dp-journey">${flow.map(([label,done])=>{
-      const state=done?'done':blocked?'blocked':'pending';
-      const description=done?t('已记录','Recorded'):blocked?t('已拦截','Blocked'):t('待记录','Pending');
-      return `<li data-receipt-state="${state}" aria-label="${e(label+' · '+description)}"><i aria-hidden="true">${done?'✓':blocked?'×':'·'}</i><span>${e(label)}</span></li>`;
-    }).join('')}</ol>`;
-    const refusalStages=refusal?[
-      stage('Brain Layer',t('未通过登记检查','Registration check failed'),facts([
-        fact(t('原因','Reason'),why(refusal.reason.toLowerCase())),
-        ...(refusal.asOf?[fact(t('行情截至','Market data through'),stamp(refusal.asOf))]:[]),
-        fact(t('采集核对时间','Collector check'),stamp(refusal.observedAt)),
-        fact(t('目标交易日','Target session'),refusal.targetDate+' UTC')
-      ])),
-      stage('Thinking Layer',t('未选定策略','No strategy selected'),empty(t('本交易日没有已登记的决策或风险额度。','No decision or risk budget was registered for this session.'))),
-      stage('Execution Layer',t('未下达执行指令','No dispatch issued'),journey+drawer(t('执行明细','Execution details'),facts([
-        fact(t('模拟回执','Paper receipt'),t('无','None')),
-        fact(t('实盘下单权限','Live order authority'),t('未授权','Not authorized'))
-      ])))
-    ].join(''):'';
-    currentResult.innerHTML=`<header class="bp-current-head"><div>
-        <span class="bp-market-name">${e(marketName)} · ${e(response.targetDate)} UTC</span>
-        <h3>${e(status)}</h3>${veto?`<p class="bp-market-name">${t('交易所复查发现行情冲突','Venue recheck found conflicting market data')}</p>`:''}</div><span class="bp-route">${t('模拟执行通道','Paper execution')}</span></header>
-      <div class="bp-current-trace bp-trace">${refusal?refusalStages:`
-        ${stage('Brain Layer',Number.isFinite(f?.close)?amount(f.close,quote,8):t('行情依据','Market evidence'),ev?marketPlot+drawer(t('冻结的行情','Frozen market data'),facts([
-          fact(t('交易场所','Venue'),ev.venue),fact(t('数据截至','Information cutoff'),stamp(cutoff)),
-          fact(t('已收盘日线','Closed daily bars'),number(ev.barCount,0)),
-          ...(f?[fact(t('最后收盘价','Last close'),amount(f.close,quote,8)),
-          fact(t('前一日收盘','Previous close'),amount(d.previousClose,quote,8)),
-          fact(t('10 日 / 30 日均价','10-day / 30-day MA'),number(f.average10,6)+' / '+number(f.average30,6)),
-          fact(t('前 10 日最高价','Previous 10-day high'),amount(f.priorHigh,quote,8)),
-          fact(t('ATR 占收盘价','ATR / close'),percentFraction(f.atrPct))]:[])
-        ])+`<div class="bp-sources">${sourceLink(response.evidenceUrl,t('冻结输入','Frozen inputs'))} ${sourceLink(ev.sourceUrl,t('行情来源','Market source'))}</div>`):
-          empty(blocked?t('本次行情依据未通过核对。','The market evidence did not clear verification.'):t('等待用于本次研判的冻结快照。','Waiting for the frozen market snapshot.')))}
-        ${stage('Thinking Layer',d?name(d.selected):t('等待可核对的决策','Awaiting a decision'),d?
-          strategyPlot(candidates,d.selected)+drawer(t('策略与风控','Strategy & risk'),empty(detailIntro)+facts([
-            fact(veto?t('登记时风控','Registered risk policy'):t('风控决定','Risk decision'),(veto?[r?.mode]:[r?.mode,r?.action,r?.reason]).filter(Boolean).map(why).join(' · ')||'—'),
-            fact(t('风险预算','Risk budget'),amount(r?.riskBudget,quote)),
-            fact(t('冻结额度','Planned amount'),amount(r?.amount,quote)),
-            fact(t('止损 / 跳空上限','Stop / opening gap limit'),percentFraction(r?.stopFraction)+' / '+percentFraction(r?.openGapLimit))
-          ])+(alternatives?`<details class="bp-alternatives"><summary>${t('比较的策略','Strategies compared')} · ${tradeCandidates.length}</summary><ul class="bp-candidates">${alternatives}</ul></details>`:'')+(!veto?policyDetail(proof.assurance?.strategy,quote):'')+
-          (!blocked?`<details data-choice-sensitivity><summary>${t('选择对样本有多敏感','Sensitivity to the sample')}</summary><div role="status"></div></details>`:'')):
-          empty(blocked?t('策略与风控依据尚未通过核对。','The strategy and risk policy have not cleared verification.'):t('登记后可查看候选策略、弃选原因与风险额度。','The registered decision supplies the alternatives, reasons and risk limits.')))}
-        ${stage('Execution Layer',execHeadline,exposure+journey+(allowed?`<small class="dp-receipt-note">${e(paperState)}</small>`:'')+drawer(t('执行明细','Execution details'),facts([
-          fact(t('目标开盘','Target open'),proof.targetOpenAt?stamp(proof.targetOpenAt):response.targetDate+' UTC'),
-          ...(allowed?[fact(t('下达的额度上限','Dispatched limit'),amount(dispatch.maxNotional,dispatch.quote??quote)),
-            fact(t('指令登记时间','Dispatch recorded at'),stamp(dispatch.issuedAt))]:[]),
-          fact(t('模拟回执','Paper receipt'),paperState),
-          ...(independent?[fact(t('独立核算','Independent reconciliation'),independent)]:[]),
-          ...(settled && Number.isFinite(paperResult.netPnl)?[fact(t('模拟净损益','Paper net P&L'),amount(paperResult.netPnl,quote))]:[]),
-          fact(t('实盘下单权限','Live order authority'),proof.liveAuthorized===false?t('未授权','Not authorized'):t('未核实','Unconfirmed'))
-        ])+(!blocked && response.handoffUrl?sourceLink(response.handoffUrl,t('模拟执行指令','Paper dispatch')):'')+(!blocked?comparisonDetail(response.comparison,quote):'')))}`}
-      </div><footer class="bp-current-foot"><details class="bp-checks"><summary>${t('核验记录','Verification record')}</summary>
-        ${venueDetail(response)}
-        ${audit?`<ul class="bp-candidates">${audit}</ul>`:''}
-        ${facts([fact(t('核验时间','Checked at'),stamp(response.checkedAt)),
-            ...(response.refusal?.sha256 && refusal?[fact(t('拒绝记录指纹','Refusal fingerprint'),response.refusal.sha256)]:[]),
-            ...(proof.recordedAt?[fact(t('事前登记','Registered at'),stamp(proof.recordedAt))]:[]),
-            ...(proof.commitId?[fact(t('登记编号','Commit ID'),proof.commitId)]:[]),
-            ...(x?.dispatchId?[fact(t('指令编号','Dispatch ID'),x.dispatchId)]:[]),
-            ...(x?.receiptId?[fact(t('回执编号','Receipt ID'),x.receiptId)]:[])])}
-        <div class="bp-sources">${sourceLink(response.recordUrl,t('事前登记原件','Original registration'))} ${sourceLink(response.reviewUrl,t('核验结果','Verification JSON'))} ${sourceLink(endpoint({brief:'1',asset:response.assetKey,date:response.targetDate}),t('AI 决策摘要','AI decision brief'))}</div>
-      </details><div class="bp-review-actions">
-        <label>${t('交易日 (UTC)','Session (UTC)')} <input type="date" data-session aria-label="${t('查看交易日的登记','Review registered session')}" value="${e(response.targetDate)}" max="${e(latestSession || response.targetDate)}"></label>
-        ${reviewDate?`<button type="button" data-latest class="bp-refresh">${t('返回当前','Current session')}</button>`:''}
+    const title=frozen?(triggered.length?triggered.map(([id])=>name(id)).join(' · '):t('未触发入场信号','No entry signal')):
+      observation?.status==='conflict'?t('行情来源不一致','Market data conflict'):t('暂无已核验行情','No verified market data');
+    const sources=observation?`<div class="bp-sources">${sourceLink(observation.documentUrl,t('核对记录','Verification record'))}
+      ${sourceLink(observation.responseUrl,t('交易所原始行情','Venue response'))}</div>`:'';
+    const rulesView=rules.map(([id,rule])=>`<li><span class="dp-rule-state" data-matched="${features.signal[id]}">${features.signal[id]?'✓':'–'}</span>
+      <div><b>${e(name(id))}</b><small>${e(rule)}</small></div><span>${features.signal[id]?t('触发','Met'):t('未触发','Unmet')}</span></li>`).join('');
+    const observationFacts=observation?facts([[t('采集时间','Observed at'),stamp(observation.observedAt)],
+      [t('行情截至','Market cutoff'),stamp(observation.windowEndAt)],[t('一致的日线','Matched candles'),observation.matchedBars+' / '+observation.totalBars]]):'';
+    currentResult.innerHTML=`<header class="bp-current-head"><div><span class="bp-market-name">${e(marketName)} · ${e(sessionDate)} UTC</span>
+      <h3>${e(title)}</h3></div>${frozen?`<span class="bp-route">${t('交易所行情已核对','Venue data verified')}</span>`:''}</header>
+      <div class="bp-current-trace bp-trace">
+      ${stage('Brain Layer',frozen?amount(features.close,frozen.quote):t('行情证据','Market evidence'),frozen?
+        `<div class="dp-plot-caption"><span>${e(frozen.venue)} · 1D</span><b class="${signClass(features.close-features.previousClose)}">${e(percent((features.close/features.previousClose-1)*100,true))}</b></div>
+        <div class="dp-candles" data-frozen-chart></div>`+drawer(t('数据来源','Data source'),observationFacts+sources):
+        `<p class="bp-current-note">${t('所选日期没有通过完整核对的行情。','No complete, verified candle window for this date.')}</p>`+observationFacts+sources)}
+      ${stage('Thinking Layer',frozen?t(`${triggered.length} / ${rules.length} 个信号触发`,`${triggered.length} / ${rules.length} signals met`):t('等待行情核对','Awaiting verified candles'),
+        frozen?`<ul class="dp-market-rules">${rulesView}</ul>`+drawer(t('波动与均线','Volatility & averages'),facts([
+          [t('14 日 ATR / 收盘价','14-day ATR / close'),percent(features.atrPct*100)],
+          [t('10 日 / 30 日均线','10-day / 30-day MA'),number(features.average10)+' / '+number(features.average30)]
+        ])):'')}
+      ${stage('Execution Layer',t('暂无可核验的成交','No verified fill'),
+        `<p class="bp-current-note">${t('当前记录只包含市场证据。成交确认需要与决策关联的交易所回执。','This record contains market evidence. A linked venue receipt is required to confirm a fill.')}</p>`)}
+      </div><footer class="bp-current-foot"><div>${observation?t('最近核对','Last observed')+' · '+e(stamp(observation.observedAt)):''}</div>
+      <div class="bp-review-actions"><label>${t('观测日 (UTC)','Observation date (UTC)')} <input type="date" data-session value="${e(sessionDate)}" max="${e(response.today)}"></label>
+        ${reviewDate?`<button type="button" data-latest class="bp-refresh">${t('返回今天','Today')}</button>`:''}
         <button type="button" class="bp-refresh" data-refresh>${t('重新核对','Check again')}</button></div></footer>`;
     currentState.hidden=true;currentResult.hidden=false;
     const plot=currentResult.querySelector('[data-frozen-chart]');
-    if(plot)mountFrozenChart(plot,response,currentRequest.signal);
-    const sensitivity=q('[data-choice-sensitivity]');
-    if(sensitivity){
-      const output=sensitivity.querySelector('[role=status]'),signal=currentRequest.signal;
-      const inspect=async()=>{
-        if(!sensitivity.open)return;
-        sensitivity.ontoggle=null;
-        notice(output,t('正在逐日复算…','Rechecking each omission…'));
-        try{
-          const brief=await request({brief:1,asset:response.assetKey,date:response.targetDate},signal);
-          if(signal.aborted || !output.isConnected)return;
-          const check=brief.thinking?.sensitivity;
-          if(brief.decisionId!==proof.decisionId || brief.status==='blocked' || !check)throw new Error('Decision changed');
-          const days=number(check.omissions,0),same=number(check.retained,0);
-          const lines=[t(`每次剔除一个校准日，${days} 次重算中有 ${same} 次仍选择${name(brief.thinking.selected)}。`,
-            `Leaving out one calibration day at a time kept ${name(brief.thinking.selected)} in ${same} of ${days} rankings.`)];
-          for(const change of check.switches)lines.push(t(`${change.count} 次改选${name(change.to)}，例如剔除 ${change.example.omittedDate}。`,
-            `${change.count} switched to ${name(change.to)}, including when ${change.example.omittedDate} was omitted.`));
-          output.textContent=lines.join(' ');
-        }catch{
-          if(!signal.aborted && output.isConnected)notice(output,t('暂时无法核对，请重新核对本次决策。','Recheck the decision to load its sensitivity.'));
-        }
-      };
-      sensitivity.ontoggle=inspect;
-    }
+    if(plot)mountFrozenChart(plot,marketData,currentRequest.signal);
     q('[data-refresh]').onclick=event=>{event.currentTarget.disabled=true;loadCurrent();};
     q('[data-session]').onchange=event=>{
       const field=event.currentTarget;
@@ -918,11 +752,10 @@ export function mountProofView(host,replayHost,learningHost,en){
   function changeSession(value){
     reviewDate=value;
     currentResult.hidden=true;currentResult.replaceChildren();
-    notice(currentState,t('正在核对事前记录…','Checking the registered decision…'));
+    notice(currentState,t('正在核对市场记录…','Checking market evidence…'));
     loadCurrent();
   }
   function focusStage(key){
-    closeTour();
     if(reviewDate)changeSession('');
     const target=currentResult.querySelector(`[data-proof-layer="${key}"]`)??q('[data-current]');
     pendingLayer=currentResult.hidden?key:'';
@@ -934,8 +767,7 @@ export function mountProofView(host,replayHost,learningHost,en){
   let tourRequest=null,tourPinned=false;
   function closeTour(restore=true){
     tourRequest?.abort();tourRequest=null;
-    tour.hidden=true;market.closest('label').hidden=false;launch.hidden=false;launch.setAttribute('aria-expanded','false');
-    q('[data-current]').hidden=false;
+    tour.hidden=true;launch.hidden=false;launch.setAttribute('aria-expanded','false');
     if(tourPinned){
       tourPinned=false;period.disabled=false;
       clearRecord();
@@ -1006,7 +838,7 @@ export function mountProofView(host,replayHost,learningHost,en){
   }
   async function openTour(){
     tourRequest?.abort();const controller=tourRequest=new AbortController(),signal=controller.signal;
-    tour.hidden=false;market.closest('label').hidden=true;q('[data-current]').hidden=true;launch.hidden=true;launch.setAttribute('aria-expanded','true');
+    tour.hidden=false;launch.hidden=true;launch.setAttribute('aria-expanded','true');
     q('[data-close-fill]').focus({preventScroll:true});
     tourBody.replaceChildren();q('[data-fill-period]').textContent='';
     const status=q('[data-fill-status]');notice(status,t('正在核对模拟回执…','Checking the paper receipt…'));

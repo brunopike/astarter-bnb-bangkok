@@ -10,7 +10,7 @@ import {mkdtemp,readFile,readdir,rename,rm,writeFile} from 'node:fs/promises';
 import {createBrainProofHandler} from './api/brain-proof.mjs';
 import {createBrainProofService} from './api/brain-proof-service.mjs';
 import {recordForwardProofs,readForwardProof,readForwardRefusal} from './brain-proof-forward.mjs';
-import {readSourceObservation} from './brain-source-observations.mjs';
+import {readSourceObservation,readSourceObservationArtifact} from './brain-source-observations.mjs';
 
 const dataset=JSON.parse(await readFile(new URL('./brain-evidence/daily-markets.json',import.meta.url)));
 const endpoint='/api/brain/proof';
@@ -402,4 +402,28 @@ test('a featured fill on an empty store leads to its frozen signal, position, se
   const after=await get('?run='+runId+'&decision='+following.id);
   assert.equal(after.body.decision.previousReceiptId,receipt.id);
   assert.equal(after.body.decision.previousReceiptAt,receipt.barCloseAt);
+});
+
+test('market evidence uses dated venue records without calling the trading or replay paths',async t=>{
+  const f=await fixture(t),dir=path.join(f.dir,'venue');
+  const now=Date.parse(f.fixture.retrievedAt)+60000,clock=()=>now;
+  const forbidden=()=>assert.fail('Market evidence must be independent of trading and replay');
+  const options={clock,build:forbidden,forward:forbidden,refusal:forbidden,cohort:forbidden,
+    observation:(key,opts)=>readSourceObservation(key,{...opts,dir}),
+    artifactReader:(key,opts)=>readSourceObservationArtifact(key,{...opts,dir})};
+  const get=await f.start(options),query='?marketEvidence=1&asset='+bitcoin.key;
+  assert.equal((await get(query)).body.marketData,null);
+  assert.equal((await get('?marketEvidence=1&asset=unknown')).body.error.code,'UNSUPPORTED_ASSET');
+  assert.equal((await observeTestArchive(f.fixture,{dir,clock})).counts.matched,1);
+  const {body,status}=await get(query);
+  assert.equal(status,200);
+  assert.equal(body.marketData.barCount,91);
+  assert.equal(body.marketData.bars.at(-1)[4],body.marketData.features.close);
+  assert.equal(body.observation.observedAt.slice(0,10),body.date);
+  assert.equal((await get(body.observation.responseUrl)).status,200);
+  assert.doesNotMatch(JSON.stringify(body),/paper|replay|netPnl|riskBudget|receiptId|equityBefore/i);
+  assert.equal((await get(query+'&date=2023-01-01')).body.marketData,null);
+  assert.equal((await get(query+'&date=2099-01-01')).status,400);
+  const conflicting=await f.start({...options,observation:async()=>({...body.observation,status:'conflict'}),artifactReader:forbidden});
+  assert.equal((await conflicting(query)).body.marketData,null);
 });

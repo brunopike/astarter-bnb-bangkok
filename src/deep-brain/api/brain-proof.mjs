@@ -5,7 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {promisify} from 'node:util';
 import {gzip,gunzip} from 'node:zlib';
-import {buildBrainProof} from '../brain-proof-engine.mjs';
+import {buildBrainProof,observedMarketSignals,validateProofMarket} from '../brain-proof-engine.mjs';
 import {buildProofCohort} from '../brain-proof-cohort.mjs';
 import {evaluateDecisionProof} from '../brain-decision-proof.mjs';
 import {forwardDirectory,readForwardProof,readForwardRefusal} from '../brain-proof-forward.mjs';
@@ -205,6 +205,28 @@ export function createBrainProofHandler({
     snapshot.cohorts.set(days,task);
     try{return await task;}catch(error){snapshot.cohorts.delete(days);throw error;}
   }
+  async function marketEvidence(params,reply){
+    assertKeys(params,['marketEvidence','asset','date']);
+    const key=params.get('asset'),now=clock(),today=new Date(now).toISOString().slice(0,10);
+    const date=params.get('date')??today;
+    if(params.get('marketEvidence')!=='1' || !key || key.length>128 || !validDate(date) || date>today)fail('BAD_QUERY');
+    const row=await observation(key,{date,before:Math.min(now,Date.parse(date)+86400000-1)});
+    if(!row && !(await archive()).data.assets.some(asset=>asset.key===key))fail('UNSUPPORTED_ASSET');
+    const result={version:'market-evidence-v1',assetKey:key,date,today,observation:describeObservation(row),marketData:null};
+    if(row?.status==='matched'){
+      const raw=await artifactReader(key,{id:row.id,kind:'archive'});
+      if(!raw || digest(raw)!==row.archiveBytesSha256)fail('INVALID_EVIDENCE');
+      const {asset,bars}=validateProofMarket(JSON.parse(raw),key);
+      const start=Date.parse(row.windowStartAt),end=Date.parse(row.windowEndAt);
+      const closed=bars.filter(([at])=>at*1000>=start && (at+86400)*1000-1<=end);
+      if(asset.market!==row.market || asset.venue!==row.venue || row.assetKey!==key ||
+        row.matchedBars!==row.totalBars || closed.length!==row.totalBars ||
+        closed.at(0)?.[0]*1000!==start || (closed.at(-1)?.[0]+86400)*1000-1!==end)fail('INVALID_EVIDENCE');
+      result.marketData={market:asset.market,venue:asset.venue,quote:asset.quote,asOf:row.windowEndAt,barCount:closed.length,
+        bars:closed,features:observedMarketSignals(closed)};
+    }
+    reply(200,result);
+  }
   async function current(params,reply,brief=false){
     const mode=brief?'brief':'current';
     assertKeys(params,brief?[mode,'asset','date']:[mode,'asset','date','artifact','sha256']);
@@ -326,6 +348,7 @@ export function createBrainProofHandler({
         if(!bytes)fail('PROOF_NOT_FOUND');
         reply(200,bytes,{ETag:'"'+digest(bytes)+'"'});return;
       }
+      if(params.has('marketEvidence')){await marketEvidence(params,reply);return;}
       if(params.has('current')){await current(params,reply);return;}
       if(params.has('cohortId')){
         assertKeys(params,['cohortId']);

@@ -514,7 +514,7 @@ test('local empty P&L offers a labeled read-only example without replacing curre
  const model=workbenchPnlSeries(trade,sync,options),capital=workbenchAccount(trade),html=capitalPnlMarkup(capital,model);
  assert.equal(model.example,'spectrum-20261109');assert.equal(model.fills,54);assert.equal(model.total,124.40940454);assert.equal(model.from,'2026-10-14');assert.equal(model.to,'2026-11-09');assert.equal(model.timeZone,'Asia/Shanghai');
  assert.equal(model.cells.filter(c=>c.state==='gain').length,21);assert.equal(model.cells.filter(c=>c.state==='loss').length,33);assert.equal(model.cells.filter(c=>c.state==='empty').length,108);
- assert.match(html,/星谱盈亏 · 参考数据/);assert.match(html,/data-statement-example="spectrum-20261109"/);assert.match(html,/10,002.56/);assert.doesNotMatch(html,/10,315.81/);assert.deepEqual(trade,before);
+ assert.match(html,/<span class="lms-title">AI 交易盈亏 · 参考数据<\/span>/);assert.match(html,/data-statement-example="spectrum-20261109"/);assert.match(html,/10,002.56/);assert.doesNotMatch(html,/10,315.81/);assert.deepEqual(trade,before);
  for(const status of [undefined,{...sync,state:'DISCONNECTED'},{...sync,scope:{accountId:'SIM-01',environment:'LIVE'}}])assert.equal(workbenchPnlSeries(trade,status,options).example,undefined);
  const actual=pnlFixture([{at:pnlAt('09'),gross:2}]);assert.equal(workbenchPnlSeries(actual,sync,options).example,undefined);assert.equal(workbenchPnlSeries(actual,sync,options).total,2);
 });
@@ -527,7 +527,7 @@ test('explicit P&L review retains unresolved account history and stops outside i
  const actual=workbenchPnlSeries(trade,sync,options);assert.equal(actual.example,undefined);assert.equal(actual.unclassified,1);assert.equal(actual.total,null);
  const model=workbenchPnlSeries(trade,sync,{...options,example:'spectrum-20261109'}),html=capitalPnlMarkup(workbenchAccount(trade),model);
  assert.equal(model.fills,54);assert.equal(model.accountUnclassified,1);assert.equal(model.total,124.40940454);
- assert.match(html,/星谱盈亏 · 参考数据/);assert.match(html,/历史盈亏待核对/);assert.match(html,/10,002.56/);assert.doesNotMatch(html,/10,315.81/);
+ assert.match(html,/<span class="lms-title">AI 交易盈亏 · 参考数据<\/span>/);assert.match(html,/历史盈亏待核对/);assert.match(html,/10,002.56/);assert.doesNotMatch(html,/10,315.81/);
  assert.deepEqual(workbenchPnlSeries(trade,sync,{...options,accountOnly:true}),actual);
  for(const status of [{...sync,state:'DISCONNECTED'},{...sync,scope:{accountId:'OTHER',environment:'LIVE'}}])assert.equal(workbenchPnlSeries(trade,status,{...options,example:'spectrum-20261109'}).example,undefined);
  assert.equal(workbenchPnlSeries(trade,sync,{...options,example:'invalid'}).example,undefined);assert.deepEqual(trade,before);

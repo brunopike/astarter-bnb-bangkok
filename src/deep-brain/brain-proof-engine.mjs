@@ -88,6 +88,11 @@ function signals(rows){
       pullback:downFromMean < -atrPct*.5 && current[4]>previous[4]},
   };
 }
+export function observedMarketSignals(bars){
+  if(bars.length<FEATURES)fail('INSUFFICIENT_EVIDENCE','Not enough closed bars for market signals');
+  const {close,average10,average30,atrPct,priorHigh,signal}=signals(bars.slice(-FEATURES));
+  return {close,previousClose:bars.at(-2)[4],average10,average30,atrPct,priorHigh,signal};
+}
 // Only the next bar's open is consulted at entry. Its low is used solely
 // to model a resting sell stop after entry; a session carries no position overnight.
 function simulate(amount,stopFraction,bar){
