@@ -1,9 +1,11 @@
 import test from 'node:test';
+import {gzipSync} from 'node:zlib';
+import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
-import {parseCatalog,archiveScopeSeries,archiveRecordTarget,pageForBlock,rowsThrough} from './brain-raw-archive.mjs';
+import {parseCatalog,archiveScopeSeries,archiveRecordTarget,pageForBlock,rowsThrough,readDay,parseArchiveSummary} from './brain-raw-archive.mjs';
 
 const sha256='f'.repeat(64);
-const shard=(asset,day,count)=>({file:asset+'-'+day+'.json',start:day,end:day,count,sha256});
+const shard=(asset,day,count)=>({file:asset.toLowerCase()+'-'+day+'.json',start:day,end:day,count,sha256});
 const dataset=(asset,days)=>({asset,source:'Test source',sourceUrl:'https://example.org/',
   fields:['height','timestamp','transactions'],start:days[0][0],end:days.at(-1)[0],
   count:days.reduce((n,[,count])=>n+count,0),shards:days.map(([day,count])=>shard(asset,day,count))});
@@ -39,4 +41,72 @@ test('an evidence link resolves the exact native-chain block, UTC day and descen
   const rows=Array.from({length:26},(_,i)=>[839999+i,0,0]);
   assert.equal(pageForBlock(rows,840000),3);assert.equal(pageForBlock(rows,840024),1);
   assert.equal(pageForBlock(rows,839998),null);
+});
+
+const day='2024-04-20',start=Date.parse(day+'T00:00:00Z')/1000;
+const testRows=[[839999,start+123,3],[840000,start+119,0],[840002,start+866,75]];
+const compact=[839999,start+123,[0,0,3,1,-4,0,2,747,75]];
+
+function packet(payload,{packed=true,bytes,metadata={}}={}){
+  bytes??=packed?gzipSync(JSON.stringify(payload)):Buffer.from(JSON.stringify(payload));
+  const part={...shard('btc',day,3),file:'btc-'+day+'.json'+(packed?'.gz':''),
+    firstHeight:839999,lastHeight:840002,sha256:createHash('sha256').update(bytes).digest('hex'),...metadata};
+  const response=async(url,options)=>{
+    assert.equal(url.split('?')[0],'/brain-evidence/archive/'+part.file);
+    assert.equal(options.cache,'no-cache');
+    return new Response(bytes);
+  };
+  return {part,response};
+}
+
+test('legacy and compressed daily files yield the same records, including nonmonotonic BTC time and a height gap',async()=>{
+  for(const fixture of [packet(testRows,{packed:false}),packet(compact)]){
+    assert.deepEqual(await readDay(fixture.part,undefined,fixture.response),testRows);
+  }
+});
+
+test('the checksum authenticates the compressed bytes before JSON parsing or decompression',async()=>{
+  const bad=packet(null,{bytes:Buffer.from('unparseable, not gzip'),metadata:{sha256}});
+  await assert.rejects(readDay(bad.part,undefined,bad.response),/ARCHIVE_DIGEST/);
+  const packed=packet(compact);
+  const uncompressedHash=createHash('sha256').update(JSON.stringify(compact)).digest('hex');
+  await assert.rejects(readDay({...packed.part,sha256:uncompressedHash},undefined,packed.response),/ARCHIVE_DIGEST/);
+});
+
+test('date bounds, count, node heights, delta overflow and unsigned transaction counts survive decompression checks',async()=>{
+  const cases=[
+    [compact,{count:4},'ARCHIVE_LENGTH'],[compact,{firstHeight:839998},'ARCHIVE_HEIGHT'],
+    [[839999,start+123,[1,0,3,1,-4,0,2,747,75]],{},'ARCHIVE_ORIGIN'],
+    [[839999,start+123,[0,0,3,0,-4,0,2,747,75]],{},'ARCHIVE_ROW'],
+    [[839999,start+123,[0,0,3,1,-124,0,2,747,75]],{},'ARCHIVE_ROW'],
+    [[839999,start+123,[0,0,3,1,86300,0,2,747,75]],{},'ARCHIVE_ROW'],
+    [[839999,start+123,[0,0,3,1,1,-2,2,747,75]],{},'ARCHIVE_DELTA'],
+    [[Number.MAX_SAFE_INTEGER,start+123,compact[2]],{},'ARCHIVE_ROW']
+  ];
+  for(const [payload,metadata,code] of cases){
+    const f=packet(payload,{metadata});await assert.rejects(readDay(f.part,undefined,f.response),new RegExp(code));
+  }
+});
+
+test('a completed fetch from a superseded day is discarded before decompression',async()=>{
+  const previous=packet(compact),controller=new AbortController();
+  const late=async(url,options)=>{const response=await previous.response(url,options);controller.abort();return response;};
+  await assert.rejects(readDay(previous.part,controller.signal,late),{name:'AbortError'});
+});
+
+test('summary totals respect disjoint periods and never expose future blocks in intraday replay',()=>{
+  const datasets=sets.map(set=>({asset:set.asset,count:set.count,start:set.start,end:set.end,
+    ranges:set.shards.map(p=>({start:p.start,end:p.end,count:p.count}))}));
+  const light={schemaVersion:1,count:32,datasets};
+  assert.deepEqual(parseArchiveSummary(light),datasets);
+  assert.equal(archiveScopeSeries(datasets,'eth-merge','2022-09-15T06:44:00Z')[0].count,null);
+  assert.equal(archiveScopeSeries(datasets,'eth-merge','2022-09-16T00:00:00Z')[0].count,22);
+  assert.deepEqual(archiveScopeSeries(datasets,'eth-merge','2022-09-12T00:00:00Z'),[]);
+  assert.throws(()=>parseArchiveSummary({...light,count:31}));
+  assert.throws(()=>parseArchiveSummary({...light,datasets:[{...datasets[0],ranges:[datasets[0].ranges[1],datasets[0].ranges[0]]}]}));
+  for(const file of ['btc-2022-09-14.json.gz','eth-2022-02-31.json.gz','../eth-2022-09-14.json.gz']){
+    assert.throws(()=>parseCatalog({...catalog,datasets:[{...sets[0],shards:[{...sets[0].shards[0],file},...sets[0].shards.slice(1)]},sets[1]]}));
+  }
+  const gzipDays=sets.map(s=>({...s,shards:s.shards.map(p=>({...p,file:p.file+'.gz'}))}));
+  assert.equal(parseCatalog({...catalog,datasets:gzipDays}),gzipDays);
 });

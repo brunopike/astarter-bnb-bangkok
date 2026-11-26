@@ -20,7 +20,7 @@ for(const file of ['brain-evidence-stars.mjs','brain-evidence-nodes.mjs','brain-
 for(const file of ['assistant-chat-client.mjs','assistant-market-context.mjs','live-market-signals.mjs','live-signal-view.mjs'])allowed.add(file);
 const blockArchive='brain-evidence/archive/';
 for(const file of await readdir(path.join(root,blockArchive))){
- if(file==='manifest.json' || file==='LICENSE.txt' || /^(?:btc|eth)-\d{4}-\d{2}-\d{2}\.json$/.test(file))allowed.add(blockArchive+file);
+ if(file==='manifest.json' || file==='summary.json' || file==='LICENSE.txt' || /^(?:btc|eth)-\d{4}-\d{2}-\d{2}\.json(?:\.gz)?$/.test(file))allowed.add(blockArchive+file);
 }
 allowed.add('brain-raw-archive.mjs');
 for(const file of ['site-languages.mjs','site-routes.mjs','site-seo-client.mjs','brand/astarter-share.png'])allowed.add(file);
