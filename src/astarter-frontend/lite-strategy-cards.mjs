@@ -20,6 +20,10 @@ export function strategyLabelForId(id, lang = 'zh') {
   return plan?.label[lang === 'en' ? 1 : 0] || '';
 }
 
+export function cardDisplayUntil(row) {
+  return row.validUntil + (row.mode === 'live' ? 15_000 : 0);
+}
+
 function quantityFor(holding, symbol) {
   const value = typeof holding === 'number' ? holding : holding?.symbol === symbol ? holding.quantity : 0;
   return Number.isFinite(value) && value > 0 ? value : 0;
@@ -60,10 +64,16 @@ export function strategyForSignal(row, holding, lang = 'zh', now = Date.now()) {
   };
 }
 
-export function liteStrategyCard(row, { strategy, selected = false, busy = false, lang = 'zh' }) {
+export function liteOrderLabel(side, symbol, amount, lang) {
+  if (side === 'sell') return lang === 'en' ? 'Sell all ' + symbol : '卖出全部 ' + symbol;
+  const value = amount == null ? symbol : amount + ' USDT';
+  return (lang === 'en' ? 'Buy ' : '买入 ') + value;
+}
+
+export function liteStrategyCard(row, { strategy, selected = false, busy = false, stale = false, quickOrder, lang = 'zh' }) {
   const o = row.live;
   const en = lang === 'en';
-  const state = {
+  const state = stale ? (en ? 'Previous close' : '上次收盘') : {
     buy: en ? 'Entry conditions met' : '已满足入场条件',
     sell: en ? 'Exit conditions met' : '已满足退出条件',
     watch: en ? 'Watching for entry' : '等待入场确认'
@@ -81,8 +91,13 @@ export function liteStrategyCard(row, { strategy, selected = false, busy = false
       ? (en ? 'No position to close on this downward signal.' : '当前无该币持仓，本次下行信号无需平仓。')
       : (en ? 'Wait for all three readings to turn down before closing a held position.' : '待三项指标均转弱，再确认是否卖出已有持仓。')
   }[strategy.side];
-  const action = selected ? (en ? 'View ticket' : '查看操作台') : strategy.actionable
-    ? (en ? 'Use strategy' : '使用此策略') : (en ? 'View signal' : '查看信号');
+  const execute = strategy.actionable && !stale;
+  const action = stale ? (en ? 'Awaiting close' : '等待新收盘') : execute
+    ? liteOrderLabel(strategy.side, o.symbol, quickOrder?.amount, lang)
+    : (en ? 'View signal' : '查看信号');
+  const unavailable = !quickOrder?.ready || quickOrder.blockedId === o.id ||
+    (strategy.side === 'buy' && (quickOrder.amount == null || quickOrder.amount > quickOrder.balance));
+  const actionDisabled = busy || stale || (execute && unavailable);
   const evidence = en ? 'Evidence' : '查看依据';
   const practice = o.mode === 'practice';
   const source = practice ? (en ? 'Local practice' : '本机演练') : o.source;
@@ -95,10 +110,10 @@ export function liteStrategyCard(row, { strategy, selected = false, busy = false
   const series = o.priceSeries;
   const chart = Array.isArray(series) && series.length >= 2 && series.at(-1) === o.price && series.every(n => Number.isFinite(n) && n > 0)
     ? `<figure class="sig-live-chart" aria-label="${en ? 'Minute closing prices' : '分钟收盘走势'}"><div aria-hidden="true">${sparkline(series, { width: 208, height: 45, color: 'var(--chart-accent)', fill: false })}</div></figure>` : '';
-  const disabled = busy ? ' disabled' : '';
-  return `<article class="sig-event sig-live-observation lite-plan-card${selected ? ' selected' : ''}" data-side="${esc(strategy.side)}" data-live-direction="${esc(o.direction)}" data-lite-asset="${esc(o.symbol)}" data-lite-id="${esc(o.id)}" aria-current="${selected}">
+  const disabled = busy || stale ? ' disabled' : '';
+  return `<article class="sig-event sig-live-observation lite-plan-card${selected ? ' selected' : ''}" data-freshness="${stale ? 'previous' : 'current'}" data-side="${esc(strategy.side)}" data-live-direction="${esc(o.direction)}" data-lite-asset="${esc(o.symbol)}" data-lite-id="${esc(o.id)}" aria-current="${selected}">
     <div class="lite-plan-body">
-      <div class="lite-plan-state"><span>${state}</span>${selected ? '<span class="sig-current-marker" aria-hidden="true">✓</span>' : ''}</div>
+      <div class="lite-plan-state"><span>${state}</span>${execute ? '<small class="lite-plan-account">' + (en ? 'Practice account' : '练习账户') + '</small>' : ''}${selected ? '<span class="sig-current-marker" aria-hidden="true">✓</span>' : ''}</div>
       <h3 class="lite-plan-title">${esc(strategy.label)}</h3>
       <div class="lite-plan-pairline"><span class="lite-plan-pair">${tokenIcon(o.symbol, { size: 24, className: 'sig-coin' })}${esc(o.market)}</span>
         <span class="lite-plan-period">${en ? '1m candles' : '1 分钟 K 线'}</span></div>
@@ -109,7 +124,7 @@ export function liteStrategyCard(row, { strategy, selected = false, busy = false
       <div class="lite-card-source"><span>${provider}</span><time title="${iso}" datetime="${iso}">${iso.slice(11, 16)} UTC</time></div>
     </div>
     <footer class="lite-plan-actions"><button type="button" data-ls="evidence" aria-label="${esc(o.symbol + ' · ' + evidence)}"${disabled}>${evidence}</button>
-      <button type="button" data-ls="select" aria-controls="lite-controls" aria-label="${esc(o.symbol + ' · ' + strategy.label + ' · ' + action)}"${disabled}>${action} ${uiGlyph('arrow')}</button></footer>
+      <button type="button" data-ls="${execute ? 'execute' : 'select'}"${execute ? ' data-side="' + strategy.side + '" data-amount="' + esc(quickOrder?.amount) + '"' : ''} aria-controls="lite-controls" aria-label="${esc(o.symbol + ' · ' + action + (execute ? en ? ' · Practice account' : ' · 练习账户' : ''))}"${actionDisabled ? ' disabled' : ''}>${esc(action)} ${uiGlyph('arrow')}</button></footer>
   </article>`;
 }
 
@@ -201,7 +216,7 @@ function mountCloseInspector(card, observation, lang, previousTime) {
   });
 }
 
-export function mountStrategyCards(host, { lang = 'zh', onSelect, onEvidence, onRendered } = {}) {
+export function mountStrategyCards(host, { lang = 'zh', onSelect, onExecute, onEvidence, onRendered } = {}) {
   host.classList.add('sig-tracking', 'lite-strategy-deck');
   let rows = [];
   let byId = new Map();
@@ -227,19 +242,21 @@ export function mountStrategyCards(host, { lang = 'zh', onSelect, onEvidence, on
     const motion = motionAllowed();
     byId = new Map();
     for (const observation of rows) {
+      const key = observation.mode + '/' + observation.symbol;
+      const previous = rendered.get(key);
+      const stale = observation.validUntil <= now;
+      if (stale && (previous?.id !== observation.id || now >= cardDisplayUntil(observation))) continue;
       const holding = holdings.find((position) => position.symbol === observation?.symbol);
-      const strategy = strategyForSignal(observation, holding, lang, now);
+      const strategy = stale ? previous.strategy : strategyForSignal(observation, holding, lang, now);
       if (!strategy || byId.has(observation.id)) continue;
       const row = liveSignalRow(observation);
       if (!row) continue;
-      const key = observation.mode + '/' + observation.symbol;
       if (visible.has(key)) continue;
       const index = visible.size;
       visible.add(key);
       byId.set(observation.id, observation);
       const selected = observation.id === selectedId;
-      const markup = liteStrategyCard(row, { selected, strategy, busy, lang });
-      const previous = rendered.get(key);
+      const markup = liteStrategyCard(row, { selected, strategy, busy, stale, lang, quickOrder: settings.quickOrder });
       let card = previous?.card;
       if (markup !== previous?.markup) {
         template.innerHTML = markup;
@@ -252,21 +269,15 @@ export function mountStrategyCards(host, { lang = 'zh', onSelect, onEvidence, on
         }
         const pointTime = focusedCard === card && focused.dataset.ls === 'chart' ? Number(focused.dataset.closeAt) : null;
         mountCloseInspector(card, observation, lang, pointTime);
-        rendered.set(key, { card, markup, price: observation.price, closedAt: observation.closedAt, selected });
+        rendered.set(key, { card, markup, strategy, id: observation.id, closedAt: observation.closedAt, selected });
       }
       if (host.children[index] !== card) host.insertBefore(card, host.children[index] || null);
-      if (motion && !previous) {
-        card.animate([{ opacity: 0, transform: 'translateY(5px)' }, { opacity: 1, transform: 'none' }],
-          { duration: 230, delay: index * 35, easing: 'ease-out', fill: 'backwards' });
-      } else if (motion && markup !== previous?.markup) {
-        if (selected && !previous.selected) {
-          card.querySelector('.sig-current-marker')?.animate([{ transform: 'scale(.7)' }, { transform: 'scale(1)' }],
-            { duration: 180, easing: 'ease-out' });
-        }
-        if (observation.closedAt > previous.closedAt && observation.price !== previous.price) {
-          card.querySelector('.sig-stats-quote strong')?.animate([{ color: 'var(--lite-card-tone)' }, { color: 'var(--b-ink)' }],
-            { duration: 680, easing: 'ease-out' });
-        }
+      if (motion && (!previous || observation.closedAt > previous.closedAt)) {
+        card.animate([{ opacity: .55, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
+          { duration: 320, delay: index * 35, easing: 'ease-out', fill: 'backwards' });
+      } else if (motion && selected && !previous.selected) {
+        card.querySelector('.sig-current-marker')?.animate([{ transform: 'scale(.7)' }, { transform: 'scale(1)' }],
+          { duration: 180, easing: 'ease-out' });
       }
     }
     for (const [key, { card }] of rendered) {
@@ -281,7 +292,9 @@ export function mountStrategyCards(host, { lang = 'zh', onSelect, onEvidence, on
       focusedCard.querySelector('[data-ls="' + focused.dataset.ls + '"]:not(:disabled)')?.focus({ preventScroll: true });
     }
     if (byId.size) {
-      const nextExpiry = Math.min(...Array.from(byId.values(), (row) => row.validUntil));
+      const nextExpiry = Math.min(...Array.from(byId.values(), (row) =>
+        row.validUntil > now ? row.validUntil : cardDisplayUntil(row)
+      ));
       expiryTimer = setTimeout(() => setRows(rows, settings), Math.max(0, nextExpiry - Date.now()));
     }
   }
@@ -297,7 +310,12 @@ export function mountStrategyCards(host, { lang = 'zh', onSelect, onEvidence, on
       setRows(rows, settings);
       return;
     }
-    if (event.target.closest('[data-ls="evidence"]')) {
+    const executeButton = event.target.closest('[data-ls="execute"]');
+    if (executeButton) {
+      if (!executeButton.disabled && event.detail <= 1) {
+        onExecute?.(row, executeButton.dataset.side, Number(executeButton.dataset.amount));
+      }
+    } else if (event.target.closest('[data-ls="evidence"]')) {
       onEvidence?.(row);
     } else {
       onSelect?.(row);

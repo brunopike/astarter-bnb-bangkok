@@ -1,4 +1,4 @@
-import { mountStrategyCards, strategyForSignal, strategyLabelForId } from './lite-strategy-cards.mjs';
+import { cardDisplayUntil, liteOrderLabel, mountStrategyCards, strategyForSignal, strategyLabelForId } from './lite-strategy-cards.mjs';
 import { ORDER_MARKETS } from './order-markets.mjs';
 import { createLiteDesk } from './lite-desk-data.mjs';
 import { mountLiteChat } from './lite-chat.mjs';
@@ -37,7 +37,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   const styles = ['lite', 'lite-strategy-cards', 'lite-crew'].map((name) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/' + name + '.css?v=20261127-lite-header';
+    link.href = '/' + name + '.css?v=20261127-lite-ticket';
     document.head.append(link);
     return link;
   });
@@ -140,12 +140,12 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     wantedSymbol = null,
     restoreReceipt = null,
     latestOnly = false;
-  let lastUpdated = 0;
+  let nextReadAt = 0;
+  let failedReads = 0;
   let blockedObservation = null;
   let handoffNotice = '';
 
   let selectedStrategy = null;
-  let amountDraft;
   let draftTouched = false;
   const feeRate = ORDER_MARKETS['cex-spot'].feeRate;
   const currentHolding = () => account?.holdings?.find((position) => position.symbol === current?.symbol);
@@ -158,6 +158,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     const saved = load('amount', 50);
     return typeof saved === 'number' && saved >= 10 && saved <= 1000 ? saved : 50;
   };
+  let amountDraft = String(amount());
   function readCursor() {
     const cursor = load('cursor.' + mode, {}) || {};
     skipped = load('skips.' + mode, []);
@@ -212,7 +213,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   }
   function availableCards() {
     const selected = !receipt && current && current.validUntil > Date.now() ? current : null;
-    const byAsset = new Map(queue().map((row) => [row.symbol, row]));
+    const byAsset = new Map(queue(true).map((row) => [row.symbol, row]));
     if (selected) byAsset.set(selected.symbol, selected);
     return Array.from(byAsset.values()).filter((row) => symbols.includes(row.symbol));
   }
@@ -220,6 +221,12 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     cards.setRows(availableCards(), {
       selectedId: receipt ? null : current?.id,
       holdings: account?.holdings || [],
+      quickOrder: {
+        ready: Boolean(account),
+        amount: readDraft(),
+        balance: account?.balance,
+        blockedId: blockedObservation?.id
+      },
       busy
     });
     el('inspect').hidden = !current || Boolean(receipt);
@@ -246,7 +253,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
         ? t('正在读取信号…', 'Loading signals…')
         : failed.length
           ? t('暂时无法读取行情。', 'Market data is unavailable.')
-          : t('本轮信号已看完。', 'You’ve reviewed all current signals.');
+          : t('等待下一根 K 线收盘…', 'Waiting for the next candle close…');
       empty.innerHTML = message + (loading ? '' : ' ' + button('refresh', t('刷新', 'Refresh')));
     }
     el('ticket').setAttribute('aria-busy', String(loading && !count));
@@ -263,7 +270,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   }
   function focusCard() {
     const target =
-      el('strategy-host').querySelector('[aria-current="true"] [data-ls="select"]') || el('signals-title');
+      el('strategy-host').querySelector('[aria-current="true"] [data-ls="evidence"]') || el('signals-title');
     const card = target.closest('[data-lite-asset]');
     if (card && card.parentElement === rail) bringCardIntoView(card);
     target.focus({ preventScroll: true });
@@ -334,10 +341,14 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   }
   function openTicket(row) {
     if (!selectCard(row)) return;
-    const target =
-      el('order-amount') || el('trade-panel').querySelector('[data-cmd=sell]') || el('controls-title');
     if (matchMedia('(max-width:860px)').matches) reveal(el('controls'), 'start');
-    target.focus({ preventScroll: true });
+    el('controls-title').focus({ preventScroll: true });
+  }
+  function executeCard(row, side, shownAmount) {
+    if (!account || blockedObservation?.id === row.id || (side === 'buy' && shownAmount !== readDraft())) return;
+    if (!selectCard(row) || validPlan()?.side !== side) return;
+    if (matchMedia('(max-width:860px)').matches) reveal(el('controls'), 'start');
+    void trade(side);
   }
   function syncEstimate(showError = false, highlight = false) {
     const input = el('order-amount');
@@ -364,10 +375,13 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       }
     }
     const action = el('trade-panel').querySelector('[data-cmd=buy]');
-    if (action)
+    if (action) {
       action.disabled = Boolean(
         !account || busy || invalid || insufficient || !validPlan() || current.validUntil <= Date.now()
       );
+      if (!busy)
+        action.querySelector('.ticket-submit-label').textContent = liteOrderLabel('buy', current.symbol, value, lang);
+    }
     input.setAttribute('aria-invalid', String(Boolean(showError && (invalid || insufficient))));
     for (const preset of el('trade-panel').querySelectorAll('[data-cmd=preset]'))
       preset.setAttribute('aria-pressed', String(Number(preset.value) === value));
@@ -434,9 +448,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
             sell ? 'sell' : 'buy',
             busy
               ? t('正在核对…', 'Checking…')
-              : sell
-                ? t('确认卖出', 'Confirm sell')
-                : t('确认买入', 'Confirm buy'),
+              : liteOrderLabel(sell ? 'sell' : 'buy', symbol, readDraft(), lang),
             'lite-action',
             busy || !account
           )
@@ -458,9 +470,10 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     <div class="dock-actions">${act}</div><p class="trade-note error" id="lite-order-note" role="status">${formError ? errorText(formError) : accountError ? errorText('STORAGE_UNAVAILABLE') : ''}</p></div>`;
     syncEstimate();
   }
-  function queue() {
+  function queue(includePreviousClose = false) {
     const handled = new Set([...(account?.receipts || []).map((r) => r.signalId), ...skipped]);
-    return rows.filter((r) => r.validUntil > Date.now() && !handled.has(r.id));
+    const at = Date.now();
+    return rows.filter((row) => (includePreviousClose ? cardDisplayUntil(row) : row.validUntil) > at && !handled.has(row.id));
   }
   function expiryLabel() {
     const seconds = Math.max(0, Math.ceil((current.validUntil - Date.now()) / 1000));
@@ -469,7 +482,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   }
   function renderQueue() {
     renderCards();
-    const unavailable = failed.length > 0 && !rows.length;
+    const unavailable = failed.length > 0 && !rows.some((row) => row.validUntil > Date.now());
     const pending = loading && !rows.length;
     const state = pending
       ? t('读取行情中', 'Loading feed')
@@ -528,7 +541,6 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     receipt = fill;
     draftTouched = false;
     selectedStrategy = current && !fill ? strategyForSignal(current, currentHolding(), lang) : null;
-    amountDraft = String(amount());
     if (blockedObservation && current?.id === blockedObservation.id) formError = blockedObservation.code;
     else blockedObservation = null;
     storeCursor();
@@ -549,7 +561,13 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     if (lifetime.signal.aborted || request !== controller) return;
     request = null;
     loading = false;
-    rows = feed.status === 'fulfilled' ? feed.value.rows : [];
+    const at = Date.now();
+    const incoming = feed.status === 'fulfilled' ? feed.value.rows : [];
+    const latest = new Map(rows.filter((row) => cardDisplayUntil(row) > at).map((row) => [row.symbol, row]));
+    for (const row of incoming) {
+      if (row.closedAt >= (latest.get(row.symbol)?.closedAt ?? 0)) latest.set(row.symbol, row);
+    }
+    rows = Array.from(latest.values()).filter((row) => symbols.includes(row.symbol));
     failed = feed.status === 'fulfilled' ? feed.value.failed : symbols.map((symbol) => ({ symbol }));
     const previousAccount = account;
     account = book.status === 'fulfilled' ? book.value : null;
@@ -557,7 +575,13 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     const balanceChanged =
       previousAccount?.balance !== account?.balance ||
       previousAccount?.receipts.length !== account?.receipts.length;
-    lastUpdated = Date.now();
+    failedReads = failed.length ? Math.min(failedReads + 1, 4) : 0;
+    const retryDelay = failedReads ? Math.min(30_000, 5_000 * 2 ** (failedReads - 1)) : Infinity;
+    nextReadAt = Math.min(
+      at + retryDelay,
+      ...incoming.filter((row) => row.validUntil > at).map((row) => row.validUntil),
+      at + (mode === 'practice' ? 30_000 : 60_000)
+    );
     if (
       mode === 'practice' &&
       wantedId &&
@@ -585,7 +609,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       return;
     }
     if (!replace && current) {
-      const updated = available.find((row) => row.symbol === current.symbol && row.id !== current.id);
+      const updated = available.find((row) => row.symbol === current.symbol && row.id !== current.id) || available[0];
       const isReading =
         chat ||
         draftTouched ||
@@ -595,6 +619,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
         el('controls').contains(document.activeElement);
       if (current.validUntil <= Date.now() && updated && !isReading) {
         pick(updated);
+        updateSelectedLink();
         return;
       }
       renderQueue();
@@ -649,7 +674,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   }
   async function trade(side) {
     const strategy = validPlan();
-    if (!current || busy || receipt || strategy?.side !== side || current.validUntil <= Date.now()) return;
+    if (!account || !current || busy || receipt || strategy?.side !== side ||
+        blockedObservation?.id === current.id || current.validUntil <= Date.now()) return;
     const spend = readDraft();
     if (side === 'buy' && (!spend || !account || spend > account.balance)) {
       syncEstimate(true);
@@ -722,6 +748,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     url.searchParams.delete('signalId');
     window.history.replaceState(window.history.state, '', url);
     blockedObservation = null;
+    amountDraft = String(amount());
     handoffNotice = '';
     current = null;
     receipt = null;
@@ -729,7 +756,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     failed = [];
     account = null;
     accountError = false;
-    lastUpdated = 0;
+    nextReadAt = 0;
+    failedReads = 0;
     latestOnly = false;
     readCursor();
     renderQueue();
@@ -805,6 +833,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
         el('order-amount').value = amountDraft;
         formError = '';
         syncEstimate(true, true);
+        renderCards();
         break;
       case 'buy':
       case 'sell':
@@ -904,6 +933,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     lang,
     onRendered: updateDeckSummary,
     onSelect: openTicket,
+    onExecute: executeCard,
     onEvidence(row) {
       if (!selectCard(row)) return;
       if (el('evidence').inert) doAction('evidence');
@@ -957,24 +987,35 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     amountDraft = event.target.value;
     if (['INSUFFICIENT_FUNDS', 'INVALID_AMOUNT'].includes(formError)) formError = '';
     syncEstimate(true, true);
+    renderCards();
   });
   readCursor();
   settings();
   paint();
   void refresh();
-  let wasExpired = false;
-  const polling = setInterval(() => {
+  let expiredId = null;
+  function poll() {
     if (document.hidden) return;
     const countdown = el('expires-countdown');
     if (current && countdown) countdown.textContent = expiryLabel();
-    const expired = Boolean(current && Date.now() >= current.validUntil);
-    if (expired !== wasExpired && !busy && !receipt) {
+    const expired = current && Date.now() >= current.validUntil ? current.id : null;
+    if (expired && expired !== expiredId && !busy && !receipt) {
       renderQueue();
-      renderTrade();
+      if (el('order-amount') && (draftTouched || editingAmount())) {
+        syncEstimate();
+        const actions = el('trade-panel').querySelector('.dock-actions');
+        actions.querySelector('[data-cmd=buy]')?.setAttribute('disabled', '');
+        if (!actions.querySelector('[data-cmd=fresh]')) {
+          actions.insertAdjacentHTML('beforeend', button('fresh', t('读取最新信号', 'Refresh signal'), 'secondary-btn'));
+        }
+        el('order-note').textContent = t('上一根 K 线已结束，已保留输入金额。', 'The candle closed. Your amount is saved in this ticket.');
+      } else renderTrade();
+      expiredId = expired;
     }
-    wasExpired = expired;
-    if (!request && !busy && Date.now() - lastUpdated >= 30000) void refresh();
-  }, 1000);
+    if (!request && !busy && Date.now() >= nextReadAt) void refresh();
+  }
+  const polling = setInterval(poll, 1000);
+  document.addEventListener('visibilitychange', poll, { signal: lifetime.signal });
   return {
     destroy() {
       lifetime.abort();

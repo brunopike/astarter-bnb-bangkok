@@ -54,7 +54,7 @@ test('Lite and Full share the observation, quote, metrics and price history with
     assert.ok(lite.includes(value[0]));
   }
   assert.match(lite,/class="sig-current-marker"/);
-  assert.match(lite,/data-ls="select"[^>]*disabled/);
+  assert.match(lite,/data-ls="execute"[^>]*disabled/);
   assert.match(lite,/data-ls="evidence"/);
   assert.match(lite,/本机演练|Local practice/);
   assert.match(lite,/datetime="[^"]+">[^<]+ UTC/);
@@ -67,12 +67,14 @@ test('Lite and Full share the observation, quote, metrics and price history with
 
 test('the Lite deck describes the actual entry and manual exit, with separate watch actions', () => {
   for (const [observation, holding, status, action, exit] of [
-    [eth, null, 'Entry conditions met', 'Use strategy', 'confirm to sell the full position.'],
+    [eth, null, 'Entry conditions met', 'Buy 75 USDT', 'confirm to sell the full position.'],
     [sol, null, 'Watching for entry', 'View signal', 'No position to close'],
-    [sol, 2, 'Exit conditions met', 'Use strategy', 'Confirm to sell your full position.']
+    [sol, 2, 'Exit conditions met', 'Sell all SOL', 'Confirm to sell your full position.']
   ]) {
     const strategy = strategyForSignal(observation, holding, 'en', at);
-    const html = liteStrategyCard(liveSignalRow(observation), { strategy, lang: 'en' });
+    const html = liteStrategyCard(liveSignalRow(observation), {
+      strategy, lang: 'en', quickOrder: { ready: true, amount: 75, balance: 100 }
+    });
     assert.ok(html.includes(status) && html.includes(action));
     assert.ok(html.includes(strategy.label));
     assert.ok(html.includes('data-lite-id="' + observation.id + '"'));
@@ -80,6 +82,24 @@ test('the Lite deck describes the actual entry and manual exit, with separate wa
     assert.ok(html.includes('datetime="' + new Date(observation.closedAt).toISOString() + '"'));
     assert.match(html, /close above EMA20, positive 5-bar change and RSI14 above 50\./i);
     assert.ok(html.includes(exit));
+    if (strategy.actionable) {
+      assert.match(html, /data-ls="execute" data-side="(?:buy|sell)" data-amount="75"/);
+      assert.doesNotMatch(html, /data-ls="execute"[^>]*disabled/);
+    } else {
+      assert.doesNotMatch(html, /data-ls="execute"/);
+    }
     assert.doesNotMatch(html, /ATR|take.profit|auto.sell/i);
   }
+});
+
+test('card execution respects the displayed amount, account and observation state', () => {
+  const row = liveSignalRow(eth);
+  const strategy = strategyForSignal(eth, null, 'en', at);
+  for (const quickOrder of [
+    { ready: false, amount: 50 }, { ready: true, amount: null, balance: 100 },
+    { ready: true, amount: 75, balance: 50 }, { ready: true, amount: 50, balance: 100, blockedId: eth.id }
+  ]) {
+    assert.match(liteStrategyCard(row, { strategy, quickOrder }), /data-ls="execute"[^>]*disabled/);
+  }
+  assert.doesNotMatch(liteStrategyCard(row, { strategy, stale: true }), /data-ls="execute"/);
 });

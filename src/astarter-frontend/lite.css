@@ -79,7 +79,7 @@
   & .order-dock {
     min-width: 0;
     border: 1px solid var(--b-line);
-    background: var(--b-panel);
+    background: linear-gradient(150deg, color-mix(in srgb, var(--lite-order-accent, var(--b-panel)) 6%, transparent), transparent 112px), var(--b-panel);
     border-radius: var(--b-panel-radius, 14px);
   }
   & #lite-ticket {
@@ -298,7 +298,7 @@
   & .dock-title {
     justify-content: space-between;
     gap: 6px;
-    min-height: 56px;
+    min-height: 50px;
     border-bottom: 1px solid var(--b-line);
   }
   & .dock-title h2 {
@@ -324,7 +324,7 @@
   }
   & .order-config,
   & .fill-state {
-    padding: 18px 0 12px;
+    padding: 14px 0 8px;
   }
   & .field-label,
   & .lite-popover small {
@@ -345,7 +345,7 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 10px;
-    margin: 0 0 18px;
+    margin: 0 0 14px;
   }
   & .order-plan h3 {
     font-size: 13px;
@@ -359,7 +359,7 @@
   }
   & .order-instrument {
     gap: 8px;
-    margin: 0 0 12px;
+    margin: 0 0 8px;
     line-height: 1.4;
   }
   & .order-instrument strong {
@@ -403,6 +403,11 @@
   & .order-input {
     position: relative;
   }
+  & .order-input:has(+ .amount-presets) {
+    margin-bottom: 0;
+    border-radius: var(--b-control-radius, 8px) var(--b-control-radius, 8px) 0 0;
+    padding-block: 6px;
+  }
   & .order-input:focus-within {
     border-color: var(--b-violet);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--b-violet) 12%, transparent);
@@ -435,10 +440,12 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     position: relative;
     isolation: isolate;
-    border-radius: 8px;
+    border: 1px solid var(--b-line);
+    border-top: 0;
+    border-radius: 0 0 var(--b-control-radius, 8px) var(--b-control-radius, 8px);
     padding: 3px;
-    margin: 7px 0 16px;
-    background: var(--b-soft);
+    margin: 0 0 12px;
+    background: var(--b-panel);
   }
   & .amount-presets::before {
     content: '';
@@ -449,7 +456,7 @@
     width: calc((100% - 6px) / 3);
     border: 1px solid var(--b-control-line);
     box-sizing: border-box;
-    background: var(--b-panel);
+    background: var(--b-soft);
     border-radius: 6px;
     box-shadow: var(--b-shadow);
     opacity: 0;
@@ -480,11 +487,9 @@
   }
   & .order-values {
     display: grid;
-    gap: 6px;
-    margin-block: 12px 14px;
-    padding: 9px 10px;
-    background: color-mix(in srgb, var(--b-soft) 70%, var(--b-panel));
-    border-radius: 8px;
+    gap: 4px;
+    margin-block: 12px;
+    padding: 0;
   }
   & :is(.order-line, .lite-detail-row, .history-item, .account-holdings > div) {
     display: flex;
@@ -543,12 +548,24 @@
   /* Tail-end ink reveal adapted from Magic UI's Interactive Hover Button on 21st.dev. */
   & .dock-actions .lite-submit {
     padding-inline: 15px 8px;
+    min-height: 46px;
+    border: 1px solid transparent;
+    border-radius: var(--b-control-radius, 8px);
+    background: var(--b-action);
+    color: var(--b-action-fg);
+    box-shadow: none;
+  }
+  & .ticket-submit-label {
+    min-width: 0;
+    text-align: start;
+    text-wrap: balance;
+    font-weight: 600;
   }
   & .ticket-submit-cap {
     display: grid;
     flex: none;
     position: relative;
-    width: 46px;
+    width: 40px;
     height: 28px;
     align-items: center;
     justify-items: end;
@@ -583,9 +600,9 @@
     transform: translateX(calc(var(--ticket-arrow-travel, 0%) - 115%));
   }
   & .lite-submit:not(:disabled):is(:active, :focus-visible) {
-    --ticket-cap-width: 46px;
+    --ticket-cap-width: 40px;
     --ticket-arrow-travel: 115%;
-    --ticket-arrow-shift: -9px;
+    --ticket-arrow-shift: -6px;
   }
   & .lite-submit[aria-busy='true'] {
     opacity: 0.85;
@@ -1013,9 +1030,9 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .lite-main .lite-submit:not(:disabled):hover {
-    --ticket-cap-width: 46px;
+    --ticket-cap-width: 40px;
     --ticket-arrow-travel: 115%;
-    --ticket-arrow-shift: -9px;
+    --ticket-arrow-shift: -6px;
   }
   .lite-main :is(.amount-presets button, #lite-inspect button):not(:disabled):hover {
     color: var(--b-ink);
