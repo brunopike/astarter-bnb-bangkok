@@ -1,3 +1,5 @@
+import mergeBlockEvidence from './brain-evidence/BLOCK-15537394-AT-MERGE@1.json' with {type:'json'};
+import {mountBlockArchive} from './brain-raw-archive.mjs';
 import {mountMemory} from './brain-memory.mjs';
 import {notes as mergeNotes,directions,detailEdges} from './brain-case-notes.mjs';
 import {escapeUI} from './product-experience.mjs';
@@ -95,6 +97,10 @@ class AstarterBrain extends HTMLElement {
     let lastPhase=-1, playing=!reduced, selected=0, zoom=1;
     let opened=[0];
     let graph;
+    const blockArchive=mountBlockArchive(root,en);
+    const mergeBlock={scopeKeys:['coin:ethereum'],blockHeight:mergeBlockEvidence.block.height,eventAt:mergeBlockEvidence.block.timestamp};
+    const blockFallback=()=>!selection.research&&[0,1,5].includes(selected)?mergeBlock:null;
+    const replayCutoff=()=>reviewNode()&&lastPhase===4?replay.reviewAsOf:replay.decisionCutoff;
     const historyHost=q('[data-note-history]'),replayAction=q('[data-note-replay]');
     const reviewNode=()=>!selection?.research && [4,11,12,13].includes(selected);
     replayAction.onclick=()=>thinking.seek(lastPhase===4?0:4);
@@ -133,7 +139,8 @@ class AstarterBrain extends HTMLElement {
       historyLoading=true;
       import('./brain-history-reader.mjs').then(({mountHistoryReader,graphEvidence})=>{
         if(!historyHost.isConnected)return;
-        historyView=mountHistoryReader(historyHost,en,(id,child)=>graph?.focusEvidence?.(id,child));makeStars=graphEvidence;
+        historyView=mountHistoryReader(historyHost,en,(id,child)=>graph?.focusEvidence?.(id,child),
+          record=>blockArchive.record(record,blockFallback()));makeStars=graphEvidence;
         syncHistory();
       }).catch(()=>{
         if(!historyHost.isConnected)return;
@@ -147,6 +154,7 @@ class AstarterBrain extends HTMLElement {
       const changed=i!==selected;
       if(changed && notePanel) readingOffsets.set(selected,notePanel.scrollTop);
       selected=i;
+      blockArchive.update(selection.key,i,selection.research?null:replayCutoff(),blockFallback());
       if(!opened.includes(i)) opened.push(i);
       const n=notes[i];
       markers.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===i)));
@@ -411,7 +419,7 @@ class AstarterBrain extends HTMLElement {
     const disposeScene=cortexaView.connect(root);
     const disposePicker=cortexaView.bindSelection(root,selection,updateSelection);
     q('[data-return]').onclick=()=>{thinking.seek(4);showMemory(memory.selectReview());};
-    this.controller=()=>{disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
+    this.controller=()=>{blockArchive.dispose();disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
     showZoom(1);showNote(0);
     graph.setZoom(2.1);
   }

@@ -2,7 +2,7 @@
 
 **A fresh price can still lead to a stale decision.** When agents hand off a trade idea for a tokenized stock, a price alone is of little use. The next agent needs its timestamp, the market conditions, and the rule that would invalidate the trade. Astarter is an AI Trading OS that gives agents a shared market snapshot and ties each decision to the evidence available at the time.
 
-[Run the local demo](#run-locally) · [Inspect the integrations](#what-you-can-verify) · [Download Hackathon frontend packages](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.2.0-frontend) · [Download v0.1.0](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
+[Run the local demo](#run-locally) · [Inspect the integrations](#what-you-can-verify) · [Download Hackathon frontend packages](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.3.0-frontend) · [Download v0.1.0](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
 ## Two ways to turn research into a strategy
 
@@ -33,7 +33,9 @@ The local demo runs in simulation mode. Continuous cross-agent scheduling, publi
 
 The default frontend directory follows the deployed `HACKATHON` branch. It opens Deep Brain, where you can select a research asset and explore the evidence behind each graph node. The [hosted demo](https://dapp.ipfund.art/) also includes a licensed particle portrait. The open repository uses the interactive evidence graph as its opening view.
 
-The [frontend release](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.2.0-frontend) provides two independently buildable source archives. Choose **deployed** for Deep Brain and localized page URLs. Choose **feature** to reproduce the separate lowercase `hackathon` branch, including its market-data, Atlas, and social-feed changes. Both packages include the dependency lockfile. After downloading both ZIPs and `SHA256SUMS.txt` to one folder, run `shasum -a 256 -c SHA256SUMS.txt`.
+The Deep Brain archive contains **1,082,682 distinct blocks** from [AWS Public Blockchain Data](https://registry.opendata.aws/aws-public-blockchain/), including 21,425 Bitcoin blocks and 1,061,257 Ethereum blocks. Both chains cover July 1 through November 24, 2026 (UTC). The archive also covers the Ethereum Merge on September 15, 2022 and the Bitcoin halving on April 20, 2024. Select **Historical blocks** to open a day and inspect block heights, timestamps and transaction counts. Each [daily shard](src/astarter-frontend/brain-evidence/archive/manifest.json) links to the upstream objects and includes a SHA-256 checksum. The [import script](src/astarter-frontend/scripts/import-brain-blocks.py) rebuilds the snapshot.
+
+The [frontend release](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.3.0-frontend) provides two independently buildable source archives. Choose **deployed** for Deep Brain and localized page URLs. Choose **feature** to reproduce the separate lowercase `hackathon` branch, including its market-data, Atlas, and social-feed changes. Both packages include the dependency lockfile. After downloading both ZIPs and `SHA256SUMS.txt` to one folder, run `shasum -a 256 -c SHA256SUMS.txt`.
 
 ## Run locally
 

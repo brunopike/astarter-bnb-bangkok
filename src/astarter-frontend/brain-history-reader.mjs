@@ -4,7 +4,7 @@ import {evidenceChildren} from './brain-evidence-nodes.mjs';
 import {gainNode,lossNode} from './brain-trader-history.mjs';
 export {graphEvidence} from './brain-evidence-nodes.mjs';
 
-export function mountHistoryReader(host,en,onInspect) {
+export function mountHistoryReader(host,en,onInspect,onRecord) {
   const doc=host.ownerDocument;
   const t=(zh,english)=>en?english:zh;
   const say=value=>Array.isArray(value)?value[en?1:0]:value;
@@ -118,7 +118,7 @@ export function mountHistoryReader(host,en,onInspect) {
     (choices.hidden?title:pick).focus({preventScroll:true});
   });
   function draw(record,detail=-1,restore=null) {
-    recordShown=record;childIndex=detail;page=detail>=0?Math.floor(detail/pageSize):restore?.page||0;
+    recordShown=record;onRecord?.(record);childIndex=detail;page=detail>=0?Math.floor(detail/pageSize):restore?.page||0;
     const c=record.trader;
     outcome.hidden=!c;insight.hidden=!c&&!record.memorySections?.length;
     if(record.memorySections?.length){
@@ -199,7 +199,7 @@ export function mountHistoryReader(host,en,onInspect) {
     pageKey=key;note=node;list=next;
     search.hidden=!isIndex||!list.length;
     for(const el of [choices,title,body,footer])el.hidden=!list.length;
-    if(!list.length){delete host.dataset.historyRecord;recordShown=null;pick.replaceChildren();count.textContent='';chart.hidden=outcome.hidden=insight.hidden=children.hidden=relations.hidden=true;return;}
+    if(!list.length){delete host.dataset.historyRecord;recordShown=null;onRecord?.(null);pick.replaceChildren();count.textContent='';chart.hidden=outcome.hidden=insight.hidden=children.hidden=relations.hidden=true;return;}
     if(scope==='eth-merge')count.textContent=t(list.length+' 条',String(list.length));
     else {
       const newest=dateLabel(list[0].knownAt,list[0].precision);
@@ -221,6 +221,7 @@ export function mountHistoryReader(host,en,onInspect) {
     if(!matches.length)empty.textContent=t('没有匹配的记忆。','No matching memories.');
     for(const el of [choices,title,body,footer])el.hidden=!matches.length;
     if(!matches.length){
+      onRecord?.(null);
       recordShown=null;delete host.dataset.historyRecord;pick.replaceChildren();
       chart.hidden=outcome.hidden=insight.hidden=children.hidden=relations.hidden=true;
       return;
