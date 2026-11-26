@@ -326,6 +326,24 @@ body #product-page .trading-start b{margin-left:8px;font-weight:500;color:var(--
  --nav-violet:#b69bea;--nav-blue:#94b6ee;--nav-cyan:#86cfda;--nav-green:#a6cfb2;--nav-gold:#e1d198;--nav-amber:#e5b78e;--nav-rose:#e4a4ae;
 }
 body .topbar>.product-nav{--spectrum:linear-gradient(90deg,var(--nav-violet),var(--nav-blue) 22%,var(--nav-cyan) 40%,var(--nav-green) 55%,var(--nav-gold) 70%,var(--nav-amber) 84%,var(--nav-rose))}
+/* A single optical capsule follows the current primary destination. */
+@media(min-width:901px){
+ body>.topbar>.product-nav[data-dock-slide]::before{
+  content:"";display:block;position:absolute;z-index:0;left:0;top:calc(50% - 19px);bottom:auto;
+  width:var(--dock-width);height:38px;translate:var(--dock-left) 0;transform:none;
+  border-radius:999px;background:var(--optical-selection,var(--b-soft));background-color:var(--b-soft);
+  box-shadow:inset 0 0 0 1px var(--b-line);pointer-events:none
+ }
+ body>.topbar>.product-nav[data-dock-slide=right]::before{transform-origin:left center}
+ body>.topbar>.product-nav[data-dock-slide=left]::before{transform-origin:right center}
+ body>.topbar>.product-nav>a[data-page]:not(.biz-credit-link){position:relative;z-index:1;border-radius:999px}
+ body>.topbar>.product-nav[data-dock-slide]>a[aria-current=page]:not(.biz-credit-link)::after{content:none;display:none}
+ @media(prefers-reduced-motion:no-preference){
+  :root:not([data-reduced-motion=true]) body>.topbar>.product-nav:is([data-dock-slide=right],[data-dock-slide=left])::before{
+   transition:translate 340ms var(--b-ease)
+  }
+ }
+}
 body .topbar .product-nav>a[data-page=assistant]>svg{display:none}
 body .topbar .product-nav>a[data-page=assistant]>span{display:block;font:inherit}
 @media(max-width:900px){

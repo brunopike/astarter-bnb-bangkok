@@ -16,18 +16,15 @@ const spectrumStops=[['0%','violet'],['22%','blue'],['40%','cyan'],['55%','green
  .map(([offset,hue])=>`<stop offset="${offset}" stop-color="var(--nav-${hue})"/>`).join('');
 const dockIcons=Object.fromEntries(Object.entries(dockShapes).map(([id,body])=>[id,`<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false" style="--dock-icon-paint:url(#dock-icon-${id})"><defs><linearGradient id="dock-icon-${id}" gradientUnits="userSpaceOnUse" x1="2" y1="16" x2="22" y2="8">${spectrumStops}</linearGradient></defs>${body}</svg>`]));
 export const assistantNavIcon=dockIcons.assistant;
-export function createMobileNavigation(host,{items,onNavigate}){
- const icons=dockIcons;
- const mobile=matchMedia('(max-width:900px)');
- let state=null,ui=null,mount=null,loading=false,attempts=0,retryReady=false,retryTimer;
+function selectionIndicator(host,currentLink,reducedMotion){
  const motionPreference=matchMedia('(prefers-reduced-motion: reduce)');
  const canStretch=typeof KeyframeEffect!=='undefined'&&'pseudoElement' in KeyframeEffect.prototype;
  let selection=null,stretch;
  function positionSelection(){
-  const link=host.querySelector('[aria-current="page"]');
+  const link=currentLink();
   const width=link?.offsetWidth;
   if(!width){selection=null;stretch?.cancel();delete host.dataset.dockSlide;return;}
-  const section=link.dataset.mobileSection,left=link.offsetLeft;
+  const section=link.dataset.mobileSection||link.dataset.page,left=link.offsetLeft;
   if(selection?.section===section&&selection.left===left&&selection.width===width)return;
   let direction='rest',startScale=1;
   if(selection&&selection.section!==section){
@@ -41,10 +38,45 @@ export function createMobileNavigation(host,{items,onNavigate}){
   host.dataset.dockSlide=direction;
   selection={section,left,width};
   stretch?.cancel();
-  if(direction!=='rest'&&canStretch&&!state.reducedMotion&&!motionPreference.matches){
+  if(direction!=='rest'&&canStretch&&!reducedMotion()&&!motionPreference.matches){
    stretch=host.animate([{scale:startScale+' 1'},{scale:'1.13 .97',offset:.3},{scale:'1'}],{pseudoElement:'::before',duration:340,easing:'ease-out'});
   }
+  return true;
  }
+ return positionSelection;
+}
+
+export function createDesktopNavigationSelection(host){
+ const desktop=matchMedia('(min-width:901px)');
+ const primary='a[data-page]:not(.biz-credit-link)';
+ const currentLink=()=>desktop.matches?host.querySelector(primary+'[aria-current="page"]'):null;
+ const align=selectionIndicator(host,currentLink,()=>document.documentElement.dataset.reducedMotion==='true');
+ let previousWidth;
+ function position(){
+  const moved=align(),width=host.clientWidth;
+  if(!moved&&width===previousWidth)return;
+  previousWidth=width;
+  const link=currentLink();
+  if(!link||host.scrollWidth<=width)return;
+  const left=link.offsetLeft,right=left+link.offsetWidth;
+  if(left<host.scrollLeft)host.scrollLeft=left;
+  else if(right>host.scrollLeft+width)host.scrollLeft=right-width;
+ }
+ desktop.addEventListener('change',position);
+ if(typeof ResizeObserver==='function'){
+  const observer=new ResizeObserver(position);
+  observer.observe(host);
+  for(const link of host.querySelectorAll(primary))observer.observe(link);
+ }else window.addEventListener('resize',position);
+ document.fonts?.addEventListener('loadingdone',position);
+ return position;
+}
+
+export function createMobileNavigation(host,{items,onNavigate}){
+ const icons=dockIcons;
+ const mobile=matchMedia('(max-width:900px)');
+ let state=null,ui=null,mount=null,loading=false,attempts=0,retryReady=false,retryTimer;
+ const positionSelection=selectionIndicator(host,()=>host.querySelector('[aria-current="page"]'),()=>state?.reducedMotion);
  function fallback(){
   if(!host.children.length)for(const item of items){
    const link=document.createElement('a');link.className='mobile-nav-item';link.dataset.mobileSection=item.id;link.dataset.page=item.home;
