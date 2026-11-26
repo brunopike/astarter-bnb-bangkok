@@ -84,3 +84,5 @@ export const walletAsset=file=>/^wallet-ui\/[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*\
 // The public marketing site has its own repository and deployment; this release is the 4188 application.
 for(const file of ['private-draft-data.mjs','private-draft-client.mjs','private-draft-editor.mjs','private-draft-editor.css'])allowed.add(file);
 export const releaseAssets=new Set([...allowed].filter(file=>!file.startsWith('landing/')&&!ACCOUNT_ACCESS_FILES.includes(file)));
+
+for(const file of ['brain-proof-view.mjs','brain-proof.css'])allowed.add(file);

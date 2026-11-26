@@ -1,0 +1,15 @@
+{
+  "name": "astarter-deep-brain",
+  "type": "module",
+  "version": "1.0.0",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node paper-replay/cli.mjs serve",
+    "demo": "node paper-replay/cli.mjs demo",
+    "verify": "node paper-replay/verify.mjs",
+    "test": "node --test *.test.mjs paper-replay/replay.test.mjs"
+  }
+}

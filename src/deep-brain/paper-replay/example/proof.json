@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "runId": "f0e137e8567b0d6e19b20475af60fd280ce4455873e0708d4dc3c17cfbf54120",
+  "decisionId": "8d595af71779895edfe004589664bafa7c1925c15bc10789daeb8310fd69e77b",
+  "snapshotId": "8df817a29eac5b4ac637a4a7a0af4086904c0a1f69dd25e9b0f1a904c4990990",
+  "receiptId": "ef2af996c892e7f8e1a9bddd8f77d70c7b8bb402082303b91ff1e8dd0474ff3b",
+  "proofUrl": "https://dapp.ipfund.art/api/brain/proof?run=f0e137e8567b0d6e19b20475af60fd280ce4455873e0708d4dc3c17cfbf54120&decision=8d595af71779895edfe004589664bafa7c1925c15bc10789daeb8310fd69e77b",
+  "venueUrl": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&endTime=1793923199999&limit=1000&startTime=1785888000000",
+  "venueSha256": "c24f7af5abb6d43025be254b3fbf313a7dfdf2d873b0d27f9b8450d5f0a1f6a5",
+  "sourceArchive": {
+    "sha256": "d1b3abfc4fd4d6c688fb03922bd2920635e0d8c9b36484112afb9e08f83fd69c",
+    "url": "/api/brain/proof?source=d1b3abfc4fd4d6c688fb03922bd2920635e0d8c9b36484112afb9e08f83fd69c"
+  },
+  "memory": {
+    "status": "completed",
+    "compiledAt": "2026-11-26T18:36:06.840Z",
+    "contentSha256": "d9df8f19d78da8dd44d62d0ff22599d0d8bcd48bf2b309b3c1b3d95f465fa7a7"
+  },
+  "explanation": {
+    "provider": "OpenAI",
+    "model": "gpt-6.2-sol",
+    "at": "2026-11-26T18:37:05.099Z",
+    "inputContentSha256": "d9df8f19d78da8dd44d62d0ff22599d0d8bcd48bf2b309b3c1b3d95f465fa7a7",
+    "originalLanguage": "zh",
+    "answer": "**数据时点。** 据《Historical paper replay | BTCUSDT | 2026-11-05 | Pullback stopped out》，决策数据截至 **2026-11-03 23:59:59.999 UTC**，模拟决策时钟为 **2026-11-04 12:00:00 UTC**，目标场次为 2026-11-05。这是固定 90 场回放中最近一笔模拟成交，不按盈亏挑选；回放使用 Binance Spot 的真实日线，但不代表当时有真实下单或交易所成交。\n\n**策略选择。** 回调策略（pullback）当时有信号，在 60 场校准中出现 7 次，超过至少 3 次的门槛；其扣除成本并经下行风险调整后的得分为 **+0.0112 个百分点**，高于现金基准的 0。趋势和突破策略当时都没有信号，因此不具备入选资格。\n\n**风控与仓位。** `normal` 档风险预算为 **24.9409 USDT**，名义仓位上限为 **616.0400 USDT**。开盘跳空 **3.9380%**，低于 **4.9981%** 的上限，因此未拦截下单。模拟以 **80,544.2620 USDT/BTC** 买入 **0.007648465386171862 BTC**，名义金额为 **616.0400 USDT**；止损设在开盘价下方 **3.7485%**，触发价为 **77,486.2802 USDT/BTC**。\n\n**止损与亏损。** 当日最低价 **75,208.4200 USDT/BTC** 跌破预设止损，现货多头按模型以 **77,447.5370 USDT/BTC** 退出；日线支持触发判断，但不能证明真实成交或保证成交价。按该仓位归因：参考价格变动 **−23.0810 USDT**，滑点 **−0.6042 USDT**，双边手续费合计 **−1.2084 USDT**，净盈亏 **−24.8936 USDT**，期末余额 **9,952.2958 USDT**。成交凭证 ID 前十二位：`ef2af996c892`",
+    "englishSummary": "The pullback met the minimum sample size and scored above cash. At the open, the 3.9380% gap stayed below the 4.9981% limit. The session low crossed the stop. The reference-price loss of 23.0810 USDT, slippage of 0.6042 and fees of 1.2084 produced a net loss of 24.8936 USDT. The closing paper balance was 9,952.2958 USDT."
+  }
+}

@@ -1,3 +1,4 @@
+import {mountProofView} from './brain-proof-view.mjs';
 import mergeBlockEvidence from './brain-evidence/BLOCK-15537394-AT-MERGE@1.json' with {type:'json'};
 import {mountTradfiArchive} from './brain-tradfi-archive.mjs';
 import {mountBlockArchive} from './brain-raw-archive.mjs';
@@ -84,11 +85,13 @@ class AstarterBrain extends HTMLElement {
           </nav>
           <section class="br-market"><div class="ops-section-heading"><h3>${t('参考行情','Spot reference')}</h3><span>Coinbase · ETH/USD</span></div><div class="br-quote"><strong data-price></strong><span data-gain></span></div>
           <div class="br-chart"></div><div class="br-axis"><span>${t('数据截止','Data cutoff')}</span><span data-window></span></div></section>
+          <a class="br-feedback" href="/paper-replay?lang=${en?'en':'zh'}">${uiGlyph('file')}<b>${t('模拟成交复盘','Paper trade review')}</b><span>BTC/USDT</span>${uiGlyph('chevron')}</a>
           <button type="button" class="br-feedback" data-return>${uiGlyph('history')}<b>${t('复盘回流','Memory return')}</b><span data-feedback></span>${uiGlyph('chevron')}</button>
         </section>`;
     const sections={brainLayerTitle:layers[1].title,thinkingSection,executionSection,nodeButtons,zoomButtons,noteTabs,reader,legend,t,en};
-    root.innerHTML=`<link rel="stylesheet" href="/brain-observatory.css"><article class="brain-board ct-board">${cortexaView.markup(sections)}<section class="mem-section" tabindex="-1"></section></article>`;
+    root.innerHTML=`<link rel="stylesheet" href="/brain-observatory.css"><link rel="stylesheet" href="/brain-proof.css"><article class="brain-board ct-board">${cortexaView.markup(sections)}<section class="br-proof" aria-labelledby="br-proof-title"></section><section class="mem-section" tabindex="-1"></section><section class="br-proof br-backtest br-layer" aria-labelledby="br-backtest-title"></section></article>`;
     const q=s=>root.querySelector(s), all=s=>[...root.querySelectorAll(s)];
+    const proof=mountProofView(q('.br-proof'),q('.br-backtest'),en);
     const faces=all('.lw-dot-face').map((el,i)=>createHalftoneFace(el,i===0));
     for(const domain of directions) q('.brain-board').style.setProperty('--brain-'+domain.key,domain.color);
     const markers=all('[data-node]'), tabs=q('.note-tabs'), related=q('.related');
@@ -374,6 +377,7 @@ class AstarterBrain extends HTMLElement {
     const scrollTo=el=>el.scrollIntoView({behavior:prefersLess()?'instant':'smooth',block:'start'});
     let memory,thinking;
     function mountWorkspace(playback){
+      proof.setScope(selection.key,selection.asset?.symbol);
       thinking?.dispose();
       const scope=selection?.research;
       lastPhase=-1;
@@ -427,7 +431,7 @@ class AstarterBrain extends HTMLElement {
     const disposeScene=cortexaView.connect(root);
     const disposePicker=cortexaView.bindSelection(root,selection,updateSelection);
     q('[data-return]').onclick=()=>{thinking.seek(4);showMemory(memory.selectReview());};
-    this.controller=()=>{window.removeEventListener('hashchange',openLinkedArchive);disposeMarkets();blockArchive.dispose();disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
+    this.controller=()=>{window.removeEventListener('hashchange',openLinkedArchive);disposeMarkets();blockArchive.dispose();proof.dispose();disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
     showZoom(1);showNote(0);
     graph.setZoom(2.1);
   }

@@ -20,6 +20,7 @@ import {handleMemory} from './living-brain.mjs';
 import {handleAtlasFeeds} from './atlas-feed-master.mjs';
 import {handleAtlasPrices} from './market-source-adapters.mjs';
 
+let paperProof;
 const root = path.dirname(fileURLToPath(import.meta.url));
 const port = Number(process.env.PORT || 4188);
 let localSimOwner;
@@ -55,6 +56,31 @@ http.createServer(async (req, res) => {
   if(localSimOwner&&file.startsWith('api/')&&!file.startsWith('api/local-sim/')){
     res.writeHead(503,{'Content-Type':'application/json; charset=utf-8'});
     res.end(JSON.stringify({error:'LOCAL_SIMULATION_ISOLATED',mode:'simulation-only'}));return;
+  }
+  if(file==='api/brain/proof'){
+    try{
+      const {createBrainProofService}=await import('../deep-brain/api/brain-proof-service.mjs');
+      paperProof??=createBrainProofService();
+      await paperProof(req,res);
+    }catch{res.writeHead(503);res.end('Paper proof unavailable');}
+    return;
+  }
+  if(file==='paper-replay/view.mjs'){
+    try{
+      const source=await readFile(new URL('../deep-brain/paper-replay/view.mjs',import.meta.url));
+      res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});res.end(req.method==='HEAD'?undefined:source);
+    }catch{res.writeHead(404);res.end();}
+    return;
+  }
+  if(file==='paper-replay'){
+    if(!['GET','HEAD'].includes(req.method)){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
+    try{
+      const en=new URL(req.url,'http://localhost').searchParams.get('lang')!=='zh';
+      const {paperPageHTML}=await import('../deep-brain/paper-replay/page.mjs');
+      const html=await paperPageHTML(en);
+      res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(req.method==='HEAD'?undefined:html);
+    }catch{res.writeHead(503);res.end('Paper replay unavailable');}
+    return;
   }
   if(file==='api/assistant/chat'){await handleAssistantChat(req,res);return;}
   if(await handleWalletAuth(req,res))return;

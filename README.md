@@ -29,6 +29,10 @@ Living Brain provides persistent memory for cases and plans. The architecture pa
 
 The local demo runs in simulation mode. Continuous cross-agent scheduling, public beta publishing, and automatic feedback ingestion are design targets.
 
+## Run the three-layer paper trade
+
+The [Deep Brain module](src/deep-brain) includes public market collection, strategy selection, position sizing, paper execution, memory storage and model review. Clone the repo, enter `src/deep-brain` and run `npm run demo` followed by `npm run verify` to reproduce a stopped-out BTC trade without credentials.
+
 ## Frontend packages
 
 The default frontend directory follows the deployed `HACKATHON` branch. It opens Deep Brain, where you can select a research asset and explore the evidence behind each graph node. The [hosted demo](https://dapp.ipfund.art/) also includes a licensed particle portrait. The open repository uses the interactive evidence graph as its opening view.

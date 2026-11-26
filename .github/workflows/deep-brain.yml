@@ -1,0 +1,26 @@
+name: Deep Brain paper trade
+on:
+  push:
+    paths:
+      - 'src/deep-brain/**'
+      - '.github/workflows/deep-brain.yml'
+  pull_request:
+    paths:
+      - 'src/deep-brain/**'
+      - '.github/workflows/deep-brain.yml'
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/deep-brain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm test
+      - run: npm run verify
+      - run: npm run demo
