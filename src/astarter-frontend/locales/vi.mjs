@@ -1,5 +1,15 @@
 // Astarter UI catalog. Proper names, numeric values and placeholders are locked.
 export default {
+"Living Brain received this version.":"Living Brain đã nhận phiên bản này.",
+"Reading Living Brain…":"Đang đọc Living Brain…",
+"Living Brain is unavailable.":"Living Brain hiện không khả dụng.",
+"Pending compilation":"Đang chờ biên dịch",
+"Compiling":"Đang biên dịch",
+"Compiled":"Đã biên dịch",
+"Compilation failed":"Biên dịch thất bại",
+"Save decision":"Quyết định đã lưu",
+"Saved plan":"Kế hoạch đã lưu",
+"No order was sent.":"Không có lệnh nào được gửi.",
 "Last sampled minute":"Nến phút gần nhất đã lấy",
 "Upward momentum":"Động lượng tăng",
 "All three indicators meet the upward rule.":"Cả ba chỉ báo đều thỏa điều kiện tăng.",

@@ -1,5 +1,15 @@
 // Complete UI messages; generated from the checked source catalog.
 export const messages=[
+["Living Brain 已接收此版本。","Living Brain received this version."],
+["正在读取 Living Brain…","Reading Living Brain…"],
+["暂时无法读取 Living Brain。","Living Brain is unavailable."],
+["等待编译","Pending compilation"],
+["编译中","Compiling"],
+["已编译","Compiled"],
+["编译失败","Compilation failed"],
+["保存决策","Save decision"],
+["保存的方案","Saved plan"],
+["未发送订单。","No order was sent."],
 ["示例数据","Sample data"],
 ["市场快讯","Market headlines"],
 ["按发布时间浏览快讯，打开标题可查看原文。","Browse headlines by publication time. Open a headline to read the source."],

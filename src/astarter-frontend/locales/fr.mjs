@@ -1,5 +1,15 @@
 // Astarter UI catalog. Proper names, numeric values and placeholders are locked.
 export default {
+"Living Brain received this version.":"Living Brain a reçu cette version.",
+"Reading Living Brain…":"Lecture de Living Brain…",
+"Living Brain is unavailable.":"Living Brain est indisponible.",
+"Pending compilation":"En attente de compilation",
+"Compiling":"Compilation en cours",
+"Compiled":"Compilé",
+"Compilation failed":"Échec de la compilation",
+"Save decision":"Décision enregistrée",
+"Saved plan":"Plan enregistré",
+"No order was sent.":"Aucun ordre n’a été envoyé.",
 "Last sampled minute":"Dernière minute relevée",
 "Upward momentum":"Dynamique haussière",
 "All three indicators meet the upward rule.":"Les trois indicateurs remplissent les conditions de hausse.",

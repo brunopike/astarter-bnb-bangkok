@@ -1,5 +1,15 @@
 // Astarter UI catalog. Proper names, numeric values and placeholders are locked.
 export default {
+"Living Brain received this version.":"Living Brain이 이 버전을 받았습니다.",
+"Reading Living Brain…":"Living Brain을 읽는 중…",
+"Living Brain is unavailable.":"현재 Living Brain을 사용할 수 없습니다.",
+"Pending compilation":"컴파일 대기 중",
+"Compiling":"컴파일 중",
+"Compiled":"컴파일 완료",
+"Compilation failed":"컴파일 실패",
+"Save decision":"저장된 결정",
+"Saved plan":"저장된 계획",
+"No order was sent.":"주문을 전송하지 않았습니다.",
 "Last sampled minute":"마지막으로 수집한 1분봉",
 "Upward momentum":"상승 모멘텀",
 "All three indicators meet the upward rule.":"세 지표 모두 상승 조건을 충족합니다.",

@@ -28,6 +28,28 @@ const head=(z,en,sub,suben,actions='')=>`<header class="p-head"><div><h1>${L(z,e
 const kv=rows=>`<dl class="ux-facts">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
 const modes={signal:['只提醒我','Notify me'],confirm:['旧设置 · 需要更新','Legacy setup · update required'],review:['旧设置 · 逐笔批准','Legacy · approve entries'],auto:['按批准规则运行','Run approved rules']};
 const reasons={'not-trade':['只是转账，不跟随','Transfer only; no trade'],duplicate:['重复或历史快照，跳过','Duplicate or snapshot; skipped'],stale:['来晚了，跳过','Signal too old'],price:['价格偏离太多','Price or slippage limit'],liquidity:['流动性不足','Insufficient liquidity'],'not-owned':['不是这套策略买的，不卖','No strategy-owned position'],'exit-off':['没有开启跟随卖出','Following exits is off'],'owned-exit':['按比例卖出自己跟随的部分','Exit strategy-owned amount'],accepted:['检查通过，模拟买入','Checks passed; paper entry'],cap:['超过资金限制','Allocation limit'],leverage:['超过杠杆限制','Leverage limit'],stop:['触及止损，模拟退出并暂停买入','Stop reached; paper exit and pause'],halted:['保护已触发，暂停买入','Protection active; entry paused'],'within-risk':['未触及止损','Within stop limit']};
+export function strategyMemoryLines(state,pages){
+ if(state==='loading')return `<p>${L('正在读取 Living Brain…','Reading Living Brain…')}</p>`;
+ if(state==='unavailable')return `<p>${L('暂时无法读取 Living Brain。','Living Brain is unavailable.')}</p>`;
+ if(!pages.length)return `<p>${L('还没有写入','Nothing saved yet')}</p>`;
+ return pages.map(page=>{
+  if(!page.plan){
+   const contested=page.status==='contested'?L('两面都保留','Both claims stay')+' · ':'';
+   return `<p>${contested}${e(page.body||page.title||'')}</p>`;
+  }
+  const {plan,decision}=page;
+  const stage={pending:L('等待编译','Pending compilation'),compiling:L('编译中','Compiling'),completed:L('已编译','Compiled'),failed:L('编译失败','Compilation failed')}[page.status]||'';
+  const title=decision?L('保存决策','Save decision'):L('保存的方案','Saved plan');
+  const fields=[[L('金额','Amount'),plan.amount],[L('上限','Cap'),plan.cap],[L('参数','Parameters'),plan.parameters]];
+  const details=[page.marketType,plan.venue,plan.instrument,...fields.filter(([,value])=>value).map(([name,value])=>name+' '+value)].filter(Boolean);
+  if(decision){
+   const explanation=decision.standard?[L('未发送订单。','No order was sent.')]:[decision.changed,decision.why,decision.rejected].filter(Boolean);
+   details.push(...explanation);
+  }
+  return `<p><strong>${e(title)}</strong> · ${e(stage)}<br>${e(details.join(' · '))}</p>`;
+ }).join('');
+}
+
 export function traderDiscoveryView(){
  const styles={'趋势跟踪':'Trend following','链上研究':'On-chain research','宏观观察':'Macro research','波段交易':'Swing trading','合约交易':'Perpetuals','短线交易':'Short-term trading','资金流':'Fund flows','事件跟踪':'Event-driven','资金研究':'Fund-flow research','区间交易':'Range trading','波动研究':'Volatility research','现货交易':'Spot trading'};
  return `<div class="ux-page copy-directory" data-localized-ui>${head('聪明钱跟随','Smart-money watchlist','','',`<a class="p-button" href="?page=social&amp;data=demo">${L('查看账户动态','Account activity')}</a>`)}<div class="copy-directory-notice"><span>${L('示例数据','Sample data')}</span><span class="sc-tag">${L('自动跟单尚未开放','Copy trading unavailable')}</span></div><section class="copy-trader-list" aria-label="${L('交易者账户','Trader accounts')}">${TRADERS.map(trader=>{
@@ -470,27 +492,36 @@ export function createStrategyCenter({w,desk,root,go:route,refresh,notify,onRese
   return true;
  }
 
- function memoryScope(){return opened?[opened.id,executionRoute?.profileId||'',executionRoute?.market||''].join('|'):'';}
- function currentMarketType(){
-  const profile=executionRoute?.profileId||'';
+ function memoryScope(){return opened?[editorScope(),opened.id,executionRoute?.profileId||'',executionRoute?.market||''].join('|'):'';}
+ function currentMarketType(route=executionRoute){
+  const profile=route?.profileId||'';
   if(['cex-spot','cex-perp','dex-spot','dex-perp','dex-lp'].includes(profile))return profile;
-  const symbol=String(executionRoute?.market||'').split('/')[0];
-  return ['SPX','NDX','XAU','DXY','US10Y'].includes(symbol)||executionRoute?.market&&!String(executionRoute.market).includes('/')?'tradfi':'';
+  const symbol=String(route?.market||'').split('/')[0];
+  return ['SPX','NDX','XAU','DXY','US10Y'].includes(symbol)||route?.market&&!String(route.market).includes('/')?'tradfi':'';
+ }
+ function refreshMemoryPanel(){
+  const panel=drawer.querySelector('.sc-memory');
+  if(panel)panel.outerHTML=memoryPanel();
  }
  function loadStrategyMemory(){
   const scope=memoryScope();if(!scope)return;
   const token=++memoryToken,market=currentMarketType();
   memoryView={scope,state:'loading',rules:[],lessons:[],choices:[]};
+  refreshMemoryPanel();
   const q=new URLSearchParams({strategy:opened.id});if(market)q.set('market',market);
-  fetch('/api/memory/context?'+q).then(response=>response.ok?response.json():{rules:[],lessons:[],choices:[]}).then(data=>{
+  fetch('/api/memory/context?'+q).then(response=>response.ok?response.json():{available:false}).then(data=>{
    if(token!==memoryToken||memoryScope()!==scope)return;
-   memoryView={scope,state:'ready',rules:data.rules||[],lessons:data.lessons||[],choices:data.choices||[]};
-   if(drawer.open){capture();renderDrawer();}
-  }).catch(()=>{if(token===memoryToken)memoryView={scope,state:'ready',rules:[],lessons:[],choices:[]};});
+   memoryView={scope,state:data.available===false?'unavailable':'ready',rules:data.rules||[],lessons:data.lessons||[],choices:data.choices||[]};
+   refreshMemoryPanel();
+  }).catch(()=>{
+   if(token!==memoryToken||memoryScope()!==scope)return;
+   memoryView={scope,state:'unavailable',rules:[],lessons:[],choices:[]};
+   refreshMemoryPanel();
+  });
  }
- function memoryLines(pages){return pages.length?pages.map(page=>`<p>${page.status==='contested'?L('两面都保留','Both claims stay')+' · ':''}${e(page.body||page.title||'')}</p>`).join(''):`<p>${L('还没有写入','Nothing saved yet')}</p>`;}
  function memoryPanel(){
-  if(!opened||!memoryView||memoryView.scope!==memoryScope()||!['configure','overview'].includes(phase))return '';
+  if(!opened||!['configure','overview'].includes(phase))return '';
+  if(!memoryView||memoryView.scope!==memoryScope())return '<section class="sc-memory"></section>';
   const plan=strategyPlan(opened.id,opened.variant),market=currentMarketType();
   const codeEntry=L(...plan.entry),codeExit=L(...plan.exit);
   const oldRule=(memoryView.rules||[]).some(page=>page.codeRule||page.status==='contested');
@@ -499,11 +530,11 @@ export function createStrategyCenter({w,desk,root,go:route,refresh,notify,onRese
    const type=(page.body.match(/^市场类型: (.+)$/m)||[])[1]||page.marketType;
    return !market||!type||type===market;
   });
-  return `<section class="sc-memory"><h3>${L('策略规则','Strategy rules')}</h3><p>${e(codeEntry)}</p><p>${e(codeExit)}</p>${oldRule?`<p>${L('记忆是旧决定，以当前代码规则为准。','Memory is an older decision. The current code rule is used.')}</p>`:''}${memoryLines(memoryView.rules||[])}<h3>${L('已汇总的参数教训','Collected parameter lessons')}</h3>${memoryLines(lessons)}<h3>${L('你在这个投资入口上上次的选择','Your last choice on this outlet')}</h3>${memoryLines(choices)}</section>`;
+  return `<section class="sc-memory"><h3>${L('策略规则','Strategy rules')}</h3><p>${e(codeEntry)}</p><p>${e(codeExit)}</p>${oldRule?`<p>${L('记忆是旧决定，以当前代码规则为准。','Memory is an older decision. The current code rule is used.')}</p>`:''}${strategyMemoryLines(memoryView.state,memoryView.rules||[])}<h3>${L('已汇总的参数教训','Collected parameter lessons')}</h3>${strategyMemoryLines(memoryView.state,lessons)}<h3>${L('你在这个投资入口上上次的选择','Your last choice on this outlet')}</h3>${strategyMemoryLines(memoryView.state,choices)}</section>`;
  }
  async function writePlanMemory(intent,draft,context){
-  const marketType=currentMarketType(),venue=intent.executionRoute?.venueId,instrument=intent.market;
-  if(!marketType||!venue||!instrument)return true;
+  const marketType=currentMarketType(intent.executionRoute),venue=intent.executionRoute?.venueId,instrument=intent.market;
+  if(!marketType||!venue||!instrument)return null;
   const parameters=Object.keys(intent.botParameters||{}).filter(name=>/^[a-z0-9_]{1,40}$/.test(name));
   try{
    const response=await fetch('/api/memory/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({strategyId:context.id,version:String(draft.version),marketType,venue,instrument,amount:intent.amount,cap:intent.cap,parameters,planId:String(context.editorKey||draft.id),changed:`金额 ${intent.amount}；上限 ${intent.cap}；参数 ${parameters.join(', ')}`,why:`保存在 ${marketType} ${venue} ${instrument}`,rejected:'没有发送交易所订单'})});
@@ -808,7 +839,14 @@ export function createStrategyCenter({w,desk,root,go:route,refresh,notify,onRese
     :liveWalletSpotRoute(intent.executionRoute,intent.market)
      ?L('方案已保存在当前钱包名下。','Plan saved for this wallet.')
      :L('设置已保存，未扣积分。','Settings saved. No credits used.');
-   if(!check&&!(await writePlanMemory(intent,d,context)))message+=L(' 记忆未写入。',' Memory was not written.');
+   if(!check){
+    const synced=await writePlanMemory(intent,d,context);
+    if(synced===true)message+=' '+L('Living Brain 已接收此版本。','Living Brain received this version.');
+    if(synced===false)message+=L(' 记忆未写入。',' Memory was not written.');
+    if(scope!==JSON.stringify([w.s.setupContext,w.account?.scope]))return;
+    if(opened!==context){refresh();notify(message,{tone:'success'});return;}
+    if(synced===true&&inlineHost)loadStrategyMemory();
+   }
    if(inlineHost){feedback=message;feedbackTone='success';}
    else{returnToCaller=null;drawer.close();refresh();notify(message,{tone:'success',action:()=>route('execution'),actionLabel:L('查看我的交易','View my trading')});}
    return;

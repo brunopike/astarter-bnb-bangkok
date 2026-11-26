@@ -1,0 +1,37 @@
+name: Living Brain capture and recall
+on:
+  push:
+    paths:
+      - 'src/astarter-frontend/living-brain*'
+      - 'src/astarter-frontend/memory-feedback*'
+      - 'src/astarter-frontend/strategy-journeys.mjs'
+      - 'src/astarter-frontend/strategy-center.test.mjs'
+      - 'src/astarter-frontend/locale-messages.mjs'
+      - 'src/astarter-frontend/locales/*.mjs'
+      - '.github/workflows/living-brain.yml'
+  pull_request:
+    paths:
+      - 'src/astarter-frontend/living-brain*'
+      - 'src/astarter-frontend/memory-feedback*'
+      - 'src/astarter-frontend/strategy-journeys.mjs'
+      - 'src/astarter-frontend/strategy-center.test.mjs'
+      - 'src/astarter-frontend/locale-messages.mjs'
+      - 'src/astarter-frontend/locales/*.mjs'
+      - '.github/workflows/living-brain.yml'
+permissions:
+  contents: read
+jobs:
+  memory:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/astarter-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/astarter-frontend/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node --import ./test-locale.mjs --test living-brain.test.mjs memory-feedback.test.mjs strategy-center.test.mjs locale.test.mjs

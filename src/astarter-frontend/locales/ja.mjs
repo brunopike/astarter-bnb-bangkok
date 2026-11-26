@@ -1,5 +1,15 @@
 // Astarter UI catalog. Proper names, numeric values and placeholders are locked.
 export default {
+"Living Brain received this version.":"Living Brain がこのバージョンを受け付けました。",
+"Reading Living Brain…":"Living Brain を読み込み中…",
+"Living Brain is unavailable.":"現在 Living Brain を利用できません。",
+"Pending compilation":"コンパイル待ち",
+"Compiling":"コンパイル中",
+"Compiled":"コンパイル済み",
+"Compilation failed":"コンパイル失敗",
+"Save decision":"保存した判断",
+"Saved plan":"保存したプラン",
+"No order was sent.":"注文は送信されていません。",
 "Last sampled minute":"直近取得の確定1分足",
 "Upward momentum":"上向きのモメンタム",
 "All three indicators meet the upward rule.":"3つの指標がすべて上向きの条件を満たしています。",

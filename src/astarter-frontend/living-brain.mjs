@@ -51,11 +51,11 @@ export function marketTypeOf(input,instrument){
  return '';
 }
 
-async function livingBrain(pathname,{method='GET',body}={}){
+async function livingBrain(pathname,{method='GET',body,signal=AbortSignal.timeout(10000)}={}){
  loadLivingBrainEnv();
  if(!livingBrainConfigured())throw Error('living-brain-unconfigured');
  const response=await fetch(API+pathname,{
-  method,
+  method,signal,
   headers:{
    Accept:'application/json',
    'x-api-key':process.env.LIVING_BRAIN_API_KEY,
@@ -125,25 +125,99 @@ function sessionUser(req){
  if(!session?.address)return null;
  return {key:userKey(session.address)};
 }
-function originOf(page){
- const body=String(page?.body||'');
- const line=body.split('\n').find(row=>row.startsWith('originRef: '));
- return line?line.slice('originRef: '.length).trim():'';
+function originOf(record,body){
+ const refs=new Set([record?.originRef,...String(body||'').split('\n')
+  .filter(line=>line.startsWith('originRef: ')).map(line=>line.slice('originRef: '.length).trim())].filter(Boolean));
+ return refs.size===1?[...refs][0]:'';
 }
 function pageView(page){
- const originRef=originOf(page);
- const marketType=(originRef.split(':')[2]&&originRef.startsWith('lesson:'))?originRef.split(':')[2]:(String(page.body||'').match(/^市场类型: (.+)$/m)||[])[1]||'';
+ const originRef=originOf(page,page.body);
+ const marketType=originRef.startsWith('lesson:')?originRef.split(':')[2]:(String(page.body||'').match(/^市场类型: (.+)$/m)||[])[1]||'';
  return {title:redactMemoryText(page.title||''),body:redactMemoryText(page.body||''),status:page.status||'active',originRef,marketType,slug:page.slug||''};
 }
-async function pagesFor(query){
- const found=await livingBrain(brainPath('/search'),{method:'POST',body:{query,topK:8,minSimilarity:0.2}});
- const rows=Array.isArray(found)?found:[];
- const pages=[];
+
+const sourceScopes=new Map();
+let sourceRevision=0;
+const sourceScopeKey=(user,strategy,market)=>JSON.stringify([brainPath(),user.key,strategy,market]);
+const sourceStates=new Set(['pending','compiling','completed','failed']);
+function readField(body,name){
+ const prefix=name+': ';
+ const values=new Set(body.split('\n').filter(line=>line.startsWith(prefix)).map(line=>line.slice(prefix.length).trim()));
+ return values.size===1?[...values][0]:'';
+}
+function sourceContext(rows,user,strategy,market){
+ const rules=[],lessons=[],plans=[],decisions=new Map();
+ const prefix='user:'+user.key+':';
  for(const row of rows){
-  if(!row?.slug)continue;
-  try{pages.push(await livingBrain(brainPath('/pages/'+encodeURIComponent(row.slug))));}catch{/* a missing page is skipped */}
+  if(typeof row?.id!=='string'||!row.id||typeof row.originRef!=='string'||typeof row.content!=='string'||!sourceStates.has(row.status))continue;
+  const ref=originOf(row,row.content);
+  if(!ref)continue;
+  const type=ref.startsWith('lesson:')?ref.split(':')[2]:readField(row.content,'市场类型');
+  const view={sourceId:row.id,originRef:ref,title:redactMemoryText(row.label),body:redactMemoryText(row.content.replace(/^originRef: .+$/gm,'').trim()),marketType:type,status:row.status,createdAt:row.createdAt||''};
+  if(ref==='strategy:'+strategy){rules.push(view);continue;}
+  if(ref.startsWith('lesson:'+strategy+':')&&(!market||type===market)){lessons.push(view);continue;}
+  if(ref.startsWith(prefix+'plan:')&&readField(row.content,'策略编号')===strategy&&(!market||type===market)){
+   const fields={instrument:'交易标的',venue:'交易平台',amount:'金额',cap:'上限',parameters:'参数名'};
+   view.plan=Object.fromEntries(Object.entries(fields).map(([key,field])=>[key,redactMemoryText(readField(row.content,field))]));
+   plans.push(view);
+  }
+  if(ref.startsWith(prefix+'decision:'))decisions.set(ref,view);
  }
- return pages.map(pageView);
+ const recent=(a,b)=>b.createdAt.localeCompare(a.createdAt);
+ const choices=[];
+ for(const plan of plans.sort(recent).slice(0,4)){
+  choices.push(plan);
+  const decision=decisions.get(prefix+'decision:'+plan.originRef.slice((prefix+'plan:').length));
+  if(decision&&(!decision.marketType||decision.marketType===plan.marketType)){
+   const changed=readField(decision.body,'改了什么'),why=readField(decision.body,'为什么'),rejected=readField(decision.body,'否决了什么');
+   const standard=changed===`金额 ${plan.plan.amount}；上限 ${plan.plan.cap}；参数 ${plan.plan.parameters}`.trimEnd()&&why===`保存在 ${plan.marketType} ${plan.plan.venue} ${plan.plan.instrument}`&&rejected==='没有发送交易所订单';
+   choices.push({...decision,marketType:plan.marketType,decision:{standard,changed,why,rejected},plan:plan.plan});
+  }
+ }
+ return {rules:rules.sort(recent).slice(0,8).map(markAgainstCode(strategy)),lessons:lessons.sort(recent).slice(0,8),choices};
+}
+async function sourceList(query,client,signal){
+ const data=await client(brainPath('/sources?'+query),{signal});
+ if(!Array.isArray(data?.items))throw Error('invalid-source-list');
+ return data;
+}
+export async function strategyMemoryContext(user,strategy,market='',client=livingBrain){
+ const empty={rules:[],lessons:[],choices:[]};
+ if(!user?.key||!STRATEGIES.includes(strategy)||(market&&!MARKETS.has(market)))return empty;
+ const revision=sourceRevision,key=sourceScopeKey(user,strategy,market);
+ const cached=sourceScopes.get(key);
+ const rows=[],signal=AbortSignal.timeout(8000);
+ if(cached&&cached.expires>Date.now()){
+  if(cached.ids.length){
+   const data=await sourceList(new URLSearchParams({ids:cached.ids.join(','),limit:'100'}),client,signal);
+   rows.push(...data.items.filter(row=>cached.ids.includes(row.id)));
+  }
+ }else{
+  const seen=new Set();
+  let offset=0,total;
+  do{
+   signal.throwIfAborted();
+   const page=await sourceList(new URLSearchParams({limit:'100',offset:String(offset)}),client,signal);
+   if(!Number.isSafeInteger(page.total)||page.total<0||(page.offset!==undefined&&page.offset!==offset))throw Error('invalid-source-pagination');
+   total??=page.total;
+   const {items}=page;
+   if(!items.length&&offset<total)throw Error('incomplete-source-list');
+   for(const row of items){
+    if(typeof row?.id!=='string'||!row.id||seen.has(row.id))throw Error('invalid-source-pagination');
+    seen.add(row.id);
+    const ref=row?.originRef;
+    if(typeof ref==='string'&&(ref==='strategy:'+strategy||ref.startsWith('lesson:'+strategy+':')||ref.startsWith('user:'+user.key+':')))rows.push(row);
+   }
+   offset+=items.length;
+  }while(offset<total);
+ }
+ const context=sourceContext(rows,user,strategy,market);
+ // Cache upstream IDs only. The next read still gets each source's current content and status from Living Brain.
+ if(revision===sourceRevision&&(!cached||cached.expires<=Date.now())){
+  if(sourceScopes.size>=128)sourceScopes.delete(sourceScopes.keys().next().value);
+  sourceScopes.set(key,{expires:Date.now()+30000,ids:[...new Set(Object.values(context).flat().map(item=>item.sourceId))]});
+ }
+ return context;
 }
 
 let sharedFeedbackStore;
@@ -175,10 +249,7 @@ export async function collectMemoryFeedback(user,input={},deps={}){
   try{page=await client(brainPath('/pages/'+encodeURIComponent(row.slug)));}
   catch{continue;}
   if(!page)continue;
-  const origins=new Set([page.originRef,...String(page.body||'').split('\n')
-   .filter(line=>line.startsWith('originRef: ')).map(line=>line.slice('originRef: '.length).trim())].filter(Boolean));
-  if(origins.size!==1)continue;
-  const [originRef]=origins;
+  const originRef=originOf(page,page.body);
   if(typeof originRef!=='string'||!(originRef.startsWith('strategy:')||originRef.startsWith('lesson:')||originRef.startsWith(`user:${user.key}:`)))continue;
   const view=pageView(page);
   const record={pageId:String(row.pageId||''),slug:row.slug,title:view.title,summary:redactMemoryText(row.summary||''),pageType:String(row.pageType||''),status:row.status||view.status,similarity:row.similarity,matchedOn:String(row.matchedOn||''),originRef,body:view.body};
@@ -233,22 +304,9 @@ async function readContext(url,res,user){
  const market=url.searchParams.get('market')||'';
  const empty={rules:[],lessons:[],choices:[]};
  if(!STRATEGIES.includes(strategy)){json(res,200,empty);return true;}
- if(!livingBrainConfigured()){json(res,200,empty);return true;}
- try{
-  await livingBrain(brainPath('/index?limit=40'));
-  const shared=await pagesFor(`strategy:${strategy}`);
-  const lessons=await pagesFor(`lesson:${strategy}`);
-  const found=await pagesFor(strategy);
-  const prefix=`user:${user.key}:`;
-  const choices=found.filter(page=>page.originRef.startsWith(prefix+'plan:')||page.originRef.startsWith(prefix+'decision:'));
-  const rules=shared.filter(page=>page.originRef.startsWith('strategy:')&&!page.originRef.startsWith('user:'));
-  const lessonPages=lessons.filter(page=>page.originRef.startsWith('lesson:')&&(!market||!page.marketType||page.marketType===market));
-  json(res,200,{
-   rules:rules.map(markAgainstCode(strategy)),
-   lessons:lessonPages,
-   choices:choices.filter(page=>!page.originRef.startsWith('user:')||page.originRef.startsWith(prefix))
-  });
- }catch{json(res,200,empty);}
+ if(!livingBrainConfigured()){json(res,200,{...empty,available:false});return true;}
+ try{json(res,200,await strategyMemoryContext(user,strategy,market));}
+ catch{json(res,503,{...empty,available:false});}
  return true;
 }
 function markAgainstCode(strategy){
@@ -258,6 +316,14 @@ function markAgainstCode(strategy){
   const differs=Boolean(code&&page.body&&!page.body.includes(code.slice(0,24)));
   return {...page,codeRule:differs};
  };
+}
+
+export function acceptedSources(items,receipt){
+ if(!Number.isInteger(receipt?.ingested)||receipt.ingested<0||receipt.ingested>items.length||!Array.isArray(receipt.sources)||receipt.sources.length!==items.length)return null;
+ const accepted=items.map(item=>receipt.sources.find(row=>row.originRef===item.originRef&&row.content===item.content&&
+  typeof row.id==='string'&&row.id&&sourceStates.has(row.status)&&row.status!=='failed'));
+ if(accepted.some(row=>!row)||new Set(accepted.map(row=>row.id)).size!==items.length)return null;
+ return accepted;
 }
 
 async function writePlan(req,res,user){
@@ -289,10 +355,18 @@ async function writePlan(req,res,user){
  const why=redactMemoryText(input.why)||`保存在 ${marketType} ${venue} ${instrument}`;
  const rejected=redactMemoryText(input.rejected)||'没有发送交易所订单';
  try{
-  await captureBatch([
+  const items=[
    {kind:'integration',bucket:'notes',label:`${strategy} ${marketType} ${instrument}`,originRef:planOrigin,content:[...facts,`originRef: ${planOrigin}`].join('\n')},
    {kind:'note',bucket:'notes',label:`${strategy} decision`,originRef:decisionOrigin,content:[`改了什么: ${changed}`,`为什么: ${why}`,`否决了什么: ${rejected}`,`originRef: ${decisionOrigin}`].join('\n')}
-  ]);
+  ];
+  const receipt=await captureBatch(items);
+  const accepted=acceptedSources(items,receipt);
+  if(!accepted){json(res,200,{saved:true,memory:false});return true;}
+  sourceRevision++;
+  for(const scopeMarket of [marketType,'']){
+   const cached=sourceScopes.get(sourceScopeKey(user,strategy,scopeMarket));
+   if(cached&&cached.expires>Date.now())cached.ids=[...new Set([...accepted.map(source=>source.id),...cached.ids])].slice(0,80);
+  }
   json(res,202,{saved:true,memory:true});
  }catch{json(res,200,{saved:true,memory:false});}
  return true;

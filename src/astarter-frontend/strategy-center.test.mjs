@@ -9,9 +9,10 @@ import {MultiResearch,DiscoveryDispatch} from './multi-research.mjs';
 import {TradingDemo,DEFAULT_CONNECTIONS} from './trading-demo.mjs';
 import {BotBook,botParameters,botRequiredCapital} from './bot-runtime.mjs';
 import {applyRecommendation} from './strategy-advisor.mjs';
-import {strategyLaunchError,startStrategyWatch,reconcileStrategyWatch,createStrategyCenter,createStrategyJourneys} from './strategy-journeys.mjs';
+import {strategyMemoryLines,strategyLaunchError,startStrategyWatch,reconcileStrategyWatch,createStrategyCenter,createStrategyJourneys} from './strategy-journeys.mjs';
 import {CATALOG} from './strategy-catalog.mjs';
 import {protectionConfig} from './strategy-protection.mjs';
+import {withLocale} from './locale.mjs';
 
 function editExitStub(){
  const note={textContent:''},focus={count:0,focus(){this.count++;}};
@@ -385,7 +386,7 @@ test('native setup can size blank entry amounts from allocation without overwrit
 });
 const bindRoute=d=>Object.assign(d,{market:route.market,executionRoute:{...route}});
 const advance=(w,seconds=5)=>{for(let i=0;i<seconds*10;i++)w.tick(.1);};
-test('a connected wallet grid submit keeps the plan when the saved-item cap is full',async()=>{
+for(const memoryAccepted of [false,true])test('a connected wallet grid submit keeps the plan when the saved-item cap is full, memory accepted '+memoryAccepted,async()=>{
  const prior={document:globalThis.document,FormData:globalThis.FormData,matchMedia:globalThis.matchMedia,IntersectionObserver:globalThis.IntersectionObserver,fetch:globalThis.fetch},events={};
  const form={reportValidity(){return true;},addEventListener(){}},drawer={innerHTML:'',open:false,dataset:{},classList:{toggle(){}},setAttribute(){},querySelector(s){return s==='#sc-config'?form:null;},querySelectorAll(){return [];},addEventListener(k,v){events[k]=v;},showModal(){this.open=true;},close(){this.open=false;}};
  const address='0x'+'ab'.repeat(20),wallet={profileId:'dex-spot',venueId:'pancakeswap',accountId:address,connectionId:'wallet-bsc',chainId:'56',market:'BTC/USDT'};
@@ -396,7 +397,7 @@ test('a connected wallet grid submit keeps the plan when the saved-item cap is f
   globalThis.fetch=async(url,options={})=>{
    if(options.method==='POST'){
     writes.push({url,body:JSON.parse(options.body)});
-    return Response.json({saved:true,memory:false});
+    return Response.json({saved:true,memory:memoryAccepted},{status:memoryAccepted?202:200});
    }
    return Response.json({rules:[],lessons:[],choices:[]});
   };
@@ -414,7 +415,7 @@ test('a connected wallet grid submit keeps the plan when the saved-item cap is f
   await events.click({target:{closest:()=>({type:'button',dataset:{sc:'save-plan'}})}});
   assert.deepEqual(writes.map(({url,body})=>[url,body.strategyId,body.cap,body.venue]),[['/api/memory/plan','S01',25,'pancakeswap']]);
   const feedback=drawer.innerHTML.match(/class="sc-feedback"[^>]*>([^<]*)/)?.[1]||'';
-  assert.equal(ensures.length,0);assert.equal(feedback,'');assert.equal(notes.length,1);assert.match(notes[0],/^(方案已保存在当前钱包名下。 记忆未写入。|Plan saved for this wallet\. Memory was not written\.)$/);assert.equal(w.s.drafts.some(d=>d.strategy==='S01'&&d.executionRoute?.connectionId==='wallet-bsc'&&d.cap===25),true);
+  assert.equal(ensures.length,0);assert.equal(feedback,'');assert.equal(notes.length,1);assert.match(notes[0],memoryAccepted?/^(方案已保存在当前钱包名下。 Living Brain 已接收此版本。|Plan saved for this wallet\. Living Brain received this version\.)$/:/^(方案已保存在当前钱包名下。 记忆未写入。|Plan saved for this wallet\. Memory was not written\.)$/);assert.equal(w.s.drafts.some(d=>d.strategy==='S01'&&d.executionRoute?.connectionId==='wallet-bsc'&&d.cap===25),true);
  }finally{for(const [key,value]of Object.entries(prior)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
 });
 test('an unrelated save failure is not hidden by an unverified trading connection',async()=>{
@@ -1003,4 +1004,18 @@ test('an existing BTC reference does not lock a changed instrument or connection
    assert.equal(w.s.validations.length,0);assert.equal(w.s.trade,null);
   }
  }finally{for(const [key,value]of Object.entries(previous)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
+});
+
+test('English strategy memory shows source status and structured legacy choices without leaking source references',()=>{
+ const render=(state,rows=[])=>withLocale('en',()=>strategyMemoryLines(state,rows));
+ assert.equal(render('ready'),'<p>Nothing saved yet</p>');
+ assert.equal(render('loading'),'<p>Reading Living Brain…</p>');
+ assert.equal(render('unavailable'),'<p>Living Brain is unavailable.</p>');
+ const plan={amount:'11',cap:'37',venue:'binance',instrument:'BTC/USDT',parameters:''};
+ const html=render('ready',[{status:'completed',marketType:'cex-spot',body:'金额: 11\n上限: 37\noriginRef: private',plan},
+  {status:'compiling',marketType:'cex-spot',plan,decision:{standard:true}}]);
+ for(const label of ['Saved plan','Compiled','Save decision','Compiling','cex-spot','binance','BTC/USDT','Amount 11','Cap 37','No order was sent.']){
+  assert.ok(html.includes(label),label);
+ }
+ assert.doesNotMatch(html,/originRef|金额|上限|private/);
 });
