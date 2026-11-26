@@ -5,7 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {promisify} from 'node:util';
 import {gzip,gunzip} from 'node:zlib';
-import {buildBrainProof,observedMarketSignals,validateProofMarket} from '../brain-proof-engine.mjs';
+import {buildBrainProof,buildLearningRecord,observedMarketSignals,validateProofMarket} from '../brain-proof-engine.mjs';
 import {buildProofCohort} from '../brain-proof-cohort.mjs';
 import {evaluateDecisionProof} from '../brain-decision-proof.mjs';
 import {forwardDirectory,readForwardProof,readForwardRefusal} from '../brain-proof-forward.mjs';
@@ -347,18 +347,36 @@ export function createBrainProofHandler({
         const id=params.get('source'),bytes=await sourceBytes(id);
         reply(200,bytes,{ETag:'"'+id+'"'});return;
       }
+      if(params.has('learningId')){
+        assertKeys(params,['learningId']);
+        const id=params.get('learningId');
+        if(!isHash(id))fail('BAD_QUERY');
+        const bytes=await readPublished(location('learning',id));
+        if(digest(bytes)!==id)fail('INVALID_EVIDENCE');
+        reply(200,bytes,{ETag:'"'+id+'"'});return;
+      }
       if(params.has('run')){
-        assertKeys(params,['run','decision','evidence','report']);
+        assertKeys(params,['run','decision','evidence','report','learning']);
         const decisionId=params.get('decision');
         if(decisionId!==null && !isHash(decisionId))fail('BAD_QUERY');
         if(params.has('report') && (decisionId!==null || params.get('report')!=='1'))fail('BAD_QUERY');
         if(params.has('evidence') && (!decisionId || params.get('evidence')!=='1'))fail('BAD_QUERY');
+        if(params.has('learning') && (!decisionId || params.get('learning')!=='1' || params.has('evidence') || params.has('report')))fail('BAD_QUERY');
         const record=await loadRun(params.get('run'));
         if(params.has('report')){reply(200,record.proof,{ETag:'"'+record.resultSha+'"'});return;}
         if(!decisionId){reply(200,index(record));return;}
         const decision=record.proof.decisions.find(item=>item.id===decisionId);
         if(!decision)fail('PROOF_NOT_FOUND');
         const ref={runId:record.proof.runId,sourceArchive:sourceRef(record.sourceSha)};
+        if(params.has('learning')){
+          const archive=JSON.parse(await sourceBytes(record.sourceSha));
+          const learning={...buildLearningRecord(record.proof,decision,archive),sourceArchive:ref.sourceArchive};
+          const bytes=Buffer.from(JSON.stringify(learning)),learningId=digest(bytes);
+          const file=location('learning',learningId);
+          await publishImmutable(file,bytes);
+          if(digest(await readPublished(file))!==learningId)fail('INVALID_EVIDENCE');
+          reply(200,{learningId,recordUrl:'/api/brain/proof?learningId='+learningId,learning});return;
+        }
         if(params.has('evidence')){
           const {key,market,venue,quote}=record.proof.asset;
           const raw=JSON.parse(await sourceBytes(record.sourceSha)).assets.find(asset=>asset.key===key);
@@ -368,7 +386,8 @@ export function createBrainProofHandler({
           reply(200,{...ref,decisionId,snapshotId:decision.snapshotId,asOf:decision.asOf,market,venue,quote,
             fields:['openTimeUnix','open','high','low','close','baseVolume'],bars});return;
         }
-        reply(200,{...ref,evidenceUrl:'/api/brain/proof?run='+ref.runId+'&decision='+decisionId+'&evidence=1',decision});return;
+        const recordUrl='/api/brain/proof?run='+ref.runId+'&decision='+decisionId;
+        reply(200,{...ref,evidenceUrl:recordUrl+'&evidence=1',learningUrl:recordUrl+'&learning=1',decision});return;
       }
       const key=params.get('asset');
       if(params.has('forward')){

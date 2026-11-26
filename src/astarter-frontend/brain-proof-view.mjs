@@ -106,17 +106,6 @@ function closedChartBars(bars,evidence){
   return rows.map(([time,open,high,low,close,volume])=>({time:time*1000,open,high,low,close,volume}));
 }
 
-// The next calendar decision may have been frozen before this session closed.
-export function nextLearningSession(decisions,record){
-  const close=Date.parse(record.execution.barCloseAt);
-  return decisions.find(row=>row.barOpenAt>record.barOpenAt && Date.parse(row.asOf)>=close);
-}
-export function linksLearningReceipt(before,after){
-  return Boolean(before.execution?.id && after.assetKey===before.assetKey && after.mode===before.mode &&
-    after.previousReceiptId===before.execution.id && after.previousReceiptAt===before.execution.barCloseAt &&
-    Date.parse(after.asOf)>=Date.parse(before.execution.barCloseAt));
-}
-
 const learningGlyphs={
   stop_loss:`<g opacity=".52"><rect x="4" y="5" width="6" height="9" rx="1.3"/><rect x="12" y="10" width="6" height="11" rx="1.3"/></g>
     <g class="bl-drop"><rect x="21" y="14" width="7" height="10" rx="1.3"/><rect x="23.5" y="11" width="2" height="16" rx=".8"/></g>
@@ -638,7 +627,7 @@ export function mountProofView(host,replayHost,learningHost,en){
     </div>`;
   }
   async function learnFromRecord(record,activeRun,signal){
-    const receipt=record.execution,following=nextLearningSession(activeRun.decisions,record);
+    const receipt=record.execution;
     learningPeriod.textContent=activeRun.asset.market+' · '+date(record.barOpenAt)+' UTC';
     const reviewUrl=decision=>endpoint({run:activeRun.runId,decision:decision.id});
     const inspectLabel=t('查看校准依据','Inspect calibration');
@@ -652,31 +641,35 @@ export function mountProofView(host,replayHost,learningHost,en){
     const origin=sourceLink(reviewUrl(record),t('原始决策与回执','Decision and receipt'));
     learningBody.innerHTML=`<div class="bl-grid">${observed}</div><div class="bl-feedback"></div>`;
     const feedback=learningBody.querySelector('.bl-feedback');
-    if(!following){
-      feedback.innerHTML=`<p>${e(t('此窗口尚无包含本场结果的后续决策。','This window ends before a later decision can use this outcome.'))}</p>${origin}`;
-      return;
-    }
     learningBody.setAttribute('aria-busy','true');
     try{
-      const response=await request({run:activeRun.runId,decision:following.id},signal);
+      const {learning,recordUrl}=await request({run:activeRun.runId,decision:record.id,learning:1},signal);
       if(signal.aborted || disposed || run!==activeRun)return;
-      const after=response.decision;
-      if(response.runId!==activeRun.runId || after?.id!==following.id || !linksLearningReceipt(record,after))throw Error('Unlinked learning record');
+      if(learning?.version!=='agent-learning-v1' || learning.runId!==activeRun.runId || learning.decisionId!==record.id ||
+        learning.assetKey!==record.assetKey || learning.mode!==record.mode || learning.outcome?.receiptId!==receipt.id)
+        throw Error('Unlinked learning record');
+      const memoryLink=sourceLink(recordUrl,t('学习记录','Learning record'));
+      if(learning.status==='window_ended'){
+        feedback.innerHTML=`<p>${e(t('此窗口尚无包含本场结果的后续决策。','This window ends before a later decision can use this outcome.'))}</p>${origin} ${memoryLink}`;
+        return;
+      }
+      const {calibration,nextDecision:after}=learning;
+      if(learning.status!=='linked' || after.receiptId!==receipt.id)throw Error('Missing decision link');
+      const row=calibration.rows.find(candidate=>candidate.id===calibration.focusId);
+      const {before:focus,after:update}=row;
       const score=value=>(value>0?'+':'')+number(value,4);
-      const focus=record.selected==='cash'?record.candidates.filter(c=>c.id!=='cash').sort((a,b)=>b.score-a.score)[0]:
-        record.candidates.find(c=>c.id===record.selected);
-      const update=after.candidates.find(c=>c.id===focus?.id);
-      if(!update || !Number.isFinite(update.score) || !Number.isFinite(focus.score))throw Error('Missing calibration');
       const change=cell(scoreDial(focus.score,update.score),t('策略评分','Strategy score'),`<span class="bl-prior">${e(score(focus.score))}</span> <i>→</i> <span class="bl-updated">${e(score(update.score))}</span>`,
         name(focus.id)+' · '+t('有效样本 ','Qualifying samples ')+number(focus.sampleCount,0)+' → '+number(update.sampleCount,0),true);
-      const choice=cell(learningGlyph(Object.hasOwn(strategies,after.selected)?after.selected:'strategy'),t('后续模拟决策','Subsequent decision'),e(name(after.selected)),date(after.barOpenAt)+' UTC · '+reason(after.reason));
-      const calibration=number(activeRun.assumptions.calibrationBars,0);
+      const choice=cell(learningGlyph(Object.hasOwn(strategies,after.selected)?after.selected:'strategy'),t('后续模拟决策','Subsequent decision'),e(name(after.selected)),date(after.barOpenAt)+' UTC · '+(after.signalCount===0?t('未触发入场信号','No entry signals'):reason(after.reason)));
+      const count=number(calibration.sessions,0);
       learningBody.innerHTML=`<div class="bl-grid bl-flow">${observed}${change}${choice}</div>
         <details class="bl-comparison" id="bl-calibration"><summary>${inspectLabel}</summary>
-        <p>${e(t('评分使用最近 '+calibration+' 场的扣费后表现，并计入下行风险。','Scores use the last '+calibration+' sessions of after-cost returns and account for downside risk.'))}</p>
-        <table><thead><tr><th>${t('候选策略','Candidate')}</th><th>${date(record.asOf)}</th><th>${date(after.asOf)}</th></tr></thead><tbody>
-        ${record.candidates.map(c=>{const revised=after.candidates.find(v=>v.id===c.id);return `<tr><th scope="row">${e(name(c.id))}</th><td>${e(score(c.score))}</td><td>${e(revised?score(revised.score):'—')}</td></tr>`;}).join('')}</tbody></table></details>
-        <footer class="bl-footer"><div>${origin} ${sourceLink(reviewUrl(after),t('后续决策原件','Subsequent decision record'))}</div>
+        <p>${e(t('最近 '+count+' 场 · 剔除本场后重算','Last '+count+' sessions · Recomputed without this session'))}</p>
+        <table><thead><tr><th>${t('策略','Strategy')}</th><th>${date(record.asOf)}</th><th>${date(after.asOf)}</th><th>${t('剔除本场','Without session')}</th></tr></thead><tbody>
+        ${calibration.rows.map(c=>`<tr><th scope="row">${e(name(c.id))}</th><td>${e(score(c.before.score))}</td><td>${e(score(c.after.score))}</td><td>${e(score(c.withoutSession.score))}</td></tr>`).join('')}</tbody></table>
+        <p>${e(t('本场对 '+name(focus.id)+' 的评分贡献为 '+score(row.sessionContribution)+' 分。剔除本场，下一轮会选择'+name(after.withoutSession)+'。',
+          'This session contributed '+score(row.sessionContribution)+' points to '+name(focus.id)+'. Without it, the next selection would be '+name(after.withoutSession)+'.'))}</p></details>
+        <footer class="bl-footer"><div>${origin} ${memoryLink} ${sourceLink(reviewUrl(after),t('后续决策原件','Subsequent decision record'))}</div>
         <button type="button" class="bp-refresh" data-next-learning>${t('复盘这次决策','Review this decision')} →</button></footer>`;
       mountLearningSequence(learningBody.querySelector('.bl-flow'),learningHost.querySelector('.bl-replay'),signal);
       const dial=learningBody.querySelector('.bl-inspect'),comparison=learningBody.querySelector('.bl-comparison');

@@ -69,3 +69,9 @@ Run `node scripts/brain-proof-forward.mjs --refresh` periodically after UTC midn
 ## Run locally
 
 [Collect data, verify a paper decision, or read a saved memory](../paper-replay/README.md).
+
+## Agent Learning records
+
+For an archived historical replay, request `GET /api/brain/proof?run=<runId>&decision=<decisionId>&learning=1`. The response links to the saved record at `?learningId=<sha256>`. Its source archive, decision, settlement receipt and first subsequent decision that used the receipt can be checked by ID. A replay ending before that decision returns `window_ended`.
+
+The service reproduces the recorded fill and both decisions’ candidate scores from the pinned candles. It then sets the settled session’s sample contribution to zero across all candidates, preserving the 60-session denominator and the subsequent entry signals. Each row reports the score with and without that session. The difference measures its contribution under this scoring rule. The record also reports whether that single change would select a different strategy. Skipped orders have zero realized P&L. Strategy calibration can still evaluate an alternative using the observed market session.

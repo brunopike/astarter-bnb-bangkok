@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {nextLearningSession,linksLearningReceipt} from './brain-proof-view.mjs';
-import {buildBrainProof} from '../deep-brain/brain-proof-engine.mjs';
+import {nextLearningSession,linksLearningReceipt,buildBrainProof} from '../deep-brain/brain-proof-engine.mjs';
 import archive from '../deep-brain/brain-evidence/daily-markets.json' with {type:'json'};
 
 test('the review follows the first recalibration that could have observed the closed session',()=>{
