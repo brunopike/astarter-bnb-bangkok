@@ -1,5 +1,11 @@
 # Public market archive sources
 
+### U.S. stock and exchange-traded product activity
+
+The [SEC MIDAS quarterly files](https://www.sec.gov/data-research/sec-markets-data/market-structure-data-security-exchange) report trading activity for individual securities and exchanges. One observation identifies a trading date, security type, ticker and venue. The public archive retains one copy of an identical observation and excludes observations with missing identifiers or conflicting values for the same key. It records source-file hashes, rejected rows and the date range for each quarter. The SEC publishes these statistics quarterly. The daily updater checks for additions and revisions. [SEC methodology](https://www.sec.gov/featured-topics/market-structure-analytics/market-activity-report-methodology) · [SEC reuse terms](https://www.sec.gov/about/privacy-information#dissemination)
+
+The market browser provides a searchable quarterly ticker index. Each preview is an actual record from the ticker’s latest observed day in that quarter, selected from the venue with the most reported trades on that date. Volumes use the source unit of thousands of shares. The quarterly ZIP contains the full set of observations across dates and venues. The catalog counts underlying observations once. Ticker indexes, preview rows and duplicate copies of the source ZIP add zero to that count. [Full quarterly source files and checksums](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/tradfi-sec-midas)
+
 The TradFi Markets total counts published observations. A daily OHLC or OHLCV row counts once. A wholesale quote counts once for its reporting key. A daily oracle read counts once for its feed, network and UTC date. The archive displays each category separately.
 
 ## Daily market records

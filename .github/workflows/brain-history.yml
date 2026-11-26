@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install archive readers
-        run: python -m pip install --disable-pip-version-check requests cbor2 pyarrow msgpack lz4 openpyxl xlrd==2.0.2
+        run: python -m pip install --disable-pip-version-check requests cbor2 pyarrow duckdb msgpack lz4 openpyxl xlrd==2.0.2
       - name: Update finalized chain history
         id: chains
         continue-on-error: true
@@ -47,6 +47,7 @@ jobs:
         run: |
           node --test brain-tradfi-archive.test.mjs
           python scripts/mirror-brain-history.py --check-local brain-evidence --group tradfi --path-list "$RUNNER_TEMP/market-paths"
+          GH_TOKEN="${{ github.token }}" python scripts/publish-midas-originals.py --root brain-evidence/tradfi
           git add --pathspec-from-file="$RUNNER_TEMP/market-paths" --pathspec-file-nul
       - name: Summarize verified historical coverage
         if: >-
@@ -69,11 +70,12 @@ jobs:
               for label, key in (
                   ("All market observations", "count"),
                   ("Daily price bars", "dailyBars"),
+                  ("SEC security and exchange activity", "exchangeActivityRecords"),
                   ("Wholesale quotes", "wholesaleQuotes"),
                   ("Wholesale variety and grade quotes", "wholesaleRangeQuotes"),
                   ("Weighted market quotes", "weightedMarketQuotes"),
                   ("Oracle observations", "oracleReads"),
-                  ("Other observations", "otherObservations"),
+                  ("Other observations, including exchange activity", "otherObservations"),
               ):
                   lines.append(f"| {label} | {markets[key]:,} |")
           with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as report:

@@ -152,6 +152,15 @@ def referenced(group, indexes):
                 "Unsafe series ID: " + str(key),
             )
             add(key + ".json", item["sha256"])
+            if item.get("statistic") == "exchangeActivity":
+                valid(key in ("sec-midas-equities", "sec-midas-etp") and item.get("quarterIndexes"),
+                      "Missing quarterly security indexes")
+                for chunk in item["quarterIndexes"]:
+                    name = chunk["file"]
+                    valid(re.fullmatch(re.escape(key) + r"-\d{4}q[1-4]\.json", name)
+                          and type(chunk["count"]) is int and 0 < chunk["count"] <= item["count"],
+                          "Invalid quarterly security index")
+                    add(name, chunk["sha256"])
             if item.get("statistic") in ("wholesaleRange", "wholesaleModal"):
                 shards = item["shards"]
                 valid(shards and sum(shard["count"] for shard in shards) == item["count"], "Market shard totals differ: " + key)

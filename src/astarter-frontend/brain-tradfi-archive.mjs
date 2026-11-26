@@ -1,6 +1,6 @@
 import {archiveCounter,followArchive} from './brain-raw-archive.mjs';
 const url='/brain-evidence/tradfi/';
-const groups={stock:['股票','Stocks'],metals:['贵金属','Precious metals'],fx:['外汇','FX'],oil:['原油','Crude oil'],commodities:['大宗商品','Commodities'],index:['指数','Indices'],etf:['ETF','ETFs'],rates:['国债收益率','Treasury yields']};
+const groups={stock:['股票','Stocks'],metals:['贵金属','Precious metals'],fx:['外汇','FX'],oil:['原油','Crude oil'],commodities:['大宗商品','Commodities'],index:['指数','Indices'],etf:['交易所交易产品','Exchange-traded products'],rates:['国债收益率','Treasury yields']};
 groups.commodity=groups.commodities;
 const types={
   close:['收盘价','Closing price'],monthlyMean:['月均价','Monthly average'],reference:['参考汇率','Reference rate'],
@@ -16,6 +16,7 @@ const types={
   bankBidAsk:['银行黄金买卖牌价','Bank gold bid and ask'],
   goldSpotTrade:['黄金现货成交行情','Gold spot trades'],
   settlementReference:['SEC 结算参考价','SEC settlement price reference'],
+  exchangeActivity:['逐证券、逐交易所交易统计','Daily activity by security and exchange'],
   wholesaleRange:['市场批发报价','Reported wholesale market prices'],
   wholesaleModal:['市场加权主流价','Weighted market modal price']
 };
@@ -55,6 +56,8 @@ export function validateSummary(data){
   if(data?.version!==1||!Number.isSafeInteger(data.series)||data.series<1||!Number.isSafeInteger(data.count)||
     data.count<1||!digestPattern.test(data.catalogSha256))throw Error('Invalid market summary');
   const summary={...data,wholesaleQuotes:data.wholesaleQuotes??0};
+  if(data.exchangeActivityRecords!==undefined&&(!Number.isSafeInteger(data.exchangeActivityRecords)||
+    data.exchangeActivityRecords<0||data.exchangeActivityRecords>data.otherObservations))throw Error('Invalid exchange activity total');
   if(!Object.keys(countLabels).every(key=>Number.isSafeInteger(summary[key])&&summary[key]>=0)||
     Object.keys(countLabels).reduce((total,key)=>total+summary[key],0)!==summary.count)throw Error('Unbalanced market summary');
   if(data.wholesaleRangeQuotes!==undefined||data.weightedMarketQuotes!==undefined){
@@ -217,7 +220,48 @@ export function linkedTaiwanBars(stock,closeRows,proof){
 }
 export async function readSeries(s,signal){
   const data=await checkedFile(s.id,s.sha256,signal);
+  if(s.statistic==='exchangeActivity')return validateMarketQuarters(s,data);
   return wholesale(s)?validateShards(s,data):validateRows(s,data);
+}
+
+export function validateMarketQuarters(s,data){
+  const quarters=data?.quarters;
+  if(data?.id!==s.id||!Array.isArray(quarters)||!quarters.length||s.quarterIndexes?.length!==quarters.length)
+    throw Error('Missing exchange activity quarters');
+  let last='',count=0;
+  for(const [i,q] of quarters.entries()){
+    const year=q.quarter?.slice(0,4),quarter=Number(q.quarter?.at(-1));
+    const inQuarter=day=>isoDate(day)&&day.startsWith(year)&&Math.ceil(Number(day.slice(5,7))/3)===quarter;
+    const file=s.quarterIndexes[i];
+    const audits=['count','rawRows','missingKeyRows','identicalDuplicateRows','conflictingRows'];
+    if(!Array.isArray(q.monthly)||q.monthly.length!==3||!audits.every(key=>Number.isSafeInteger(q[key])&&q[key]>=0&&
+      q.monthly.reduce((total,m)=>total+m[key],0)===q[key])||
+      q.rawRows!==q.count+q.missingKeyRows+q.identicalDuplicateRows+q.conflictingRows||
+      q.monthly.some((m,j)=>m.month!==year+'-'+String((quarter-1)*3+j+1).padStart(2,'0')))throw Error('Invalid SEC monthly totals');
+    if(!/^\d{4}Q[1-4]$/.test(q.quarter)||q.quarter<=last||!inQuarter(q.start)||!inQuarter(q.end)||q.start>q.end||
+      !Number.isSafeInteger(q.count)||!Number.isSafeInteger(q.tickerCount)||q.tickerCount<1||q.count<q.tickerCount||
+      !digestPattern.test(q.sha256)||!digestPattern.test(q.tickerSha256)||q.tickerFile!==s.id+'-'+q.quarter.toLowerCase()+'.json'||
+      file.file!==q.tickerFile||file.sha256!==q.tickerSha256||file.count!==q.tickerCount||
+      !/^https:\/\/www\.sec\.gov\/files\/[^?#]+\.zip$/i.test(q.url))throw Error('Invalid exchange activity quarter');
+    count+=q.count;last=q.quarter;
+  }
+  if(quarters[0].start!==s.start||quarters.at(-1).end!==s.end||count!==s.count)throw Error('Exchange activity totals differ');
+  return quarters;
+}
+
+export function validateMarketTickers(s,quarter,data){
+  if(data?.id!==s.id||data.quarter!==quarter.quarter||!Array.isArray(data.rows)||data.rows.length!==quarter.tickerCount)
+    throw Error('Invalid quarterly ticker index');
+  const seen=new Set();
+  for(const row of data.rows){
+    if(!Array.isArray(row)||row.length!==8)throw Error('Invalid exchange activity row');
+    const [day,ticker,venue,...metrics]=row;
+    if(!isoDate(day)||day<quarter.start||day>quarter.end||typeof ticker!=='string'||!ticker||seen.has(ticker)||
+      typeof venue!=='string'||!venue||metrics.some(n=>n!==null&&(!Number.isFinite(n)||n<0))||
+      metrics.slice(0,4).some(n=>n!==null&&!Number.isSafeInteger(n)))throw Error('Invalid exchange activity observation');
+    seen.add(ticker);
+  }
+  return data.rows;
 }
 export function mountTradfiArchive(root,en){
   const doc=root.ownerDocument,t=(zh,eng)=>en?eng:zh;
@@ -245,13 +289,14 @@ export function mountTradfiArchive(root,en){
     <div class="br-raw-filters br-market-choices">
       <label>${t('数据序列','Series')}<select data-instrument></select></label>
       <label data-year-wrap>${t('年份','Year')}<select data-year></select></label>
-      <label data-month-wrap hidden>${t('报价月份','Quote month')}<select data-month></select></label>
+      <label data-month-wrap hidden><span data-period-label></span><select data-month></select></label>
     </div>
     <div class="br-market-match"><small data-match aria-live="polite"></small> <button type="button" data-more-series hidden>${t('显示更多序列','Show more series')}</button></div>
     <div class="br-raw-filters br-market-places" data-places hidden>
       <label>${t('查找市场','Find a market')}<input type="search" data-place-search autocomplete="off" placeholder="${t('邦、地区或市场','State, district or market')}"></label>
       <label>${t('报价市场','Reporting market')}<select data-market></select></label>
     </div>
+    <div class="br-raw-filters" data-equity-search hidden><label>${t('季度内查代码','Find ticker in quarter')}<input type="search" data-equity-query placeholder="AAPL, SPY…" autocomplete="off"></label></div>
     <div class="br-raw-provenance" data-provenance></div><div class="br-raw-status" role="status"><span data-status></span> <button type="button" data-retry hidden>${t('重试','Retry')}</button></div>
     <div class="br-raw-scroll"><table><thead><tr></tr></thead><tbody></tbody></table></div>
     <footer class="br-raw-pages" hidden><button type="button" data-prev aria-label="${t('上一页','Previous page')}">←</button><span data-page></span><button type="button" data-next aria-label="${t('下一页','Next page')}">→</button></footer>`;
@@ -295,8 +340,10 @@ export function mountTradfiArchive(root,en){
       number.format(s.count)+' historical observations across '+number.format(s.series)+' series');
     open.setAttribute('aria-label',open.title+' · '+t('打开传统市场','Open TradFi markets'));
     const counts=q('[data-counts]');counts.hidden=false;
-    counts.replaceChildren(...Object.entries(countLabels).map(([key,label])=>{
-      const cell=el('div');cell.append(el('dt',t(...label)),el('dd',number.format(s[key])));return cell;
+    const metrics=s.exchangeActivityRecords?{exchangeActivityRecords:['交易所交易统计','Exchange activity'],...countLabels}:countLabels;
+    counts.replaceChildren(...Object.entries(metrics).map(([key,label])=>{
+      const amount=key==='otherObservations'?s[key]-(s.exchangeActivityRecords??0):s[key];
+      const cell=el('div');cell.append(el('dt',t(...label)),el('dd',number.format(amount)));return cell;
     }));
     showCoverage(s.perGroup);
     const detail=q('[data-wholesale-count]');
@@ -346,12 +393,41 @@ export function mountTradfiArchive(root,en){
   }
   const clear=()=>{rows=[];linkedBars=new Map();shards=[];monthData=null;filteredQuotes=[];tbody.replaceChildren();q('thead tr').replaceChildren();paging.hidden=true;
     year.replaceChildren();month.replaceChildren();market.replaceChildren();info.replaceChildren();q('[data-places]').hidden=true;
+    q('[data-equity-search]').hidden=true;q('[data-equity-query]').value='';
     q('[data-year-wrap]').hidden=false;q('[data-month-wrap]').hidden=true;};
   const remember=(key,value)=>{if(cache.size>=8&&!cache.has(key))cache.delete(cache.keys().next().value);cache.set(key,value);return value;};
   function pages(total){
     const count=Math.ceil(total/pageSize);page=Math.max(0,Math.min(page,count-1));paging.hidden=count===0;
     q('[data-page]').textContent=count?(page+1)+' / '+number.format(count):'';
     q('[data-prev]').disabled=page===0;q('[data-next]').disabled=page+1>=count;q('.br-raw-scroll').scrollTop=0;
+  }
+  function renderActivity(){
+    const quarter=shards.find(item=>item.quarter===month.value);
+    if(!quarter||!rows.length)return;
+    const query=q('[data-equity-query]').value.trim().toUpperCase();
+    const relevance=row=>row[1].toUpperCase()===query?0:row[1].toUpperCase().startsWith(query)?1:2;
+    const matches=query?rows.filter(row=>row[1].toUpperCase().includes(query)).sort((a,b)=>relevance(a)-relevance(b)):rows;
+    const headings=[t('交易日','Trade date'),t('代码','Ticker'),t('交易所','Exchange'),t('成交笔数','Trades'),t('零股成交笔数','Odd-lot trades'),t('成交量（千股）','Volume (thousand shares)')];
+    q('thead tr').replaceChildren(...headings.map(value=>el('th',value)));
+    pages(matches.length);
+    tbody.replaceChildren(...matches.slice(page*pageSize,(page+1)*pageSize).map(([day,ticker,venue,trades,,oddLots,,volume])=>{
+      const tr=el('tr');for(const value of [day,ticker,venue,trades,oddLots,volume])tr.append(el('td',typeof value==='number'?number.format(value):value??'—'));
+      return tr;
+    }));
+    const description=t('逐代码预览：取该季最后一个有观测的交易日，在当日有记录的交易所中选成交笔数最高的一家。','Ticker preview uses the last observed session in the quarter and its venue with the most trades.');
+    const name='sec-midas-'+quarter.quarter.toLowerCase()+'-'+quarter.sha256.slice(0,16)+'.zip';
+    status.replaceChildren(el('span',number.format(quarter.count)+t(' 条季度原始观测。',' quarterly observations. ')+description+' '+number.format(matches.length)+t(' 个匹配代码。',' matching tickers.')),
+      doc.createTextNode(' '),link(t('完整季度原表','Full quarter ZIP')+' ↗',quarter.url),
+      doc.createTextNode(' · '),link('GitHub ↗','https://github.com/brunopike/astarter-bnb-bangkok/releases/download/tradfi-sec-midas/'+name));
+  }
+  async function getActivityQuarter(s,signal,id){
+    const quarter=shards.find(item=>item.quarter===month.value);
+    if(!quarter)throw Error('Quarter not indexed');
+    rows=[];paging.hidden=true;tbody.replaceChildren();status.textContent=t('正在读取证券索引…','Loading the ticker index…');
+    const values=cache.get(quarter.tickerSha256)??validateMarketTickers(s,quarter,
+      await checkedFile(quarter.tickerFile.slice(0,-5),quarter.tickerSha256,signal));
+    if(signal.aborted||id!==revision)return;
+    rows=remember(quarter.tickerSha256,values);page=0;renderActivity();
   }
   function renderWholesale(){
     const s=chosen();if(!s||!monthData)return;
@@ -379,6 +455,7 @@ export function mountTradfiArchive(root,en){
     page=0;renderWholesale();
   }
   function render(){
+    if(chosen()?.statistic==='exchangeActivity'){renderActivity();return;}
     const s=chosen();if(s&&wholesale(s)){renderWholesale();return;}if(!s||!rows.length)return;
     const yearRows=rows.filter(r=>r[0].startsWith(year.value)).toReversed(),pages=Math.ceil(yearRows.length/pageSize);
     page=Math.max(0,Math.min(page,pages-1));const oracle=s.statistic==='oracle',holding=s.statistic==='reportedValuePerShare',
@@ -558,7 +635,14 @@ export function mountTradfiArchive(root,en){
       describe(s);
       const data=cache.get(s.sha256)??await readSeries(s,signal);if(id!==revision||signal.aborted)return;
       remember(s.sha256,data);
-      if(wholesale(s)){
+      if(s.statistic==='exchangeActivity'){
+        shards=data;q('[data-year-wrap]').hidden=true;q('[data-month-wrap]').hidden=false;
+        q('[data-period-label]').textContent=t('统计季度','Reporting quarter');q('[data-equity-search]').hidden=false;
+        month.replaceChildren(...[...shards].reverse().map(item=>option(item.quarter,item.quarter.slice(0,4)+' '+item.quarter.slice(4))));
+        if(shards.some(item=>item.quarter===priorMonth))month.value=priorMonth;
+        await getActivityQuarter(s,signal,id);
+      }else if(wholesale(s)){
+        q('[data-period-label]').textContent=t('报价月份','Quote month');
         shards=data;q('[data-year-wrap]').hidden=true;q('[data-month-wrap]').hidden=false;
         month.replaceChildren(...[...shards].reverse().map(sh=>option(sh.month,sh.month)));
         if(shards.some(sh=>sh.month===priorMonth))month.value=priorMonth;
@@ -591,7 +675,10 @@ export function mountTradfiArchive(root,en){
   }
   async function changeMonth(){
     controller?.abort();controller=new AbortController();const signal=controller.signal,id=++revision;
-    try{await getMonth(chosen(),signal,id);}catch{failure(signal);}
+    try{
+      if(chosen()?.statistic==='exchangeActivity')await getActivityQuarter(chosen(),signal,id);
+      else await getMonth(chosen(),signal,id);
+    }catch{failure(signal);}
   }
   const refreshFilters=()=>{optionLimit=resultLimit;clearTimeout(searchTimer);searchTimer=setTimeout(()=>load(false,instrument.value),150);};
   open.onclick=()=>{dialog.showModal();load();};
@@ -602,11 +689,13 @@ export function mountTradfiArchive(root,en){
     if(group.value&&doc.defaultView.matchMedia('(max-width:660px)').matches){
       coverage.open=false;coverage.querySelector('summary').focus({preventScroll:true});
     }
-    load();
+    const activity=series.find(s=>s.group===group.value&&s.statistic==='exchangeActivity');
+    load(false,activity?.id??instrument.value);
   };
   search.oninput=refreshFilters;group.onchange=()=>{optionLimit=resultLimit;load();};
   q('[data-more-series]').onclick=()=>{optionLimit+=resultLimit;selectMatches(instrument.value);};
   instrument.onchange=()=>load();year.onchange=()=>{page=0;render();};month.onchange=changeMonth;
+  q('[data-equity-query]').oninput=()=>{page=0;renderActivity();};
   placeSearch.oninput=()=>{clearTimeout(placeTimer);placeTimer=setTimeout(filterPlaces,120);};market.onchange=filterPlaces;
   retry.onclick=()=>load(true);q('[data-prev]').onclick=()=>{page--;render();};q('[data-next]').onclick=()=>{page++;render();};
   q('[data-close]').onclick=()=>dialog.close();

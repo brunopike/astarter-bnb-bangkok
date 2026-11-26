@@ -17,6 +17,7 @@ import brain_tradfi_settlements
 import brain_tradfi_stocks_tw
 import brain_tradfi_mandi_live
 import brain_tradfi_mandi_recent
+import brain_tradfi_midas
 import brain_tradfi_tw
 import brain_tradfi_trades
 from brain_tradfi_us import issuer_series
@@ -56,7 +57,7 @@ if __name__ == '__main__':
               brain_tradfi_trades.build,brain_tradfi_daily.build,brain_tradfi_futures.build,
               brain_tradfi_stocks_tw.build,brain_tradfi_settlements.build,brain_tradfi_energy.build,
               brain_tradfi_energy.build_gas,brain_tradfi_energy.build_gold,
-              brain_tradfi_mandi_live.build,brain_tradfi_mandi_recent.build,brain_tradfi_oracles.build)
+              brain_tradfi_mandi_live.build,brain_tradfi_mandi_recent.build,brain_tradfi_midas.build,brain_tradfi_oracles.build)
     local_sources={brain_tradfi_tw.build:'Asia/Taipei',brain_tradfi_futures.build:'Asia/Taipei',brain_tradfi_stocks_tw.build:'Asia/Taipei',
                    brain_tradfi_energy.build_gold:'Asia/Taipei',brain_tradfi_mandi_live.build:'Asia/Kolkata',
                    brain_tradfi_mandi_recent.build:'Asia/Kolkata'}

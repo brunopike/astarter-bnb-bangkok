@@ -254,7 +254,7 @@ astarter-brain .br-market-attribution[open] > :not(summary) {display:block;margi
 
 astarter-brain #brain-tradfi-dialog {width:min(760px,calc(100vw - 24px))}
 astarter-brain #brain-tradfi-dialog [hidden] {display:none!important}
-astarter-brain .br-market-counts {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0;padding:12px 18px;background:var(--b-bg)}
+astarter-brain .br-market-counts {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,100px),1fr));gap:10px;margin:0;padding:12px 18px;background:var(--b-bg)}
 astarter-brain .br-market-count-detail {margin:0;padding:0 18px 8px;color:var(--b-muted);font-size:11px;line-height:1.4}
 astarter-brain .br-market-counts dt {color:var(--b-muted);font-size:11px}
 astarter-brain .br-market-counts dd {margin:2px 0 0;font-size:16px;font-weight:600}
@@ -270,6 +270,8 @@ astarter-brain #brain-tradfi-dialog .br-raw-pages {margin-top:auto}
   astarter-brain .br-market-counts dd {font-size:13px}
   astarter-brain .br-market-match {margin-inline:10px}
   astarter-brain #brain-tradfi-dialog .br-raw-filters {grid-template-columns:minmax(0,1.3fr) minmax(92px,.7fr)}
+  astarter-brain #brain-tradfi-dialog .br-market-choices:has([data-month-wrap]:not([hidden])) {grid-template-columns:minmax(0,1fr) 115px}
+  astarter-brain #brain-tradfi-dialog [data-equity-search] label {grid-column:1/-1}
 }
 astarter-brain .br-market-match small {font-size:inherit}
 astarter-brain .br-market-match button {padding:4px 3px;min-height:24px;border:0;background:none;color:var(--b-ink);font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}

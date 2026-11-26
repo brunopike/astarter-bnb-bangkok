@@ -2,13 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-import {validateSeries,validateRows,validateSummary,validateShards,validateWholesale,matchingSeries,linkedTaiwanBars,marketGroupCoverage,relatedSeries,settlementReleaseUrl} from './brain-tradfi-archive.mjs';
+import {validateSeries,validateRows,validateSummary,validateShards,validateWholesale,validateMarketQuarters,validateMarketTickers,matchingSeries,linkedTaiwanBars,marketGroupCoverage,relatedSeries,settlementReleaseUrl} from './brain-tradfi-archive.mjs';
 const read=name=>readFileSync(new URL('./brain-evidence/tradfi/'+name+'.json',import.meta.url));
 const all=validateSeries(JSON.parse(read('catalog')));
 test('published market observations match instrument, units, dates, and checksum',()=>{
-  assert.deepEqual(new Set(all.filter(s=>s.statistic!=='oracle').map(s=>s.group==='commodity'?'commodities':s.group)),new Set(['stock','index','metals','fx','oil','commodities','rates']));
+  assert.deepEqual(new Set(all.map(s=>s.group==='commodity'?'commodities':s.group)),new Set(['stock','index','metals','fx','oil','commodities','rates','etf']));
   for(const s of all){
     const bytes=read(s.id),data=JSON.parse(bytes),{id,rows}=data;
+    if(s.statistic==='exchangeActivity'){
+      assert.equal(createHash('sha256').update(bytes).digest('hex'),s.sha256);
+      for(const quarter of validateMarketQuarters(s,data)){
+        const index=read(quarter.tickerFile.slice(0,-5));
+        assert.equal(createHash('sha256').update(index).digest('hex'),quarter.tickerSha256);
+        validateMarketTickers(s,quarter,JSON.parse(index));
+      }
+      continue;
+    }
     if(['wholesaleRange','wholesaleModal'].includes(s.statistic)){
       assert.equal(createHash('sha256').update(bytes).digest('hex'),s.sha256);
       for(const shard of validateShards(s,data)){
@@ -73,10 +82,25 @@ test('published market observations match instrument, units, dates, and checksum
 });
 test('every requested asset class includes observations in every calendar year from 2016',()=>{
   for(const group of ['stock','index','metals','fx','oil','commodities']){
-    const years=new Set(all.filter(s=>s.group===group&&s.statistic!=='oracle'&&!['wholesaleRange','wholesaleModal'].includes(s.statistic)).flatMap(s=>JSON.parse(read(s.id)).rows.map(r=>Number(r[0].slice(0,4)))));
+    const years=new Set(all.filter(s=>s.group===group&&s.statistic!=='oracle'&&!['wholesaleRange','wholesaleModal','exchangeActivity'].includes(s.statistic)).flatMap(s=>JSON.parse(read(s.id)).rows.map(r=>Number(r[0].slice(0,4)))));
     assert.ok(years.size>=10,group);
     for(let year=2016;year<=Math.max(...years);year++)assert.ok(years.has(year),group+' '+year);
   }
+});
+test('SEC activity counts original venue records exactly once across the two security classes',()=>{
+  const funds=all.find(s=>s.id==='sec-midas-etp'),stocks=all.find(s=>s.id==='sec-midas-equities');
+  assert.ok(stocks&&funds);
+  const security=JSON.parse(read(stocks.id)),products=JSON.parse(read(funds.id));
+  for(const [i,q] of security.quarters.entries()){
+    const other=products.quarters[i];
+    assert.deepEqual([q.quarter,q.url,q.sha256,q.size],[other.quarter,other.url,other.sha256,other.size]);
+    assert.ok(q.tickerCount<q.count && other.tickerCount<other.count);
+    const observations=JSON.parse(read(q.tickerFile.slice(0,-5))).rows;
+    const byTicker=new Map(observations.map(row=>[row[1],row]));
+    for(const sample of q.sample)assert.deepEqual(sample,byTicker.get(sample[1]));
+  }
+  const corrupt=structuredClone(security);corrupt.quarters[0].rawRows++;
+  assert.throws(()=>validateMarketQuarters(stocks,corrupt),/monthly totals/);
 });
 test('related oracle pricing keeps futures, reference rates, stocks and ETFs identifiable',()=>{
   const by=id=>all.find(s=>s.id===id);
@@ -118,6 +142,7 @@ test('homepage totals reconcile with independently categorized actual observatio
     }else assert.equal(s.linkedDailyBars??0,0);
   }
   for(const [key,count] of Object.entries(groups))assert.equal(sum[key],count);
+  assert.equal(sum.exchangeActivityRecords??0,all.filter(s=>s.statistic==='exchangeActivity').reduce((n,s)=>n+s.count,0));
   if(sum.wholesaleRangeQuotes!==undefined){
     const countType=type=>all.reduce((n,s)=>n+(s.statistic===type?s.count:0),0);
     assert.equal(sum.wholesaleRangeQuotes,countType('wholesaleRange'));

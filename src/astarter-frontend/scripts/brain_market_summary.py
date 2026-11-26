@@ -79,6 +79,7 @@ def summarize(catalog_bytes):
     by_kind = Counter()
     ids = set()
     wholesale = Counter()
+    exchange_activity = 0
     groups = {}
     for item in series:
         key = item["id"]
@@ -97,6 +98,8 @@ def summarize(catalog_bytes):
             kind = "oracleReads"
         else:
             kind = "otherObservations"
+        if item.get("statistic") == "exchangeActivity":
+            exchange_activity += count
         shared = item.get("linkedDailyBars", 0)
         linked_close = (item.get("statistic") == "close" and item.get("group") == "stock"
                         and TAIWAN_CLOSE_IDS.get(item.get("ticker")) == key)
@@ -123,6 +126,7 @@ def summarize(catalog_bytes):
         "wholesaleQuotes": by_kind["wholesaleQuotes"],
         "oracleReads": by_kind["oracleReads"],
         "otherObservations": by_kind["otherObservations"],
+        **({"exchangeActivityRecords": exchange_activity} if exchange_activity else {}),
         "wholesaleRangeQuotes": wholesale["wholesaleRange"],
         "weightedMarketQuotes": wholesale["wholesaleModal"],
         "perGroup": groups,
