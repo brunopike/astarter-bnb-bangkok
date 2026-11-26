@@ -1,7 +1,6 @@
 import { tokenIcon } from './brand-icons.mjs';
 import { liveSignalRow, signalClosePrice } from './live-signal-view.mjs';
 import { sparkline, sparklinePoints } from './product-charts.mjs';
-import { uiGlyph } from './product-composition.mjs';
 import { escapeUI as esc } from './product-experience.mjs';
 
 const markets = new Set(['BTC', 'ETH', 'SOL']);
@@ -64,13 +63,20 @@ export function strategyForSignal(row, holding, lang = 'zh', now = Date.now()) {
   };
 }
 
+export function canSubmitLiteOrder(row, plan, balance, amount, blockedId, now = Date.now()) {
+  if (!row || !plan?.actionable || row.id !== plan.signalId || row.id === blockedId ||
+      row.validUntil <= now || !Number.isFinite(balance)) return false;
+  if (plan.side === 'sell') return true;
+  return plan.side === 'buy' && Number.isFinite(amount) && amount >= 10 && amount <= Math.min(balance, 1000);
+}
+
 export function liteOrderLabel(side, symbol, amount, lang) {
   if (side === 'sell') return lang === 'en' ? 'Sell all ' + symbol : '卖出全部 ' + symbol;
   const value = amount == null ? symbol : amount + ' USDT';
   return (lang === 'en' ? 'Buy ' : '买入 ') + value;
 }
 
-export function liteStrategyCard(row, { strategy, selected = false, busy = false, stale = false, quickOrder, lang = 'zh' }) {
+export function liteStrategyCard(row, { strategy, stale = false, lang = 'zh' }) {
   const o = row.live;
   const en = lang === 'en';
   const state = stale ? (en ? 'Previous close' : '上次收盘') : {
@@ -91,14 +97,6 @@ export function liteStrategyCard(row, { strategy, selected = false, busy = false
       ? (en ? 'No position to close on this downward signal.' : '当前无该币持仓，本次下行信号无需平仓。')
       : (en ? 'Wait for all three readings to turn down before closing a held position.' : '待三项指标均转弱，再确认是否卖出已有持仓。')
   }[strategy.side];
-  const execute = strategy.actionable && !stale;
-  const action = stale ? (en ? 'Awaiting close' : '等待新收盘') : execute
-    ? liteOrderLabel(strategy.side, o.symbol, quickOrder?.amount, lang)
-    : (en ? 'View signal' : '查看信号');
-  const unavailable = !quickOrder?.ready || quickOrder.blockedId === o.id ||
-    (strategy.side === 'buy' && (quickOrder.amount == null || quickOrder.amount > quickOrder.balance));
-  const actionDisabled = busy || stale || (execute && unavailable);
-  const evidence = en ? 'Evidence' : '查看依据';
   const practice = o.mode === 'practice';
   const source = practice ? (en ? 'Local practice' : '本机演练') : o.source;
   const provider = !practice && o.source.startsWith('Binance') && markets.has(o.symbol)
@@ -110,21 +108,17 @@ export function liteStrategyCard(row, { strategy, selected = false, busy = false
   const series = o.priceSeries;
   const chart = Array.isArray(series) && series.length >= 2 && series.at(-1) === o.price && series.every(n => Number.isFinite(n) && n > 0)
     ? `<figure class="sig-live-chart" aria-label="${en ? 'Minute closing prices' : '分钟收盘走势'}"><div aria-hidden="true">${sparkline(series, { width: 208, height: 45, color: 'var(--chart-accent)', fill: false })}</div></figure>` : '';
-  const disabled = busy || stale ? ' disabled' : '';
-  return `<article class="sig-event sig-live-observation lite-plan-card${selected ? ' selected' : ''}" data-freshness="${stale ? 'previous' : 'current'}" data-side="${esc(strategy.side)}" data-live-direction="${esc(o.direction)}" data-lite-asset="${esc(o.symbol)}" data-lite-id="${esc(o.id)}" aria-current="${selected}">
+  return `<article class="sig-event sig-live-observation lite-plan-card" data-freshness="${stale ? 'previous' : 'current'}" data-side="${strategy.side}" data-live-direction="${esc(o.direction)}" data-lite-asset="${esc(o.symbol)}" data-lite-id="${esc(o.id)}">
     <div class="lite-plan-body">
-      <div class="lite-plan-state"><span>${state}</span>${execute ? '<small class="lite-plan-account">' + (en ? 'Practice account' : '练习账户') + '</small>' : ''}${selected ? '<span class="sig-current-marker" aria-hidden="true">✓</span>' : ''}</div>
+      <div class="lite-plan-pairline"><span class="lite-plan-pair">${tokenIcon(o.symbol, { size: 28, className: 'sig-coin' })}${esc(o.market)}</span><span class="lite-plan-state">${state}</span></div>
       <h3 class="lite-plan-title">${esc(strategy.label)}</h3>
-      <div class="lite-plan-pairline"><span class="lite-plan-pair">${tokenIcon(o.symbol, { size: 24, className: 'sig-coin' })}${esc(o.market)}</span>
-        <span class="lite-plan-period">${en ? '1m candles' : '1 分钟 K 线'}</span></div>
-      <div class="lite-plan-quote"><div class="sig-stats-quote"><span>${en ? 'Closing price' : '收盘价'}</span>
-        <strong class="dot-number">${esc(signalClosePrice(o.price))} <small>${esc(o.unit)}</small></strong></div>${chart}</div>
-      <dl class="lite-plan-readings"><div><dt>${en ? '5-bar change' : '5 根涨跌幅'}</dt><dd>${esc(momentum)}</dd></div><div><dt>RSI 14</dt><dd>${esc(reading.format(o.rsi14))}</dd></div></dl>
-      <dl class="lite-plan-rules"><div><dt>${en ? 'Entry' : '入场'}</dt><dd>${enter}</dd></div><div><dt>${en ? 'Exit' : '退出'}</dt><dd>${exit}</dd></div></dl>
+      <div class="lite-plan-market"><div class="lite-plan-quote"><div class="sig-stats-quote"><span>${en ? 'Closing price' : '收盘价'}</span><strong class="dot-number">${esc(signalClosePrice(o.price))} <small>${esc(o.unit)}</small></strong></div>
+        <dl class="lite-plan-readings"><div><dt>${en ? '5-bar change' : '5 根涨跌幅'}</dt><dd>${esc(momentum)}</dd></div><div><dt>RSI 14</dt><dd>${esc(reading.format(o.rsi14))}</dd></div></dl></div>
+      ${chart}</div>
       <div class="lite-card-source"><span>${provider}</span><time title="${iso}" datetime="${iso}">${iso.slice(11, 16)} UTC</time></div>
+      <details class="lite-plan-rules-box"><summary>${en ? 'Entry and exit rules' : '入场与退出条件'}</summary>
+        <dl class="lite-plan-rules"><div><dt>${en ? 'Entry' : '入场'}</dt><dd>${enter}</dd></div><div><dt>${en ? 'Exit' : '退出'}</dt><dd>${exit}</dd></div></dl></details>
     </div>
-    <footer class="lite-plan-actions"><button type="button" data-ls="evidence" aria-label="${esc(o.symbol + ' · ' + evidence)}"${disabled}>${evidence}</button>
-      <button type="button" data-ls="${execute ? 'execute' : 'select'}"${execute ? ' data-side="' + strategy.side + '" data-amount="' + esc(quickOrder?.amount) + '"' : ''} aria-controls="lite-controls" aria-label="${esc(o.symbol + ' · ' + action + (execute ? en ? ' · Practice account' : ' · 练习账户' : ''))}"${actionDisabled ? ' disabled' : ''}>${esc(action)} ${uiGlyph('arrow')}</button></footer>
   </article>`;
 }
 
@@ -132,6 +126,7 @@ function mountCloseInspector(card, observation, lang, previousTime) {
   const chart = card.querySelector('.sig-live-chart');
   if (!chart) return;
   const svg = chart.querySelector('svg');
+  svg.setAttribute('preserveAspectRatio', 'none');
   const { width, height } = svg.viewBox.baseVal;
   const points = sparklinePoints(observation.priceSeries, width, height);
   const last = points.length - 1;
@@ -216,129 +211,31 @@ function mountCloseInspector(card, observation, lang, previousTime) {
   });
 }
 
-export function mountStrategyCards(host, { lang = 'zh', onSelect, onExecute, onEvidence, onRendered } = {}) {
-  host.classList.add('sig-tracking', 'lite-strategy-deck');
-  let rows = [];
-  let byId = new Map();
-  let settings = {};
-  const rendered = new Map();
-  const doc = host.ownerDocument;
-  const reducedMotion = doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)');
-  const motionAllowed = () => !doc.hidden && doc.documentElement.dataset.reducedMotion !== 'true' && !reducedMotion.matches;
-  const template = doc.createElement('template');
-  let expiryTimer;
-  let mounted = true;
-
-  function setRows(nextRows, nextSettings = {}) {
-    if (!mounted) return;
-    clearTimeout(expiryTimer);
-    rows = nextRows;
-    settings = nextSettings;
-    const { selectedId, holdings = [], busy = false } = settings;
-    const now = Date.now();
-    const visible = new Set();
-    const focused = host.contains(doc.activeElement) && doc.activeElement.closest('[data-ls]');
-    const focusedCard = focused && focused.closest('article');
-    const motion = motionAllowed();
-    byId = new Map();
-    for (const observation of rows) {
-      const key = observation.mode + '/' + observation.symbol;
-      const previous = rendered.get(key);
-      const stale = observation.validUntil <= now;
-      if (stale && (previous?.id !== observation.id || now >= cardDisplayUntil(observation))) continue;
-      const holding = holdings.find((position) => position.symbol === observation?.symbol);
-      const strategy = stale ? previous.strategy : strategyForSignal(observation, holding, lang, now);
-      if (!strategy || byId.has(observation.id)) continue;
-      const row = liveSignalRow(observation);
-      if (!row) continue;
-      if (visible.has(key)) continue;
-      const index = visible.size;
-      visible.add(key);
-      byId.set(observation.id, observation);
-      const selected = observation.id === selectedId;
-      const markup = liteStrategyCard(row, { selected, strategy, busy, stale, lang, quickOrder: settings.quickOrder });
-      let card = previous?.card;
-      if (markup !== previous?.markup) {
-        template.innerHTML = markup;
-        const next = template.content.firstElementChild;
-        if (card) {
-          for (const attribute of next.attributes) card.setAttribute(attribute.name, attribute.value);
-          card.replaceChildren(...next.childNodes);
-        } else {
-          card = next;
-        }
-        const pointTime = focusedCard === card && focused.dataset.ls === 'chart' ? Number(focused.dataset.closeAt) : null;
-        mountCloseInspector(card, observation, lang, pointTime);
-        rendered.set(key, { card, markup, strategy, id: observation.id, closedAt: observation.closedAt, selected });
-      }
-      if (host.children[index] !== card) host.insertBefore(card, host.children[index] || null);
-      if (motion && (!previous || observation.closedAt > previous.closedAt)) {
-        card.animate([{ opacity: .55, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
-          { duration: 320, delay: index * 35, easing: 'ease-out', fill: 'backwards' });
-      } else if (motion && selected && !previous.selected) {
-        card.querySelector('.sig-current-marker')?.animate([{ transform: 'scale(.7)' }, { transform: 'scale(1)' }],
-          { duration: 180, easing: 'ease-out' });
+export function mountStrategyCard(host, lang) {
+  let lastMarkup = '';
+  let lastId = '';
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  return function show(observation, strategy) {
+    const row = observation && strategy && liveSignalRow(observation);
+    const markup = row ? liteStrategyCard(row, { strategy, lang, stale: observation.validUntil <= Date.now() }) : '';
+    if (lastMarkup === markup) return;
+    const oldCard = host.firstElementChild;
+    const oldRules = oldCard?.querySelector('details');
+    const keepRules = oldRules?.open && oldCard.dataset.liteAsset === observation?.symbol;
+    const focus = host.ownerDocument.activeElement;
+    const restoreFocus = focus?.matches('.sig-live-chart, .lite-plan-rules-box summary') && host.contains(focus);
+    const pointTime = focus?.matches('.sig-live-chart') ? Number(focus.dataset.closeAt) : null;
+    lastMarkup = markup;
+    host.innerHTML = markup;
+    const card = host.firstElementChild;
+    if (card) {
+      if (keepRules) card.querySelector('details').open = true;
+      mountCloseInspector(card, observation, lang, pointTime);
+      if (restoreFocus) card.querySelector(focus.tagName === 'SUMMARY' ? 'summary' : '.sig-live-chart')?.focus({ preventScroll: true });
+      if (lastId !== observation.id && !host.ownerDocument.hidden && !reducedMotion.matches && document.documentElement.dataset.reducedMotion !== 'true') {
+        card.animate([{ opacity: .65, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'ease-out' });
       }
     }
-    for (const [key, { card }] of rendered) {
-      if (!visible.has(key)) {
-        card.remove();
-        rendered.delete(key);
-      }
-    }
-    host.hidden = !visible.size;
-    onRendered?.(Array.from(byId.values(), (row) => row.symbol));
-    if (focusedCard?.isConnected && doc.activeElement !== focused) {
-      focusedCard.querySelector('[data-ls="' + focused.dataset.ls + '"]:not(:disabled)')?.focus({ preventScroll: true });
-    }
-    if (byId.size) {
-      const nextExpiry = Math.min(...Array.from(byId.values(), (row) =>
-        row.validUntil > now ? row.validUntil : cardDisplayUntil(row)
-      ));
-      expiryTimer = setTimeout(() => setRows(rows, settings), Math.max(0, nextExpiry - Date.now()));
-    }
-  }
-
-  function click(event) {
-    const card = event.target.closest('article[data-lite-id]');
-    if (!card || !host.contains(card) || event.target.closest('a')) return;
-    if (settings.busy || event.defaultPrevented) return;
-    const selection = host.ownerDocument.getSelection();
-    if (!event.target.closest('button') && !selection?.isCollapsed && card.contains(selection?.anchorNode)) return;
-    const row = byId.get(card.dataset.liteId);
-    if (!row || row.validUntil <= Date.now()) {
-      setRows(rows, settings);
-      return;
-    }
-    const executeButton = event.target.closest('[data-ls="execute"]');
-    if (executeButton) {
-      if (!executeButton.disabled && event.detail <= 1) {
-        onExecute?.(row, executeButton.dataset.side, Number(executeButton.dataset.amount));
-      }
-    } else if (event.target.closest('[data-ls="evidence"]')) {
-      onEvidence?.(row);
-    } else {
-      onSelect?.(row);
-      if (card.isConnected && motionAllowed()) {
-        card.animate([
-          { boxShadow: 'inset 0 0 0 2px var(--lite-edge)' },
-          { boxShadow: 'inset 0 0 0 0 transparent' }
-        ], { duration: 320, easing: 'ease-out' });
-      }
-    }
-  }
-
-  host.addEventListener('click', click);
-  host.hidden = true;
-  return {
-    setRows,
-    destroy() {
-      mounted = false;
-      clearTimeout(expiryTimer);
-      host.removeEventListener('click', click);
-      rendered.clear();
-      host.replaceChildren();
-      host.hidden = true;
-    }
+    lastId = observation?.id || '';
   };
 }

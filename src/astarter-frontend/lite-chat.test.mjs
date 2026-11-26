@@ -59,3 +59,18 @@ test('practice stays separate from live sources and expired readings are marked'
   assert.match(stale.at(-1).content, /expired/);
   assert.match(stale.at(-1).content, /"status":"unavailable"/);
 });
+
+test('general conversation works without a signal and keeps the prior reply', async () => {
+  const messages = await liteChatMessages(history.slice(1), null, 'en');
+  assert.equal(messages[1].content, history[1].text);
+  assert.equal(messages.at(-1).content, history[2].question);
+  assert.doesNotMatch(JSON.stringify(messages), /Binance|page=signals/);
+});
+
+test('a follow-up preserves the candle that supported each earlier answer', async () => {
+  const earlier = { ...live, price: 99.25, closedAt: close - 60000, validUntil: close };
+  const messages = await liteChatMessages([{ ...history[1], reading: earlier }, history[2]], live, 'en');
+  assert.match(messages[0].content, /99\.25 USDT/);
+  assert.doesNotMatch(messages[0].content, /101\.5 USDT/);
+  assert.match(messages.at(-1).content, /101\.5 USDT/);
+});

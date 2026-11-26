@@ -1,4 +1,4 @@
-import { cardDisplayUntil, liteOrderLabel, mountStrategyCards, strategyForSignal, strategyLabelForId } from './lite-strategy-cards.mjs';
+import { canSubmitLiteOrder, cardDisplayUntil, liteOrderLabel, mountStrategyCard, strategyForSignal, strategyLabelForId } from './lite-strategy-cards.mjs';
 import { ORDER_MARKETS } from './order-markets.mjs';
 import { createLiteDesk } from './lite-desk-data.mjs';
 import { mountLiteChat } from './lite-chat.mjs';
@@ -37,7 +37,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   const styles = ['lite', 'lite-strategy-cards', 'lite-crew'].map((name) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/' + name + '.css?v=20261127-lite-ticket';
+    link.href = '/' + name + '.css?v=20261127-lite-workspace';
     document.head.append(link);
     return link;
   });
@@ -45,35 +45,34 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     <header class="lite-command">
       <div class="lite-heading">
         <h1 id="lite-signals-title" tabindex="-1">${t('智选信号', 'Signals')}</h1>
-        <p id="lite-deck-summary"></p>
       </div>
       <div id="lite-crew"></div>
       <div class="lite-command-group">
         <details class="lite-menu" id="lite-settings-menu"><summary title="${t('信号设置', 'Signal settings')}" aria-label="${t('信号设置', 'Signal settings')}" aria-describedby="lite-feed-label"><span id="lite-feed-label"></span>${uiGlyph('sliders')}</summary><div class="lite-popover"><div id="lite-settings"></div><button id="lite-mode-button" class="lite-text" type="button"></button></div></details>
       </div>
     </header>
-    <div class="lite-workspace">
+    <div id="lite-workspace" class="lite-workspace" tabindex="-1">
+      <div class="lite-asset-bar">
+        <div id="lite-deck-summary" role="group" aria-label="${t('选择策略标的', 'Choose a strategy asset')}"></div>
+        <span class="lite-summary-period">${t('1 分钟 K 线', '1m candles')}</span>
+      </div>
       <section id="lite-ticket" aria-labelledby="lite-signals-title">
-        <div id="lite-strategy-host"></div>
-        <nav class="lite-deck-nav" id="lite-deck-nav" hidden aria-label="${t('浏览策略卡', 'Browse strategy cards')}">
-          <button type="button" data-deck-step="-1" aria-controls="lite-strategy-host" aria-label="${t('上一张策略卡', 'Previous strategy card')}">${uiGlyph('chevron')}</button>
-          <span id="lite-deck-range" aria-live="polite" aria-atomic="true"></span>
-          <button type="button" data-deck-step="1" aria-controls="lite-strategy-host" aria-label="${t('下一张策略卡', 'Next strategy card')}">${uiGlyph('chevron')}</button>
-        </nav>
+        <div id="lite-strategy-host" class="lite-strategy-deck"></div>
+        <div id="lite-archive" class="lite-archive" hidden></div>
         <div id="lite-empty" class="lite-empty" role="status" hidden></div>
       </section>
       <aside class="order-dock" id="lite-controls" aria-labelledby="lite-controls-title">
-        <div class="dock-title"><h2 id="lite-controls-title" tabindex="-1">${t('操作台', 'Order ticket')}</h2>
+        <div class="dock-title"><h2 id="lite-controls-title" tabindex="-1">${t('操作台', 'Order ticket')} <span id="lite-order-symbol"></span></h2>
           <details id="lite-account-menu" class="lite-menu"><summary>${t('练习账户', 'Practice account')}${uiGlyph('chevron')}</summary><div class="lite-popover" id="lite-account-info"></div></details>
         </div>
         <div id="lite-trade-panel"></div>
         <div id="lite-queue-tools" class="lite-queue"></div>
-        <div class="market-tools" id="lite-inspect" hidden><button type="button" data-cmd="evidence" aria-controls="lite-evidence" aria-expanded="false">${uiGlyph('layers')}${t('信号依据', 'Evidence')}</button><button type="button" data-cmd="chat" aria-controls="lite-chat-panel" aria-expanded="false">${uiGlyph('chat')}${t('问 AI', 'Ask AI')}</button></div>
+        <div class="market-tools" id="lite-inspect" hidden><button type="button" data-cmd="evidence" aria-controls="lite-evidence" aria-expanded="false">${uiGlyph('layers')}${t('信号依据', 'Evidence')}</button></div>
         <div id="lite-evidence" class="lite-disclosure" inert><div class="lite-disclosure-clip"><div id="lite-evidence-content" class="lite-inline"></div></div></div>
-        <section id="lite-chat-panel" class="lite-inline" hidden></section>
         <details id="lite-history" class="lite-history"><summary><span class="history-label">${uiGlyph('history')}${t('最近操作', 'Recent activity')}</span><span class="history-end"><span id="lite-history-count"></span>${uiGlyph('chevron')}</span></summary><div id="lite-history-list"></div></details>
       </aside>
     </div>
+    <div id="lite-chat-panel"></div>
     <p class="sr-only" role="status" id="lite-announcement"></p>
   </div>`;
   const view = host.firstElementChild;
@@ -126,8 +125,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     failed = [],
     current = null,
     account = null,
-    receipt = null,
-    chat = null;
+    receipt = null;
+  const chat = mountLiteChat(el('chat-panel'), { lang });
   let busy = false,
     loading = false,
     formError = '',
@@ -191,16 +190,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       new CustomEvent('astarter:lite-context', { bubbles: true, detail: { asset, signalId, mode, lang } })
     );
   }
-  function closeChat(focus = false) {
-    chat?.destroy();
-    chat = null;
-    el('chat-panel').hidden = true;
-    el('chat-panel').replaceChildren();
-    view.querySelector('[data-cmd=chat]')?.setAttribute('aria-expanded', 'false');
-    if (focus) view.querySelector('[data-cmd=chat]')?.focus();
-  }
   function closeDetails() {
-    closeChat();
     el('evidence').inert = true;
     el('evidence-content').replaceChildren();
     view.querySelector('[data-cmd=evidence]').setAttribute('aria-expanded', 'false');
@@ -211,52 +201,71 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       return t('本机卖出演练', 'Local exit scenario');
     return row.mode === 'practice' ? t('本机演练行情', 'Local practice feed') : row.source;
   }
-  function availableCards() {
-    const selected = !receipt && current && current.validUntil > Date.now() ? current : null;
-    const byAsset = new Map(queue(true).map((row) => [row.symbol, row]));
-    if (selected) byAsset.set(selected.symbol, selected);
-    return Array.from(byAsset.values()).filter((row) => symbols.includes(row.symbol));
-  }
+  const showStrategy = mountStrategyCard(el('strategy-host'), lang);
+  const assetButtons = new Map();
   function renderCards() {
-    cards.setRows(availableCards(), {
-      selectedId: receipt ? null : current?.id,
-      holdings: account?.holdings || [],
-      quickOrder: {
-        ready: Boolean(account),
-        amount: readDraft(),
-        balance: account?.balance,
-        blockedId: blockedObservation?.id
-      },
-      busy
-    });
-    el('inspect').hidden = !current || Boolean(receipt);
-  }
-  let displayedAssets = '';
-  function updateDeckSummary(visibleSymbols) {
-    const count = visibleSymbols.length;
-    const assetsKey = visibleSymbols.join(',');
-    if (assetsKey !== displayedAssets) {
-      displayedAssets = assetsKey;
-      crew.setActive(count > 0);
-      const pairs = visibleSymbols.map((symbol) =>
-        `<span class="lite-summary-asset">${tokenIcon(symbol, { size: 14 })}${esc(symbol)}</span>`
-      );
-      el('deck-summary').innerHTML = count
-        ? pairs.join('') + `<span class="lite-summary-period">${t('1 分钟 K 线', '1m candles')}</span>`
-        : '';
+    const at = Date.now();
+    const candidates = new Map(queue(true).map((row) => [row.symbol, row]));
+    const activeSymbol = receipt?.symbol || current?.symbol;
+    const activeAsset = receipt || current;
+    if (!receipt && current?.validUntil > at && !candidates.has(current.symbol)) candidates.set(current.symbol, current);
+    const summary = el('deck-summary');
+    for (const [symbol, item] of assetButtons) {
+      if (!symbols.includes(symbol)) {
+        item.remove();
+        assetButtons.delete(symbol);
+      }
     }
-    scheduleDeckLayout();
+    for (const symbol of symbols) {
+      let item = assetButtons.get(symbol);
+      if (!item) {
+        item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'lite-summary-asset';
+        item.dataset.liteChoice = symbol;
+        item.setAttribute('aria-controls', 'lite-ticket lite-controls');
+        item.innerHTML = tokenIcon(symbol, { size: 18 }) + '<span>' + symbol + '</span><i aria-hidden="true"></i>';
+        assetButtons.set(symbol, item);
+        summary.insertBefore(item, summary.children[symbols.indexOf(symbol)] || null);
+      }
+      const row = candidates.get(symbol);
+      const fresh = Boolean(row && row.validUntil > at);
+      const previousId = item.dataset.signalId;
+      const newer = fresh && activeSymbol === symbol && row.id !== (receipt?.signalId || current?.id);
+      item.dataset.signalId = row?.id || '';
+      item.dataset.freshness = newer ? 'new' : fresh ? 'current' : 'waiting';
+      item.setAttribute('aria-pressed', String(activeSymbol === symbol));
+      const description = newer ? t('新收盘，查看最新策略', 'New close, view updated strategy') :
+        fresh ? clock(row.closedAt) : t('等待新收盘', 'Awaiting close');
+      item.title = symbol + ' · ' + description;
+      item.setAttribute('aria-label', item.title);
+      item.disabled = busy || !fresh;
+      if (fresh && previousId && previousId !== row.id && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && document.documentElement.dataset.reducedMotion !== 'true')
+        item.animate([{ opacity: .55 }, { opacity: 1 }], { duration: 450 });
+    }
+    crew.setActive([...candidates.values()].some((row) => row.validUntil > at));
+    const showReading = !receipt && current && (cardDisplayUntil(current) > at || candidates.get(current.symbol)?.validUntil > at);
+    const displayPlan = showReading && (selectedStrategy || strategyForSignal(current, currentHolding(), lang, current.closedAt));
+    showStrategy(showReading ? current : null, displayPlan);
+    el('inspect').hidden = !displayPlan || Boolean(receipt);
+    const archive = el('archive');
+    archive.hidden = !receipt;
+    if (receipt && archive.dataset.receipt !== receipt.id) {
+      archive.dataset.receipt = receipt.id;
+      archive.innerHTML = `<div class="lite-plan-pair">${tokenIcon(receipt.symbol, { size: 28 })}${esc(receipt.market)}</div>
+        <h3 class="lite-plan-title">${esc(strategyLabelForId(receipt.strategyId, lang) || t('操作记录', 'Activity'))}</h3>
+        <span>${t('成交价', 'Fill price')}</span><strong class="dot-number">${fmt(receipt.price)} <small>USDT</small></strong>
+        <p>${day(receipt.filledAt)} · ${clock(receipt.filledAt)}</p>`;
+    }
     const empty = el('empty');
-    empty.hidden = count > 0;
+    empty.hidden = Boolean(receipt || displayPlan);
     if (!empty.hidden) {
-      const message = loading
-        ? t('正在读取信号…', 'Loading signals…')
-        : failed.length
-          ? t('暂时无法读取行情。', 'Market data is unavailable.')
-          : t('等待下一根 K 线收盘…', 'Waiting for the next candle close…');
+      const message = loading ? t('正在读取信号…', 'Loading signals…') : failed.length
+        ? t('暂时无法读取行情。', 'Market data is unavailable.')
+        : t('等待下一根 K 线收盘…', 'Waiting for the next candle close…');
       empty.innerHTML = message + (loading ? '' : ' ' + button('refresh', t('刷新', 'Refresh')));
     }
-    el('ticket').setAttribute('aria-busy', String(loading && !count));
+    el('ticket').setAttribute('aria-busy', String(loading && !activeAsset));
   }
   const viewport = host.closest('#product-page');
   function reveal(section, align = 'nearest') {
@@ -269,10 +278,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     }
   }
   function focusCard() {
-    const target =
-      el('strategy-host').querySelector('[aria-current="true"] [data-ls="evidence"]') || el('signals-title');
-    const card = target.closest('[data-lite-asset]');
-    if (card && card.parentElement === rail) bringCardIntoView(card);
+    const choice = assetButtons.get(current?.symbol || receipt?.symbol);
+    const target = choice && !choice.disabled ? choice : el('signals-title');
     target.focus({ preventScroll: true });
     reveal(target);
   }
@@ -330,26 +337,6 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     const latest = strategyForSignal(current, currentHolding(), lang);
     return latest?.actionable && latest.id === selectedStrategy.id ? latest : null;
   }
-  function selectCard(row) {
-    if (busy || !availableCards().some((card) => card.id === row.id)) return false;
-    if (receipt || current?.id !== row.id) {
-      pick(row);
-      updateSelectedLink();
-      el('trade-panel').firstElementChild?.classList.add('ticket-arrive');
-    }
-    return true;
-  }
-  function openTicket(row) {
-    if (!selectCard(row)) return;
-    if (matchMedia('(max-width:860px)').matches) reveal(el('controls'), 'start');
-    el('controls-title').focus({ preventScroll: true });
-  }
-  function executeCard(row, side, shownAmount) {
-    if (!account || blockedObservation?.id === row.id || (side === 'buy' && shownAmount !== readDraft())) return;
-    if (!selectCard(row) || validPlan()?.side !== side) return;
-    if (matchMedia('(max-width:860px)').matches) reveal(el('controls'), 'start');
-    void trade(side);
-  }
   function syncEstimate(showError = false, highlight = false) {
     const input = el('order-amount');
     if (!input) return;
@@ -376,9 +363,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     }
     const action = el('trade-panel').querySelector('[data-cmd=buy]');
     if (action) {
-      action.disabled = Boolean(
-        !account || busy || invalid || insufficient || !validPlan() || current.validUntil <= Date.now()
-      );
+      action.disabled = busy || !canSubmitLiteOrder(current, validPlan(), account?.balance, value, blockedObservation?.id);
       if (!busy)
         action.querySelector('.ticket-submit-label').textContent = liteOrderLabel('buy', current.symbol, value, lang);
     }
@@ -392,6 +377,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   }
   function renderTrade() {
     const target = el('trade-panel');
+    el('order-symbol').textContent = receipt?.symbol || current?.symbol || '';
     if (receipt) {
       const sold = receipt.side === 'sell';
       const exercise =
@@ -418,13 +404,12 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     const label =
       (!expired && selectedStrategy?.label) ||
       (expired ? t('信号已到期', 'Signal expired') : t('等待可执行信号', 'Waiting for a trade signal'));
-    const status = buy ? t('买入', 'Buy') : sell ? t('卖出', 'Sell') : t('观察', 'Watch');
     const balance = orderLine(t('可用资金', 'Available funds'), fmt(account?.balance) + ' USDT');
     const symbol = current?.symbol || '—';
     const form = buy
       ? `<label class="field-label" for="lite-order-amount">${t('投入金额', 'Order amount')}</label>
-    <div class="order-input"><input id="lite-order-amount" name="amount" aria-describedby="lite-order-note" inputmode="decimal" autocomplete="off" value="${esc(amountDraft)}" ${busy ? 'disabled' : ''}><span>USDT</span></div>
-    <div class="amount-presets">${[25, 50, 100].map((v) => `<button type="button" data-cmd="preset" value="${v}" ${busy ? 'disabled' : ''}>${v} USDT</button>`).join('')}</div>`
+    <div class="lite-amount-controls"><div class="order-input"><input id="lite-order-amount" name="amount" aria-describedby="lite-order-note" inputmode="decimal" autocomplete="off" value="${esc(amountDraft)}" ${busy ? 'disabled' : ''}><span>USDT</span></div>
+    <div class="amount-presets">${[25, 50, 100].map((v) => `<button type="button" data-cmd="preset" value="${v}" aria-label="${v} USDT" ${busy ? 'disabled' : ''}>${v}<span class="preset-unit"> USDT</span></button>`).join('')}</div></div>`
       : sell
         ? `<div class="field-label">${t('卖出持仓', 'Position to sell')}</div><div class="sell-amount">${fmt(holding?.quantity, 6)} <small>${esc(symbol)}</small></div>`
         : '';
@@ -463,11 +448,11 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
             )
           : button('refresh', t('刷新信号', 'Refresh signals'), 'secondary-btn', busy || loading);
     target.innerHTML = `<div class="order-config">
-    ${current ? `<div class="order-instrument">${tokenIcon(symbol, { size: 32 })}<strong>${esc(symbol)} <small>/ USDT</small></strong><span data-side="${plan?.side || 'watch'}">${status}</span></div>` : ''}
-    <div class="order-plan"><span class="field-label">${t('当前策略', 'Selected strategy')}</span><h3>${esc(label)}</h3></div>
-    ${form}<div class="order-values">${balance}${lines}</div>
+    ${!current || expired ? '<div class="order-plan"><h3>' + esc(label) + '</h3></div>' : ''}
+    ${form}
     ${!plan && !needsRefresh ? `<p class="order-idle">${idle}</p>` : ''}
-    <div class="dock-actions">${act}</div><p class="trade-note error" id="lite-order-note" role="status">${formError ? errorText(formError) : accountError ? errorText('STORAGE_UNAVAILABLE') : ''}</p></div>`;
+    <div class="dock-actions">${act}</div>
+    <div class="order-values">${balance}${lines}</div><p class="trade-note error" id="lite-order-note" role="status">${formError ? errorText(formError) : accountError ? errorText('STORAGE_UNAVAILABLE') : ''}</p></div>`;
     syncEstimate();
   }
   function queue(includePreviousClose = false) {
@@ -534,6 +519,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     renderQueue();
     renderAccount();
     setLink();
+    chat.setSignal(current, current || receipt);
   }
   function pick(row, fill = null) {
     closeDetails();
@@ -609,9 +595,9 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       return;
     }
     if (!replace && current) {
-      const updated = available.find((row) => row.symbol === current.symbol && row.id !== current.id) || available[0];
+      const updated = available.find((row) => row.symbol === current.symbol && row.id !== current.id);
       const isReading =
-        chat ||
+        chat.isInteracting() ||
         draftTouched ||
         editingAmount() ||
         !el('evidence').inert ||
@@ -674,11 +660,10 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   }
   async function trade(side) {
     const strategy = validPlan();
-    if (!account || !current || busy || receipt || strategy?.side !== side ||
-        blockedObservation?.id === current.id || current.validUntil <= Date.now()) return;
+    if (busy || receipt || strategy?.side !== side) return;
     const spend = readDraft();
-    if (side === 'buy' && (!spend || !account || spend > account.balance)) {
-      syncEstimate(true);
+    if (!canSubmitLiteOrder(current, strategy, account?.balance, spend, blockedObservation?.id)) {
+      if (side === 'buy') syncEstimate(true);
       return;
     }
     if (side === 'buy') save('amount', spend);
@@ -865,82 +850,17 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
         }
         break;
       }
-      case 'chat':
-        if (chat) {
-          closeChat(true);
-          break;
-        }
-        if (!current) break;
-        el('chat-panel').hidden = false;
-        chat = mountLiteChat(el('chat-panel'), { signal: current, lang, onClose: () => closeChat(true) });
-        view.querySelector('[data-cmd=chat]').setAttribute('aria-expanded', 'true');
-        reveal(el('chat-panel'));
-        chat.focus();
-        break;
     }
   }
   const crew = mountLiteCrew(el('crew'), { lang });
-  const rail = el('strategy-host');
-  const deckNav = el('deck-nav');
-  const [previousCard, nextCard] = deckNav.querySelectorAll('button');
-  let layoutFrame = 0;
-  let firstVisible = 0;
-  let initialDeckPosition = true;
-  function bringCardIntoView(card, animate = false) {
-    const reduced = document.documentElement.dataset.reducedMotion === 'true' || matchMedia('(prefers-reduced-motion: reduce)').matches;
-    rail.scrollTo({
-      left: rail.scrollLeft + card.getBoundingClientRect().left - rail.getBoundingClientRect().left,
-      behavior: animate && !reduced ? 'smooth' : 'instant'
-    });
-  }
-  function updateDeckLayout() {
-    layoutFrame = 0;
-    const items = [...rail.children];
-    if (initialDeckPosition && items.length && rail.clientWidth) {
-      const selected = items.find((item) => item.dataset.liteAsset === (current || receipt)?.symbol);
-      if (selected) bringCardIntoView(selected);
-      initialDeckPosition = false;
-    }
-    deckNav.hidden = items.length < 2 || rail.scrollWidth - rail.clientWidth < 3;
-    if (deckNav.hidden) return;
-    const box = rail.getBoundingClientRect();
-    const visible = items.filter((item) => {
-      const rect = item.getBoundingClientRect();
-      return Math.min(box.right, rect.right) - Math.max(box.left, rect.left) > rect.width * 0.65;
-    });
-    if (!visible.length) return;
-    firstVisible = items.indexOf(visible[0]);
-    const last = items.indexOf(visible.at(-1)) + 1;
-    const label = (visible.length === 1 ? last : (firstVisible + 1) + '–' + last) + ' / ' + items.length;
-    const range = el('deck-range');
-    if (range.textContent !== label) range.textContent = label;
-    previousCard.disabled = rail.scrollLeft <= 2;
-    nextCard.disabled = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 2;
-  }
-  function scheduleDeckLayout() {
-    if (!layoutFrame) layoutFrame = requestAnimationFrame(updateDeckLayout);
-  }
-  rail.addEventListener('scroll', scheduleDeckLayout, { passive: true, signal: lifetime.signal });
-  const railObserver = new ResizeObserver(scheduleDeckLayout);
-  railObserver.observe(rail);
-  deckNav.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-deck-step]');
-    if (!button || button.disabled) return;
-    const target = rail.children[firstVisible + Number(button.dataset.deckStep)];
-    if (target) bringCardIntoView(target, true);
+  el('deck-summary').addEventListener('click', (event) => {
+    const item = event.target.closest('[data-lite-choice]');
+    if (!item || item.disabled || busy) return;
+    const row = queue().find((entry) => entry.id === item.dataset.signalId && entry.symbol === item.dataset.liteChoice);
+    if (!row || (!receipt && current?.id === row.id)) return;
+    pick(row);
+    updateSelectedLink();
   }, { signal: lifetime.signal });
-  const cards = mountStrategyCards(rail, {
-    lang,
-    onRendered: updateDeckSummary,
-    onSelect: openTicket,
-    onExecute: executeCard,
-    onEvidence(row) {
-      if (!selectCard(row)) return;
-      if (el('evidence').inert) doAction('evidence');
-      else reveal(el('evidence'));
-      el('evidence').querySelector('button')?.focus({ preventScroll: true });
-    }
-  });
   document.addEventListener(
     'click',
     (event) => {
@@ -1023,10 +943,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       request?.abort();
       request = null;
       chat?.destroy();
-      railObserver.disconnect();
-      cancelAnimationFrame(layoutFrame);
       crew.destroy();
-      cards.destroy();
       for (const style of styles) style.remove();
       if (host.contains(view)) view.remove();
     }

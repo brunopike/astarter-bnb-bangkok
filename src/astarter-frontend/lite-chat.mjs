@@ -1,4 +1,7 @@
+import { uiGlyph } from './product-composition.mjs';
+
 const STORAGE_KEY = 'astarter.lite.signal-chat.v1';
+const SCOPE_KEY = 'astarter.lite.chat-scope';
 const MAX_THREADS = 12;
 const MAX_TURNS = 12;
 const MAX_QUESTION = 1200;
@@ -7,14 +10,15 @@ const updates = new EventTarget();
 const sessions = new Map();
 
 const copy = (lang, zh, en) => (lang === 'en' ? en : zh);
-const threadKey = (signal) => signal.mode + '/' + signal.id;
+const threadKey = (context) => context ? context.mode + '/' + context.symbol : 'general';
 
-function restoreThread(key) {
+function restoreThread(key, signal) {
   if (sessions.has(key)) return sessions.get(key);
   let saved;
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    saved = data.find((item) => item?.key === key);
+    saved = data.find((item) => item?.key === key) ||
+      (signal && data.find((item) => item?.key === signal.mode + '/' + signal.id));
   } catch {}
   const thread = {
     key,
@@ -180,39 +184,44 @@ function feedback(code, lang) {
     return copy(lang, 'AI 请求较多，请稍后重试。', 'The AI service is busy. Try again shortly.');
   if (code === 'MODEL_TIMEOUT')
     return copy(lang, 'AI 回答超时，可重新提问。', 'The AI request timed out. You can retry.');
-  return copy(
-    lang,
-    'AI 服务暂时无法回答。你仍可查看这条信号的依据。',
-    'AI is unavailable. You can still review the evidence for this signal.'
-  );
+  return copy(lang, 'AI 服务暂时无法回答，请重试。', 'The AI service is unavailable. Please retry.');
 }
 
-export async function liteChatMessages(history, signal, lang) {
+function signalReading(signal) {
+  if (!signal) return null;
+  const { symbol, mode, source, period, unit, direction, price, ema20, momentumPct, rsi14, closedAt, validUntil } = signal;
+  return { symbol, mode, source, period, unit, direction, price, ema20, momentumPct, rsi14, closedAt, validUntil };
+}
+
+export async function liteChatMessages(history, signal, lang, asset = '') {
   const { assistantConversationMessages } = await import('./assistant-chat-client.mjs');
-  const cited = evidence(signal, lang);
   const turns = history
     .filter((item) => ['model', 'facts', 'pending'].includes(item.kind))
     .map((item) => {
       let question = item.question;
-      if (signal.mode === 'practice' && item.kind === 'pending') {
+      const reading = item.reading ?? (item.kind === 'pending' ? signal : null);
+      const cited = reading && evidence(reading, lang);
+      if (reading?.mode === 'practice' && item.kind === 'pending') {
         question += '\n\n' + cited.text;
+      } else if (!reading && asset && item.kind === 'pending') {
+        question += '\n\n' + copy(lang, '当前标的 ', 'Selected asset: ') + asset;
       }
       return {
         id: item.id,
         mode: 'ask',
         question,
         ...(item.kind !== 'pending' ? { modelReply: { state: 'complete', text: item.text } } : {}),
-        evidence: signal.mode === 'practice' ? [] : [cited]
+        evidence: cited && reading.mode !== 'practice' ? [cited] : []
       };
     });
   return assistantConversationMessages(turns, turns.at(-1));
 }
 
-async function askModel(thread, signal, turn, lang) {
+async function askModel(thread, signal, turn, lang, asset) {
   inFlight.add(thread.key);
   try {
     const { requestAssistantAnswer } = await import('./assistant-chat-client.mjs');
-    const result = await requestAssistantAnswer(await liteChatMessages(thread.turns, signal, lang));
+    const result = await requestAssistantAnswer(await liteChatMessages(thread.turns, signal, lang, asset));
     turn.text = result.text;
     turn.kind = 'model';
   } catch (error) {
@@ -225,18 +234,28 @@ async function askModel(thread, signal, turn, lang) {
   }
 }
 
-export function mountLiteChat(host, { signal, lang = 'zh', onClose } = {}) {
+export function mountLiteChat(host, { signal = null, lang = 'zh' } = {}) {
   const t = (zh, en) => copy(lang, zh, en);
-  let thread = restoreThread(threadKey(signal));
+  let context = signal;
+  let general = false;
+  try { general = localStorage.getItem(SCOPE_KEY) === 'general'; } catch {}
+  let thread = restoreThread(threadKey(general ? null : context), general ? null : signal);
   const panel = el('section', 'lite-chat');
+  panel.setAttribute('aria-labelledby', 'lite-chat-title');
   const header = el('header', 'lite-chat-head');
-  const heading = el('strong', '', t('问 AI', 'Ask AI'));
-  const close = button('lite-chat-close', t('收起', 'Close'), () => onClose?.());
-  header.append(heading, close);
-  const source = el('small', 'lite-chat-source');
+  const heading = el('h2', 'lite-chat-title', t('AI 助手', 'AI assistant'));
+  heading.id = 'lite-chat-title';
+  heading.insertAdjacentHTML('afterbegin', uiGlyph('chat'));
+  const scopes = el('div', 'lite-chat-scopes');
+  scopes.setAttribute('role', 'group');
+  scopes.setAttribute('aria-label', t('对话范围', 'Chat context'));
+  const assetButton = button('', '', () => switchScope(false));
+  const generalButton = button('', t('通用对话', 'General'), () => switchScope(true));
+  scopes.append(assetButton, generalButton);
+  header.append(heading, scopes);
   const log = el('div', 'lite-chat-log');
   log.setAttribute('role', 'log');
-  log.setAttribute('aria-label', t('此信号的对话', 'Conversation about this signal'));
+  log.setAttribute('aria-label', t('对话记录', 'Conversation'));
   const prompts = el('div', 'lite-chat-prompts');
   for (const type of ['why', 'expiry'])
     prompts.append(button('', promptText(lang, type), () => submit(promptText(lang, type), type)));
@@ -246,18 +265,46 @@ export function mountLiteChat(host, { signal, lang = 'zh', onClose } = {}) {
   input.type = 'text';
   input.maxLength = MAX_QUESTION;
   input.autocomplete = 'off';
-  input.setAttribute('aria-label', t('关于当前信号的问题', 'Question about this signal'));
-  input.placeholder = t('继续问这条信号…', 'Ask about this signal…');
-  const send = el('button', 'lite-chat-send', t('发送', 'Send'));
+  input.enterKeyHint = 'send';
+  input.setAttribute('aria-label', t('向 AI 提问', 'Ask the assistant'));
+  const send = el('button', 'lite-chat-send');
+  send.innerHTML = uiGlyph('send');
+  send.setAttribute('aria-label', t('发送', 'Send'));
   send.type = 'submit';
   form.append(input, send);
-  panel.append(header, source, log, prompts, form);
+  panel.append(header, log, form, prompts);
   host.replaceChildren(panel);
+  let renderedKey;
+  function changeThread() {
+    const key = threadKey(general ? null : context);
+    if (key !== thread.key) {
+      persist(thread);
+      thread = restoreThread(key, general ? null : signal);
+      input.value = thread.draft;
+    }
+    render();
+  }
+  function switchScope(next) {
+    general = next;
+    try { localStorage.setItem(SCOPE_KEY, next ? 'general' : 'asset'); } catch {}
+    changeThread();
+  }
   function syncSend() {
     send.disabled = inFlight.has(thread.key) || !input.value.trim();
   }
-  function render() {
-    source.textContent = signal.symbol + ' · ' + liteSignalFacts(signal, 'why', lang).citation;
+  function render(followLastTurn = false) {
+    const previousTop = log.scrollTop;
+    const atEnd = log.scrollHeight - log.clientHeight - previousTop < 4;
+    const hasSignal = !general && Boolean(signal);
+    scopes.hidden = !context;
+    assetButton.textContent = context ? context.symbol + ' / USDT' : '';
+    assetButton.setAttribute('aria-pressed', String(!general));
+    generalButton.setAttribute('aria-pressed', String(general));
+    input.placeholder = !general && context
+      ? t('问问 ' + context.symbol + ' 的策略…', 'Ask about the ' + context.symbol + ' strategy…')
+      : t('问 AI 一个问题…', 'Ask a question…');
+    prompts.hidden = !hasSignal;
+    log.hidden = !thread.turns.length;
     log.replaceChildren();
     for (const turn of thread.turns) {
       const item = el('div', 'lite-chat-message');
@@ -269,7 +316,7 @@ export function mountLiteChat(host, { signal, lang = 'zh', onClose } = {}) {
             button('lite-chat-retry', t('重试', 'Retry'), () => {
               turn.kind = 'pending';
               persist(thread);
-              void askModel(thread, signal, turn, lang);
+              void askModel(thread, general ? null : signal, turn, lang, general ? '' : context?.symbol);
               render();
             })
           );
@@ -277,60 +324,44 @@ export function mountLiteChat(host, { signal, lang = 'zh', onClose } = {}) {
       } else if (turn.kind === 'pending') {
         item.append(el('p', 'lite-chat-status', t('正在回答…', 'Thinking…')));
       } else {
-        item.append(
-          el(
-            'small',
-            'lite-chat-by',
-            turn.kind === 'facts' ? t('信号依据', 'Signal evidence') : t('AI 回答', 'AI reply')
-          ),
-          el('p', 'lite-chat-answer', turn.text)
-        );
+        item.append(el('p', 'lite-chat-answer', turn.text));
+        if (turn.reading) {
+          const { citation } = liteSignalFacts(turn.reading, 'why', lang);
+          item.append(el('small', 'lite-chat-source', citation));
+        }
       }
       log.append(item);
     }
     for (const option of prompts.children) option.disabled = inFlight.has(thread.key);
     syncSend();
-    log.scrollTop = log.scrollHeight;
+    log.scrollTop = followLastTurn || atEnd || renderedKey !== thread.key ? log.scrollHeight : previousTop;
+    renderedKey = thread.key;
   }
   function submit(question, type) {
     if (!question || inFlight.has(thread.key)) return;
-    const normalized = question
-      .trim()
-      .replace(/[?？。!.！]+$/u, '')
-      .toLowerCase();
-    const localType =
-      type ||
-      (/^(为什么(出现这条信号|触发|会触发|出现)?|why( did (this|the signal) (appear|trigger))?)$/u.test(
-        normalized
-      )
+    const reading = general ? null : signalReading(signal);
+    const normalized = question.trim().replace(/[?？。!.！]+$/u, '').toLowerCase();
+    const localType = reading && (type ||
+      (/^(为什么(出现这条信号|触发|会触发|出现)?|why( did (this|the signal) (appear|trigger))?)$/u.test(normalized)
         ? 'why'
-        : /^(这条信号何时失效|何时失效|什么时候(失效|过期)|when does (this|this signal|it) expire)$/u.test(
-              normalized
-            )
-          ? 'expiry'
-          : '');
+        : /^(这条信号何时失效|何时失效|什么时候(失效|过期)|when does (this|this signal|it) expire)$/u.test(normalized)
+          ? 'expiry' : ''));
     const turn = {
       id: Array.from(crypto.getRandomValues(new Uint32Array(4)), (part) => part.toString(16)).join('-'),
-      question,
-      kind: localType ? 'facts' : 'pending',
-      text: ''
+      question, kind: localType ? 'facts' : 'pending', text: '', reading
     };
-    if (localType) turn.text = liteSignalFacts(signal, localType, lang).text;
+    if (localType) turn.text = liteSignalFacts(reading, localType, lang).text;
     thread.turns = [...thread.turns.slice(1 - MAX_TURNS), turn];
     if (!type) thread.draft = input.value = '';
     persist(thread);
-    if (!localType) void askModel(thread, signal, turn, lang);
-    render();
+    if (!localType) void askModel(thread, reading, turn, lang, general ? '' : context?.symbol);
+    render(true);
   }
   function notify(event) {
     if (event.detail === thread.key) render();
   }
-  input.addEventListener('compositionstart', () => {
-    composing = true;
-  });
-  input.addEventListener('compositionend', () => {
-    composing = false;
-  });
+  input.addEventListener('compositionstart', () => { composing = true; });
+  input.addEventListener('compositionend', () => { composing = false; });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!composing) submit(input.value.trim());
@@ -340,33 +371,23 @@ export function mountLiteChat(host, { signal, lang = 'zh', onClose } = {}) {
     syncSend();
   });
   input.addEventListener('change', () => persist(thread));
-  panel.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !event.isComposing && onClose) {
-      event.preventDefault();
-      event.stopPropagation();
-      onClose();
-    }
-  });
-  function saveDraft() {
-    persist(thread);
-  }
+  function saveDraft() { persist(thread); }
   window.addEventListener('pagehide', saveDraft);
   updates.addEventListener('reply', notify);
   input.value = thread.draft;
   render();
   return {
-    setSignal(next) {
-      const key = threadKey(next);
+    setSignal(next, assetContext = next) {
+      if (signal?.id === next?.id && threadKey(context) === threadKey(assetContext)) return;
+      if (!context && assetContext && (input.value || inFlight.has(thread.key) || document.activeElement === input)) general = true;
       signal = next;
-      if (key === thread.key) return;
-      persist(thread);
-      thread = restoreThread(key);
-      input.value = thread.draft;
-      render();
+      context = assetContext;
+      changeThread();
     },
-    focus() {
-      input.focus({ preventScroll: true });
+    isInteracting() {
+      return !general && !!context && (panel.contains(document.activeElement) || inFlight.has(thread.key));
     },
+    focus() { input.focus({ preventScroll: true }); },
     destroy() {
       persist(thread);
       updates.removeEventListener('reply', notify);
