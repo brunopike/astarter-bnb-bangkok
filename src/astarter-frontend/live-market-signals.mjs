@@ -23,7 +23,7 @@ function sourceFor(symbol) {
   return {symbol, request, daily, resource: query.resource, url: '/api/market-hub?' + new URLSearchParams(query)};
 }
 
-function analyze(source, envelope, at) {
+function analyze(source, envelope, at, allowExpiredCloses = false) {
   const {symbol, request, daily, resource} = source;
   const {receivedAt, body} = envelope || {};
   if (envelope?.schema !== 'public-market-relay-v1' || envelope.resource !== resource ||
@@ -58,55 +58,72 @@ function analyze(source, envelope, at) {
     if (!bars.length) throw Error('INSUFFICIENT_BARS');
     closedAt = bars.at(-1).time * 1000 + MINUTE;
     validUntil = closedAt + MINUTE;
-    sessionDate = new Date(bars.at(-1).time * 1000).toISOString().slice(0, 10);
-    quoteAsOf = closedAt;
     asOfKind = 'bar-close';
   }
-  if (validUntil <= at) throw Error('STALE_MARKET');
+  if (validUntil <= at && (daily || !allowExpiredCloses || at - closedAt >= DAY)) throw Error('STALE_MARKET');
   if (bars.length < 21) throw Error('INSUFFICIENT_BARS');
 
-  const last = bars.at(-1);
-  const price = last.close;
-  const momentumPct = (price / bars.at(-6).close - 1) * 100;
-  const ema20 = exponentialAverage(bars, 20).at(-1).value;
-  const rsi14 = wilderSeries(bars, 14).rsi.at(-1).value;
-  const baselineVolume = daily ? 0 : bars.slice(-21, -1).reduce((sum, bar) => sum + bar.volume / 20, 0);
-  const volumeRatio = baselineVolume > 0 ? last.volume / baselineVolume : null;
-  if (![momentumPct, ema20, rsi14].every(Number.isFinite) ||
-      (volumeRatio !== null && !Number.isFinite(volumeRatio))) throw Error('INVALID_SOURCE_DATA');
-  let direction = 'neutral';
-  if (momentumPct > 0 && price > ema20 && rsi14 > 50) direction = 'up';
-  if (momentumPct < 0 && price < ema20 && rsi14 < 50) direction = 'down';
-  return Object.freeze({
-    id: [symbol, request.period, daily ? sessionDate : closedAt].join(':'),
-    symbol, market: request.market, assetClass: daily ? 'tradfi' : 'crypto', period: request.period,
-    direction, source: daily ? request.source : 'Binance Spot', unit: daily ? request.unit : 'USDT',
-    price, momentumPct, ema20, rsi14, volumeRatio,
-    priceSeries: Object.freeze(bars.slice(-20).map(bar => bar.close)),
-    closedAt, receivedAt, validUntil, sessionDate, quoteAsOf, asOfKind,
-    timezone: daily ? request.timezone : 'UTC', session: daily ? body.session : 'continuous',
-    closeTimeBasis: daily ? body.closeTimeBasis : 'bar-close'
-  });
+  const averages = exponentialAverage(bars, 20);
+  const rsis = wilderSeries(bars, 14).rsi;
+  const count = daily ? 1 : Math.min(6, bars.length - 20);
+  const observations = [];
+  for (let offset = 0; offset < count; offset++) {
+    const index = bars.length - 1 - offset;
+    const last = bars[index];
+    const price = last.close;
+    const momentumPct = (price / bars[index - 5].close - 1) * 100;
+    const ema20 = averages.at(-1 - offset).value;
+    const rsi14 = rsis.at(-1 - offset).value;
+    const baselineVolume = daily ? 0 : bars.slice(index - 20, index).reduce((sum, bar) => sum + bar.volume / 20, 0);
+    const volumeRatio = baselineVolume > 0 ? last.volume / baselineVolume : null;
+    if (![momentumPct, ema20, rsi14].every(Number.isFinite) || (volumeRatio !== null && !Number.isFinite(volumeRatio))) {
+      if (offset === 0) throw Error('INVALID_SOURCE_DATA');
+      continue;
+    }
+    let direction = 'neutral';
+    if (momentumPct > 0 && price > ema20 && rsi14 > 50) direction = 'up';
+    if (momentumPct < 0 && price < ema20 && rsi14 < 50) direction = 'down';
+    const close = daily ? closedAt : last.time * 1000 + MINUTE;
+    observations.push(Object.freeze({
+      id: [symbol, request.period, daily ? sessionDate : close].join(':'),
+      symbol, market: request.market, assetClass: daily ? 'tradfi' : 'crypto', period: request.period,
+      direction, source: daily ? request.source : 'Binance Spot', unit: daily ? request.unit : 'USDT',
+      price, momentumPct, ema20, rsi14, volumeRatio,
+      priceSeries: Object.freeze(bars.slice(index - 19, index + 1).map(bar => bar.close)),
+      closedAt: close, receivedAt, validUntil: daily ? validUntil : close + MINUTE,
+      sessionDate: daily ? sessionDate : new Date(last.time * 1000).toISOString().slice(0, 10),
+      quoteAsOf: daily ? quoteAsOf : close, asOfKind,
+      timezone: daily ? request.timezone : 'UTC', session: daily ? body.session : 'continuous',
+      closeTimeBasis: daily ? body.closeTimeBasis : 'bar-close'
+    }));
+  }
+  return Object.freeze(observations);
 }
 
-// Signals already validated on the signals page are available to chat in this tab.
+// Preserve the validated close window for callers sharing a tab and market source.
 const readings = new WeakMap();
-function rememberObservation(fetchImpl, row) {
+function rememberWindow(fetchImpl, window) {
   let bySymbol = readings.get(fetchImpl);
   if (!bySymbol) { bySymbol = new Map(); readings.set(fetchImpl, bySymbol); }
-  if ((bySymbol.get(row.symbol)?.receivedAt ?? 0) <= row.receivedAt) bySymbol.set(row.symbol, row);
+  const latest = window[0];
+  if ((bySymbol.get(latest.symbol)?.[0].receivedAt ?? 0) <= latest.receivedAt) bySymbol.set(latest.symbol, window);
 }
 
-export async function readLiveSignalObservation(symbol, {fetchImpl = globalThis.fetch, now = Date.now, signal} = {}) {
-  const at = now(), previous = readings.get(fetchImpl)?.get(symbol);
-  if (previous && previous.receivedAt <= at && at < Math.min(previous.validUntil, previous.receivedAt + DAILY_REFRESH)) return previous;
+export async function readLiveSignalWindow(symbol, {fetchImpl = globalThis.fetch, now = Date.now, signal, allowExpiredCloses = false} = {}) {
+  const at = now(), cached = readings.get(fetchImpl)?.get(symbol), latest = cached?.[0];
+  if (latest && latest.receivedAt <= at && at < Math.min(latest.validUntil, latest.receivedAt + DAILY_REFRESH)) return cached;
   const source = sourceFor(symbol);
   const response = await fetchImpl(source.url, {method: 'GET', credentials: 'omit', cache: 'no-store', redirect: 'error', signal});
   if (!response.ok) throw Error('PUBLIC_SOURCE_UNAVAILABLE');
-  const row = analyze(source, await response.json(), now());
+  const window = analyze(source, await response.json(), now(), allowExpiredCloses);
   signal?.throwIfAborted();
-  rememberObservation(fetchImpl, row);
-  return row;
+  rememberWindow(fetchImpl, window);
+  return window;
+}
+
+export async function readLiveSignalObservation(symbol, options) {
+  const [latest] = await readLiveSignalWindow(symbol, options);
+  return latest;
 }
 
 const dataErrors = new Set(['STALE_MARKET', 'INSUFFICIENT_BARS', 'INVALID_SOURCE_DATA']);
@@ -190,12 +207,13 @@ export function createLiveSignalFeed({
           throw dataErrors.has(error.message) ? error : Error('INVALID_SOURCE_DATA');
         }
       }
-      const row = await Promise.race([load(), aborted]);
+      const window = await Promise.race([load(), aborted]);
+      const row = window[0];
       if (slot.controller !== controller) return;
       if (slot.row && (row.sessionDate < slot.row.sessionDate ||
           (!slot.daily && row.closedAt < slot.row.closedAt))) throw Error('STALE_MARKET');
       slot.row = row;
-      rememberObservation(fetchImpl, row);
+      rememberWindow(fetchImpl, window);
       slot.error = null;
       slot.failures = 0;
       slot.rateLimitUntil = 0;

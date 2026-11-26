@@ -1,5 +1,6 @@
-import { canSubmitLiteOrder, liteOrderLabel, mountLiteSignalFeed, strategyForSignal, strategyLabelForId } from './lite-strategy-cards.mjs';
+import { LITE_MARKETS, canSubmitLiteOrder, liteOrderLabel, mountLiteSignalFeed, strategyForSignal, strategyLabelForId } from './lite-strategy-cards.mjs';
 import { ORDER_MARKETS } from './order-markets.mjs';
+import { signalClosePrice } from './live-signal-view.mjs';
 import { createLiteDesk, mergeLiteSignalFeed } from './lite-desk-data.mjs';
 import { mountLiteChat } from './lite-chat.mjs';
 import { mountLiteCrew } from './lite-crew.mjs';
@@ -7,9 +8,9 @@ import { uiGlyph } from './product-composition.mjs';
 import { tokenIcon } from './brand-icons.mjs';
 
 const desk = createLiteDesk();
-const assets = ['BTC', 'ETH', 'SOL'];
+const assets = LITE_MARKETS;
 const amountPresets = [25, 50, 100];
-const names = { BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana' };
+const names = { BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana', BNB: 'BNB', XRP: 'XRP', DOGE: 'Dogecoin' };
 function load(key, fallback) {
   try {
     return JSON.parse(localStorage.getItem('astarter.lite.' + key)) ?? fallback;
@@ -22,13 +23,6 @@ function save(key, value) {
     localStorage.setItem('astarter.lite.' + key, JSON.stringify(value));
   } catch {}
 }
-function shared(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
 export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant } = {}) {
   const english = !/^zh/i.test(locale);
   const lang = english ? 'en' : 'zh';
@@ -38,14 +32,14 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
   const styles = ['lite', 'lite-strategy-cards', 'lite-crew'].map((name) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/' + name + '.css?v=20261127-lite-simple-ticket';
+    link.href = '/' + name + '.css?v=20261127-lite-six-signals';
     document.head.append(link);
     return link;
   });
   host.innerHTML = `<div class="lite-main" data-no-translate>
     <header class="lite-command">
       <div class="lite-heading">
-        <h1 id="lite-signals-title" tabindex="-1">${t('智选信号', 'Signals')}</h1>
+        <h1 id="lite-signals-title" tabindex="-1" lang="en">Casual Vibe Trading</h1><span id="lite-card-count" hidden></span>
       </div>
       <div id="lite-crew"></div>
       <div class="lite-command-group">
@@ -105,13 +99,6 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     const saved = load('symbols', null);
     if (Array.isArray(saved) && saved.some((s) => assets.includes(s)))
       return assets.filter((s) => saved.includes(s));
-    try {
-      const watch = JSON.parse(shared('hive.market.watch-assets.v1') || '[]');
-      const known = assets.filter((s) =>
-        watch.some((a) => !a.address && a.symbol === s && a.id === names[s].toLowerCase())
-      );
-      if (known.length) return known;
-    } catch {}
     return [...assets];
   }
   let symbols = readSymbols();
@@ -233,6 +220,11 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       return { row, strategy, state: fill ? 'filled' : skipped.includes(row.id) ? 'skipped' : latest.has(row.id) ? 'current' : 'expired' };
     });
     feedView.render(items, { selectedId: receipt?.signalId || current?.id || null, busy });
+    const count = items.length;
+    const countLabel = el('card-count');
+    const caption = t(count + ' 张策略卡', count + (count === 1 ? ' strategy card' : ' strategy cards'));
+    if (countLabel.textContent !== caption) countLabel.textContent = caption;
+    countLabel.hidden = !count;
     crew.setActive(items.some(item => item.state === 'current'));
     const archive = el('archive');
     archive.hidden = !receipt || items.some(item => item.row.id === receipt.signalId);
@@ -240,7 +232,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       archive.dataset.receipt = receipt.id;
       archive.innerHTML = `<div class="lite-plan-pair">${tokenIcon(receipt.symbol, { size: 28 })}${esc(receipt.market)}</div>
         <h3 class="lite-plan-title">${esc(strategyLabelForId(receipt.strategyId, lang) || t('操作记录', 'Activity'))}</h3>
-        <span>${t('成交价', 'Fill price')}</span><strong class="dot-number">${fmt(receipt.price)} <small>USDT</small></strong>
+        <span>${t('成交价', 'Fill price')}</span><strong class="dot-number">${signalClosePrice(receipt.price)} <small>USDT</small></strong>
         <p>${day(receipt.filledAt)} · ${clock(receipt.filledAt)}</p>`;
     }
     const empty = el('empty');
@@ -371,7 +363,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         mode === 'practice' && !sold && account?.holdings.some((h) => h.symbol === receipt.symbol);
       const planLabel = strategyLabelForId(receipt.strategyId, lang);
       const details =
-        orderLine(t('成交价', 'Fill price'), fmt(receipt.price) + ' USDT') +
+        orderLine(t('成交价', 'Fill price'), signalClosePrice(receipt.price) + ' USDT') +
         orderLine(
           sold ? t('净收回', 'Net proceeds') : t('总支出', 'Total spent'),
           fmt(receipt.amount) + ' USDT'
@@ -405,7 +397,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         <div class="order-line"><span>${t('预估手续费', 'Est. fee')}</span><strong id="lite-order-fee"></strong></div>`;
     } else if (sell) {
       form = `<p class="position-to-sell"><span>${t('卖出持仓', 'Position to sell')}</span><strong>${fmt(holding?.quantity, 6)} ${esc(symbol)}</strong></p>`;
-      lines = balance + orderLine(t('参考收盘价', 'Reference close'), fmt(current.price) + ' USDT');
+      lines = balance + orderLine(t('参考收盘价', 'Reference close'), signalClosePrice(current.price) + ' USDT');
     }
     if (buy || sell) {
       action = button(plan.side, busy ? t('正在核对…', 'Checking…') : liteOrderLabel(plan.side, symbol, readDraft(), lang), 'lite-action', busy || !account);
@@ -480,7 +472,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       ? receipts
           .map(
             (r) =>
-              `<div class="history-item"><div><b>${esc((r.side === 'sell' ? t('卖出 ', 'Sell ') : t('买入 ', 'Buy ')) + r.symbol)}</b><small>${day(r.filledAt)} ${clock(r.filledAt)} · ${fmt(r.quantity, 6)} ${esc(r.symbol)}</small><small>${t('成交价 ', 'Fill price ')}${fmt(r.price)} USDT</small></div><div class="history-amount">${r.side === 'sell' ? '+' : '−'}${fmt(r.amount)} USDT<small>${t('含手续费 ', 'Incl. fee ')}${fmt(r.fee, 3)} USDT</small></div></div>`
+              `<div class="history-item"><div><b>${esc((r.side === 'sell' ? t('卖出 ', 'Sell ') : t('买入 ', 'Buy ')) + r.symbol)}</b><small>${day(r.filledAt)} ${clock(r.filledAt)} · ${fmt(r.quantity, 6)} ${esc(r.symbol)}</small><small>${t('成交价 ', 'Fill price ')}${signalClosePrice(r.price)} USDT</small></div><div class="history-amount">${r.side === 'sell' ? '+' : '−'}${fmt(r.amount)} USDT<small>${t('含手续费 ', 'Incl. fee ')}${fmt(r.fee, 3)} USDT</small></div></div>`
           )
           .join('')
       : `<p class="history-empty">${accountError ? errorText('STORAGE_UNAVAILABLE') : t('暂无操作记录。', 'No activity yet.')}</p>`;
@@ -552,7 +544,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       const exercise = desk.practiceExit(wantedSymbol);
       if (exercise.id === wantedId && !rows.some((r) => r.id === exercise.id)) rows.push(exercise);
     }
-    rememberFeed(rows);
+    const history = feed.status === 'fulfilled' ? (feed.value.history ?? []) : [];
+    rememberFeed([...history, ...rows]);
     const available = prioritizedRows();
     if (receipt) {
       renderQueue();

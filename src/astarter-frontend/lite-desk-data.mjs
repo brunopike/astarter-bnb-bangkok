@@ -1,10 +1,10 @@
-import { strategyForSignal } from './lite-strategy-cards.mjs';
-import { readLiveSignalObservation } from './live-market-signals.mjs';
+import { LITE_MARKETS, strategyForSignal } from './lite-strategy-cards.mjs';
+import { readLiveSignalObservation, readLiveSignalWindow } from './live-market-signals.mjs';
 import { HUB_RESOURCES, normalizeHubResource } from './market-hub-data.mjs';
 import { ORDER_MARKETS } from './order-markets.mjs';
 import { exponentialAverage, wilderSeries } from './workbench-market-analysis.mjs';
 
-const symbols = ['ETH', 'BTC', 'SOL'];
+const minimumCardCount = 6;
 const paperFee = ORDER_MARKETS['cex-spot'].feeRate;
 const startingBalance = 10_000;
 const practiceWindow = 15 * 60_000;
@@ -30,13 +30,14 @@ function requireMode(mode) {
 
 function practiceRow(symbol, at, exit = false) {
   const start = Math.floor(at / practiceWindow) * practiceWindow;
-  const entryPrice = { ETH: 3180, BTC: 81230, SOL: 184 }[symbol];
-  const price = exit ? Number((entryPrice * 0.995).toFixed(2)) : entryPrice;
-  const change = exit ? -0.8 : { ETH: 0.85, BTC: 0.39, SOL: -0.52 }[symbol];
+  const entryPrice = { ETH: 3180, BTC: 81230, SOL: 184, BNB: 562, XRP: 1.48, DOGE: 0.0974 }[symbol];
+  const priceDecimals = entryPrice < 1 ? 6 : entryPrice < 10 ? 4 : 2;
+  const price = exit ? Number((entryPrice * 0.995).toFixed(priceDecimals)) : entryPrice;
+  const change = exit ? -0.8 : { ETH: 0.85, BTC: 0.39, SOL: -0.52, BNB: 0.64, XRP: -0.73, DOGE: 1.04 }[symbol];
   const bars = Array.from({ length: 32 }, (_, index) => {
     const progress = index / 31;
     const deviation = (progress - 1) * change + Math.sin(progress * Math.PI * 6) * Math.abs(change) * 0.11;
-    const close = Number((price * (1 + deviation / 100)).toFixed(2));
+    const close = Number((price * (1 + deviation / 100)).toFixed(priceDecimals));
     return { close, high: close, low: close, time: start / 1000 - (32 - index) * 60 };
   });
   const priceSeries = bars.slice(-20).map((bar) => bar.close);
@@ -171,26 +172,42 @@ export function createLiteDesk({
   indexedDB = globalThis.indexedDB,
   accountStore = paperStore(indexedDB)
 } = {}) {
-  async function readSignals({ mode = 'live', symbols: requested = ['BTC', 'ETH'], signal } = {}) {
+  async function readSignals({ mode = 'live', symbols: requested = LITE_MARKETS, signal } = {}) {
     requireMode(mode);
-    const selected = symbols.filter((symbol) => requested.includes(symbol));
-    if (mode === 'practice')
-      return { rows: selected.map((symbol) => practiceRow(symbol, now())), failed: [] };
-    const results = await Promise.allSettled(
-      selected.map((symbol) =>
-        readLiveSignalObservation(symbol, { fetchImpl, now, signal: signal ?? AbortSignal.timeout(12000) })
-      )
-    );
+    const selected = LITE_MARKETS.filter(symbol => requested.includes(symbol));
+    const at = now();
+    if (mode === 'practice') {
+      const rows = selected.map(symbol => practiceRow(symbol, at));
+      const history = [];
+      for (let step = 1; rows.length && rows.length + history.length < minimumCardCount; step++) {
+        for (const symbol of selected) {
+          history.push(practiceRow(symbol, at - step * practiceWindow));
+          if (rows.length + history.length === minimumCardCount) break;
+        }
+      }
+      return { rows, history, failed: [] };
+    }
+    const results = await Promise.allSettled(selected.map(symbol =>
+      readLiveSignalWindow(symbol, { fetchImpl, now, signal: signal ?? AbortSignal.timeout(12000), allowExpiredCloses: true })
+    ));
     signal?.throwIfAborted();
-    const rows = [],
-      failed = [];
-    results.forEach((result, i) => {
-      if (result.status === 'rejected')
-        failed.push({ symbol: selected[i], code: result.reason?.message || 'UNAVAILABLE' });
-      else if (result.value.validUntil <= now()) failed.push({ symbol: selected[i], code: 'STALE_MARKET' });
-      else rows.push({ ...result.value, mode: 'live' });
+    const settledAt = now();
+    const rows = [], previous = [], failed = [];
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        failed.push({ symbol: selected[index], code: result.reason?.message || 'UNAVAILABLE' });
+        return;
+      }
+      const [latest, ...older] = result.value.map(row => ({ ...row, mode }));
+      if (latest.validUntil > settledAt) rows.push(latest);
+      else {
+        failed.push({ symbol: selected[index], code: 'STALE_MARKET' });
+        previous.push(latest);
+      }
+      previous.push(...older);
     });
-    return { rows, failed };
+    const history = previous.sort((a, b) => b.closedAt - a.closedAt).slice(0, minimumCardCount - rows.length);
+    return { rows, history, failed };
   }
 
   async function getAccount(mode = 'live') {
@@ -200,14 +217,14 @@ export function createLiteDesk({
   }
 
   function practiceExit(symbol) {
-    if (!symbols.includes(symbol)) throw Error('UNSUPPORTED_MARKET');
+    if (!LITE_MARKETS.includes(symbol)) throw Error('UNSUPPORTED_MARKET');
     return practiceRow(symbol, now(), true);
   }
 
   async function trade({ row, amount, expectedQuantity, strategyId }, side) {
     const mode = row?.mode;
     requireMode(mode);
-    if (!symbols.includes(row.symbol) || !row.id) throw Error('SIGNAL_CHANGED');
+    if (!LITE_MARKETS.includes(row.symbol) || !row.id) throw Error('SIGNAL_CHANGED');
     const buying = side === 'buy';
     const direction = buying ? 'up' : 'down';
     const cents = buying ? spendCents(amount) : 0;

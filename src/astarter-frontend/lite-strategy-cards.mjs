@@ -3,7 +3,8 @@ import { liveSignalRow, signalClosePrice } from './live-signal-view.mjs';
 import { sparkline, sparklinePoints } from './product-charts.mjs';
 import { escapeUI as esc } from './product-experience.mjs';
 
-const markets = new Set(['BTC', 'ETH', 'SOL']);
+export const LITE_MARKETS = Object.freeze(['ETH', 'BTC', 'SOL', 'BNB', 'XRP', 'DOGE']);
+const markets = new Set(LITE_MARKETS);
 const readingFormats = {
   zh: new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 }),
   en: new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
@@ -114,7 +115,7 @@ export function liteStrategyCard(row, { strategy, stale = false, lang = 'zh' }) 
     const prices = high === low ? [high] : [high, low];
     const axis = prices.map(price => {
       const top = points[series.indexOf(price)][1] / height * 100;
-      return `<span style="top:${top.toFixed(2)}%">${reading.format(price)}</span>`;
+      return `<span style="top:${top.toFixed(2)}%">${signalClosePrice(price)}</span>`;
     }).join('');
     const start = new Date(o.closedAt - (series.length - 1) * 60000).toISOString();
     chart = `<figure class="sig-live-chart" aria-label="${en ? 'Minute closing prices' : '分钟收盘走势'}">
@@ -132,7 +133,7 @@ export function liteStrategyCard(row, { strategy, stale = false, lang = 'zh' }) 
         <div class="lite-card-source"><span>${provider}</span><time title="${iso}" datetime="${iso}">${iso.slice(11, 16)} UTC</time>
           ${Number.isFinite(o.volumeRatio) ? `<span>${en ? 'Relative volume' : '相对成交量'} ${reading.format(o.volumeRatio)}×</span>` : ''}</div></div>
       ${chart}</div>
-      <dl class="lite-plan-readings"><div><dt>EMA 20</dt><dd>${reading.format(o.ema20)}</dd></div><div data-change="${Math.sign(o.momentumPct)}"><dt>${en ? '5-bar change' : '5 根涨跌幅'}</dt><dd>${esc(momentum)}</dd></div><div><dt>RSI 14</dt><dd>${esc(reading.format(o.rsi14))}</dd></div></dl>
+      <dl class="lite-plan-readings"><div><dt>EMA 20</dt><dd>${signalClosePrice(o.ema20)}</dd></div><div data-change="${Math.sign(o.momentumPct)}"><dt>${en ? '5-bar change' : '5 根涨跌幅'}</dt><dd>${esc(momentum)}</dd></div><div><dt>RSI 14</dt><dd>${esc(reading.format(o.rsi14))}</dd></div></dl>
       <details class="lite-plan-rules-box"><summary>${en ? 'Entry and exit rules' : '入场与退出条件'}</summary>
         <dl class="lite-plan-rules"><div><dt>${en ? 'Entry' : '入场'}</dt><dd>${enter}</dd></div><div><dt>${en ? 'Exit' : '退出'}</dt><dd>${exit}</dd></div></dl></details>
     </div>

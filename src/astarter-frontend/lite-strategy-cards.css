@@ -172,6 +172,9 @@ body #product-page[data-layout='unified'] .lite-main {
   scrollbar-color: var(--b-line) transparent;
   padding: 3px;
 }
+@container (min-width: 680px) {
+  .lite-feed-rail:not(:has(> :nth-child(7))) { max-height: none; }
+}
 #product-page .lite-feed-card {
   --card-color: var(--b-muted);
   --chart-accent: var(--b-muted);
@@ -190,6 +193,9 @@ body #product-page[data-layout='unified'] .lite-main {
 #product-page .lite-feed-card[data-feed-asset='BTC'] { --card-color: #e4a454; }
 #product-page .lite-feed-card[data-feed-asset='ETH'] { --card-color: #94a7e9; }
 #product-page .lite-feed-card[data-feed-asset='SOL'] { --card-color: #81cdb8; }
+#product-page .lite-feed-card[data-feed-asset='BNB'] { --card-color: #e0bc63; }
+#product-page .lite-feed-card[data-feed-asset='XRP'] { --card-color: #91c2df; }
+#product-page .lite-feed-card[data-feed-asset='DOGE'] { --card-color: #c89d77; }
 #product-page .lite-feed-card[data-side='buy'] { --chart-accent: var(--b-up); }
 #product-page .lite-feed-card[data-side='sell'] { --chart-accent: var(--b-down); }
 #product-page .lite-feed-card[aria-pressed='true'] {

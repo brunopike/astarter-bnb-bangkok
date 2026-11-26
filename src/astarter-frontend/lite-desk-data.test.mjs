@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLiteDesk, mergeLiteSignalFeed } from './lite-desk-data.mjs';
+import { readLiveSignalObservation } from './live-market-signals.mjs';
 
 const start = Date.UTC(2026, 10, 25, 10, 6, 5);
 function harness() {
@@ -20,7 +21,7 @@ function harness() {
     if (resource === 'tickers') {
       body = [
         {
-          symbol: 'ETHUSDT',
+          symbol: state.tickerSymbol || 'ETHUSDT',
           lastPrice: state.price,
           openPrice: 125,
           quoteVolume: 60000,
@@ -230,4 +231,93 @@ test('each closed candle stays one independent recommendation, newest first, kee
   assert.deepEqual(mergeLiteSignalFeed(merged,[],{...options,mode:'live'}),[]);
   assert.deepEqual(mergeLiteSignalFeed(merged,[],{...options,symbols:['BTC']}),[]);
   assert.deepEqual(mergeLiteSignalFeed(merged,[],{...options,now:state.time+86400001}),[]);
+});
+
+test('opens six current markets by default and rechecks the additional trading pairs', async () => {
+  const { desk, state } = harness();
+  const markets = ['ETH', 'BTC', 'SOL', 'BNB', 'XRP', 'DOGE'];
+  for (const mode of ['live', 'practice']) {
+    const { rows, history, failed } = await desk.readSignals({ mode });
+    assert.deepEqual(rows.map(row => row.symbol), markets);
+    assert.deepEqual(history, []);
+    assert.deepEqual(failed, []);
+    assert.equal(new Set(rows.map(row => row.id)).size, 6);
+    assert.ok(rows.every(row => row.mode === mode && row.validUntil > state.time && Number.isFinite(row.price)));
+  }
+  assert.equal(state.candles, 6);
+  const { rows } = await desk.readSignals();
+  assert.equal(state.candles, 6);
+  for (const row of rows.slice(3)) {
+    state.tickerSymbol = row.symbol + 'USDT';
+    const result = await desk.buy({ row, amount: '10.00' });
+    assert.equal(result.receipt.symbol, row.symbol);
+    assert.equal(result.receipt.signalId, row.id);
+  }
+  for (const count of [1, 2, 3]) {
+    const { rows, history } = await desk.readSignals({ mode: 'practice', symbols: markets.slice(0, count) });
+    assert.equal(rows.length, count);
+    assert.equal(rows.length + history.length, 6);
+    assert.ok(history.every(row => row.source === 'Practice' && row.validUntil <= state.time &&
+      row.validUntil - row.closedAt === 15 * 60000));
+    await assert.rejects(desk.buy({ row: history[0], amount: 25 }), /EXPIRED/);
+  }
+});
+
+test('backfills filtered assets from actual earlier closes with no extra market request or future bars', async () => {
+  const minute = 60_000;
+  const close = Date.UTC(2026, 10, 26, 0, 2);
+  const now = close + 4_000;
+  const prices = Array.from({ length: 42 }, (_, index) => 60 + Math.sin(index / 2) * 4 + index / 2);
+  const body = [...prices, 1500].map((price, index) => {
+    const open = close + (index - prices.length) * minute;
+    return [open, price, price + 1, price - 1, price, 23 + index, open + minute - 1];
+  });
+  const relay = (receivedAt, records) => ({ ok: true, json: async () =>
+    ({ schema: 'public-market-relay-v1', resource: 'candles', receivedAt, body: records }) });
+  let calls = 0;
+  const desk = createLiteDesk({ now: () => now, fetchImpl: async () => { calls++; return relay(now, body); } });
+  const { rows, history } = await desk.readSignals({ symbols: ['BTC'] });
+  assert.equal(calls, 1);
+  assert.equal(rows.length, 1);
+  assert.equal(history.length, 5);
+  assert.equal(rows[0].price, prices.at(-1));
+  for (const [offset, row] of history.entries()) {
+    const earlier = close - (offset + 1) * minute;
+    assert.equal(row.closedAt, earlier);
+    assert.equal(row.receivedAt, now);
+    assert.equal(row.validUntil, earlier + minute);
+    assert.equal(row.priceSeries.at(-1), prices.at(-2 - offset));
+    const expected = await readLiveSignalObservation('BTC', { now: () => earlier + 4000,
+      fetchImpl: async () => relay(earlier + 4000, body.filter(([open]) => open <= earlier)) });
+    assert.deepEqual(row, { ...expected, receivedAt: now, mode: 'live' });
+  }
+  const narrowed = await desk.readSignals({ symbols: ['BTC','ETH'] });
+  assert.equal(calls, 2);
+  assert.deepEqual(narrowed.history.map(row => [row.symbol,row.closedAt]), [
+    ['ETH',close-minute], ['BTC',close-minute], ['ETH',close-2*minute], ['BTC',close-2*minute]
+  ]);
+});
+
+test('marks a relay snapshot spanning the minute boundary as history and never trades it', async () => {
+  const minute = 60_000;
+  const close = Math.floor(start / minute) * minute;
+  const receivedAt = close - 1000;
+  const body = Array.from({ length: 29 }, (_, index) => {
+    const open = close - (29 - index) * minute;
+    return [open, 100 + index, 101 + index, 99 + index, 100 + index, 4, open + minute - 1];
+  });
+  const fetchImpl = async url => {
+    if (!url.includes('symbol=BTCUSDT')) throw Error('UNAVAILABLE');
+    return { ok: true, json: async () => ({schema:'public-market-relay-v1',resource:'candles',body,receivedAt}) };
+  };
+  const desk = createLiteDesk({fetchImpl, now:()=>start, accountStore:async () => ({balance:10000,receipts:[]})});
+  const {rows, history, failed} = await desk.readSignals();
+  assert.equal(rows.length, 0);
+  assert.equal(failed.length, 6);
+  assert.equal(history.length, 6);
+  assert.ok(history.every(row => row.symbol === 'BTC' && row.validUntil <= start));
+  assert.equal(history[0].price, 127);
+  assert.equal(history[0].validUntil, close);
+  await assert.rejects(desk.buy({row:history[0],amount:25}), /EXPIRED/);
+  await assert.rejects(readLiveSignalObservation('BTC',{fetchImpl,now:()=>start}),/STALE_MARKET/);
 });
