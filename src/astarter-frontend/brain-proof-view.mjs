@@ -93,6 +93,17 @@ function formatters(en){
 const signClass=value=>(value>0?'is-positive':value<0?'is-negative':'');
 const fact=(label,value)=>`<div><dt>${e(label)}</dt><dd>${e(value)}</dd></div>`;
 
+export function frozenChartBars(archive,assetKey,evidence){
+  const asset=archive?.assets?.find(row=>row.key===assetKey && row.market===evidence.market && row.venue===evidence.venue && row.quote===evidence.quote);
+  const end=Date.parse(evidence.asOf),day=86400000,count=evidence.barCount;
+  if(!Array.isArray(asset?.bars) || !Number.isSafeInteger(count) || count<1 || !Number.isFinite(end))return [];
+  const start=end+1-count*day;
+  const rows=asset.bars.filter(row=>Array.isArray(row) && row[0]*1000>=start && row[0]*1000+day-1<=end);
+  if(rows.length!==count || !rows.every(([time,o,h,l,c,v],i)=>time*1000===start+i*day &&
+    [o,h,l,c,v].every(Number.isFinite) && l>0 && h>=Math.max(o,c) && l<=Math.min(o,c) && v>=0))return [];
+  return rows.map(([time,open,high,low,close,volume])=>({time:time*1000,open,high,low,close,volume}));
+}
+
 // The next calendar decision may have been frozen before this session closed.
 export function nextLearningSession(decisions,record){
   const close=Date.parse(record.execution.barCloseAt);
@@ -476,6 +487,55 @@ export function mountProofView(host,replayHost,learningHost,en){
   function stage(title,main,body){
     return `<article class="bp-stage" tabindex="-1" data-proof-layer="${title.split(' ')[0].toLowerCase()}"><h4>${title}</h4><strong>${e(main)}</strong>${body}</article>`;
   }
+  function mountFrozenChart(target,response,signal){
+    const observer=new IntersectionObserver(entries=>{
+      if(!entries.some(entry=>entry.isIntersecting))return;
+      observer.disconnect();
+      load();
+    },{rootMargin:'180px'});
+    observer.observe(target);
+    let disposeChart;
+    signal.addEventListener('abort',()=>{observer.disconnect();disposeChart?.();},{once:true});
+    async function load(){
+      if(signal.aborted)return;
+      target.textContent=t('读取冻结日线…','Loading daily candles…');
+      try{
+        const [archive,charts]=await Promise.all([
+          fetch(response.evidenceUrl,{signal}).then(result=>{
+            if(!result.ok)throw Error('Frozen evidence unavailable');
+            return result.json();
+          }),import('./product-chart-ui.mjs')
+        ]);
+        if(signal.aborted || !target.isConnected)return;
+        const evidence=response.decisionProof.evidence,bars=frozenChartBars(archive,response.assetKey,evidence);
+        if(!bars.length)throw Error('Frozen window does not match the decision');
+        const count=Math.min(30,bars.length);
+        target.innerHTML=charts.chartPanel('brain-frozen-candles',{title:evidence.market,unit:evidence.quote,
+          bars,period:'1D',height:156,compact:true,showPresets:false,initialRange:{start:bars.length-count,count}});
+        disposeChart=charts.mountCharts(target);
+      }catch{
+        if(!signal.aborted && target.isConnected)notice(target,t('暂时无法读取冻结日线。','Frozen candles unavailable.'),load);
+      }
+    }
+  }
+  function strategyPlot(candidates,selected){
+    if(!candidates.length)return '';
+    const hasScore=row=>Number.isFinite(row.score) && (row.sampleCount>0 || row.id==='cash');
+    const scored=candidates.filter(hasScore);
+    const scale=Math.max(...scored.map(row=>Math.abs(row.score)),0);
+    const rows=candidates.map(row=>{
+      const valid=hasScore(row),score=row.score;
+      const width=valid && scale?Math.abs(score)/scale*50:0;
+      const value=valid?(score>0?'+':'')+number(score,4):'—';
+      const state=row.id===selected?t('入选','Selected'):reason(row.reason);
+      return `<li data-picked="${row.id===selected}" title="${e(state)}" aria-label="${e([name(row.id),value,state].join(' · '))}">
+        <span>${e(name(row.id))}</span><i class="dp-score-track" aria-hidden="true">${valid?`<i style="left:${score<0?50-width:50}%;width:${width}%" data-zero="${score===0}"></i>`:''}</i><b>${e(value)}</b></li>`;
+    }).join('');
+    const signals=candidates.filter(row=>row.id!=='cash');
+    const fired=signals.filter(row=>row.signal===true).length;
+    return `<div class="dp-plot-caption"><span>${t('策略评分','Strategy scores')}</span><span>${t('现金基准 = 0','Cash baseline = 0')}</span></div><ul class="dp-scores">${rows}</ul>
+      <div class="dp-signal-count"><span aria-hidden="true">${signals.map(row=>`<i data-fired="${row.signal===true}"></i>`).join('')}</span>${fired} / ${signals.length} ${t('个信号触发','signals triggered')}</div>`;
+  }
   function venueDetail(response){
     const source=response.decisionProof.assurance?.source,review=response.venueReview;
     if(!source && !review)return '';
@@ -572,6 +632,26 @@ export function mountProofView(host,replayHost,learningHost,en){
       why(proof.reason);
     const empty=(message)=>`<p class="bp-current-note">${e(message)}</p>`;
     const percentFraction=value=>Number.isFinite(value)?percent(value*100):'—';
+    const drawer=(label,body)=>`<details class="dp-detail"><summary>${e(label)}</summary><div>${body}</div></details>`;
+    const change=Number.isFinite(f?.close) && d.previousClose>0?(f.close/d.previousClose-1)*100:null;
+    const marketPlot=ev && response.evidenceUrl?`<div class="dp-plot-caption"><span>${e(ev.venue)} · 1D</span>
+      ${Number.isFinite(change)?`<b class="${signClass(change)}">${e(percent(change,true))}</b>`:''}</div>
+      <div class="dp-candles" data-frozen-chart></div>`:'';
+    const orderLimit=allowed && Number.isFinite(dispatch.maxNotional)?dispatch.maxNotional:null;
+    const share=orderLimit!==null && d?.equityBefore>0?100*orderLimit/d.equityBefore:null;
+    const exposure=share===null?'':`<div class="dp-allocation"><div class="dp-ring" style="--share:${Math.min(100,Math.max(0,share))}%">
+      <b>${e(percent(share))}</b></div><div><strong>${e(amount(orderLimit,dispatch.quote??quote))}</strong>
+      <span>${t('下达额度 / 模拟权益','Dispatch limit / paper equity')}</span></div></div>`;
+    const flow=[
+      [t('登记','Register'),Boolean(response.commitId)],
+      [t('指令','Dispatch'),allowed],
+      [t('回执','Receipt'),settled]
+    ];
+    const journey=`<ol class="dp-journey">${flow.map(([label,done])=>{
+      const state=done?'done':blocked?'blocked':'pending';
+      const description=done?t('已记录','Recorded'):blocked?t('已拦截','Blocked'):t('待记录','Pending');
+      return `<li data-receipt-state="${state}" aria-label="${e(label+' · '+description)}"><i aria-hidden="true">${done?'✓':blocked?'×':'·'}</i><span>${e(label)}</span></li>`;
+    }).join('')}</ol>`;
     const refusalStages=refusal?[
       stage('Brain Layer',t('未通过登记检查','Registration check failed'),facts([
         fact(t('原因','Reason'),why(refusal.reason.toLowerCase())),
@@ -580,16 +660,16 @@ export function mountProofView(host,replayHost,learningHost,en){
         fact(t('目标交易日','Target session'),refusal.targetDate+' UTC')
       ])),
       stage('Thinking Layer',t('未选定策略','No strategy selected'),empty(t('本交易日没有已登记的决策或风险额度。','No decision or risk budget was registered for this session.'))),
-      stage('Execution Layer',t('未下达执行指令','No dispatch issued'),facts([
+      stage('Execution Layer',t('未下达执行指令','No dispatch issued'),journey+drawer(t('执行明细','Execution details'),facts([
         fact(t('模拟回执','Paper receipt'),t('无','None')),
         fact(t('实盘下单权限','Live order authority'),t('未授权','Not authorized'))
-      ]))
+      ])))
     ].join(''):'';
     currentResult.innerHTML=`<header class="bp-current-head"><div>
         <span class="bp-market-name">${e(marketName)} · ${e(response.targetDate)} UTC</span>
         <h3>${e(status)}</h3>${veto?`<p class="bp-market-name">${t('交易所复查发现行情冲突','Venue recheck found conflicting market data')}</p>`:''}</div><span class="bp-route">${t('模拟执行通道','Paper execution')}</span></header>
       <div class="bp-current-trace bp-trace">${refusal?refusalStages:`
-        ${stage('Brain Layer',ev?t('冻结的行情','Frozen market data'):t('行情依据','Market evidence'),ev?facts([
+        ${stage('Brain Layer',Number.isFinite(f?.close)?amount(f.close,quote,8):t('行情依据','Market evidence'),ev?marketPlot+drawer(t('冻结的行情','Frozen market data'),facts([
           fact(t('交易场所','Venue'),ev.venue),fact(t('数据截至','Information cutoff'),stamp(cutoff)),
           fact(t('已收盘日线','Closed daily bars'),number(ev.barCount,0)),
           ...(f?[fact(t('最后收盘价','Last close'),amount(f.close,quote,8)),
@@ -597,18 +677,18 @@ export function mountProofView(host,replayHost,learningHost,en){
           fact(t('10 日 / 30 日均价','10-day / 30-day MA'),number(f.average10,6)+' / '+number(f.average30,6)),
           fact(t('前 10 日最高价','Previous 10-day high'),amount(f.priorHigh,quote,8)),
           fact(t('ATR 占收盘价','ATR / close'),percentFraction(f.atrPct))]:[])
-        ])+`<div class="bp-sources">${sourceLink(response.evidenceUrl,t('冻结输入','Frozen inputs'))} ${sourceLink(ev.sourceUrl,t('行情来源','Market source'))}</div>`:
+        ])+`<div class="bp-sources">${sourceLink(response.evidenceUrl,t('冻结输入','Frozen inputs'))} ${sourceLink(ev.sourceUrl,t('行情来源','Market source'))}</div>`):
           empty(blocked?t('本次行情依据未通过核对。','The market evidence did not clear verification.'):t('等待用于本次研判的冻结快照。','Waiting for the frozen market snapshot.')))}
         ${stage('Thinking Layer',d?name(d.selected):t('等待可核对的决策','Awaiting a decision'),d?
-          empty(detailIntro)+facts([
+          strategyPlot(candidates,d.selected)+drawer(t('策略与风控','Strategy & risk'),empty(detailIntro)+facts([
             fact(veto?t('登记时风控','Registered risk policy'):t('风控决定','Risk decision'),(veto?[r?.mode]:[r?.mode,r?.action,r?.reason]).filter(Boolean).map(why).join(' · ')||'—'),
             fact(t('风险预算','Risk budget'),amount(r?.riskBudget,quote)),
             fact(t('冻结额度','Planned amount'),amount(r?.amount,quote)),
             fact(t('止损 / 跳空上限','Stop / opening gap limit'),percentFraction(r?.stopFraction)+' / '+percentFraction(r?.openGapLimit))
-          ])+(alternatives?`<details open class="bp-alternatives"><summary>${t('比较的策略','Strategies compared')} · ${tradeCandidates.length}</summary><ul class="bp-candidates">${alternatives}</ul></details>`:'')+(!veto?policyDetail(proof.assurance?.strategy,quote):'')+
-          (!blocked?`<details data-choice-sensitivity><summary>${t('选择对样本有多敏感','Sensitivity to the sample')}</summary><div role="status"></div></details>`:''):
+          ])+(alternatives?`<details class="bp-alternatives"><summary>${t('比较的策略','Strategies compared')} · ${tradeCandidates.length}</summary><ul class="bp-candidates">${alternatives}</ul></details>`:'')+(!veto?policyDetail(proof.assurance?.strategy,quote):'')+
+          (!blocked?`<details data-choice-sensitivity><summary>${t('选择对样本有多敏感','Sensitivity to the sample')}</summary><div role="status"></div></details>`:'')):
           empty(blocked?t('策略与风控依据尚未通过核对。','The strategy and risk policy have not cleared verification.'):t('登记后可查看候选策略、弃选原因与风险额度。','The registered decision supplies the alternatives, reasons and risk limits.')))}
-        ${stage('Execution Layer',execHeadline,facts([
+        ${stage('Execution Layer',execHeadline,exposure+journey+(allowed?`<small class="dp-receipt-note">${e(paperState)}</small>`:'')+drawer(t('执行明细','Execution details'),facts([
           fact(t('目标开盘','Target open'),proof.targetOpenAt?stamp(proof.targetOpenAt):response.targetDate+' UTC'),
           ...(allowed?[fact(t('下达的额度上限','Dispatched limit'),amount(dispatch.maxNotional,dispatch.quote??quote)),
             fact(t('指令登记时间','Dispatch recorded at'),stamp(dispatch.issuedAt))]:[]),
@@ -616,7 +696,7 @@ export function mountProofView(host,replayHost,learningHost,en){
           ...(independent?[fact(t('独立核算','Independent reconciliation'),independent)]:[]),
           ...(settled && Number.isFinite(paperResult.netPnl)?[fact(t('模拟净损益','Paper net P&L'),amount(paperResult.netPnl,quote))]:[]),
           fact(t('实盘下单权限','Live order authority'),proof.liveAuthorized===false?t('未授权','Not authorized'):t('未核实','Unconfirmed'))
-        ])+(!blocked && response.handoffUrl?sourceLink(response.handoffUrl,t('模拟执行指令','Paper dispatch')):'')+(!blocked?comparisonDetail(response.comparison,quote):''))}`}
+        ])+(!blocked && response.handoffUrl?sourceLink(response.handoffUrl,t('模拟执行指令','Paper dispatch')):'')+(!blocked?comparisonDetail(response.comparison,quote):'')))}`}
       </div><footer class="bp-current-foot"><details class="bp-checks"><summary>${t('核验记录','Verification record')}</summary>
         ${venueDetail(response)}
         ${audit?`<ul class="bp-candidates">${audit}</ul>`:''}
@@ -632,6 +712,8 @@ export function mountProofView(host,replayHost,learningHost,en){
         ${reviewDate?`<button type="button" data-latest class="bp-refresh">${t('返回当前','Current session')}</button>`:''}
         <button type="button" class="bp-refresh" data-refresh>${t('重新核对','Check again')}</button></div></footer>`;
     currentState.hidden=true;currentResult.hidden=false;
+    const plot=currentResult.querySelector('[data-frozen-chart]');
+    if(plot)mountFrozenChart(plot,response,currentRequest.signal);
     const sensitivity=q('[data-choice-sensitivity]');
     if(sensitivity){
       const output=sensitivity.querySelector('[role=status]'),signal=currentRequest.signal;
