@@ -10,6 +10,20 @@ const startingBalance = 10_000;
 const practiceWindow = 15 * 60_000;
 const maxQuoteMove = 0.005;
 
+export function mergeLiteSignalFeed(previous, incoming, { mode, symbols: tracked, selectedId, now = Date.now() }) {
+  const byId = new Map();
+  for (const row of [...previous, ...incoming]) {
+    if (row?.mode !== mode || !tracked.includes(row.symbol) || typeof row.source !== 'string' || row.unit !== 'USDT' || row.closedAt > now ||
+        row.closedAt < now - 86400000 || !strategyForSignal(row, 0, 'en', row.closedAt)) continue;
+    byId.set(row.id, row);
+  }
+  const latest = [...byId.values()].sort((a, b) => b.closedAt - a.closedAt);
+  const visible = latest.slice(0, 12);
+  const selected = byId.get(selectedId);
+  if (selected && !visible.some(row => row.id === selectedId)) visible[visible.length - 1] = selected;
+  return visible;
+}
+
 function requireMode(mode) {
   if (mode !== 'live' && mode !== 'practice') throw Error('INVALID_MODE');
 }

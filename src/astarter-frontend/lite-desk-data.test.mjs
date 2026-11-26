@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLiteDesk } from './lite-desk-data.mjs';
+import { createLiteDesk, mergeLiteSignalFeed } from './lite-desk-data.mjs';
 
 const start = Date.UTC(2026, 10, 25, 10, 6, 5);
 function harness() {
@@ -210,4 +210,24 @@ test('a selected Signals strategy must match the fill and is recorded on the rec
     strategyId: 'signals-spot-momentum-exit'
   });
   assert.equal(sale.strategyId, 'signals-spot-momentum-exit');
+});
+
+
+test('each closed candle stays one independent recommendation, newest first, keeping a selected older one', async () => {
+  const { desk, state } = harness();
+  const { rows:[row] } = await desk.readSignals({mode:'practice',symbols:['ETH']});
+  const samples = Array.from({length:15}, (_,i) => ({
+    ...row, closedAt:row.closedAt-i*60000, validUntil:row.closedAt+(1-i)*60000, id:'ETH:1m:'+i
+  }));
+  const options={mode:'practice',symbols:['ETH'],now:state.time,selectedId:samples.at(-1).id};
+  const first=mergeLiteSignalFeed([],samples.slice(3),options);
+  const merged=mergeLiteSignalFeed(first,[...samples.slice(0,4),samples[0]],options);
+  assert.equal(merged.length,12);
+  assert.equal(new Set(merged.map(r=>r.id)).size,12);
+  assert.deepEqual(merged.slice(0,3),samples.slice(0,3));
+  assert.equal(merged.at(-1).id,options.selectedId);
+  assert.deepEqual(mergeLiteSignalFeed(merged,samples.slice(0,3),options),merged);
+  assert.deepEqual(mergeLiteSignalFeed(merged,[],{...options,mode:'live'}),[]);
+  assert.deepEqual(mergeLiteSignalFeed(merged,[],{...options,symbols:['BTC']}),[]);
+  assert.deepEqual(mergeLiteSignalFeed(merged,[],{...options,now:state.time+86400001}),[]);
 });

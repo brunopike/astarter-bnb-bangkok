@@ -80,8 +80,6 @@ body #product-page[data-layout='unified'] .lite-main {
   body #product-page[data-layout='unified'] .lite-main {
     & :is(.lite-plan-body, .lite-archive) { padding: 16px 15px 0; }
     & .lite-plan-pairline { gap: 8px; }
-    & .lite-plan-pairline .sig-coin { width: 30px; height: 30px; flex: 0 0 30px; }
-    & .lite-plan-pairline .sig-coin img { width: 100%; height: 100%; }
     & .lite-plan-title { font-size: 17px; }
     & .lite-plan-state { font-size: 10px; }
     & .lite-plan-market { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(90px, .9fr); gap: 8px; align-items: center; margin-top: 15px; }
@@ -143,3 +141,114 @@ body #product-page[data-layout='unified'] .lite-main {
 }
 .lite-strategy-deck .lite-spark-readout time { color: var(--b-muted); font-size: 10px; }
 .lite-strategy-deck [data-inspecting] :is(.lite-spark-cursor, .lite-spark-readout) { visibility: visible; }
+
+#product-page .lite-main :is(.lite-plan-pairline,.lite-archive,.lite-feed-card,.asset-option) .brand-mark {
+  width: var(--brand-size);
+  min-width: var(--brand-size);
+  height: var(--brand-size);
+  min-height: var(--brand-size);
+  flex: 0 0 var(--brand-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+#product-page .lite-main :is(.lite-plan-pairline,.lite-feed-card,.lite-archive,.asset-option) .brand-mark:not(.brand-solana),
+#product-page .lite-main :is(.lite-plan-pairline,.lite-feed-card,.lite-archive,.asset-option) .brand-mark:not(.brand-solana) > img {
+  background: transparent;
+  box-shadow: none;
+}
+#product-page .lite-main :is(.lite-plan-pairline,.lite-feed-card,.lite-archive,.asset-option) .brand-mark > img {
+  width: 100%; height: 100%; object-fit: contain; border-radius: inherit;
+}
+
+#lite-signal-feed { min-width: 0; container-type: inline-size; }
+.lite-feed-rail {
+  display: grid;
+  align-content: start;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 218px), 1fr));
+  gap: 10px;
+  max-height: min(58svh, 545px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--b-line) transparent;
+  padding: 3px;
+}
+#product-page .lite-feed-card {
+  --card-color: var(--b-muted);
+  --chart-accent: var(--b-muted);
+  position: relative;
+  display: flex; flex-direction: column; align-items: stretch; gap: 0;
+  min-width: 0; min-height: 223px;
+  padding: 16px;
+  text-align: start;
+  color: var(--b-ink);
+  font: 500 13px/1.4 var(--sans);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--card-color) 7%, transparent), transparent 55%),
+    color-mix(in srgb, var(--b-panel) 89%, transparent);
+  border: 1px solid var(--b-line);
+  border-radius: var(--b-panel-radius, 12px);
+}
+#product-page .lite-feed-card[data-feed-asset='BTC'] { --card-color: #e4a454; }
+#product-page .lite-feed-card[data-feed-asset='ETH'] { --card-color: #94a7e9; }
+#product-page .lite-feed-card[data-feed-asset='SOL'] { --card-color: #81cdb8; }
+#product-page .lite-feed-card[data-side='buy'] { --chart-accent: var(--b-up); }
+#product-page .lite-feed-card[data-side='sell'] { --chart-accent: var(--b-down); }
+#product-page .lite-feed-card[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--card-color) 66%, var(--b-control-line));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--card-color) 14%, transparent), transparent 80%),
+    color-mix(in srgb, var(--b-panel) 93%, transparent);
+}
+#product-page .lite-feed-card:focus-visible { outline: 2px solid var(--b-accent-ink); outline-offset: 1px; }
+.lite-feed-pair, .lite-feed-foot, .lite-feed-state {
+  display: flex; align-items: center;
+}
+.lite-feed-pair { gap: 8px; min-height: 30px; }
+.lite-feed-pair b { font-size: 15px; font-weight: 650; }
+.lite-feed-pair small, .lite-feed-quote small, .lite-feed-foot { font: 450 11px/1.3 var(--sans); color: var(--b-muted); }
+.lite-feed-check {
+  display: grid; place-items: center; margin-inline-start: auto;
+  width: 17px; height: 17px; border-radius: 50%; color: var(--card-color); font: 650 12px/1 var(--sans);
+  background: color-mix(in srgb, var(--card-color) 16%, transparent); visibility: hidden;
+}
+.lite-feed-card[aria-pressed='true'] .lite-feed-check { visibility: visible; }
+.lite-feed-name { margin-top: 15px; font: 550 clamp(16px, 2.4cqw, 20px)/1.25 var(--sans); letter-spacing: -.024em; overflow-wrap: anywhere; }
+.lite-feed-state { gap: 5px; margin-top: 5px; color: var(--b-muted); font: 450 11px/1.5 var(--sans); }
+.lite-feed-state::before { content: ''; width: 5px; height: 5px; border-radius: 100%; background: var(--b-muted); }
+.lite-feed-card[data-state='current'] .lite-feed-state::before { background: var(--chart-accent); }
+.lite-feed-quote { display: flex; flex-direction: column; gap: 2px; margin-top: auto; padding-top: 14px; }
+.lite-feed-quote > span { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; }
+.lite-feed-quote .dot-number { font-size: clamp(24px, 3.65cqw, 32px); line-height: 1.05; }
+.lite-feed-line { display: block; height: 33px; margin: 8px 0 6px; }
+.lite-feed-line svg { display: block; width: 100%; height: 100%; }
+.lite-feed-line :is(.chart-light-core, .chart-light-envelope, .chart-light-point) { display: none; }
+.lite-feed-line .chart-light-line { vector-effect: non-scaling-stroke; stroke-width: 1.4px; filter: none; }
+.lite-feed-foot { flex-wrap: wrap; justify-content: space-between; gap: 4px 6px; border-top: 1px solid var(--b-line); padding-top: 8px; }
+.lite-feed-foot b, .lite-feed-foot time { font: 500 10px/1.5 var(--mono); }
+.lite-feed-foot [data-change='1'] { color: var(--b-up); }
+.lite-feed-foot [data-change='-1'] { color: var(--b-down); }
+#product-page .lite-feed-detail {
+  border: 1px solid var(--b-line); border-radius: var(--b-panel-radius, 12px);
+  background: color-mix(in srgb, var(--b-panel) 86%, transparent);
+  margin: 9px 3px 0; padding: 0;
+}
+.lite-feed-detail > summary {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 15px;
+  color: var(--b-ink); font-size: 13px;
+}
+.lite-feed-detail > summary span { font: 450 11px/1.3 var(--mono); color: var(--b-muted); }
+.lite-feed-detail > summary::after { content: '+'; margin-inline-start: auto; font-size: 17px; }
+.lite-feed-detail[open] > summary::after { content: '−'; }
+@media (hover: hover) {
+  #product-page .lite-feed-card:not(:disabled):hover { border-color: var(--card-color); }
+}
+@media (max-width: 760px) {
+  .lite-feed-rail {
+    display: grid; grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: min(82%, 285px);
+    max-height: none; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity; scroll-padding-inline: 3px; overscroll-behavior-x: contain;
+  }
+  #product-page .lite-feed-card { min-height: 194px; padding: 13px; scroll-snap-align: start; }
+  .lite-feed-name { margin-top: 11px; }
+  .lite-feed-quote { padding-top: 9px; }
+  .lite-feed-line { height: 23px; margin-block: 5px; }
+  .lite-feed-detail > summary { min-height: 44px; }
+}

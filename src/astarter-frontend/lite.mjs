@@ -1,6 +1,6 @@
-import { canSubmitLiteOrder, cardDisplayUntil, liteOrderLabel, mountStrategyCard, strategyForSignal, strategyLabelForId } from './lite-strategy-cards.mjs';
+import { canSubmitLiteOrder, liteOrderLabel, mountLiteSignalFeed, strategyForSignal, strategyLabelForId } from './lite-strategy-cards.mjs';
 import { ORDER_MARKETS } from './order-markets.mjs';
-import { createLiteDesk } from './lite-desk-data.mjs';
+import { createLiteDesk, mergeLiteSignalFeed } from './lite-desk-data.mjs';
 import { mountLiteChat } from './lite-chat.mjs';
 import { mountLiteCrew } from './lite-crew.mjs';
 import { uiGlyph } from './product-composition.mjs';
@@ -37,7 +37,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
   const styles = ['lite', 'lite-strategy-cards', 'lite-crew'].map((name) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/' + name + '.css?v=20261127-lite-trading-desk';
+    link.href = '/' + name + '.css?v=20261127-lite-signal-feed';
     document.head.append(link);
     return link;
   });
@@ -52,12 +52,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       </div>
     </header>
     <div id="lite-workspace" class="lite-workspace" tabindex="-1">
-      <div class="lite-asset-bar">
-        <div id="lite-deck-summary" role="group" aria-label="${t('选择策略标的', 'Choose a strategy asset')}"></div>
-        <span class="lite-summary-period">${t('1 分钟 K 线', '1m candles')}</span>
-      </div>
       <section id="lite-ticket" aria-labelledby="lite-signals-title">
-        <div id="lite-strategy-host" class="lite-strategy-deck"></div>
+        <div id="lite-signal-feed" class="lite-strategy-deck"></div>
         <div id="lite-archive" class="lite-archive" hidden></div>
         <div id="lite-empty" class="lite-empty" role="status" hidden></div>
       </section>
@@ -122,6 +118,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
   if (assets.includes(requestedAsset) && !symbols.includes(requestedAsset)) symbols.push(requestedAsset);
   let mode = query.get('mode') === 'practice' ? 'practice' : 'live';
   let rows = [],
+    feedRows = [],
     failed = [],
     current = null,
     account = null,
@@ -201,53 +198,47 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       return t('本机卖出演练', 'Local exit scenario');
     return row.mode === 'practice' ? t('本机演练行情', 'Local practice feed') : row.source;
   }
-  const showStrategy = mountStrategyCard(el('strategy-host'), lang);
-  const assetButtons = new Map();
+  function restoreFeed() {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem('astarter.lite.feed.' + mode) || '[]');
+      return mergeLiteSignalFeed([], Array.isArray(cached) ? cached : [], { mode, symbols });
+    } catch { return []; }
+  }
+  function rememberFeed(incoming) {
+    feedRows = mergeLiteSignalFeed(feedRows, incoming, { mode, symbols, selectedId: current?.id || receipt?.signalId });
+    try { sessionStorage.setItem('astarter.lite.feed.' + mode, JSON.stringify(feedRows)); } catch {}
+  }
+  function planFor(row, at = Date.now()) {
+    const holding = account?.holdings?.find(position => position.symbol === row.symbol);
+    return strategyForSignal(row, holding, lang, at);
+  }
+  function prioritizedRows() {
+    return queue().sort((a, b) => Number(!!planFor(b)?.actionable) - Number(!!planFor(a)?.actionable) || b.closedAt - a.closedAt);
+  }
+  let explicitSelection = false;
+  const feedView = mountLiteSignalFeed(el('signal-feed'), { lang, onSelect(id) {
+    if (busy) return;
+    const row = feedRows.find(item => item.id === id);
+    if (!row) return;
+    explicitSelection = true;
+    const fill = account?.receipts.find(item => item.signalId === id);
+    if (current?.id === id && (fill?.id || null) === (receipt?.id || null)) return;
+    handoffNotice = '';
+    pick(row, fill);
+    updateSelectedLink();
+  } });
   function renderCards() {
     const at = Date.now();
-    const candidates = new Map(queue(true).map((row) => [row.symbol, row]));
-    const activeSymbol = receipt?.symbol || current?.symbol;
-    const activeAsset = receipt || current;
-    if (!receipt && current?.validUntil > at && !candidates.has(current.symbol)) candidates.set(current.symbol, current);
-    const summary = el('deck-summary');
-    for (const [symbol, item] of assetButtons) {
-      if (!symbols.includes(symbol)) {
-        item.remove();
-        assetButtons.delete(symbol);
-      }
-    }
-    for (const symbol of symbols) {
-      let item = assetButtons.get(symbol);
-      if (!item) {
-        item = document.createElement('button');
-        item.type = 'button';
-        item.className = 'lite-summary-asset';
-        item.dataset.liteChoice = symbol;
-        item.setAttribute('aria-controls', 'lite-ticket lite-controls');
-        item.innerHTML = tokenIcon(symbol, { size: 18 }) + '<span>' + symbol + '</span><i aria-hidden="true"></i>';
-        assetButtons.set(symbol, item);
-        summary.insertBefore(item, summary.children[symbols.indexOf(symbol)] || null);
-      }
-      const row = candidates.get(symbol);
-      const fresh = Boolean(row && row.validUntil > at);
-      const previousId = item.dataset.signalId;
-      const newer = fresh && activeSymbol === symbol && row.id !== (receipt?.signalId || current?.id);
-      item.dataset.signalId = row?.id || '';
-      item.dataset.freshness = newer ? 'new' : fresh ? 'current' : 'waiting';
-      item.setAttribute('aria-pressed', String(activeSymbol === symbol));
-      const description = newer ? t('新收盘，查看最新策略', 'New close, view updated strategy') :
-        fresh ? clock(row.closedAt) : t('等待新收盘', 'Awaiting close');
-      item.title = symbol + ' · ' + description;
-      item.setAttribute('aria-label', item.title);
-      item.disabled = busy || !fresh;
-      if (fresh && previousId && previousId !== row.id && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && document.documentElement.dataset.reducedMotion !== 'true')
-        item.animate([{ opacity: .55 }, { opacity: 1 }], { duration: 450 });
-    }
-    crew.setActive([...candidates.values()].some((row) => row.validUntil > at));
-    const showReading = !receipt && current && (cardDisplayUntil(current) > at || candidates.get(current.symbol)?.validUntil > at);
-    const displayPlan = showReading && (selectedStrategy || strategyForSignal(current, currentHolding(), lang, current.closedAt));
-    showStrategy(showReading ? current : null, displayPlan);
-    el('inspect').hidden = !displayPlan || Boolean(receipt);
+    const latest = new Set(rows.filter(row => row.validUntil > at).map(row => row.id));
+    const fills = new Map(account?.receipts.map(fill => [fill.signalId, fill]));
+    const items = feedRows.map(row => {
+      const fill = fills.get(row.id);
+      const strategy = fill?.side === 'sell' ? strategyForSignal(row, fill.quantity, lang, row.closedAt) : planFor(row, row.closedAt);
+      return { row, strategy, state: fill ? 'filled' : skipped.includes(row.id) ? 'skipped' : latest.has(row.id) ? 'current' : 'expired' };
+    });
+    feedView.render(items, { selectedId: receipt?.signalId || current?.id || null, busy });
+    crew.setActive(items.some(item => item.state === 'current'));
+    el('inspect').hidden = !current || Boolean(receipt);
     const archive = el('archive');
     archive.hidden = !receipt;
     if (receipt && archive.dataset.receipt !== receipt.id) {
@@ -258,14 +249,14 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         <p>${day(receipt.filledAt)} · ${clock(receipt.filledAt)}</p>`;
     }
     const empty = el('empty');
-    empty.hidden = Boolean(receipt || displayPlan);
+    empty.hidden = Boolean(receipt || items.length);
     if (!empty.hidden) {
       const message = loading ? t('正在读取信号…', 'Loading signals…') : failed.length
         ? t('暂时无法读取行情。', 'Market data is unavailable.')
         : t('等待下一根 K 线收盘…', 'Waiting for the next candle close…');
       empty.innerHTML = message + (loading ? '' : ' ' + button('refresh', t('刷新', 'Refresh')));
     }
-    el('ticket').setAttribute('aria-busy', String(loading && !activeAsset));
+    el('ticket').setAttribute('aria-busy', String(loading && !items.length));
   }
   const viewport = host.closest('#product-page');
   function reveal(section, align = 'nearest') {
@@ -278,10 +269,11 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     }
   }
   function focusCard() {
-    const choice = assetButtons.get(current?.symbol || receipt?.symbol);
-    const target = choice && !choice.disabled ? choice : el('signals-title');
-    target.focus({ preventScroll: true });
-    reveal(target);
+    const id = current?.id || receipt?.signalId;
+    if (id && feedView.focus?.(id) !== false && el('signal-feed').contains(document.activeElement)) return;
+    const title = el('signals-title');
+    title.focus({ preventScroll: true });
+    reveal(title);
   }
   function renderEvidence() {
     const row = current;
@@ -333,7 +325,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     return `<div class="order-line"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
   }
   function validPlan() {
-    if (!current || !selectedStrategy || selectedStrategy.signalId !== current.id) return null;
+    if (!current || !selectedStrategy || selectedStrategy.signalId !== current.id || skipped.includes(current.id) || !rows.some(row => row.id === current.id)) return null;
     const latest = strategyForSignal(current, currentHolding(), lang);
     return latest?.actionable && latest.id === selectedStrategy.id ? latest : null;
   }
@@ -377,7 +369,11 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
   }
   function renderTrade() {
     const target = el('trade-panel');
-    el('order-symbol').textContent = receipt?.symbol || current?.symbol || '';
+    const observed = current?.closedAt || (receipt && feedRows.find(row => row.id === receipt.signalId)?.closedAt);
+    const market = current?.market || receipt?.market || '';
+    const stamp = observed ? new Date(observed).toISOString() : '';
+    el('order-symbol').textContent = market + (stamp ? ' · ' + stamp.slice(11, 16) + ' UTC' : '');
+    el('order-symbol').title = stamp;
     if (receipt) {
       const sold = receipt.side === 'sell';
       const exercise =
@@ -400,7 +396,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     const buy = plan?.side === 'buy',
       sell = plan?.side === 'sell';
     const expired = current && Date.now() >= current.validUntil;
-    const needsRefresh = expired || ['EXPIRED', 'QUOTE_CHANGED', 'SIGNAL_CHANGED'].includes(formError);
+    const needsRefresh = expired || (current && !rows.some(row => row.id === current.id)) || ['EXPIRED', 'QUOTE_CHANGED', 'SIGNAL_CHANGED'].includes(formError);
     const label =
       (!expired && selectedStrategy?.label) ||
       (expired ? t('信号已到期', 'Signal expired') : t('等待可执行信号', 'Waiting for a trade signal'));
@@ -422,12 +418,13 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       ? loading
         ? t('正在读取信号…', 'Reading signals…')
         : t('可操作的推荐将显示在这里。', 'The next actionable strategy will appear here.')
+      : skipped.includes(current.id) ? t('已跳过这张卡。', 'You skipped this signal.')
       : t(
           '当前信号适合观察。可以看下一条，或展开信号依据。',
           'Watch this signal, view the evidence, or move to the next one.'
         );
     const act = needsRefresh
-      ? button('fresh', t('读取最新信号', 'Refresh signal'), 'lite-action', busy)
+      ? button('fresh', t('查看最新信号', 'View latest signal'), 'lite-action', busy)
       : buy || sell
         ? button(
             sell ? 'sell' : 'buy',
@@ -456,10 +453,10 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     <p class="trade-note error" id="lite-order-note" role="status">${formError ? errorText(formError) : accountError ? errorText('STORAGE_UNAVAILABLE') : ''}</p></div>`;
     syncEstimate();
   }
-  function queue(includePreviousClose = false) {
+  function queue() {
     const handled = new Set([...(account?.receipts || []).map((r) => r.signalId), ...skipped]);
     const at = Date.now();
-    return rows.filter((row) => (includePreviousClose ? cardDisplayUntil(row) : row.validUntil) > at && !handled.has(row.id));
+    return rows.filter((row) => row.validUntil > at && !handled.has(row.id));
   }
   function expiryLabel() {
     const seconds = Math.max(0, Math.ceil((current.validUntil - Date.now()) / 1000));
@@ -525,7 +522,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
   function pick(row, fill = null) {
     closeDetails();
     current = row ?? null;
-    receipt = fill;
+    receipt = fill || null;
     draftTouched = false;
     selectedStrategy = current && !fill ? strategyForSignal(current, currentHolding(), lang) : null;
     if (blockedObservation && current?.id === blockedObservation.id) formError = blockedObservation.code;
@@ -550,7 +547,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     loading = false;
     const at = Date.now();
     const incoming = feed.status === 'fulfilled' ? feed.value.rows : [];
-    const latest = new Map(rows.filter((row) => cardDisplayUntil(row) > at).map((row) => [row.symbol, row]));
+    const latest = new Map(rows.filter((row) => row.validUntil > at).map((row) => [row.id.startsWith('practice:exit:') ? row.id : row.symbol, row]));
     for (const row of incoming) {
       if (row.closedAt >= (latest.get(row.symbol)?.closedAt ?? 0)) latest.set(row.symbol, row);
     }
@@ -578,7 +575,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       const exercise = desk.practiceExit(wantedSymbol);
       if (exercise.id === wantedId && !rows.some((r) => r.id === exercise.id)) rows.push(exercise);
     }
-    const available = queue().sort((a, b) => Number(b.direction === 'up') - Number(a.direction === 'up'));
+    rememberFeed(rows);
+    const available = prioritizedRows();
     if (receipt) {
       renderQueue();
       renderAccount();
@@ -590,21 +588,21 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     if (savedFill) {
       restoreReceipt = null;
       pick(
-        rows.find((r) => r.id === savedFill.signalId),
+        feedRows.find((r) => r.id === savedFill.signalId),
         savedFill
       );
       return;
     }
     if (!replace && current) {
-      const updated = available.find((row) => row.symbol === current.symbol && row.id !== current.id);
+      const updated = available[0];
       const isReading =
-        chat.isInteracting() ||
+        explicitSelection || chat.isInteracting() ||
         draftTouched ||
         editingAmount() ||
         !el('evidence').inert ||
         el('ticket').contains(document.activeElement) ||
         el('controls').contains(document.activeElement);
-      if (current.validUntil <= Date.now() && updated && !isReading) {
+      if (updated && updated.id !== current.id && !isReading && (current.validUntil <= at || updated.closedAt > current.closedAt || (!planFor(current)?.actionable && planFor(updated)?.actionable))) {
         pick(updated);
         updateSelectedLink();
         return;
@@ -620,6 +618,16 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     }
     let next = available.find((r) => r.id === wantedId) || available.find((r) => r.symbol === wantedSymbol);
     if (!next && !latestOnly) next = available[0];
+    if (!next && latestOnly && current) {
+      wantedId = null;
+      wantedSymbol = null;
+      latestOnly = false;
+      formError = 'UNAVAILABLE';
+      renderTrade();
+      renderQueue();
+      renderAccount();
+      return;
+    }
     if (
       wantedId &&
       next &&
@@ -651,11 +659,12 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     window.history.replaceState(window.history.state, '', url);
   }
   function advance() {
+    explicitSelection = false;
     handoffNotice = '';
     wantedSymbol = null;
     wantedId = null;
     restoreReceipt = null;
-    pick(queue().sort((a, b) => Number(b.direction === 'up') - Number(a.direction === 'up'))[0]);
+    pick(prioritizedRows()[0]);
     updateSelectedLink();
     focusCard();
   }
@@ -739,6 +748,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     current = null;
     receipt = null;
     rows = [];
+    feedRows = restoreFeed();
+    explicitSelection = false;
     failed = [];
     account = null;
     accountError = false;
@@ -760,6 +771,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         void refresh({ replace: true, focusAfter: true });
         break;
       case 'fresh':
+        explicitSelection = true;
+        wantedId = null;
         wantedSymbol = current?.symbol;
         latestOnly = true;
         void refresh({ replace: true, focusAfter: true });
@@ -829,6 +842,9 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         const symbol = element?.dataset.symbol || receipt?.symbol;
         if (mode !== 'practice' || !account?.holdings?.some((h) => h.symbol === symbol)) return;
         const exercise = desk.practiceExit(symbol);
+        rows = [...rows.filter(row => row.id !== exercise.id), exercise];
+        rememberFeed([exercise]);
+        explicitSelection = true;
         el('account-menu').open = false;
         pick(exercise);
         updateSelectedLink();
@@ -854,14 +870,6 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     }
   }
   const crew = mountLiteCrew(el('crew'), { lang });
-  el('deck-summary').addEventListener('click', (event) => {
-    const item = event.target.closest('[data-lite-choice]');
-    if (!item || item.disabled || busy) return;
-    const row = queue().find((entry) => entry.id === item.dataset.signalId && entry.symbol === item.dataset.liteChoice);
-    if (!row || (!receipt && current?.id === row.id)) return;
-    pick(row);
-    updateSelectedLink();
-  }, { signal: lifetime.signal });
   document.addEventListener(
     'click',
     (event) => {
@@ -898,6 +906,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       return;
     }
     symbols = chosen;
+    rememberFeed([]);
     save('symbols', symbols);
     if (current && !symbols.includes(current.symbol)) pick(null);
     void refresh();
@@ -911,6 +920,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
     renderCards();
   });
   readCursor();
+  feedRows = restoreFeed();
   settings();
   paint();
   void refresh();
@@ -927,7 +937,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
         const actions = el('trade-panel').querySelector('.dock-actions');
         actions.querySelector('[data-cmd=buy]')?.setAttribute('disabled', '');
         if (!actions.querySelector('[data-cmd=fresh]')) {
-          actions.insertAdjacentHTML('beforeend', button('fresh', t('读取最新信号', 'Refresh signal'), 'secondary-btn'));
+          actions.insertAdjacentHTML('beforeend', button('fresh', t('查看最新信号', 'View latest signal'), 'secondary-btn'));
         }
         el('order-note').textContent = t('上一根 K 线已结束，已保留输入金额。', 'The candle closed. Your amount is saved in this ticket.');
       } else renderTrade();
@@ -943,6 +953,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant }
       clearInterval(polling);
       request?.abort();
       request = null;
+      feedView.destroy?.();
       chat?.destroy();
       crew.destroy();
       for (const style of styles) style.remove();

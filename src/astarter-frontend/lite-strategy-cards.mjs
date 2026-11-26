@@ -124,7 +124,7 @@ export function liteStrategyCard(row, { strategy, stale = false, lang = 'zh' }) 
   }
   return `<article class="sig-event sig-live-observation lite-plan-card" data-freshness="${stale ? 'previous' : 'current'}" data-side="${strategy.side}" data-live-direction="${esc(o.direction)}" data-lite-asset="${esc(o.symbol)}" data-lite-id="${esc(o.id)}">
     <div class="lite-plan-body">
-      <header class="lite-plan-pairline">${tokenIcon(o.symbol, { size: 38, className: 'sig-coin' })}
+      <header class="lite-plan-pairline">${tokenIcon(o.symbol, { size: 30, className: 'sig-coin' })}
         <div class="lite-plan-identity"><span class="lite-plan-pair">${esc(o.market)}</span><h3 class="lite-plan-title">${esc(strategy.label)}</h3></div>
         <span class="lite-plan-state">${state}</span>
       </header>
@@ -253,5 +253,134 @@ export function mountStrategyCard(host, lang) {
       }
     }
     lastId = observation?.id || '';
+  };
+}
+
+function feedCardBody({ row, strategy }, lang) {
+  const en = lang === 'en';
+  const reading = readingFormats[en ? 'en' : 'zh'];
+  const iso = new Date(row.closedAt).toISOString();
+  const series = row.priceSeries;
+  const hasChart = Array.isArray(series) && series.length > 1 && series.at(-1) === row.price &&
+    series.every(value => Number.isFinite(value) && value > 0);
+  return `<span class="lite-feed-pair">${tokenIcon(row.symbol, { size: 30 })}
+      <span><b>${esc(row.symbol)}</b><small> / USDT</small></span><i class="lite-feed-check" aria-hidden="true">✓</i></span>
+    <span class="lite-feed-name">${esc(strategy.label)}</span>
+    <span class="lite-feed-state"></span>
+    <span class="lite-feed-quote"><small>${en ? 'Close' : '收盘价'}</small>
+      <span><b class="dot-number">${esc(signalClosePrice(row.price))}</b> <small>${esc(row.unit)}</small></span></span>
+    <span class="lite-feed-line" aria-hidden="true">${hasChart ? sparkline(series, { width: 208, height: 45, color: 'var(--chart-accent)', fill: true }) : ''}</span>
+    <span class="lite-feed-foot"><span>${en ? '5m change' : '5 分钟涨跌'} <b data-change="${Math.sign(row.momentumPct)}">${row.momentumPct > 0 ? '+' : ''}${reading.format(row.momentumPct)}%</b></span>
+      <time datetime="${iso}" title="${iso}">${iso.slice(11,16)} UTC</time></span>`;
+}
+
+export function mountLiteSignalFeed(host, { lang, onSelect }) {
+  const en = lang === 'en';
+  const labels = en
+    ? { buy: 'Entry confirmed', sell: 'Exit confirmed', watch: 'Watching', expired: 'Expired', filled: 'Recorded', skipped: 'Skipped' }
+    : { buy: '已满足入场条件', sell: '已满足退出条件', watch: '观察中', expired: '已过期', filled: '已记录', skipped: '已跳过' };
+  host.innerHTML = `<div class="lite-feed-rail" role="group" aria-label="${en ? 'Strategy cards' : '策略卡片'}"></div>
+    <details class="lite-feed-detail" hidden><summary>${en ? 'Strategy details' : '策略详情'}<span></span></summary>
+      <div class="lite-strategy-deck"></div></details>`;
+  const rail = host.querySelector('.lite-feed-rail');
+  const detail = host.querySelector('.lite-feed-detail');
+  const detailLabel = detail.querySelector('summary span');
+  const showDetails = mountStrategyCard(detail.lastElementChild, lang);
+  const nodes = new Map();
+  let selected = null;
+  function refreshDetail() {
+    if (detail.open && selected) showDetails(selected.row, selected.strategy);
+  }
+  detail.addEventListener('toggle', refreshDetail);
+  function choose(event) {
+    const card = event.target.closest('[data-feed-id]');
+    if (card && !card.disabled) onSelect(card.dataset.feedId);
+  }
+  function moveFocus(event) {
+    const card = event.target.closest('[data-feed-id]');
+    if (!card || event.altKey || event.ctrlKey || event.metaKey) return;
+    const cards = Array.from(rail.children);
+    const at = cards.indexOf(card);
+    const next = { ArrowLeft: at - 1, ArrowRight: at + 1, Home: 0, End: cards.length - 1 }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    cards[Math.min(cards.length - 1, Math.max(0, next))]?.focus();
+  }
+  rail.addEventListener('click', choose);
+  rail.addEventListener('keydown', moveFocus);
+  return {
+    render(items, { selectedId, busy }) {
+      const before = rail.getBoundingClientRect();
+      const browsing = rail.scrollLeft > 6 || rail.scrollTop > 6;
+      const anchor = browsing && Array.from(rail.children).find(node => {
+        const rect = node.getBoundingClientRect();
+        return rect.right > before.left + 2 && rect.bottom > before.top + 2;
+      });
+      const prevRect = anchor && anchor.getBoundingClientRect();
+      const animate = nodes.size > 0 && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches &&
+        document.documentElement.dataset.reducedMotion !== 'true';
+      const oldId = selected?.row.id;
+      selected = null;
+      const keep = new Set();
+      let slot = rail.firstElementChild;
+      for (const item of items) {
+        const { row, strategy, state } = item;
+        if (!strategy || strategy.signalId !== row.id || keep.has(row.id)) continue;
+        keep.add(row.id);
+        let card = nodes.get(row.id);
+        const entering = !card;
+        if (entering) {
+          card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'lite-feed-card';
+          card.dataset.feedId = row.id;
+          card.dataset.feedAsset = row.symbol;
+          card.setAttribute('aria-controls', 'lite-controls');
+          nodes.set(row.id, card);
+        }
+        if (entering || card.dataset.side !== strategy.side) {
+          card.innerHTML = feedCardBody(item, lang);
+          card.querySelector('.lite-feed-line svg')?.setAttribute('preserveAspectRatio', 'none');
+          card.dataset.side = strategy.side;
+        }
+        const chosen = selectedId === row.id;
+        if (chosen) selected = item;
+        const status = labels[state === 'current' ? strategy.side : state] || labels.expired;
+        if (card.dataset.state !== state || card.querySelector('.lite-feed-state').textContent !== status) {
+          card.dataset.state = state;
+          card.querySelector('.lite-feed-state').textContent = status;
+        }
+        card.disabled = Boolean(busy);
+        card.setAttribute('aria-pressed', String(chosen));
+        if (slot !== card) rail.insertBefore(card, slot);
+        slot = card.nextElementSibling;
+        if (entering && animate) {
+          card.animate([{opacity: .3, transform: 'translateY(-8px)'}, {opacity: 1, transform: 'translateY(0)'}],
+            {duration: 360, easing: 'cubic-bezier(.2,.75,.2,1)'});
+        }
+      }
+      for (const [id, card] of nodes) {
+        if (!keep.has(id)) { card.remove(); nodes.delete(id); }
+      }
+      if (anchor?.isConnected && prevRect && oldId === selectedId) {
+        const now = anchor.getBoundingClientRect();
+        rail.scrollLeft += now.left - prevRect.left;
+        rail.scrollTop += now.top - prevRect.top;
+      }
+      if (selected && oldId !== selectedId && rail.scrollWidth > rail.clientWidth + 2) {
+        const rect = nodes.get(selectedId).getBoundingClientRect();
+        if (rect.left < before.left || rect.right > before.right) rail.scrollLeft += rect.left - before.left;
+      }
+      detail.hidden = !selected;
+      detailLabel.textContent = selected ? selected.row.market : '';
+      if (selected) refreshDetail();
+      else detail.open = false;
+    },
+    focus(id) { (nodes.get(id) || rail.firstElementChild)?.focus({ preventScroll: true }); },
+    destroy() {
+      rail.removeEventListener('click', choose);
+      rail.removeEventListener('keydown', moveFocus);
+      detail.removeEventListener('toggle', refreshDetail);
+    }
   };
 }
