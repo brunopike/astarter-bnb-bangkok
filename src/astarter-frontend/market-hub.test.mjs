@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {WATCH_ASSETS_KEY} from './market-watchlist.mjs';
 import {HUB_RESOURCES,HUB_SYMBOLS,normalizeHubResource,normalizeHubTicker,hubSeriesChange,hubQuality,hubRetryDelay,createMarketHubClient} from './market-hub-data.mjs';
 import {hubOwnsRoute,hubMoney,hubFeedRows,createMarketHub,hubCandleIdentity} from './market-hub.mjs';
-import {hubPerformanceSeries,hubMarketShares,hubChartOption,applyHubGaugeLight} from './market-hub-charts.mjs';
+import {createHubHourlyHistory,hubPerformanceSeries,hubMarketShares,hubChartOption,applyHubGaugeLight} from './market-hub-charts.mjs';
 import {approvedTokenImageURL,approvedVenueImageURL,venueIcon} from './brand-icons.mjs';
 import {createMarketHubRelay} from './market-hub-relay.mjs';
 import {getLocale,initLocale} from './locale.mjs';
@@ -768,4 +768,76 @@ test('no Markets hint that shows a data or retrieval time keeps the metric help 
   for(const [,label,body] of timed)assert.ok(!['查看指标说明','About this metric'].includes(label),search+' '+body);
  }
  assert.equal(fetches,0);
+});
+
+const COMPARISON_DAY=86400000;
+function comparisonCandles(endAt,stepMs,closedCount=91){
+ return Array.from({length:closedCount+1},(_,i)=>{
+  const open=endAt-(closedCount-i)*stepMs,price=i===closedCount?99999:100+i;
+  return [open,String(price),String(price+1),String(price-1),String(price),'10',open+stepMs-1];
+ });
+}
+test('30d and 90d share one Binance daily fetch per symbol and use only common completed UTC closes',async()=>{
+ const end=Date.UTC(2026,10,26),calls=[];let clock=end+5000,offline=false;
+ const history=createHubHourlyHistory(()=>{},{now:()=>clock,fetchImpl:async(url,{signal})=>{
+  const q=new URL(url,'https://example.org').searchParams;
+  calls.push([q.get('symbol'),q.get('interval')]);assert.equal(q.get('resource'),'candles');
+  return {ok:!offline,json:async()=>({schema:'public-market-relay-v1',resource:'candles',receivedAt:clock,body:comparisonCandles(end,COMPARISON_DAY)})};
+ }});
+ assert.equal(history.read('30d').loading,true);
+ const first=history.refresh(false,'30d');assert.equal(first,history.refresh(false,'90d'));await first;
+ for(const days of [30,90]){
+  const view=history.read(days+'d');assert.equal(view.startAt,end-days*COMPARISON_DAY);assert.equal(view.endAt,end);assert.equal(view.stepMs,COMPARISON_DAY);
+  assert.equal(view.stale,false);assert.equal(view.loading,false);assert.equal(view.currency,'USDT');assert.equal(view.source,'Binance Spot');
+  for(const row of view.rows){
+   assert.equal(row.values.length,days+1);assert.equal(row.stepMs,view.stepMs);assert.equal(row.endAt,view.endAt);assert.equal(row.startAt,view.startAt);
+   assert.deepEqual(row.values[0],[-days,0]);assert.deepEqual(row.values.at(-1),[0,(190/(190-days)-1)*100]);
+  }
+  assert.deepEqual(view.rows.map(r=>r.symbol),['BTC','ETH','SOL']);
+ }
+ await history.refresh(true);assert.deepEqual(calls,[['BTCUSDT','1d'],['ETHUSDT','1d'],['SOLUSDT','1d']]);
+ assert.deepEqual(history.read('6h').rows,[]);assert.deepEqual(hubPerformanceSeries([{id:'bitcoin',series:[1,2]}],'30d'),[]);
+ offline=true;clock+=COMPARISON_DAY;await history.refresh();assert.equal(history.read().endAt,end);assert.equal(history.read().stale,true);
+ clock+=COMPARISON_DAY;assert.equal(history.read().stale,false);assert.deepEqual(history.read().rows,[]);assert.equal(history.read().startAt,null);
+});
+test('the public frontend can read hourly Binance closes directly when aggregate history is unavailable',async()=>{
+ const hour=3600000,end=Date.UTC(2026,10,26,3),calls=[];
+ const history=createHubHourlyHistory(()=>{},{useAggregate:false,now:()=>end+1000,fetchImpl:async url=>{
+  const q=new URL(url,'https://example.org').searchParams;calls.push([q.get('resource'),q.get('interval')]);
+  return {ok:true,json:async()=>({schema:'public-market-relay-v1',resource:'candles',receivedAt:end+1000,body:comparisonCandles(end,hour,169)})};
+ }});
+ await history.refresh(false,'6h');await history.refresh(false,'24h');await history.refresh(true,'7d');
+ assert.deepEqual(calls,[['candles','1h'],['candles','1h'],['candles','1h']]);
+ for(const [period,hours] of [['6h',6],['24h',24],['7d',168]]){
+  const view=history.read(period);assert.equal(view.source,'Binance Spot');assert.equal(view.currency,'USDT');
+  assert.equal(view.startAt,end-hours*hour);assert.equal(view.rows[2].values.length,hours+1);
+ }
+});
+test('incorrect venue, currency, pair, gaps and short histories never produce a false comparison',async()=>{
+ const end=Date.UTC(2026,10,26),base={schema:'public-market-relay-v1',resource:'candles',receivedAt:end+5000};
+ async function check(overrides){
+  const history=createHubHourlyHistory(()=>{},{now:()=>end+5000,fetchImpl:async(url)=>{
+   const symbol=new URL(url,'https://example.org').searchParams.get('symbol');
+   const result={...base,body:comparisonCandles(end,COMPARISON_DAY),symbol,source:'Binance Spot',currency:'USDT'};
+   if(overrides[symbol])overrides[symbol](result);
+   return {ok:true,json:async()=>result};
+  }});
+  await history.refresh(false,'90d');return history;
+ }
+ const none=await check({BTCUSDT:r=>r.source='coinbase',ETHUSDT:r=>r.currency='USD',SOLUSDT:r=>r.symbol='BTCUSDT'});
+ assert.deepEqual(none.read().rows,[]);assert.equal(none.read().loading,false);assert.equal(none.read().source,null);
+ const partial=await check({ETHUSDT:r=>r.body.splice(70,1),SOLUSDT:r=>r.body=r.body.slice(-32)});
+ assert.deepEqual(partial.read('90d').rows.map(r=>r.symbol),['BTC']);assert.deepEqual(partial.read('30d').rows.map(r=>r.symbol),['BTC','SOL']);
+});
+test('switching from a pending hourly request to daily history ignores its late completion',async()=>{
+ const end=Date.UTC(2026,10,26),seen=[];let release,aborted;
+ const history=createHubHourlyHistory(()=>seen.push('render'),{now:()=>end+5000,fetchImpl:async(url,{signal})=>{
+  if(url.includes('performance-history')){
+   aborted=signal;await new Promise(resolve=>{release=resolve;});return {ok:false};
+  }
+  assert.equal(new URL(url,'https://example.org').searchParams.get('interval'),'1d');
+  return {ok:true,json:async()=>({schema:'public-market-relay-v1',resource:'candles',receivedAt:end+5000,body:comparisonCandles(end,COMPARISON_DAY)})};
+ }});
+ const old=history.refresh(false,'6h');await history.refresh(false,'30d');assert.equal(aborted.aborted,true);
+ release();await old;assert.deepEqual(seen,['render']);assert.equal(history.read().endAt,end);assert.equal(history.read().rows[0].values.length,31);
 });

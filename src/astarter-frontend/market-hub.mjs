@@ -6,7 +6,7 @@ import {formatDataTime} from './product-help.mjs';
 import {tokenIcon,venueIcon,registerTokenMetadata} from './brand-icons.mjs';
 import {uiGlyph,bindSearchRender,canAutoRefresh,dataRefreshControls} from './product-composition.mjs';
 import {chartPanel,miniChart} from './product-chart-ui.mjs';
-import {createHubCharts,hubPerformanceSeries,hubMarketShares} from './market-hub-charts.mjs';
+import {createHubCharts,createHubHourlyHistory,hubMarketShares} from './market-hub-charts.mjs';
 import {L} from './execution-views.mjs';
 import {readRelatedAsset} from './related-data.mjs';
 import {tradingChartPanel} from './trading-chart.mjs';
@@ -58,6 +58,8 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
   return resourceKeys.map(key=>{const s=client.read(key);return [s.snapshot?.receivedAt,s.quality,s.error,s.fromCache].join(':');}).join('|');
  }
  const charts=createHubCharts(),hiddenSeries=new Set();let performanceWindow='7d',heroModels={};
+ const performanceWindows=['6h','24h','7d','30d','90d'];
+ const hourly=createHubHourlyHistory(()=>schedule(),{useAggregate:false});
  const param=k=>new URLSearchParams(location.search).get(k);
  const read=key=>client.read(key),data=key=>read(key).snapshot?.data;
  let watchRows=loadWatchAssets(storage),watchAt=0,watchTask=null,watchController=null;
@@ -115,7 +117,9 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
    paintFrame=0;
    if(!enabled||document.hidden||!userPaint&&(!canAutoRefresh(root)||root.querySelector('.chart-canvas.is-dragging,button:active,a:active')))return;
    needsPaint=false;userPaint=false;lastAutoPaint=performance.now();
+   const focusWindow=document.activeElement?.dataset?.hubWindow;
    const y=root.scrollTop;rerender();root.scrollTop=y;
+   if(focusWindow&&document.activeElement===document.body)root.querySelector('[data-hub-window="'+focusWindow+'"]')?.focus({preventScroll:true});
   });
  }
  function schedule(immediate=false){
@@ -210,12 +214,33 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
  }
  function sourceDetails(){return `<footer class="hub-source-footer"><details class="hub-sources"><summary>${L('数据来源','Data sources')}</summary><div>${Object.entries(HUB_RESOURCES).map(([key,p])=>{const s=read(key),at=s.snapshot?.asOf??s.snapshot?.receivedAt;return `<section><b>${p.provider} · ${resourceLabel(key)}</b><span>${L('来源时间','Source time')}: ${s.snapshot?.asOf?hubSourceTime(at,key):L('来源未提供时间，显示获取时间','Source time unavailable; retrieval time shown')}</span><span>${L('获取时间','Retrieved at')}: ${s.snapshot?formatDataTime(s.snapshot.receivedAt):'—'}</span><span title="${esc(s.detail||'')}">${s.error?errorLabel(s.error)+(s.retryIn?' · '+s.retryIn+'s':''):s.quality==='stale'?L('较早数据','Older data'):L('自动更新','Auto updates')+' · '+refreshSeconds+'s'}</span></section>`;}).join('')}</div></details><a class="hub-credit" href="https://www.coingecko.com/en/api" target="_blank" rel="noopener noreferrer">Powered by CoinGecko API ↗</a><a class="hub-credit" href="https://coinmarketcap.com/api/" target="_blank" rel="noopener noreferrer">Powered by CoinMarketCap API ↗</a></footer>`;}
  function graphOverview(){
-  const g=data('global'),rows=hubPerformanceSeries(assets(),performanceWindow),shares=hubMarketShares(g),sent=data('sentiment')||[],fear=sent.at(-1),history=sent.slice(-30);
+  const g=data('global'),shares=hubMarketShares(g),listing=read('assets').snapshot;
+  const historyView=hourly.read(performanceWindow),rows=historyView.rows;
+  const sent=data('sentiment')||[],fear=sent.at(-1),history=sent.slice(-30);
   if(rows.length&&rows.every(r=>hiddenSeries.has(r.symbol)))hiddenSeries.delete(rows[0].symbol);
   heroModels={performance:{rows,hidden:hiddenSeries,window:performanceWindow},shares,sentiment:sent};
+  const daily=historyView.stepMs===86400000,interval=daily?L('日线收盘','Daily closes'):L('小时价格','Hourly prices');
   const plot=(kind,label)=>`<div class="hub-plot hub-${kind}-plot" data-hub-plot="${kind}" role="group" tabindex="0" aria-label="${esc(label+' · '+L('方向键查看数据','Arrow keys explore data'))}"></div>`;
-  const legend=rows.map(r=>`<button type="button" data-hub-series="${r.symbol}" aria-pressed="${!hiddenSeries.has(r.symbol)}" ${!hiddenSeries.has(r.symbol)&&rows.filter(s=>!hiddenSeries.has(s.symbol)).length===1?'disabled':''} style="--series:var(--chart-series-${r.color+1})"><i></i><b>${r.symbol}</b>${change(r.values.at(-1)[1])}</button>`).join('');
-  return `<div class="hub-market-summary"><dl><div><dt>${L('总市值','Market cap')}</dt><dd>${hubMoney(g?.cap)} ${change(g?.change)}</dd></div><div><dt>${L('24h 成交额','24h volume')}</dt><dd>${hubMoney(g?.volume)} ${g?.volumeChange!=null?change(g.volumeChange):''}</dd></div></dl>${source('global')}</div><span class="sr-only" data-hub-chart-announcement aria-live="polite"></span><div class="hub-overview-charts">${panel(L('主流资产走势','Major asset performance')+' '+info(L('CoinMarketCap 汇总报价没有 7 日小时价格，没有小时样本时走势留空。横轴为小时样本位置，不是精确成交时间。实时 USDT 报价不改写这些历史样本。','CoinMarketCap aggregate quotes do not include 7d hourly prices, so the chart stays empty without hourly samples. The axis shows hourly sample offsets, not exact trade times. Live USDT quotes do not overwrite history samples.')),`${rows.length?plot('performance',performanceWindow+' · '+rows.map(r=>r.symbol+' '+hubNumber(r.values.at(-1)[1])+'%').join(', ')):emptyRows('assets')}<div class="hub-plot-tools"><output data-hub-window-label aria-live="off"></output><div class="hub-segments" aria-label="${L('图表缩放','Chart zoom')}"><button type="button" data-hub-zoom="out" aria-label="${L('缩小对比图','Zoom out comparison')}">−</button><button type="button" data-hub-reset aria-label="${L('复位对比图','Reset comparison')}" disabled>${L('复位','Reset')}</button><button type="button" data-hub-zoom="in" aria-label="${L('放大对比图','Zoom in comparison')}">+</button></div></div><div class="hub-performance-legend" aria-label="${L('切换图表资产','Toggle chart assets')}">${legend}</div><footer class="hub-graph-source">${source('assets')}<span>${L('相对涨跌','Relative change')} / %</span></footer>`,'assets',`<div class="hub-segments" aria-label="${L('走势周期','Performance window')}">${['24h','7d'].map(w=>`<button type="button" data-hub-window="${w}" aria-pressed="${performanceWindow===w}">${w}</button>`).join('')}</div>`,'hub-performance-card')}${panel(L('市值结构','Market composition')+' '+info(L('CoinGecko 全市场市值占比。其它包含稳定币及其余加密资产；不是前 50 个资产的样本占比。','CoinGecko global market capitalization shares. Other includes stablecoins and remaining cryptoassets, not just the loaded top-50 sample.')),`${shares.length?`<div class="hub-donut-wrap">${plot('shares',shares.map(s=>s.name+' '+hubNumber(s.value)+'%').join(', '))}<div class="hub-donut-center"><strong>${hubNumber(g.btcShare,1)}<small>%</small></strong><span>${L('BTC 占比','BTC dominance')}</span></div></div><ul class="hub-share-legend">${shares.map((s,i)=>`<li><i style="--series:var(--chart-series-${i+1})"></i>${['BTC','ETH'].includes(s.name)?link(s.name,{asset:s.name,coin:s.name==='BTC'?'bitcoin':'ethereum'},'hub-share-link').replace('<a ',`<a data-hub-share="${s.name}" `):`<span>${s.name}</span>`}<b>${hubNumber(s.value)}%</b></li>`).join('')}</ul>`:emptyRows('global')}<footer class="hub-graph-source">${source('global')}</footer>`,'global','','hub-composition-card')}${panel(L('恐慌与贪婪','Fear & Greed')+' '+info(L('Alternative.me 的比特币情绪指数，0–100，每日更新。底部曲线是最近 30 个日度样本；不是 RSI 或实时交易信号。','Alternative.me daily Bitcoin sentiment, 0–100. The lower line shows the latest 30 daily samples. This is not RSI or a live trading signal.')),`${fear?plot('sentiment',L('情绪指数','Sentiment index')+' '+fear.value+' / 100 · '+date(fear.at)):emptyRows('sentiment')}<div class="hub-sentiment-history"><span data-hub-sentiment-point>${L('近 30 日情绪','30-day sentiment')}</span><span>${history.length?date(history[0].at).slice(5)+' — '+date(fear.at).slice(5):'—'}</span></div><footer class="hub-graph-source">${source('sentiment')}</footer>`,'sentiment','','hub-sentiment-card')}</div>`;
+  const visible=rows.filter(r=>!hiddenSeries.has(r.symbol));
+  const legend=rows.map(r=>`<button type="button" data-hub-series="${r.symbol}" aria-pressed="${!hiddenSeries.has(r.symbol)}" ${visible.length===1&&visible[0]===r?'disabled':''} style="--series:var(--chart-series-${r.color+1})"><i></i><b>${r.symbol}</b>${change(r.values.at(-1)[1])}</button>`).join('');
+  const windowTabs=`<div class="hub-segments hub-performance-windows" role="group" aria-label="${L('走势周期','Performance window')}">${performanceWindows.map(w=>`<button type="button" data-hub-window="${w}" aria-pressed="${performanceWindow===w}">${w}</button>`).join('')}</div>`;
+  const tools=`<div class="hub-plot-tools"><output data-hub-window-label aria-live="off"></output><div class="hub-segments" aria-label="${L('图表缩放','Chart zoom')}"><button type="button" data-hub-zoom="out" aria-label="${L('缩小对比图','Zoom out comparison')}">−</button><button type="button" data-hub-reset aria-label="${L('复位对比图','Reset comparison')}" disabled>${L('复位','Reset')}</button><button type="button" data-hub-zoom="in" aria-label="${L('放大对比图','Zoom in comparison')}">+</button></div></div>`;
+  const summary=rows.map(r=>r.symbol+' '+hubNumber(r.values.at(-1)[1])+'%').join(', ');
+  const stamp=historyView.endAt?new Date(historyView.endAt).toISOString():'';
+  const windowReturn={ '24h':'change','7d':'change7d' }[performanceWindow];
+  const returns=windowReturn?(listing?.data||[]).filter(a=>['bitcoin','ethereum','solana'].includes(a.id)&&Number.isFinite(a[windowReturn])):[];
+  const unavailable=daily?L('日线收盘价暂不可用','Daily closes are unavailable'):L('小时价格暂不可用','Hourly prices are unavailable');
+  const fallback=historyView.loading?(daily?L('正在读取日线收盘价…','Loading daily closes…'):L('正在读取小时价格…','Loading hourly prices…')):unavailable;
+  const snapshots=!historyView.loading&&returns.length?`<small>${esc(listing?.provider||'')} · ${performanceWindow} ${L('涨跌幅','return')}</small><div class="hub-period-returns">${returns.map(a=>`<span><b>${esc(a.symbol)}</b> ${change(a[windowReturn])}</span>`).join('')}</div>`:'';
+  const missing=['BTC','ETH','SOL'].filter(symbol=>!rows.some(row=>row.symbol===symbol));
+  const partial=rows.length&&!historyView.loading&&missing.length?`<small class="hub-history-missing">${missing.join(' · ')} · ${unavailable}</small>`:'';
+  const performanceBody=rows.length?plot('performance',performanceWindow+' · '+summary)+tools+`<div class="hub-performance-legend" aria-label="${L('切换图表资产','Toggle chart assets')}">${legend}</div>`
+   :`<div class="hub-empty hub-period-empty" role="status" aria-busy="${historyView.loading}"><span>${fallback}</span>${snapshots}</div>`;
+  const historyStatus=historyView.stale?L('较早数据','Older data'):historyView.loading?L('更新中','Updating'):'';
+  const footer=stamp?`<footer class="hub-graph-source hub-performance-source"><span>${esc(historyView.source)} · ${esc(historyView.currency)} · ${interval}</span><time datetime="${stamp}">${stamp.slice(0,16).replace('T',' ')} UTC</time>${historyStatus?`<span class="hub-history-missing" role="status">${historyStatus}</span>`:''}</footer>`:'';
+  const performance=panel(L('主流资产走势','Major asset performance')+' '+info(L('各资产以同一周期起点的实测价格为基准。缩放只改变可见区间，图例显示所选时刻的累计涨跌幅。','Each asset starts at 0% at the same observation time. Zoom keeps that baseline. The legend shows the return at the inspected time.')),
+   performanceBody+partial+footer,'assets',windowTabs,'hub-performance-card');
+  return `<div class="hub-market-summary"><dl><div><dt>${L('总市值','Market cap')}</dt><dd>${hubMoney(g?.cap)} ${change(g?.change)}</dd></div><div><dt>${L('24h 成交额','24h volume')}</dt><dd>${hubMoney(g?.volume)} ${g?.volumeChange!=null?change(g.volumeChange):''}</dd></div></dl>${source('global')}</div><span class="sr-only" data-hub-chart-announcement aria-live="polite"></span><div class="hub-overview-charts">${performance}${panel(L('市值结构','Market composition')+' '+info(L('CoinGecko 全市场市值占比。其它包含稳定币及其余加密资产；不是前 50 个资产的样本占比。','CoinGecko global market capitalization shares. Other includes stablecoins and remaining cryptoassets, not just the loaded top-50 sample.')),`${shares.length?`<div class="hub-donut-wrap">${plot('shares',shares.map(s=>s.name+' '+hubNumber(s.value)+'%').join(', '))}<div class="hub-donut-center"><strong>${hubNumber(g.btcShare,1)}<small>%</small></strong><span>${L('BTC 占比','BTC dominance')}</span></div></div><ul class="hub-share-legend">${shares.map((s,i)=>`<li><i style="--series:var(--chart-series-${i+1})"></i>${['BTC','ETH'].includes(s.name)?link(s.name,{asset:s.name,coin:s.name==='BTC'?'bitcoin':'ethereum'},'hub-share-link').replace('<a ',`<a data-hub-share="${s.name}" `):`<span>${s.name}</span>`}<b>${hubNumber(s.value)}%</b></li>`).join('')}</ul>`:emptyRows('global')}<footer class="hub-graph-source">${source('global')}</footer>`,'global','','hub-composition-card')}${panel(L('恐慌与贪婪','Fear & Greed')+' '+info(L('Alternative.me 的比特币情绪指数，0–100，每日更新。底部曲线是最近 30 个日度样本；不是 RSI 或实时交易信号。','Alternative.me daily Bitcoin sentiment, 0–100. The lower line shows the latest 30 daily samples. This is not RSI or a live trading signal.')),`${fear?plot('sentiment',L('情绪指数','Sentiment index')+' '+fear.value+' / 100 · '+date(fear.at)):emptyRows('sentiment')}<div class="hub-sentiment-history"><span data-hub-sentiment-point>${L('近 30 日情绪','30-day sentiment')}</span><span>${history.length?date(history[0].at).slice(5)+' — '+date(fear.at).slice(5):'—'}</span></div><footer class="hub-graph-source">${source('sentiment')}</footer>`,'sentiment','','hub-sentiment-card')}</div>`;
  }
  function overview(){
   const rwa=data('categories')?.find(c=>c.id==='real-world-assets-rwa');
@@ -240,11 +265,16 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
    atlasPrices=body.prices;rerender();
   }).catch(()=>{});
  }
+ function refreshHourly(force=false){
+  const overview=!param('asset')&&(!param('view')||param('view')==='overview');
+  if(enabled&&typeof document!=='undefined'&&!document.hidden&&overview)return hourly.refresh(force,performanceWindow);
+  hourly.suspend();
+ }
  function sync(page){
   const active=hubOwnsRoute(page,location.search);
   if(active&&!enabled){dataVersion=resourceVersion();lastAutoPaint=-Infinity;}
   if(!active&&enabled){cancelPaint();needsPaint=userPaint=false;charts.dispose();watchController?.abort();}
-  enabled=active;client.setActive(enabled&&typeof document!=='undefined'&&!document.hidden);
+  enabled=active;if(!enabled)hourly.suspend();client.setActive(enabled&&typeof document!=='undefined'&&!document.hidden);
   if(enabled)refreshAtlasPrices();
   return enabled;
  }
@@ -267,7 +297,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
  async function refreshNow(){
   if(refreshing)return;const focused=document.activeElement===root.querySelector('[data-hub-refresh]');refreshing=true;patchStatus();
   try{
-   const [result,watchResult]=await Promise.all([client.refresh(),refreshWatch(true)]);
+   const [result,watchResult]=await Promise.all([client.refresh(),refreshWatch(true),refreshHourly(true)]);
    if(watchResult.failed&&result.status==='complete')result.status='partial';
    if(!enabled||result.status==='cancelled')return;
    if(needsPaint&&result.status!=='cooldown'){cancelPaint();queuePaint();}
@@ -305,6 +335,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
  }
  function bind(){
   if(!root.querySelector('.market-hub'))return;
+  refreshHourly();
   const memory=viewMemory.get(viewKey());if(memory)for(const el of root.querySelectorAll('.hub-table-wrap,.hub-kpis,.hub-nav'))el.scrollLeft=memory.scrolls.get(el.className)||0;
   const refresh=root.querySelector('[data-hub-refresh]');
   refresh?.addEventListener('pointerdown',event=>{if(event.button===0&&document.activeElement===root.querySelector('[data-hub-search]'))event.preventDefault();});
@@ -315,7 +346,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
   });
   root.querySelectorAll('[data-hub-ask]').forEach(b=>b.onclick=()=>{const source=sourceSnapshot();if(source.text)onAskSource(source);else notify(L('数据还未加载，请稍后再试','Data has not loaded yet. Try again shortly.'));});
   root.querySelectorAll('[data-hub-period]').forEach(b=>b.onclick=()=>{period=Number(b.dataset.hubPeriod);schedule(true);});
-  root.querySelectorAll('[data-hub-window]').forEach(b=>b.onclick=()=>{performanceWindow=b.dataset.hubWindow;schedule(true);});
+  root.querySelectorAll('[data-hub-window]').forEach(b=>b.onclick=()=>{const next=b.dataset.hubWindow;if(next===performanceWindow)return;performanceWindow=next;refreshHourly();schedule(true);});
   root.querySelectorAll('[data-hub-series]').forEach(b=>b.onclick=()=>{const symbol=b.dataset.hubSeries;hiddenSeries.has(symbol)?hiddenSeries.delete(symbol):hiddenSeries.add(symbol);schedule(true);});
   root.querySelectorAll('[data-hub-sort]').forEach(b=>b.onclick=()=>{const key=b.dataset.hubSort;sortDirection=sort===key?-sortDirection:-1;sort=key;schedule(true);});
   root.querySelectorAll('[data-hub-scope]').forEach(b=>b.onclick=()=>{scope=b.dataset.hubScope;schedule(true);});
@@ -358,7 +389,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
   patchStatus();
   charts.mount(root,heroModels);
  }
- return {render,bind,sync,capture:rememberView,previewAsset:(target,signal)=>readRelatedAsset(target,{rows:assets(),quote:getQuote,signal}),tick(){if(!enabled)return;client.setActive(!document.hidden);if(document.hidden)watchController?.abort();client.tick();refreshWatch();if(Date.now()-lastPaint>1000){lastPaint=Date.now();patchPrices();if(needsPaint)schedule();}},sourceSnapshot,
+ return {render,bind,sync,capture:rememberView,previewAsset:(target,signal)=>readRelatedAsset(target,{rows:assets(),quote:getQuote,signal}),tick(){if(!enabled)return;client.setActive(!document.hidden);if(document.hidden)watchController?.abort();client.tick();refreshWatch();refreshHourly();if(Date.now()-lastPaint>1000){lastPaint=Date.now();patchPrices();if(needsPaint)schedule();}},sourceSnapshot,
   companionBrief(cursor=0){
    if(!enabled)return null;
    const rows=assets(),requested=param('asset'),a=requested?selectedAsset():rows[Math.max(0,cursor)%Math.max(1,rows.length)];
