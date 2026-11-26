@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createLiteDesk} from './lite-desk-data.mjs';
 import {liveSignalCard,liveSignalDetail,liveSignalRow,signalClosePrice} from './live-signal-view.mjs';
-import {liteStrategyCard,strategyForSignal} from './lite-strategy-cards.mjs';
+import {cardDisplayUntil,liteStrategyCard,strategyForSignal} from './lite-strategy-cards.mjs';
 
 const at = 1795700000000;
 const desk = createLiteDesk({now: () => at});
@@ -38,6 +38,19 @@ test('stale, malformed and unsupported observations cannot populate the ticket',
     {...eth,market:'ETH/BTC'},{...eth,price:Infinity},{...eth,rsi14:null},{...eth,direction:'alert'}]) {
     assert.equal(strategyForSignal(bad,1,'en',at), null);
   }
+});
+
+test('the live close handoff keeps a previous reading visible without extending its trading deadline', () => {
+  const live = { ...eth, mode: 'live', source: 'Binance Spot' };
+  const plan = strategyForSignal(live, null, 'en', at);
+  assert.equal(cardDisplayUntil(eth), eth.validUntil);
+  assert.equal(cardDisplayUntil(live), live.validUntil + 15_000);
+  assert.equal(strategyForSignal(live, null, 'en', live.validUntil), null);
+  const html = liteStrategyCard(liveSignalRow(live), { strategy: plan, stale: true, lang: 'en' });
+  assert.match(html, /data-freshness="previous"/);
+  assert.match(html, /Previous close/);
+  assert.match(html, /data-ls="select"[^>]*disabled/);
+  assert.doesNotMatch(html, /data-ls="execute"/);
 });
 
 test('Lite and Full share the observation, quote, metrics and price history with different actions', () => {
