@@ -7,6 +7,7 @@ import {L} from './execution-views.mjs';
 import {INTELLIGENCE} from './product-data.mjs';
 import {escapeUI as e} from './product-experience.mjs';
 import {sentimentBoard} from './reference-surfaces.mjs';
+import {createLiveSignalFeed} from './live-market-signals.mjs';
 import {createSignalTracker} from './signal-tracking-view.mjs';
 const outcomes={retain:['值得跟踪','Watch closely'],context:['背景参考','Context'],missing:['待核实','Unverified'],conflict:['需注意风险','Risk review']};
 const types={chain:['链上活动','On-chain'],trend:['AI 发现','AI discovery'],volatility:['风险变化','Risk change'],macro:['宏观事件','Macro'],social:['社媒舆情','Social']};
@@ -120,9 +121,9 @@ export function createAISignals({w,desk,research,root,refresh,go,notify,onResear
  const ready=t=>t.phase==='complete'&&t.outcome==='candidate'&&t.domain==='Crypto';
  const status=t=>t.phase!=='complete'?L('评估中','Assessing'):L(...({candidate:['可继续评估','Candidate'],watch:['继续观察','Watching'],conflict:['暂缓操作','Conflicting'],missing:['等待补充','Missing data'],context:['市场背景','Context']}[t.outcome]||['观察','Watch']));
  const close=()=>{dialog.close();opener?.focus?.();};
- const tracker=createSignalTracker({w,research,readSnapshot:()=>desk.readSnapshot?.()||desk.snapshot?.()||{},notify,localizeResearch:signalText,root,refresh,onBrowse:()=>{feedView='all';refresh();},onManageWatch:()=>go('watchlist'),onStrategy,onRelatedLink:(href,onReturn)=>{window.dispatchEvent(new CustomEvent('hive:related-data',{detail:{href,onReturn}}));return true;}});
+ const tracker=createSignalTracker({w,research,createLiveFeed:createLiveSignalFeed,readSnapshot:()=>desk.readSnapshot?.()||desk.snapshot?.()||{},notify,localizeResearch:signalText,root,refresh,onBrowse:()=>{feedView='all';refresh();},onManageWatch:()=>go('watchlist'),onStrategy,onRelatedLink:(href,onReturn)=>{window.dispatchEvent(new CustomEvent('hive:related-data',{detail:{href,onReturn}}));return true;}});
  signalRevision=tracker.revision();
- const feedNav=()=>`<header class="sig-page-header"><h1>${L('AI 信号','AI signals')}<small class="sig-mobile-label">${L('模拟','DEMO')}</small></h1><nav aria-label="${L('信号视图','Signal views')}">${[['personal','为你精选','For you'],['all','全市场','All markets'],['watch','我的追踪','My watchlist']].map(([id,z,en])=>`<button type="button" data-as-view="${id}" aria-pressed="${feedView===id}">${L(z,en)}${id==='watch'?` <span class="sig-watch-count">${tracker.watchCount()}</span>`:''}</button>`).join('')}</nav><div>${action('我的交易','My trades','go','execution')}</div></header>`;
+ const feedNav=()=>`<header class="sig-page-header"><h1>${L('AI 信号','AI signals')}</h1><nav aria-label="${L('信号视图','Signal views')}">${[['personal','为你精选','For you'],['all','全市场','All markets'],['watch','我的追踪','My watchlist']].map(([id,z,en])=>`<button type="button" data-as-view="${id}" aria-pressed="${feedView===id}">${L(z,en)}${id==='watch'?` <span class="sig-watch-count">${tracker.watchCount()}</span>`:''}</button>`).join('')}</nav><div>${action('我的交易','My trades','go','execution')}</div></header>`;
  dialog.addEventListener('cancel',ev=>{ev.preventDefault();close();});dialog.addEventListener('click',ev=>{if(ev.target===dialog)close();});
  function render(){
   if(feedView!=='research')return tracker.render({nav:feedNav(),myWatch:feedView==='watch',view:feedView});

@@ -17,7 +17,7 @@ for(const file of ['brain-history.mjs','brain-history-reader.mjs','brain-evidenc
 for(const file of ['brain-evidence/ranked-price-history.json','brain-evidence/daily-markets.json'])allowed.add(file);
 for(const file of ['brain-reasoning-memory.mjs','brain-evidence/decision-cases.json','brain-evidence/market-reactions.json'])allowed.add(file);
 for(const file of ['brain-evidence-stars.mjs','brain-evidence-nodes.mjs','brain-trader-history.mjs','brain-evidence/trader-gains.json','brain-evidence/trader-losses.json','brain-evidence/trader-positions.json','brain-evidence/perp-exits.json','brain-evidence/market-cap-top20.json'])allowed.add(file);
-for(const file of ['assistant-chat-client.mjs','assistant-market-context.mjs','live-market-signals.mjs'])allowed.add(file);
+for(const file of ['assistant-chat-client.mjs','assistant-market-context.mjs','live-market-signals.mjs','live-signal-view.mjs'])allowed.add(file);
 const blockArchive='brain-evidence/archive/';
 for(const file of await readdir(path.join(root,blockArchive))){
  if(file==='manifest.json' || file==='LICENSE.txt' || /^(?:btc|eth)-\d{4}-\d{2}-\d{2}\.json$/.test(file))allowed.add(blockArchive+file);
@@ -53,7 +53,7 @@ allowed.add('brand/binance-wallet.svg');
 for(const file of ['brand/astarter-mark-ui.svg','brand/astarter-icon-gradient-primary.svg','brand/photonic-beam.webp'])allowed.add(file);
 for(const file of ['locale-registry.mjs','locale-messages.mjs',...['ja','ko','vi','es','fr','ru'].map(id=>`locales/${id}.mjs`)])allowed.add(file);
 for(const file of ['index.html','landing.css','landing.mjs','copy.mjs','data.mjs','template-primitives.mjs','workbench-scene.png','workbench-scene-light.png','LICENSES.txt'])allowed.add('landing/'+file);
-for(const file of ['collection-motion.mjs','scene-audio.mjs','agent-poses.mjs','agent-family.mjs','agent-stations.mjs','agent-floor.mjs','agent-floor.css','assets/agent-family.glb'])allowed.add(file);
+for(const file of ['collection-motion.mjs','collection-planner.mjs','scene-audio.mjs','agent-poses.mjs','agent-family.mjs','agent-stations.mjs','agent-floor.mjs','agent-floor.css','assets/agent-family.glb'])allowed.add(file);
 for(const file of ['loaders/GLTFLoader.js','utils/BufferGeometryUtils.js','utils/SkeletonUtils.js','geometries/RoundedBoxGeometry.js','environments/RoomEnvironment.js'])allowed.add('node_modules/three/examples/jsm/'+file);
 for(const file of ['workbench-console.mjs','workbench-console-examples.mjs','connection-ticker.mjs','workbench-console.css','agent-models.mjs','workbench-targets.mjs','watchlist-view.mjs','workbench-os.css'])allowed.add(file);
 for(const file of ['workbench-charts.mjs','workbench-insights.mjs','workbench-charts.css','market-hub-charts.mjs','node_modules/echarts/dist/echarts.esm.min.mjs','typography.css'])allowed.add(file);

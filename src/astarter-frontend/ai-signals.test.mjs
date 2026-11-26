@@ -98,6 +98,7 @@ test('research updates do not overwrite historical signal records or interrupt a
   globalThis.document={body:{append(){}},querySelector:()=>null,activeElement:null,addEventListener(){},createElement:()=>({setAttribute(){},addEventListener(){}})};
   const research=new MultiResearch(),w=new WorkspaceSim({research}),demo=new TradingDemo(),root={scrollTop:23,contains:()=>false,querySelectorAll:()=>[],querySelector:q=>q==='.sig-tracking'?{}:q==='details[open]'&&expanded?{}:null};
   const view=createAISignals({w,desk:{snapshot:()=>demo},research,root,refresh(){refreshes++;},go(){},notify(){}});
+  assert.doesNotMatch(view.render(),/data-track-record=|2026-10-24/);assert.equal(view.review('ETH'),true);
   assert.match(view.render(),/2026-10-24/);assert.match(view.render(),/历史记录|Historical record/);research.advance(60);
   const historical=view.render();assert.match(historical,/历史记录|Historical record/);assert.doesNotMatch(historical,/进入策略候选|Trend and capital align/);
   research.recheck('ETH','新一轮模拟');const updated=view.render();assert.match(updated,/target-scope-bar/);assert.equal(updated.slice(updated.indexOf('<div class="sig-workspace">')),historical.slice(historical.indexOf('<div class="sig-workspace">')));
@@ -139,13 +140,13 @@ test('legacy signal execution actions cannot configure a strategy or change an o
 });
 
 test('viewing a signal strategy forwards its exact template without touching trading state',()=>{
- const previous=globalThis.document,opened=[],routes=[],button={dataset:{trackStrategy:'RX03-S'}},root={querySelector:()=>null,querySelectorAll:q=>q==='[data-track-strategy]'?[button]:[]};
+ const previous=globalThis.document,oldMedia=globalThis.matchMedia,opened=[],routes=[],button={dataset:{trackStrategy:'RX03-S'}},root={querySelector:()=>null,querySelectorAll:q=>q==='[data-track-strategy]'?[button]:[]};
  try{
   globalThis.document={body:{append(){}},addEventListener(){},createElement:()=>({setAttribute(){},addEventListener(){}})};
   const research=new MultiResearch(),w=new WorkspaceSim({research}),demo=new TradingDemo(),before=JSON.stringify(w.s);
   const view=createAISignals({w,desk:{snapshot:()=>demo},research,root,refresh(){},go:page=>routes.push(page),notify(){},onStrategy:id=>opened.push(id)});
-  view.render();view.bind();button.onclick();assert.deepEqual(opened,['RX03-S']);assert.equal(routes.length,0);assert.equal(demo.orders.length,0);assert.equal(JSON.stringify(w.s),before);
- }finally{if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
+  globalThis.matchMedia=()=>({matches:false});assert.equal(view.review('ETH'),true);view.render();view.bind();button.onclick();assert.deepEqual(opened,['RX03-S']);assert.equal(routes.length,0);assert.equal(demo.orders.length,0);assert.equal(JSON.stringify(w.s),before);
+ }finally{if(oldMedia===undefined)delete globalThis.matchMedia;else globalThis.matchMedia=oldMedia;if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
 });
 
 test('signal automatic display updates obey the selected interval and defer while a control is open',t=>{

@@ -311,6 +311,19 @@ function browserWindow(t){
  const previous=Object.getOwnPropertyDescriptor(globalThis,'window');Object.defineProperty(globalThis,'window',{configurable:true,value:{}});
  t.after(()=>{if(previous)Object.defineProperty(globalThis,'window',previous);else delete globalThis.window;});
 }
+test('a relay maintenance response with Retry-After is not retried on first paint or a channel revisit',async t=>{
+ browserWindow(t);
+ const calls=[];let at=NOW;
+ const client=createMarketHubClient({resources:['assets'],now:()=>at,WebSocketImpl:null,storageImpl:null,fetchImpl:async url=>{calls.push(url);return response({},503,'120');}});
+ t.after(()=>client.dispose());
+ client.setActive(true);await settle();
+ assert.deepEqual(calls,['/api/market-hub?resource=assets']);
+ assert.equal(client.read('assets').retryIn,120);
+ client.setActive(false);at+=15000;client.setActive(true);await client.refresh();
+ assert.equal(calls.length,1);assert.equal(client.read('assets').retryIn,105);
+ at+=105000;client.tick();await settle();assert.equal(calls.length,2);
+});
+
 test('browser tickers use the same-origin route and retain the relay cache time and fixed twenty-asset scope',async t=>{
  browserWindow(t);let at=NOW;const upstream=[],calls=[],rows=HUB_SYMBOLS.map(symbol=>({...ticker(NOW-1000),symbol:symbol+'USDT'}));
  const relay=createMarketHubRelay({now:()=>at,fetchImpl:async(url,options)=>{upstream.push({url,options});return response(rows);}});

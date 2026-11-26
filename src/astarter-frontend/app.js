@@ -12,6 +12,7 @@ import {createResearchBoard} from './research-board.js';
 import {createResearchJobCoordinator} from './research-job-coordinator.mjs';
 import {createPrivateUIController} from './private-ui-controller.mjs';
 import {createPrivateDraftEditor} from './private-draft-editor.mjs';
+import {DATA_PAGES} from './data-center-fixtures.mjs';
 import {createProduct} from './product.js?v=20261126a';
 import {armSources,tickSources,queueSource} from './product-data.mjs';
 import {coordinationForRole} from './coordination.mjs';
@@ -254,4 +255,7 @@ document.addEventListener('hive:locale',()=>setImmersive(document.body.dataset.p
 document.addEventListener('hive:workbench-information',()=>{if(document.body.dataset.photonicImmersive==='true')setImmersive(false);});
 
 initLocale();
-requestAnimationFrame(()=>window.__appPreload?.done());
+requestAnimationFrame(()=>{
+ const page=document.body.dataset.page;
+ window.__appPreload?.done({immediate:DATA_PAGES.includes(page)||page==='signals'||page==='opportunities'});
+});

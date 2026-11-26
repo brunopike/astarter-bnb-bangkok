@@ -80,9 +80,14 @@ test('reference rejects gaps, invalid bars, warmup, missing original close and i
 
 test('reference loader makes one existing candle request, validates receipt age and never polls',async()=>{
  const {row,bars,at}=referenceFixture(),rawBars=bars.map(b=>[b.time*1000,b.open,b.high,b.low,b.close,b.volume,(b.time+300)*1000-1]);let calls=0;
- const fetchImpl=async(url,options)=>{calls++;assert.equal(url,'/api/market-hub?resource=candles&symbol=BTCUSDT&interval=5m');assert.equal(options.credentials,'omit');return {ok:true,json:async()=>({body:rawBars,receivedAt:at+1000})};};
+ const fetchImpl=async(url,options)=>{calls++;assert.equal(url,'/api/market-hub?resource=candles&symbol=BTCUSDT&interval=5m');assert.equal(options.credentials,'omit');return {ok:true,json:async()=>({schema:'public-market-relay-v1',resource:'candles',body:rawBars,receivedAt:at+1000})};};
  const p=await loadSignalReferencePlan(row,{fetchImpl,now:()=>at+2000});assert.equal(p.status,'ready');assert.equal(calls,1);
+ const second={...row,id:'another-card',record:{...row.record,signalId:'different'}};
+ const reused=await loadSignalReferencePlan(second,{fetchImpl,now:()=>at+3000});
+ assert.equal(reused.status,'ready');assert.equal(calls,1);assert.equal(reused.recordKey,signalReferenceKey(second));
  assert.equal((await loadSignalReferencePlan(row,{fetchImpl,now:()=>at+40000})).status,'pending');
+ const wrong=async()=>({ok:true,json:async()=>({schema:'public-market-relay-v1',resource:'prices',body:rawBars,receivedAt:at+1000})});
+ assert.equal((await loadSignalReferencePlan(row,{fetchImpl:wrong,now:()=>at+2000})).status,'pending');
  const missing={...row,record:{...row.record,strategyVersion:null}};await loadSignalReferencePlan(missing,{fetchImpl});assert.equal(calls,2);
  const failed=await loadSignalReferencePlan(row,{fetchImpl:async()=>{throw Error('offline');}});assert.equal(failed.status,'error');assert.match(failed.reasons[0][0],/重试/);
  const invalid=await loadSignalReferencePlan(row,{fetchImpl:async()=>({ok:true,json:async()=>({body:[],receivedAt:at+1000})}),now:()=>at+2000});assert.equal(invalid.status,'pending');assert.doesNotMatch(invalid.reasons[0][0],/重试|重新打开/);

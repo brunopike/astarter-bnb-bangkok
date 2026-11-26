@@ -18,7 +18,7 @@ const update=board.slice(board.indexOf(' function update(){'),board.indexOf('\n 
 const product=readFileSync(new URL('./product.js',import.meta.url),'utf8');
 test('all six data channels retain their own patrol while Spectrum, navigation and preferences release inactive crews',()=>{
  const gate=product.slice(product.indexOf(' function ensureMascot(){'),product.indexOf('  if(petContext!==context)'))+'}\nensureMascot();';
- const cases=[['workbench',true,true],['workbench',true,false],['assistant',true,true],['strategies',true,true],['assistant',false,true],['signals',true,true],['signals',false,true],['signals',true,true,false],['strategies',true,true,true,true,true,true,true]];
+ const cases=[['workbench',true,true],['workbench',true,false],['assistant',true,true],['strategies',true,true],['assistant',false,true],['signals',true,true],['signals',false,true],['signals',true,true,false],['opportunities',true,true],['opportunities',true,true,false],['signals',true,true,true,true,false],['strategies',true,true,true,true,true,true,true]];
  for(const page of DATA_PAGES)cases.push([page,true,true],[page,false,true],[page,true,true,true,false],[page,true,true,true,true,false],[page,true,true,true,true,true,false]);
  for(const [page,enabled,existing,signalEnabled=true,dataEnabled=true,sameRoute=true,hasContent=true,draft=false] of cases){
   const removed=!enabled||page==='workbench'||draft,search=draft?'?page='+page+'&privateDraft=draft-1':'?page='+page;
@@ -27,7 +27,7 @@ test('all six data channels retain their own patrol while Spectrum, navigation a
   const courier={dispose(){courierDisposals++;}};
   const patrol={dispose(){patrolDisposals++;}};
   let stopped=0;
-  const context={stopBriefFeed(){stopped++;},petOpen:true,page,DATA_PAGES,location:{search},URLSearchParams,petContext:sameRoute?page+search:'previous',petEnabled:enabled,petMotion:existing?motion:null,newsCourier:courier,newsPilot:false,newsMotionEnabled:dataEnabled,signalMotionEnabled:signalEnabled,signalCourier:patrol,
+  const context={stopBriefFeed(){stopped++;},petOpen:true,page,DATA_PAGES,routeSearch:()=>search,URLSearchParams,petContext:sameRoute?page+search:'previous',petEnabled:enabled,petMotion:existing?motion:null,newsCourier:courier,newsPilot:false,newsMotionEnabled:dataEnabled,signalMotionEnabled:signalEnabled,signalCourier:patrol,
    root:{querySelector:()=>hasContent?pocket:null},document:{getElementById:id=>{assert.equal(id,'hive-mascot');return existing?pocket:null;}}};
   runInNewContext(gate,context);
   assert.equal(stopped,removed?1:0);
@@ -35,7 +35,7 @@ test('all six data channels retain their own patrol while Spectrum, navigation a
   assert.equal(context.petMotion,removed?null:motion);assert.equal(context.petEnabled,enabled,'page navigation must not change the saved assistant preference');
   const activeData=DATA_PAGES.includes(page)&&enabled&&dataEnabled&&sameRoute&&hasContent;
   assert.equal(courierDisposals,activeData?0:1);assert.equal(context.newsCourier,activeData?courier:null);
-  const activeSignals=page==='signals'&&enabled&&signalEnabled;
+  const activeSignals=['signals','opportunities'].includes(page)&&enabled&&signalEnabled&&hasContent&&sameRoute;
   assert.equal(patrolDisposals,activeSignals?0:1);assert.equal(context.signalCourier,activeSignals?patrol:null);
  }
 });
@@ -99,51 +99,58 @@ function loadingFixture({reduced=false,appReduced=false,locale='zh',storageBlock
  const classes=new Set(),bodyClasses=new Set(['app-loading']),timers=new Map(),events=new Map(),scriptEvents=new Map(),retryEvents=new Map();
  let now=0,next=0,reloads=0;
  const label={textContent:''},retry={hidden:true,addEventListener:(name,fn)=>retryEvents.set(name,fn)};
- const root={isConnected:true,classList:{add:name=>classes.add(name),remove:name=>classes.delete(name)},remove(){this.isConnected=false;},querySelector:s=>s==='[data-load-label]'?label:retry};
+ const root={isConnected:true,inert:false,classList:{add:name=>classes.add(name),remove:name=>classes.delete(name),contains:name=>classes.has(name)},remove(){this.isConnected=false;},querySelector:s=>s==='[data-load-label]'?label:retry};
+ const skip={focus(){context.document.activeElement=skip;}};
  const window={addEventListener:(name,fn)=>events.set(name,fn),removeEventListener:name=>events.delete(name)};
- const context={window,document:{getElementById:()=>root,querySelector:()=>({addEventListener:(name,fn)=>scriptEvents.set(name,fn)}),body:{classList:{remove:name=>bodyClasses.delete(name)}}},
+ const context={window,document:{getElementById:()=>root,querySelector:s=>s==='.product-skip'?skip:({addEventListener:(name,fn)=>scriptEvents.set(name,fn)}),body:{classList:{remove:name=>bodyClasses.delete(name)}}},
   localStorage:{getItem(){if(storageBlocked)throw Error('storage blocked');return locale;},setItem(){assert.fail('loading must not change stored preferences');}},location:{search:appReduced?'?motion=reduced':'',reload(){reloads++;}},URLSearchParams,matchMedia:()=>({matches:reduced}),
   performance:{now:()=>now},requestAnimationFrame:fn=>context.setTimeout(fn,16),
   setTimeout(fn,ms){const id=++next;timers.set(id,{at:now+ms,fn});return id;},clearTimeout:id=>timers.delete(id)};
  assert.ok(preload,'inline controller must be available before the module graph loads');runInNewContext(preload,context);
- return {root,label,retry,classes,bodyClasses,events,scriptEvents,controller:window.__appPreload,get reloads(){return reloads;},retryLoad(){retryEvents.get('click')();},
+ return {root,label,retry,skip,document:context.document,classes,bodyClasses,events,scriptEvents,controller:window.__appPreload,get reloads(){return reloads;},retryLoad(){retryEvents.get('click')();},
   advance(ms){const end=now+ms;for(;;){const entry=[...timers].sort((a,b)=>a[1].at-b[1].at)[0];if(!entry||entry[1].at>end)break;timers.delete(entry[0]);now=entry[1].at;entry[1].fn();}now=end;}};
 }
 
-test('opening loader waits for product readiness, then folds and reveals it exactly once',()=>{
- const f=loadingFixture();f.advance(10000);
- assert.equal(f.root.isConnected,true);assert.equal(f.bodyClasses.has('app-loading'),true);assert.equal(f.classes.has('go'),false);
- f.controller.done();f.advance(0);assert.equal(f.classes.has('go'),true);assert.equal(f.classes.has('fold'),false);
- f.advance(16);assert.equal(f.classes.has('fold'),true);assert.equal(f.bodyClasses.has('app-loading'),true);
- f.advance(664);assert.equal(f.classes.has('flash'),true);assert.equal(f.bodyClasses.has('app-loading'),true);
- f.advance(79);assert.equal(f.bodyClasses.has('app-loading'),true);f.advance(1);
- assert.equal(f.bodyClasses.has('app-loading'),false);assert.equal(f.root.isConnected,true);
- f.advance(1240);assert.equal(f.root.isConnected,false);assert.equal(f.events.has('error'),false);
+test('a visible startup intro releases the page on readiness, before its brief exit completes',()=>{
+ const f=loadingFixture();f.advance(199);assert.equal(f.classes.has('present'),false);
+ f.advance(1);assert.equal(f.classes.has('present'),true);
+ assert.equal(f.bodyClasses.has('app-loading'),true);assert.equal(f.root.inert,false);
+ f.controller.done();
+ assert.equal(f.bodyClasses.has('app-loading'),false);assert.equal(f.root.inert,true);
+ assert.equal(f.root.isConnected,true);f.advance(180);
+ assert.equal(f.root.isConnected,false);assert.equal(f.events.has('error'),false);
  f.controller.done();f.controller.fail();f.advance(15000);assert.equal(f.retry.hidden,true);
- assert.match(app,/initLocale\(\);\s*requestAnimationFrame\(\(\)=>window\.__appPreload\?\.done\(\)\)/);
+ assert.match(app,/initLocale\(\);\s*requestAnimationFrame\(\(\)=>\{[\s\S]*?window\.__appPreload\?\.done\(/);
  assert.doesNotMatch(html,/构建协作空间|INITIALIZING NETWORK|class="loading-state"/);
 });
 
-test('a ready product keeps Landing opening time before folding without restarting on duplicate readiness',()=>{
- const f=loadingFixture();f.controller.done();f.advance(1000);f.controller.done();f.advance(1599);
- assert.equal(f.classes.has('go'),false);assert.equal(f.bodyClasses.has('app-loading'),true);
- f.advance(1);assert.equal(f.classes.has('go'),true);f.advance(759);
- assert.equal(f.bodyClasses.has('app-loading'),true);f.advance(1);assert.equal(f.bodyClasses.has('app-loading'),false);
- f.advance(1240);assert.equal(f.root.isConnected,false);f.advance(15000);assert.equal(f.retry.hidden,true);
+test('a fast startup never flashes the intro or delays interactivity',()=>{
+ const f=loadingFixture();f.advance(190);f.controller.done();
+ assert.equal(f.bodyClasses.has('app-loading'),false);assert.equal(f.root.isConnected,false);
+ f.controller.done();f.advance(15000);
+ assert.equal(f.classes.has('present'),false);assert.equal(f.retry.hidden,true);
+});
+
+test('ready data and signal views dismiss even a visible loader in the same frame',()=>{
+ const f=loadingFixture();f.advance(250);assert.equal(f.classes.has('present'),true);
+ f.controller.done({immediate:true});
+ assert.equal(f.bodyClasses.has('app-loading'),false);assert.equal(f.root.isConnected,false);
+ assert.match(app,/immediate:DATA_PAGES.includes\(page\)\|\|page==='signals'\|\|page==='opportunities'/);
 });
 
 test('slow loading offers reload and still allows eventual successful startup',()=>{
  const f=loadingFixture({locale:'en'});f.advance(15000);
- assert.equal(f.label.textContent,'Taking longer than usual');assert.equal(f.retry.hidden,false);assert.equal(f.classes.has('attention'),true);assert.equal(f.classes.has('go'),false);
+ assert.equal(f.label.textContent,'Taking longer than usual');assert.equal(f.retry.hidden,false);assert.equal(f.classes.has('attention'),true);assert.equal(f.classes.has('present'),true);
  f.retryLoad();assert.equal(f.reloads,1);assert.equal(f.bodyClasses.has('app-loading'),true);
- f.controller.done();assert.equal(f.retry.hidden,true);assert.equal(f.classes.has('attention'),false);f.advance(2000);
+ f.document.activeElement=f.retry;f.controller.done();assert.equal(f.document.activeElement,f.skip);
+ assert.equal(f.retry.hidden,true);assert.equal(f.classes.has('attention'),false);f.advance(180);
  assert.equal(f.root.isConnected,false);assert.equal(f.bodyClasses.has('app-loading'),false);
 });
 
 test('module and startup errors keep a usable retry without exposing the unfinished page',()=>{
  for(const error of ['module','runtime']){
   const f=loadingFixture({storageBlocked:true});(error==='module'?f.scriptEvents:f.events).get('error')();
-  assert.equal(f.label.textContent,'Unable to load. Try again.');assert.equal(f.retry.hidden,false);f.advance(20000);
+  assert.equal(f.label.textContent,'Unable to load. Try again.');assert.equal(f.retry.hidden,false);assert.equal(f.classes.has('present'),true);f.advance(20000);
   assert.equal(f.label.textContent,'Unable to load. Try again.');assert.equal(f.root.isConnected,true);assert.equal(f.bodyClasses.has('app-loading'),true);
   f.retryLoad();assert.equal(f.reloads,1);
  }

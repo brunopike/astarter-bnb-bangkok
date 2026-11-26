@@ -94,7 +94,10 @@ test('legacy and restored URLs, manual refresh, ranking and address detail fetch
  h.goto(old);await settle();assertTabs(h.html,'social');assert.match(h.html,/QUALIFIED_CREATOR_POST/);assert.doesNotMatch(h.html,/Hyperliquid/);
  h.goto(rank);await settle();assertTabs(h.html,'traders');
  const feedUrl='/api/market-hub?resource=social&selection_version=0&limit=50',rankUrl='/api/market-hub?resource=traders',profileUrl=rankUrl+'&address='+address;
- assert.deepEqual(h.calls.map(call=>call.url),[feedUrl,feedUrl,rankUrl,profileUrl,profileUrl,rankUrl,feedUrl,rankUrl]);
+ assert.deepEqual(h.calls.map(call=>call.url),[feedUrl,feedUrl,rankUrl,profileUrl,profileUrl]);
+ assert.match(h.html,/Hyperliquid/);assert.doesNotMatch(h.html,/QUALIFIED_CREATOR_POST/);
+ h.setNow(NOW+HOUR+1);h.view.tick('social');await settle();
+ assert.deepEqual(h.calls.map(call=>call.url),[feedUrl,feedUrl,rankUrl,profileUrl,profileUrl,rankUrl]);
 });
 test('wrong feeds, invalid addresses and a verified empty leaderboard keep the correct recovery links',async t=>{
  const responses=[mastodon(),curated(),traderReceipt({empty:true})];
@@ -102,7 +105,8 @@ test('wrong feeds, invalid addresses and a verified empty leaderboard keep the c
  h.render();await settle();assertTabs(h.html,'social');assert.match(h.html,/Source unavailable|来源暂不可用/);assert.match(h.html,/LunarCrush/);assert.doesNotMatch(h.html,/WRONG_MASTODON_CHANNEL/);
  h.goto('?page=social&view=rank');await settle();assertTabs(h.html,'traders');assert.match(h.html,/Source unavailable|来源暂不可用/);assert.doesNotMatch(h.html,/LunarCrush|QUALIFIED_CREATOR_POST/);
  h.goto('?page=social&trader=orbit&view=history');assertTabs(h.html,'traders');assert.match(h.html,/Invalid public address|公开地址无效/);assert.match(h.html,/trader=orbit&view=history&data=demo/);assert.equal(h.calls.length,2);
- h.goto('?page=social&view=rank');await settle();assertTabs(h.html,'traders');assert.match(h.html,/No records in this range|当前范围暂无记录/);assert.match(h.html,/data-quality="fresh"/);
+ h.goto('?page=social&view=rank');assert.equal(h.calls.length,2);assert.match(h.html,/Source unavailable|来源暂不可用/);
+ h.setNow(NOW+15000);h.view.tick('social');await settle();assertTabs(h.html,'traders');assert.match(h.html,/No records in this range|当前范围暂无记录/);assert.match(h.html,/data-quality="fresh"/);
 });
 test('late responses from either tab cannot replace the active source',async t=>{
  const replies=[],h=harness(t,{fetchImpl:()=>new Promise(resolve=>replies.push(resolve))});

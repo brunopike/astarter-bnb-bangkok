@@ -147,7 +147,8 @@ test('clicking a signal card body selects that exact record and preserves indepe
   globalThis.document={body:{append(){}},createElement:()=>({setAttribute(){},addEventListener(){}}),getSelection:()=>({toString:()=>selectedText})};globalThis.matchMedia=()=>({matches:false});globalThis.location={search:'?page=signals'};
   const view=createSignalTracker({w,root,refresh(){},readSnapshot:()=>({time:12})}),before=JSON.stringify(w.s);view.bind();origin.value='bot';origin.onchange({target:origin});const html=view.render({nav:''});
   for(const [,id]of [...html.matchAll(/data-track-record="([^"]+)"/g)].slice(0,2))cards.push({dataset:{trackRecord:id},querySelector:()=>({focus(){focused++;}})});
-  assert.match(html,/(?:运行记录|Run history) <b>2<\/b><\/span><span>(?:历史观察记录|Historical observations) <b>0<\/b>/);
+  assert.match(html,/(?:运行记录|Run history) <b>2<\/b>/);
+  assert.doesNotMatch(html,/data-track-record="TRACK-/);
   assert.ok(cards.every(card=>card.dataset.trackRecord.startsWith('research-ETH:v1:RUN-1:SIG-')));
   assert.equal(view.sourceSnapshot().id,cards[0].dataset.trackRecord);view.bind();
   cards[1].onclick?.({target:body});
@@ -161,29 +162,138 @@ test('clicking a signal card body selects that exact record and preserves indepe
 });
 
 const selectionSignal=n=>({id:'SIG-'+n,runId:'RUN-1',sourceId:'research-ETH',version:'v1',market:'ETH/USDT',side:'buy',clockKind:'simulation',observedAt:n});
-async function signalSelectionHarness(t,{count=3,compact=false,order='latest',reflow=false}={}){
+async function signalSelectionHarness(t,{count=3,compact=false,feed='all',reflow=false,pathname='/signals',search='?page=signals',createLiveFeed}={}){
  const {createSignalTracker}=await import('./signal-tracking-view.mjs'),previous={document:globalThis.document,location:globalThis.location,matchMedia:globalThis.matchMedia,localStorage:globalThis.localStorage};
  t.after(()=>{for(const [key,value]of Object.entries(previous)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}});
- let html='',view,mode='personal',focused='',watchRemoved=0;const notices=[],returns=[],contexts=[],dialogEvents={};const copy={dataset:{}},exportButton={dataset:{}},feedback={},watch={dataset:{trackWatch:'ETH'},remove(){watchRemoved++;}};
- const open={dataset:{}},next={dataset:{trackPage:'2'}},previousPage={dataset:{trackPage:'1'}},reset={},close={},strategy={dataset:{trackStrategy:'RX03-S'}},link={getAttribute:()=>'?page=markets&asset=ETH'};
+ let html='',view,mode='personal',focused='',focusedControl='',watchRemoved=0;const notices=[],returns=[],contexts=[],dialogEvents={};const copy={dataset:{}},exportButton={dataset:{}},feedback={},watch={dataset:{trackWatch:'ETH'},remove(){watchRemoved++;}};
+ const archive={addEventListener(type,handler){this['on'+type]=handler;}},open={dataset:{}},next={dataset:{trackPage:'2'}},previousPage={dataset:{trackPage:'1'}},reset={},close={},strategy={dataset:{trackStrategy:'RX03-S'}},link={getAttribute:()=>'?page=markets&asset=ETH'};
  const select=()=>({value:'all',addEventListener(type,handler){this['on'+type]=handler;}}),origin=select(),validity=select(),sort={value:'plans'};
  const dialog={open:false,innerHTML:'',setAttribute(){},addEventListener(type,fn){dialogEvents[type]=fn;},showModal(){this.open=true;},close(){this.open=false;},querySelector:s=>s==='[data-track-close]'?close:s==='[data-track-feedback]'?feedback:null,querySelectorAll:s=>{if(s==='[data-track-link]')return [link];if(s==='[data-track-strategy]')return dialog.innerHTML.includes('data-track-strategy')?[strategy]:[];if(s==='[data-track-watch]')return [watch];if(s==='[data-track-copy]'||s==='[data-track-export]'){const button=s.includes('copy')?copy:exportButton,key=s.includes('copy')?'trackCopy':'trackExport';button.dataset[key]=dialog.innerHTML.match(new RegExp('data-track-'+(key==='trackCopy'?'copy':'export')+'="([^"]+)"'))?.[1];return button.dataset[key]?[button]:[];}return [];}};
  const body={dataset:{page:'signals'},isConnected:true,append(){},focus(){focused='body';}};
- globalThis.document={body,activeElement:body,createElement:()=>dialog,addEventListener(){},getSelection:()=>({toString:()=>''})};globalThis.location={search:'?page=signals'};globalThis.matchMedia=()=>({matches:compact});globalThis.localStorage={getItem:()=>null};
- const focusNode=s=>{const id=s.match(/data-track-record="([^"]+)"/)?.[1];return id&&html.includes('data-track-record="'+id+'"')?{focus(options){focused=id;if(!options?.preventScroll)root.scrollTop=0;}}:null;};
- const root={querySelector:s=>s==='[data-track-origin]'?origin:s==='[data-track-validity]'?validity:s==='[data-sig-sort]'?sort:s==='.sig-feed-meta'?{scrollIntoView(){}}:s.startsWith('[data-track-record=')?focusNode(s):null,querySelectorAll:s=>s==='[data-track-open]'?[open]:s==='[data-track-page]'?[next,previousPage]:s==='[data-track-reset]'?[reset]:s==='[data-track-strategy]'?[strategy]:[]};
+ globalThis.document={body,activeElement:body,createElement:()=>dialog,addEventListener(){},getSelection:()=>({toString:()=>''})};globalThis.location={pathname,search};globalThis.matchMedia=()=>({matches:compact});globalThis.localStorage={getItem:()=>null};
+ const reader={},heading={focus(){focused='';focusedControl='heading';}};
+ const focusNode=s=>{
+  const id=s.match(/data-track-record="([^"]+)"/)?.[1]||(s==='.sig-event-title'?html.match(/<article[^>]*data-track-record="([^"]+)"/):html.match(/class="sig-event selected" data-track-record="([^"]+)"/))?.[1];
+  return id&&html.includes('data-track-record="'+id+'"')?{focus(options){focused=id;focusedControl=s.endsWith('[data-track-read]')?'read':'title';if(!options?.preventScroll)root.scrollTop=0;}}:null;
+ };
+ const root={querySelector:s=>s==='[data-track-origin]'?origin:s==='[data-track-validity]'?validity:s==='[data-track-archive]'&&html.includes('data-track-archive')?archive:s==='[data-sig-sort]'?sort:s==='.sig-feed-meta'?{scrollIntoView(){}}:s==='.sig-detail-aside'?reader:s==='[data-track-reading-heading]'?heading:s.startsWith('[data-track-record')||s==='.sig-event-title'?focusNode(s):null,querySelectorAll:s=>s==='[data-track-open]'?[open]:s==='[data-track-page]'?[next,previousPage]:s==='[data-track-reset]'?[reset]:s==='[data-track-strategy]'?[strategy]:[]};
  const w={s:{signals:Array.from({length:count},(_,i)=>selectionSignal(i+1)),aiSignalWatch:[],credits:600},touch(){throw Error('Selection must not change business state');}};
  const refresh=()=>{html=view.render({nav:'',view:mode});view.bind();if(reflow)root.scrollTop=0;};
- view=createSignalTracker({w,root,refresh,readSnapshot:()=>({time:100}),notify:message=>notices.push(message),onRelatedLink:(href,onReturn)=>{returns.push(onReturn);return true;},onStrategy:(id,onReturn,source)=>{returns.push(onReturn);contexts.push(source);}});refresh();
- if(order==='latest'){origin.value='bot';origin.onchange({target:origin});origin.value='all';origin.onchange({target:origin});}
+ view=createSignalTracker({w,root,refresh,createLiveFeed,readSnapshot:()=>({time:100}),notify:message=>notices.push(message),onRelatedLink:(href,onReturn)=>{returns.push(onReturn);return true;},onStrategy:(id,onReturn,source)=>{returns.push(onReturn);contexts.push(source);}});refresh();
+ if(feed==='all'){origin.value='all';origin.onchange({target:origin});}
  const ids=()=>[...html.matchAll(/<article[^>]*data-track-record="([^"]+)"/g)].map(m=>m[1]);
  const source=()=>view.sourceSnapshot();
- return {view,w,root,dialog,next,previousPage,reset,origin,validity,sort,close,link,strategy,notices,returns,contexts,refresh,ids,html:()=>html,focused:()=>focused,source,dialogEvents,copy,exportButton,feedback,watchRemoved:()=>watchRemoved,
+ return {view,w,root,dialog,next,previousPage,reset,origin,validity,sort,close,link,strategy,archive,notices,returns,contexts,refresh,ids,html:()=>html,focused:()=>focused,focusedControl:()=>focusedControl,reader,source,dialogEvents,copy,exportButton,feedback,watchRemoved:()=>watchRemoved,
   setMode(value){mode=value;refresh();},
-  open(id){open.dataset.trackOpen=ids().find(value=>value===id||value.endsWith(':'+id));assert.ok(open.dataset.trackOpen,id);open.onclick();},
+  open(id,read=false){if(read)open.dataset.trackRead='';else delete open.dataset.trackRead;open.dataset.trackOpen=ids().find(value=>value===id||value.endsWith(':'+id));assert.ok(open.dataset.trackOpen,id);open.onclick();},
   current(id){const s=source();assert.equal(JSON.parse(s.text).signalId,id);assert.equal(html.match(/class="sig-event selected" data-track-record="([^"]+)"/)?.[1],s.id);assert.ok(html.includes('data-track-copy="'+s.id+'"'));assert.ok(html.includes('data-track-export="'+s.id+'"'));}
  };
 }
+
+function marketFeedFixture(){
+ const now=Date.now(),closedAt=Math.floor(now/60000)*60000-1;
+ const crypto={id:'sample-BTC',symbol:'BTC',market:'BTC/USDT',assetClass:'crypto',period:'1m',direction:'up',source:'Binance Spot',unit:'USDT',price:102,momentumPct:2,ema20:100,rsi14:62,volumeRatio:1.4,closedAt,receivedAt:now,validUntil:closedAt+180000,sessionDate:new Date(closedAt).toISOString().slice(0,10),timezone:'UTC',session:'continuous',closeTimeBasis:'bar-close',priceSeries:[99,100,101,102]};
+ const state={rows:[crypto,{...crypto,id:'sample-ETH',symbol:'ETH',market:'ETH/USDT'}],loading:false,failed:[],pending:[],total:2,partial:false};
+ let active=false;
+ const createLiveFeed=()=>({snapshot:()=>state,setActive:value=>{active=value;},setSymbols(){},setRefreshSeconds(){},refresh(){}});
+ return {state,createLiveFeed,isActive:()=>active};
+}
+
+test('a connected signal feed opens on current market analysis and keeps runs and historical examples separately selectable',async t=>{
+ const fixture=marketFeedFixture(),h=await signalSelectionHarness(t,{count:1,feed:'default',createLiveFeed:fixture.createLiveFeed});
+ assert.equal(fixture.isActive(),true);assert.equal(h.ids().length,2);
+ assert.match(h.html(),/<option value="live" selected>/);assert.doesNotMatch(h.html(),/2026-10-24|data-track-archive|data-signal-reference-id/);
+ const live=h.source();assert.match(live.href,/data=live/);assert.doesNotMatch(live.text,/TRACK-BTC|S00/);
+ h.origin.onchange({target:{value:'runtime'}});assert.equal(fixture.isActive(),false);assert.equal(h.ids().length,1);assert.equal(JSON.parse(h.source().text).signalId,'SIG-1');
+ h.origin.onchange({target:{value:'historical'}});assert.equal(h.ids().length,12);assert.match(h.source().href,/data=demo/);
+ h.origin.onchange({target:{value:'all'}});assert.equal(h.ids().length,15);assert.equal(fixture.isActive(),true);
+ assert.equal(h.w.s.signals.length,1);
+});
+test('partial quotes update the default reading pane while an explicitly opened asset stays selected',async t=>{
+ const fixture=marketFeedFixture(),[btc,eth]=fixture.state.rows;fixture.state.rows=[eth];
+ const h=await signalSelectionHarness(t,{count:0,feed:'default',createLiveFeed:fixture.createLiveFeed});
+ assert.match(h.source().href,/asset=ETH/);
+ fixture.state.rows=[btc,eth];h.refresh();assert.match(h.source().href,/asset=BTC/);
+ h.open(h.ids()[1],true);
+ fixture.state.rows=[{...btc,price:103},eth];h.refresh();assert.match(h.source().href,/asset=ETH/);
+});
+
+test('a live asset link selects its current observation and removed quotes cannot survive as selected or archive cards',async t=>{
+ const fixture=marketFeedFixture(),h=await signalSelectionHarness(t,{count:0,feed:'default',search:'?data=live&asset=ETH',createLiveFeed:fixture.createLiveFeed});
+ assert.match(h.source().href,/asset=ETH/);assert.match(h.source().title,/ETH/);
+ fixture.state.rows=[];fixture.state.failed=[{symbol:'ETH',period:'1m',code:'unavailable'}];h.refresh();
+ assert.deepEqual(h.ids(),[]);assert.equal(h.source(),null);assert.match(h.html(),/data-track-live-retry/);assert.doesNotMatch(h.html(),/data-track-archive|2026-10-24/);
+ fixture.state.loading=true;h.refresh();assert.doesNotMatch(h.html(),/data-track-live-retry/);assert.match(h.html(),/正在分析最新行情|Analyzing market data/);
+});
+
+test('the default runtime feed offers only matching archive examples and leaves no source card on an empty board',async t=>{
+ const h=await signalSelectionHarness(t,{count:0,feed:'runtime'});
+ assert.equal(h.source(),null);assert.deepEqual(h.ids(),[]);assert.match(h.html(),/暂无运行信号|No run signals yet/);
+ assert.doesNotMatch(h.html(),/data-signal-stats=|data-track-copy=|data-track-reading-heading|2026-10-24/);
+ assert.match(h.html(),/查看 12 条历史样例|View 12 historical examples/);
+ h.archive.onclick();assert.equal(h.ids().length,12);assert.ok(h.ids().every(id=>id.startsWith('TRACK-')));
+ assert.match(h.html(),/<option value="historical" selected>/);assert.match(h.html(),/2026-10-24/);assert.equal(h.focused(),h.ids()[0]);
+ h.open('TRACK-ETH-4');assert.equal(JSON.parse(h.source().text).observedAt,'2026-10-24T12:10:00+08:00');
+ assert.equal(h.source().href,'?page=signals&data=demo&asset=ETH');
+ h.reset.onclick();assert.deepEqual(h.ids(),[]);assert.equal(h.source(),null);
+ h.w.s.aiSignalPreferences={scope:'crypto',focus:'onchain',strategy:'RX03-S'};h.refresh();
+ assert.match(h.html(),/查看 1 条历史样例|View 1 historical example/);h.archive.onclick();assert.deepEqual(h.ids(),['TRACK-ETH-4']);
+});
+
+test('runtime records retain their validity and new records arrive without switching to the archive',async t=>{
+ const h=await signalSelectionHarness(t,{count:0,feed:'runtime'});
+ h.w.s.signals=[{...selectionSignal(1),validUntil:150},{...selectionSignal(2),validUntil:50}];const before=JSON.stringify(h.w.s);
+ h.refresh();assert.equal(h.ids().length,2);assert.ok(h.ids().every(id=>id.endsWith(':SIG-1')||id.endsWith(':SIG-2')));h.open('SIG-2');assert.equal(JSON.parse(h.source().text).validity,'expired');
+ assert.match(h.html(),/已过期|Expired/);h.validity.onchange({target:{value:'active'}});assert.equal(h.ids().length,1);h.current('SIG-1');
+ h.validity.onchange({target:{value:'expired'}});assert.equal(h.ids().length,1);h.current('SIG-2');assert.equal(JSON.stringify(h.w.s),before);
+});
+
+test('historical URL inputs select the original examples and survive a repaint without replacing the chosen record',async t=>{
+ const h=await signalSelectionHarness(t,{count:1,feed:'runtime',search:'?page=signals&asset=ETH'});h.current('TRACK-ETH-4');
+ assert.equal(h.ids().length,12);h.open('TRACK-XAU-5');h.refresh();h.current('TRACK-XAU-5');
+ globalThis.location.search='?page=signals&data=demo';h.refresh();assert.equal(h.ids().length,12);assert.ok(h.ids().every(id=>id.startsWith('TRACK-')));
+ globalThis.location.search='?page=signals&data=live&asset=ETH';h.refresh();h.current('SIG-1');assert.equal(h.ids().length,1);
+ globalThis.location.search='?page=signals';h.refresh();h.current('SIG-1');assert.equal(h.ids().length,1);
+});
+
+test('a failed optional chart can be retried locally while the selected signal and static prices remain readable',async t=>{
+ const {createSignalTracker}=await import('./signal-tracking-view.mjs');
+ const saved=globalThis.document,notice={hidden:true},retry={},host={isConnected:true},dialog={setAttribute(){},addEventListener(){}};
+ t.after(()=>{if(saved===undefined)delete globalThis.document;else globalThis.document=saved;});
+ globalThis.document={body:{append(){}},createElement:()=>dialog};
+ const root={querySelector:s=>s==='[data-signal-chart-status]'?notice:s==='[data-signal-chart-retry]'?retry:null,querySelectorAll:s=>s==='[data-signal-stats]'?[host]:[]};
+ let loads=0,mounts=0;
+ const tracker=createSignalTracker({w:{s:{signals:[{...selectionSignal(1),price:123.45}]}},root,refresh(){throw Error('Retry must only reload charts');},loadCardStats:async()=>{
+  if(++loads===1)throw Error('Network unavailable');
+  return {mountAdvancedStats(container,records){assert.equal(container,root);assert.equal(records.size,1);mounts++;return ()=>{};}};
+ }});
+ const initial=tracker.render({nav:''});assert.match(initial,/123.45/);tracker.bind();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(notice.hidden,false);assert.equal(loads,1);const source=tracker.sourceSnapshot();assert.ok(source);
+ const fallback=tracker.render({nav:''});assert.match(fallback,/123.45/);assert.match(fallback,/data-signal-chart-status >/);tracker.bind();assert.equal(loads,1);
+ await retry.onclick();assert.equal(loads,2);assert.equal(mounts,1);assert.equal(notice.hidden,true);assert.deepEqual(tracker.sourceSnapshot(),source);
+});
+
+test('desktop titles select in place, while explicit reading starts the detail and reverse Tab returns to its card action',async t=>{
+ const h=await signalSelectionHarness(t);h.open('SIG-2');h.current('SIG-2');assert.equal(h.focusedControl(),'');
+ assert.deepEqual([...h.html().matchAll(/<button[^>]+data-track-open="([^"]+)"[^>]*tabindex="0"/g)].map(match=>match[1]),h.ids());
+ h.open('SIG-2',true);assert.equal(h.focusedControl(),'heading');assert.match(h.html(),/tabindex="-1" data-track-reading-heading aria-describedby="sig-detail-title"/);
+ let prevented=false;h.reader.onkeydown({key:'Tab',shiftKey:true,target:{matches:()=>true},preventDefault(){prevented=true;}});
+ assert.equal(prevented,true);assert.equal(h.focusedControl(),'read');assert.equal(h.focused(),h.source().id);
+});
+
+test('compact signal dismissal restores the exact title or reading button and falls back when its record disappears',async t=>{
+ const h=await signalSelectionHarness(t,{compact:true});h.open('SIG-2',true);const id=h.source().id;
+ h.dialogEvents.cancel({preventDefault(){}});assert.equal(h.focusedControl(),'read');assert.equal(h.focused(),id);
+ h.open('SIG-2');h.close.onclick();assert.equal(h.focusedControl(),'title');assert.equal(h.focused(),id);
+ h.open('SIG-2',true);h.w.s.signals=h.w.s.signals.filter(s=>s.id!=='SIG-2');h.close.onclick();
+ assert.notEqual(h.focused(),id);assert.equal(h.focused(),h.ids()[0]);assert.equal(h.focusedControl(),'title');assert.equal(h.source(),null);
+});
+
+test('dismissal keeps the current page when the original signal button is no longer in the list',async t=>{
+ const h=await signalSelectionHarness(t,{count:24,compact:true});const firstPage=h.ids();h.open(firstPage[1],true);
+ h.next.onclick();const secondPage=h.ids();assert.ok(!secondPage.includes(firstPage[1]));h.close.onclick();
+ assert.deepEqual(h.ids(),secondPage);assert.equal(h.focused(),secondPage[0]);assert.equal(h.focusedControl(),'title');
+});
 
 test('shared target scope intersects independent filters, resets paging and retains the original selected detail',async t=>{
  const {MultiResearch}=await import('./multi-research.mjs'),h=await signalSelectionHarness(t,{count:20}),beforeSignals=JSON.stringify(h.w.s.signals);
@@ -330,8 +440,9 @@ test('signal selection follows its record after new data crosses a page boundary
  h.refresh();h.current('SIG-1');
 });
 
-test('an explicitly requested signal plan remains selected when live records place it beyond the first page',async t=>{
- const h=await signalSelectionHarness(t,{count:16});assert.equal(h.view.select('ETH'),true);h.refresh();h.current('TRACK-ETH-4');assert.match(h.html(),/<span>2 \/ 2<\/span>/);
+test('an explicit historical plan opens its own archive without being pushed onto a later page by run records',async t=>{
+ const h=await signalSelectionHarness(t,{count:16});assert.equal(h.view.select('ETH'),true);h.refresh();h.current('TRACK-ETH-4');assert.match(h.html(),/<span>1 \/ 1<\/span>/);
+ assert.equal(h.ids().length,12);assert.ok(h.ids().every(id=>id.startsWith('TRACK-')));
 });
 
 test('empty signal filters clear the selection instead of reviving a hidden record when filters reset',async t=>{
@@ -446,7 +557,7 @@ test('historical detail explains its price path, verification gaps and risk with
 });
 
 test('historical cards expose a comparable price change while live records retain their missing-value state',async t=>{
- const h=await signalSelectionHarness(t,{order:'plans'}),cards=[...h.html().matchAll(/<article[\s\S]*?<\/article>/g)].map(m=>m[0]);
+ const h=await signalSelectionHarness(t,{feed:'all'}),cards=[...h.html().matchAll(/<article[\s\S]*?<\/article>/g)].map(m=>m[0]);
  const eth=cards.find(card=>card.includes('data-track-record="TRACK-ETH-4"')),btc=cards.find(card=>card.includes('data-track-record="TRACK-BTC-4"'));assert.match(eth,/较首次记录|From first record/);assert.ok(eth.includes('+1.20%'));assert.ok(btc.includes('+0.80%'));assert.match(eth,/sig-card-spark/);
  const run=cards.find(card=>card.includes(':SIG-3'));assert.doesNotMatch(run,/较首次记录|From first record|\+1.20%|sig-card-spark/);assert.match(run,/未提供|Not provided/);assert.match(run,/data-signal-density="compact"/);assert.match(run,/sig-card-price-missing/);
  const runText=run.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');assert.match(runText,/运行\s+RUN-1|Run\s+RUN-1/);assert.match(runText,/信号\s+SIG-3|Signal\s+SIG-3/);
@@ -461,7 +572,10 @@ test('reset controls restore tracking filters without changing business state',a
   const w={s:{aiSignalWatch:[],credits:600},touch(){throw new Error('Filtering must not mutate account state');}},before=JSON.stringify(w.s);
   const tracker=createSignalTracker({w,research:{tasks:[],accepts:()=>true,task:()=>null},root,refresh(){},onResearchReview(){},onBrowse(){}});
   const render=()=>tracker.render({nav:''});
-  for(const reset of resets){tracker.bind();sources[0].onclick();assert.match(render(),/(?:运行记录|Run history) <b>0<\/b><\/span><span>(?:历史观察记录|Historical observations) <b>2<\/b><\/span>/);reset.onclick();assert.match(render(),/(?:运行记录|Run history) <b>0<\/b><\/span><span>(?:历史观察记录|Historical observations) <b>12<\/b><\/span>/);}
+  for(const reset of resets){
+   tracker.bind();sources[0].onclick();assert.match(render(),/data-track-archive[^>]*>[^<]*2[^<]*</);
+   reset.onclick();assert.match(render(),/data-track-archive[^>]*>[^<]*12[^<]*</);assert.doesNotMatch(render(),/data-track-record=/);
+  }
   assert.equal(JSON.stringify(w.s),before);
  }finally{if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
 });
@@ -482,26 +596,26 @@ test('research overlays retain each signal record date instead of a mode label',
   globalThis.document={body:{append(){}},createElement:()=>({setAttribute(){},addEventListener(){}})};
   const w={s:{aiSignalWatch:[],credits:600},touch(){throw Error('Rendering must not mutate account state');}};
   const view=createSignalTracker({w,root:{querySelector(){return null;},querySelectorAll(){return [];}},research:{tasks:[],accepts:()=>true,task:()=>({phase:'complete',title:'Research updated',thesis:'Review conditions',version:1})},refresh(){},onBrowse(){}});
-  const html=view.render({nav:''});
+  assert.equal(view.select('ETH'),true);const html=view.render({nav:''});
   assert.equal((html.match(/class="sig-event-time"><time datetime="2026-/g)||[]).length,12);
   assert.doesNotMatch(html,/class="sig-event-time"><span>模拟<\/span>/);
  }finally{if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
 });
 
 test('signal search finds visible strategy IDs, while unsupported assets remain actionable information rather than plans',async()=>{
- const {createSignalTracker}=await import('./signal-tracking-view.mjs'),old=globalThis.document,oldRAF=globalThis.requestAnimationFrame;globalThis.requestAnimationFrame=fn=>fn();
+ const {createSignalTracker}=await import('./signal-tracking-view.mjs'),old=globalThis.document,oldRAF=globalThis.requestAnimationFrame,oldMedia=globalThis.matchMedia;globalThis.requestAnimationFrame=fn=>fn();
  const input={value:'',selectionStart:0,isConnected:true,addEventListener(type,fn){this['on'+type]=fn;},focus(){},setSelectionRange(){}},root={querySelector:q=>q==='#sig-search'?input:null,querySelectorAll:()=>[]};
  try{
   globalThis.document={body:{append(){}},createElement:()=>({setAttribute(){},addEventListener(){}})};
   const w={s:{aiSignalWatch:[],credits:600},touch(){throw Error('Search must not mutate business state');}},before=JSON.stringify(w.s),view=createSignalTracker({w,root,refresh(){},onBrowse(){}});
-  assert.match(view.render({nav:''}),/(?:运行记录|Run history) <b>0<\/b><\/span><span>(?:历史观察记录|Historical observations) <b>12<\/b><\/span>/);assert.doesNotMatch(view.render({nav:''}),/份示例方案|方案优先|Plans first/);
-  view.bind();input.value='RX03-S';input.oninput({});const result=view.render({nav:''});
-  assert.match(result,/(?:运行记录|Run history) <b>0<\/b><\/span><span>(?:历史观察记录|Historical observations) <b>1<\/b><\/span>/);assert.match(result,/data-track-record="TRACK-ETH/);assert.doesNotMatch(result,/data-track-record="TRACK-BTC/);
+  assert.match(view.render({nav:''}),/data-track-archive[^>]*>[^<]*12[^<]*</);assert.doesNotMatch(view.render({nav:''}),/份示例方案|方案优先|Plans first/);
+  globalThis.matchMedia=()=>({matches:false});assert.equal(view.select('ETH'),true);view.bind();input.value='RX03-S';input.oninput({});const result=view.render({nav:''});
+  assert.equal([...result.matchAll(/<article[^>]*data-track-record=/g)].length,1);assert.match(result,/data-track-record="TRACK-ETH/);assert.doesNotMatch(result,/data-track-record="TRACK-BTC/);
   input.value='ETH';input.oninput({});assert.doesNotMatch(view.render({nav:''}),/data-track-record="TRACK-SUI/);
   input.value='SOL';input.oninput({});const observed=view.render({nav:''});assert.match(observed,/解读信号/);assert.doesNotMatch(observed,/查看线索|查看方案/);
   assert.equal(JSON.stringify(w.s),before);
   assert.match(view.render({nav:'',myWatch:true}),/还没有追踪的标的/);
- }finally{if(oldRAF===undefined)delete globalThis.requestAnimationFrame;else globalThis.requestAnimationFrame=oldRAF;if(old===undefined)delete globalThis.document;else globalThis.document=old;}
+ }finally{if(oldMedia===undefined)delete globalThis.matchMedia;else globalThis.matchMedia=oldMedia;if(oldRAF===undefined)delete globalThis.requestAnimationFrame;else globalThis.requestAnimationFrame=oldRAF;if(old===undefined)delete globalThis.document;else globalThis.document=old;}
 });
 
 test('research preferences survive stale workspace state and do not spend credits',async()=>{
@@ -513,7 +627,8 @@ test('research preferences survive stale workspace state and do not spend credit
   const w={s:{credits:600},touch(){}},view=createSignalTracker({w,root,refresh(){},onBrowse(){}});view.bind();control.onchange();
   assert.deepEqual(JSON.parse(values.get('hive.ai-signal.preferences.v1')),{scope:'tradfi',focus:'all',strategy:'all'});
   w.s.aiSignalPreferences={scope:'all',focus:'all',strategy:'all'};
-  assert.match(view.render({nav:''}),/(?:运行记录|Run history) <b>0<\/b><\/span><span>(?:历史观察记录|Historical observations) <b>3<\/b><\/span>/);assert.equal(w.s.aiSignalPreferences.scope,'tradfi');assert.equal(w.s.credits,600);
+  assert.match(view.render({nav:''}),/data-track-archive[^>]*>[^<]*3[^<]*</);assert.equal([...view.render({nav:''}).matchAll(/data-track-record=/g)].length,0);
+  assert.equal(view.select('XAU'),true);assert.equal([...view.render({nav:''}).matchAll(/<article[^>]*data-track-record=/g)].length,3);assert.equal(w.s.aiSignalPreferences.scope,'tradfi');assert.equal(w.s.credits,600);
  }finally{if(oldDoc===undefined)delete globalThis.document;else globalThis.document=oldDoc;if(oldStorage===undefined)delete globalThis.localStorage;else globalThis.localStorage=oldStorage;}
 });
 
@@ -652,8 +767,9 @@ test('watchlist signals count matching assets once, preserve CA identity and ope
  try{
   globalThis.document={body:{append(){}},createElement:()=>({setAttribute(){},addEventListener(){}})};
   const view=createSignalTracker({w,root,refresh(){},onManageWatch:()=>opened++}),before=JSON.stringify(w.s),html=view.render({nav:'',myWatch:true});
-  assert.equal(view.watchCount(),1);assert.match(html,/data-track-record="TRACK-BTC/);assert.doesNotMatch(html,/data-track-record="TRACK-ETH/);assert.match(html,/data-track-manage/);
-  view.bind();manager.onclick();assert.equal(opened,1);assert.equal(JSON.stringify(w.s),before);
+  assert.equal(view.watchCount(),1);assert.match(html,/data-track-archive[^>]*>[^<]*1[^<]*</);assert.doesNotMatch(html,/data-track-record=/);assert.match(html,/data-track-manage/);
+  view.bind();manager.onclick();assert.equal(opened,1);
+  assert.equal(view.select('BTC'),true);const archive=view.render({nav:'',myWatch:true});assert.match(archive,/data-track-record="TRACK-BTC/);assert.doesNotMatch(archive,/data-track-record="TRACK-ETH/);assert.equal(JSON.stringify(w.s),before);
   w.s.aiSignalWatch=[ca];assert.equal(view.watchCount(),0);assert.match(view.render({nav:'',myWatch:true}),/追踪标的暂无匹配信号/);
   w.s.aiSignalWatch=[];assert.match(view.render({nav:'',myWatch:true}),/还没有追踪的标的/);
  }finally{if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}

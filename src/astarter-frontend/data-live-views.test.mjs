@@ -220,9 +220,22 @@ test('a late response cannot cross a live route change, and failed refresh retai
  assert.match(html,/ETH-USDT-SWAP/);assert.match(html,/0\.123456/);assert.doesNotMatch(html,/0\.987654/);
  assert.equal(view.companionBrief(page).href,'?page=derivatives&asset=ETH');
  assert.match(view.companionBrief(page).body,/已更新|Updated/);
+ view.render('signals');
+ html=view.render(page);
+ assert.match(html,/ETH-USDT-SWAP/);assert.match(html,/0\.123456/);
+ assert.equal(deferred.length,2,'returning before expiry reuses the validated ETH response');
  now+=61_000;view.tick(page);deferred[2].resolve(new Response('{}',{status:502}));await settle();
  assert.match(html,/暂不可用|Source unavailable/);assert.match(html,/0\.123456/);assert.match(html,/data-quality="stale"/);
  assert.match(view.companionBrief(page).body,/暂不可用|Source unavailable/);
+ view.render('signals');
+ html=view.render(page);view.tick(page);
+ assert.match(html,/0\.123456/);assert.match(html,/data-quality="stale"/);
+ assert.equal(deferred.length,3,'switching channels cannot reset the retry deadline');
+ globalThis.location.search='?page=derivatives&asset=BTC';
+ html=view.render(page);
+ assert.doesNotMatch(html,/ETH-USDT-SWAP|0\.123456|0\.987654/);
+ assert.equal(deferred.length,4,'BTC needs its own successful read');
+ deferred[3].resolve(read('BTC',0.34567));await settle();
 });
 
 test('a focused data view announces an outage without replacing the visible receipt',async t=>{

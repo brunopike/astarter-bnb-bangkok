@@ -411,3 +411,20 @@ body #product-page[data-layout=unified] .layout-heading-actions .data-header-inf
 body[data-page=brain] #product-page{padding:0!important;margin-inline:0!important;width:100%;max-width:none;display:block;overflow-y:auto;background:var(--b-bg)}
 .brain-entry{display:inline-flex;align-items:center;gap:4px;color:inherit;font-size:12px;font-weight:600;white-space:nowrap;text-decoration:none;border:1px solid var(--line,#465257);border-radius:6px;padding:5px 8px}
 .brain-entry:hover,.brain-entry:focus-visible{color:var(--accent,currentColor);text-decoration:underline}
+
+/* The shell stays interactive while the Brain module is being fetched. */
+astarter-brain > .brain-page-status {
+ display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+ gap:12px; min-height:clamp(160px,38vh,360px); padding:24px;
+ color:var(--b-muted); font:500 14px/1.5 var(--sans);
+}
+.brain-page-status:not(.is-error)::before {
+ content:''; width:14px; height:14px; border:2px solid currentColor;
+ border-inline-end-color:transparent; border-radius:50%;
+ animation:brain-page-wait .9s linear infinite;
+}
+@keyframes brain-page-wait { to { transform:rotate(1turn); } }
+@media (prefers-reduced-motion:reduce) {
+ .brain-page-status:not(.is-error)::before { animation:none; }
+}
+html[data-reduced-motion=true] .brain-page-status:not(.is-error)::before { animation:none; }

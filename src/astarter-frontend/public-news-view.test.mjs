@@ -40,6 +40,27 @@ test('the actual news controller uses live reads by default and keeps markets op
  assert.equal(h.render('markets'),null,'existing market defaults remain unchanged');
 });
 
+test('returning to news immediately restores the exact feed, preserves its clocks and respects expiry',async t=>{
+ const h=harness(t),newsCalls=()=>h.calls.filter(c=>c.url.searchParams.get('resource')==='news');
+ h.render();await settle();await settle();
+ assert.equal(h.calls[0].url.searchParams.get('resource'),'news');
+ const original=h.view.client.read('news').snapshot;
+ assert.equal(newsCalls().length,1);
+ assert.equal(h.render('signals'),null);
+ const warm=h.render();
+ assert.match(warm,/Ethereum and Solana market update/);
+ assert.deepEqual(h.view.client.read('news').snapshot,original);
+ assert.equal(newsCalls().length,1);
+ h.render('signals');h.setNow(NOW+61000);globalThis.navigator.onLine=false;
+ const offline=h.render();
+ assert.match(offline,/Ethereum and Solana market update/);
+ assert.equal(h.view.client.read('news').snapshot.quality,'stale');
+ assert.equal(h.view.client.read('news').snapshot.as_of_ms,original.as_of_ms);
+ assert.equal(newsCalls().length,1);
+ globalThis.navigator.onLine=true;h.view.tick('intelligence',1);await settle();
+ assert.equal(newsCalls().length,2);
+});
+
 test('typing in the news filter keeps the source timestamp while connectivity changes',async t=>{
  const h=harness(t);h.render();await settle();
  const html=h.html,field={matches:()=>true},updates=[];

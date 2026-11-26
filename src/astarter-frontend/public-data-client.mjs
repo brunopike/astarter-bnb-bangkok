@@ -157,12 +157,30 @@ export function publicRetryDelay(value,now=Date.now()){
 }
 
 export function createPublicDataClient({fetchImpl=globalThis.fetch,onChange=()=>{},timeoutMs=8000,now=Date.now}={}){
- const slots=new Map();let generation=0;
+ const slots=new Map(),recent=new Map();let generation=0;
+ const queryKey=query=>JSON.stringify(Object.fromEntries(Object.entries(query).filter(([k])=>k!=='selection_version')));
+ const cacheKey=(resource,key)=>resource+'|'+key;
+ function suspend(){
+  for(const [resource,s] of slots){
+   slots.delete(resource);
+   s.controller?.abort();
+   if(!s.snapshot&&!(s.retryAt>now()))continue;
+   const key=cacheKey(resource,s.key);
+   recent.delete(key);
+   recent.set(key,{...s,pending:false,controller:null,promise:null,lastAttempt:s.pending?null:s.lastAttempt});
+   if(recent.size>12)recent.delete(recent.keys().next().value);
+  }
+ }
+ function restore(resource,input){
+  if(slots.has(resource))return;
+  const key=cacheKey(resource,queryKey(publicQuery(resource,input))),saved=recent.get(key);
+  if(saved){recent.delete(key);saved.id=++generation;slots.set(resource,saved);}
+ }
  // A snapshot kept after a failed read stays stale while the retry is pending, until a read succeeds again.
  const read=resource=>{const s=slots.get(resource);return s?{...s,retryIn:Math.max(0,Math.ceil((s.retryAt-now())/1000)),snapshot:currentPublicEnvelope(s.snapshot,now(),!!s.error||s.failures>0)}:{pending:false,snapshot:null,error:null,key:null,retryIn:0};};
- const cancel=resource=>{const s=slots.get(resource);if(s){s.controller?.abort();slots.delete(resource);}};
+ const cancel=resource=>{const s=slots.get(resource);if(s){s.controller?.abort();slots.delete(resource);}for(const key of recent.keys())if(key.startsWith(resource+'|'))recent.delete(key);};
  function load(resource,input={}){
-  const query=publicQuery(resource,input),key=JSON.stringify(Object.fromEntries(Object.entries(query).filter(([k])=>k!=='selection_version'))),previous=slots.get(resource);
+  const query=publicQuery(resource,input),key=queryKey(query),previous=slots.get(resource);
   if(previous?.pending&&previous.key===key&&previous.query.selection_version===query.selection_version)return previous.promise;
   if(previous?.key===key&&previous.retryAt>now())return Promise.resolve(read(resource));
   previous?.controller?.abort();
@@ -190,5 +208,5 @@ export function createPublicDataClient({fetchImpl=globalThis.fetch,onChange=()=>
    return read(resource);
   })();return s.promise;
  }
- return {load,read,cancel,clear(){for(const key of slots.keys())cancel(key);}};
+ return {load,read,cancel,suspend,restore,clear(){for(const key of slots.keys())cancel(key);recent.clear();}};
 }

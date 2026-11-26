@@ -127,7 +127,7 @@ export function createMarketHubClient({fetchImpl=globalThis.fetch,WebSocketImpl=
     relay=true;response=await fetchImpl('/api/market-hub?resource='+key,options);
    }
    if(!active||epoch!==ownEpoch)return;
-   if(relay&&[502,503,504].includes(response.status)){try{void response.body?.cancel().catch(()=>{});}catch{}response=await fetchImpl('/api/market-hub?resource='+key,options);if(!active||epoch!==ownEpoch)return;}
+   if(relay&&[502,503,504].includes(response.status)&&!hubRetryDelay(response.headers?.get?.('Retry-After'),now())){try{void response.body?.cancel().catch(()=>{});}catch{}response=await fetchImpl('/api/market-hub?resource='+key,options);if(!active||epoch!==ownEpoch)return;}
    const retry=hubRetryDelay(response.headers?.get?.('Retry-After'),now());if(!response.ok&&retry>0)s.retryAt=now()+retry;
    if(!response.ok){try{void response.body?.cancel().catch(()=>{});}catch{}s.detail='HTTP '+response.status;throw new Error(response.status===429?'RATE_LIMIT':response.status===402?'AUTH_REQUIRED':'FETCH_FAILED');}
    const text=await response.text();if(text.length>policy.maxBytes)throw new Error('INVALID_DATA');

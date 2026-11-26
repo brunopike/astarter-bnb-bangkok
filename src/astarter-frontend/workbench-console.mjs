@@ -482,7 +482,10 @@ export function createWorkbenchConsole({host,research,desk,workspace,interventio
   document.querySelector('.console-header h2').textContent=L('操作台','Controls');
   const liveBooks=connectedAccountBalances(trade?.connections);
   const liveIdentity=liveBooks.map(row=>row.kind==='wallet'?L('我的钱包','My wallet'):L('共享币安现货','Shared Binance spot')).join(' · ');
-  if(intervention)put(intervention,`<span class="ops-account-identity" title="${esc(accountId)} · ${esc(sync.scope.environment)}">${liveIdentity||(sync.scope.environment==='DEMO'?L('模拟盘','Paper trading'):esc(accountId))}</span>`);
+  if(intervention){
+   const identity=liveIdentity||(sync.scope.environment==='DEMO'?'':esc(accountId));
+   put(intervention,identity?`<span class="ops-account-identity">${identity}</span>`:'');
+  }
   const scopeKey=JSON.stringify(sync.scope);if(scopeKey!==exampleScope){exampleScope=scopeKey;examplesEnabled=research.mode!=='live_readonly';}
   const examplesAvailable=workbenchExamplesAvailable(trade,sync.scope),examples=examplesAvailable&&examplesEnabled;
   const exampleToggle=examplesAvailable?`<button type="button" class="ops-example-toggle" data-ops-example-toggle>${examples?L('查看账户','View account'):L('查看示例','View examples')}</button>`:'';

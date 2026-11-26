@@ -19,6 +19,8 @@ const topics = new Map([
   ['topic:sentiment', ['舆情', 'Sentiment', /市场情绪|投资者情绪|恐惧与贪婪|社交媒体|\b(investor sentiment|market sentiment|fear and greed|social media)\b/i]],
 ]);
 
+const hasNewsHeadline = item => /[\p{L}\p{N}]/u.test(item?.data?.title || '');
+
 function sourceName(id) {
   if (id === 'blockbeats-news-v1') return L('律动 BlockBeats', 'BlockBeats');
   if (id === 'coindesk-rss-v1') return 'CoinDesk';
@@ -32,7 +34,7 @@ export function createNewsDeliveryReader() {
     const batch = state.snapshot;
     if (state.error || state.offline || batch?.mode !== 'live_readonly') return null;
     const healthy = new Set(batch.sources.filter(s => s.status === 'OK').map(s => s.provider_id));
-    const rows = batch.items.filter(item => item.quality === 'fresh' && healthy.has(item.provider_id) && safePublicURL(item.data.url));
+    const rows = batch.items.filter(item => hasNewsHeadline(item) && item.quality === 'fresh' && healthy.has(item.provider_id) && safePublicURL(item.data.url));
     const added = rows.filter(item => {
       const previous = watermarks.get(item.provider_id), time = item.data.published_at_ms;
       return !previous || time > previous.time || (time === previous.time && !previous.ids.has(item.record_id));
@@ -103,6 +105,7 @@ function feedItems(items, source, savedItems) {
 export function filterIntelligenceNews(items, {search = '', source = 'all', publisher = 'all', date = 'all', saved = [], savedItems = []} = {}) {
   const query = search.trim().toLowerCase();
   return feedItems(items, source, savedItems).filter(item => {
+    if (!hasNewsHeadline(item)) return false;
     if (publisher !== 'all' && item.provider_id !== publisher) return false;
     if (source === 'saved' && !saved.includes(item.record_id)) return false;
     if (topics.has(source)) {

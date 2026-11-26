@@ -118,6 +118,7 @@ export function createLiveSignalFeed({
   let interval = parseHubRefreshSeconds(refreshSeconds) * 1000;
   let active = false, disposed = false, timer = null, batch = null;
   const slots = new Map();
+  let prioritySymbol = null;
 
   function displayDeadline(slot) {
     return slot.daily ? slot.row.validUntil : slot.row.closedAt + Math.max(MINUTE, interval) + HANDOFF;
@@ -226,6 +227,8 @@ export function createLiveSignalFeed({
     const at = now(), all = [...slots.values()];
     const running = all.filter(slot => slot.controller).length;
     const due = all.filter(slot => !slot.controller && slot.nextAt <= at);
+    const first = due.findIndex(slot => slot.symbol === prioritySymbol);
+    if (first > 0) due.unshift(...due.splice(first, 1));
     if ((running || due.length) && !batch) {
       let resolve;
       const promise = new Promise(done => { resolve = done; });
@@ -253,7 +256,7 @@ export function createLiveSignalFeed({
     onChange(snapshot());
   }
 
-  function setSymbols(values) {
+  function setSymbols(values, priority = null) {
     if (disposed) return;
     const wanted = new Set(DEFAULT_SYMBOLS);
     for (const value of Array.isArray(values) ? values : []) {
@@ -261,7 +264,9 @@ export function createLiveSignalFeed({
       const symbol = typeof raw === 'string' ? raw.trim().toUpperCase().replace(/\/?USDT$/, '') : '';
       if (HUB_SYMBOLS.includes(symbol)) wanted.add(symbol);
     }
-    let changed = false;
+    const preferred = wanted.has(priority) ? priority : null;
+    let changed = prioritySymbol !== preferred;
+    prioritySymbol = preferred;
     for (const [symbol, slot] of slots) {
       if (wanted.has(symbol)) continue;
       cancelSlot(slot);

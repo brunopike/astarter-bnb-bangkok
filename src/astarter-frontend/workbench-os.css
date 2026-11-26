@@ -863,7 +863,7 @@ body[data-workbench-view=photonic] .pw-core-state{top:116px}
 path.pw-micro-base{fill:none;stroke:currentColor;stroke-width:1}
 .pw-micro-line{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
 .pw-micro-sample{opacity:.85}
-.photonic-workbench{--pw-read-beat:1s}
+.photonic-workbench{--pw-read-beat:.78s}
 .pw-price-trace,.pw-context-ring{display:none}
 @media(max-width:1200px) and (prefers-reduced-motion:no-preference){
  .photonic-workbench[data-motion-enabled=true] .pw-inputs[data-in-view=true]>button[data-available=true]>i::after{
@@ -1037,11 +1037,11 @@ body[data-page=workbench][data-workbench-view=photonic] .pw-track-select option:
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-operation .px-trace{stroke-width:1.6;stroke-dasharray:2 6}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-operation .px-rings ellipse{stroke-width:1.25;transform-box:fill-box;transform-origin:center}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-strategy-operation .px-links path:not(.px-link-pulse){animation:none!important;stroke-dasharray:none;stroke-width:1.4;opacity:.68;filter:drop-shadow(0 0 2px currentColor)}
-:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench{--scan-speed:2.4s;--scan-peak:1;--packet-speed:1.3s;--lift:24px;--float-speed:3.6s}
-:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-phase=complete]{--scan-speed:2.6s;--scan-peak:1;--packet-speed:1.8s;--lift:18px;--float-speed:3.8s}
-:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-phase=verify]{--scan-speed:1.8s}
-:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench:is([data-phase=queuedCore],[data-phase=core]){--scan-speed:3.6s;--packet-speed:1.6s}
-:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-fresh=true]{--scan-speed:1.2s;--packet-speed:.8s;--scan-peak:1}
+:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench{--scan-speed:1.7s;--scan-peak:1;--packet-speed:1s;--lift:24px;--float-speed:3.6s}
+:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-phase=complete]{--scan-speed:1.85s;--scan-peak:1;--packet-speed:1.25s;--lift:18px;--float-speed:3.8s}
+:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-phase=verify]{--scan-speed:1.35s}
+:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench:is([data-phase=queuedCore],[data-phase=core]){--scan-speed:2.4s;--packet-speed:1.15s}
+:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-fresh=true]{--scan-speed:1s;--packet-speed:.72s;--scan-peak:1}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-strategy-operation{--strategy-speed:3.6s;--strategy-alpha:.68;--strategy-direction:normal}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-outcome=ready] .pw-strategy-operation{--strategy-speed:2.8s;--strategy-alpha:.85;--strategy-direction:reverse}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench:is([data-execution=running],[data-execution=position]) .pw-strategy-operation{--strategy-speed:1.6s;--strategy-alpha:1;--strategy-direction:reverse}

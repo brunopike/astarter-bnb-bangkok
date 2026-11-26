@@ -212,22 +212,24 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
    if(tab!==intelligenceTab){intelligenceTab=tab;search='';}
   }
   const next=live(page)?page:null,key=next?JSON.stringify([next,param('asset'),param('chain'),limit,next==='intelligence'?intelligenceTab:null]):'';
-  if(key!==identity){refreshReturnFocus=false;displayedStatuses.clear();client.clear();identity=key;selection=(selection+1)%2147483647;}
+  if(key!==identity){refreshReturnFocus=false;displayedStatuses.clear();client.suspend();identity=key;selection=(selection+1)%2147483647;}
   active=disposed?null:next;if(active!=='intelligence'){sentiment.setActive(false);contextData.tick(false);}return !!active;
  }
  const query=resource=>({selection_version:selection,...(['markets','assets'].includes(resource)?{asset_ids:selected()?[selected()]:Object.keys(PUBLIC_ASSETS)}:['news','social'].includes(resource)?{limit}:{provider_id:'etherscan',...(Object.hasOwn(PUBLIC_CHAINS,param('chain'))?{chain_id:param('chain')}:{})})});
  const required=()=>active==='markets'?param('asset')&&!selected()?[]:['markets','assets',...(Object.hasOwn(PUBLIC_CHAINS,param('chain'))?['capabilities']:[])]:active==='intelligence'?[intelligenceTab]:[];
  function load(force=false){
   const available=!disposed&&!suspended&&!globalThis.document?.hidden&&globalThis.navigator?.onLine!==false;
-  sentiment.setActive(available&&active==='intelligence');
-  contextData.tick(available&&active==='intelligence',force);
-  if(!available)return;
-  if(active==='intelligence'){if(force)void sentiment.refresh();else sentiment.tick();}
   for(const resource of required()){
+   const input=query(resource);
+   client.restore(resource,input);
+   if(!available)continue;
    const s=client.read(resource),interval=resource==='capabilities'?45000:['markets','news','social'].includes(resource)?refreshSeconds*1000:300000;
    const automatic=s.error?!['INVALID_QUERY','DATA_ACCESS_DENIED'].includes(s.error):now()-s.lastAttempt>=interval;
-   if(!s.pending&&!s.retryIn&&(force||s.lastAttempt==null||automatic))client.load(resource,query(resource));
+   if(!s.pending&&!s.retryIn&&(force||s.lastAttempt==null||automatic))client.load(resource,input);
   }
+  sentiment.setActive(available&&active==='intelligence');
+  contextData.tick(available&&active==='intelligence',force);
+  if(available&&active==='intelligence'){if(force)void sentiment.refresh();else sentiment.tick();}
  }
  const stateStamp=()=>JSON.stringify(states().map(s=>[s.pending,s.error,s.quality||s.snapshot?.quality,s.snapshot?.asOf,s.retryIn,s.offline]));
  const refresh=()=>{
@@ -335,9 +337,12 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
  }
  function companionBrief(cursor=0){
   if(!active)return null;
-  const s=client.read(active==='markets'?'markets':intelligenceTab),b=s.snapshot,rows=visibleItems(b),item=rows[Math.floor(Math.max(cursor,0)/3)%Math.max(rows.length,1)],mode=b?.mode==='live_readonly'?L('只读数据','Read-only data'):b?.mode==='offline_fixture'?L('离线测试样本','Offline fixture'):L('数据状态','Data status');
+  const s=client.read(active==='markets'?'markets':intelligenceTab),b=s.snapshot;
+  const rows=b?.coverage.scope==='NEWS_FEED'?filterIntelligenceNews(visibleItems(b),{...newsOptions(),savedItems:[]}):visibleItems(b);
+  const item=rows[Math.floor(Math.max(cursor,0)/3)%Math.max(rows.length,1)],mode=b?.mode==='live_readonly'?L('只读数据','Read-only data'):b?.mode==='offline_fixture'?L('离线测试样本','Offline fixture'):L('数据状态','Data status');
   const link=href(active),base={kind:'data',label:L('数据简报','Data brief'),modeLabel:b?mode:L('只读','Read-only'),timestamp:b?.as_of_ms===null||!b?null:stamp(b.as_of_ms)+' UTC+8',visual:'',href:link,action:L('查看当前数据','View current data'),source:mode};
   if(!item&&active==='intelligence'&&intelligenceTab==='social'&&lunarScope(b?.coverage)&&b.coverage.topics?.length){const topic=b.coverage.topics[0];return {...base,kind:'social',label:L('社媒热度','Social activity'),title:topic.symbol,body:L('24h 互动 ','24h interactions ')+socialCount(topic.interactions24h),source:'LunarCrush'};}
+  if(!item&&b?.coverage.scope==='NEWS_FEED'&&!s.error&&['fresh','partial'].includes(b.quality))return {...base,title:L('没有匹配的快讯','No matching stories'),body:''};
   if(!item)return {...base,title:L('数据服务暂未连接','Data service is unavailable'),body:L('我还没有拿到可用数据。刷新可以重试；不会把演示行情当成实时行情。','No usable data has arrived. Refresh to try again; demo prices will not stand in for live data.')};
   if(active==='intelligence'&&intelligenceTab==='social'&&lunarPost(item))return {...base,kind:'social',label:curatedScope(b.coverage)?L('精选 KOL','Featured creator'):L('历史热门原帖','Archived top post'),title:item.data.author?.display_name||item.data.author?.acct||item.data.platform,body:L('24h 互动 ','24h interactions ')+socialCount(item.data.interactions_24h),href:safePublicURL(item.data.url)||link,source:'LunarCrush · '+item.data.platform+' · '+stamp(item.data.published_at_ms)+' UTC+8'};
   if(active==='intelligence'&&intelligenceTab==='social')return {...base,kind:'social',label:L('公开社媒样本','Public social sample'),title:item.data.author.display_name||item.data.author.acct,body:L('赞 ','Likes ')+socialCount(item.data.likes)+' · '+L('转发 ','Reposts ')+socialCount(item.data.reposts)+' · '+L('回复 ','Replies ')+socialCount(item.data.replies),href:safePublicURL(item.data.url)||link,source:'Mastodon · '+stamp(item.data.published_at_ms)+' UTC+8'};
@@ -353,8 +358,8 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
   const stories=filterIntelligenceNews(visibleItems(snapshot),{...newsOptions(),savedItems:[]}).filter(item=>safePublicURL(item.data.url));
   return stories.find(item=>item.record_id===preferredId)||stories[0]||null;
  }
- const visibilityChanged=()=>{if(globalThis.document?.hidden){sentiment.setActive(false);contextData.tick(false);client.clear();}else if(active)load();};
- const pageHidden=event=>{suspended=true;sentiment.setActive(false);contextData.tick(false);client.clear();if(!event.persisted)dispose();};
+ const visibilityChanged=()=>{if(globalThis.document?.hidden){sentiment.setActive(false);contextData.tick(false);client.suspend();}else if(active)load();};
+ const pageHidden=event=>{suspended=true;sentiment.setActive(false);contextData.tick(false);client.suspend();if(!event.persisted)dispose();};
  const pageShown=event=>{if(event.persisted&&suspended&&!disposed){suspended=false;if(active)load();}};
  globalThis.document?.addEventListener?.('visibilitychange',visibilityChanged);
  globalThis.window?.addEventListener?.('pagehide',pageHidden);

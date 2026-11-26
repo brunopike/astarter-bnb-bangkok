@@ -219,6 +219,7 @@ export function validateLiveDataResponse(response,route,now=Date.now()){
 export function createLiveDataViews({root,rerender,link,section,table,stat,chartPanel,empty,fetchImpl=globalThis.fetch,now=Date.now}){
  let current=null,activeKey='',needsPaint=false,paintedStatus='',suspended=false;
  let displayedReceipt=null,badgeState='';
+ const recentRoutes=new Map();
  const tab=(title,page,params,on)=>link(title,page,params,on?'selected':'');
  const nav=(label,links)=>`<nav class="dc-section-nav" aria-label="${escapeHtml(label)}">${links.join('')}</nav>`;
  const select=(label,param,values,selected,display=value=>value)=>`<label><span>${escapeHtml(label)}</span><select data-dc-route-select="${param}" aria-label="${escapeHtml(label)}">${values.map(value=>`<option value="${escapeHtml(value)}" ${selected===value?'selected':''}>${escapeHtml(display(value))}</option>`).join('')}</select></label>`;
@@ -242,15 +243,26 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   const route=liveDataRoute(page,globalThis.location?.search||'');
   const key=route?JSON.stringify([route.kind,route.resource,route.query,route.displayMetric]):'';
   if(key!==activeKey){
-   abort();activeKey=key;current=route?{route,pending:false,nextAt:0,failures:0}:null;
-   if(route?.kind==='cross'&&route.query.symbol==='XAU'){
-    current.spot={route:{kind:'gold-spot',resource:'gold-spot',query:{},interval:GOLD_SPOT.interval,stale:GOLD_SPOT.stale},nextAt:0,failures:0};
+   abort();
+   const saved=recentRoutes.get(key);
+   if(saved)recentRoutes.delete(key);
+   if([current,current?.spot,current?.breakdown].some(state=>state?.receipt||state?.failures)){
+    recentRoutes.set(activeKey,current);
+    if(recentRoutes.size>12)recentRoutes.delete(recentRoutes.keys().next().value);
    }
-   if(route?.resource==='exchange-asset-flows')current.read=loadAssetExchangeFlows;
-   if(route?.resource==='asset-liquidations')current.read=loadAssetVenueLiquidations;
-   if(route?.query.view==='venue-liquidations'&&route.resource==='derivatives'){
-    current.breakdown={route:{resource:'asset-liquidations',kind:'asset-liquidations',query:{symbol:route.query.symbol},interval:MINUTE,stale:10*MINUTE},
-     read:loadAssetVenueLiquidations,nextAt:0,failures:0};
+   activeKey=key;
+   current=saved;
+   if(!current){
+    current=route?{route,pending:false,nextAt:0,failures:0}:null;
+    if(route?.kind==='cross'&&route.query.symbol==='XAU'){
+     current.spot={route:{kind:'gold-spot',resource:'gold-spot',query:{},interval:GOLD_SPOT.interval,stale:GOLD_SPOT.stale},nextAt:0,failures:0};
+    }
+    if(route?.resource==='exchange-asset-flows')current.read=loadAssetExchangeFlows;
+    if(route?.resource==='asset-liquidations')current.read=loadAssetVenueLiquidations;
+    if(route?.query.view==='venue-liquidations'&&route.resource==='derivatives'){
+     current.breakdown={route:{resource:'asset-liquidations',kind:'asset-liquidations',query:{symbol:route.query.symbol},interval:MINUTE,stale:10*MINUTE},
+      read:loadAssetVenueLiquidations,nextAt:0,failures:0};
+    }
    }
    needsPaint=false;paintedStatus='';displayedReceipt=null;badgeState='';
   }

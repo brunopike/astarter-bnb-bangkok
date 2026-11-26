@@ -188,7 +188,7 @@ test('the console never presents a selected draft as authorization or resumes an
   assert.doesNotMatch(node('#ops-plan').innerHTML,/<details|ops-boundary-summary/,'limits are directly editable instead of hidden behind a duplicate summary');
   assert.match(node('#ops-plan').innerHTML,/data-ops-settings="exchange"/);
   assert.match(node('#ops-runs').innerHTML,/ETH\/USDT/);assert.match(node('#ops-runs').innerHTML,/已暂停|Paused/);
-  assert.match(node('#ops-runs').innerHTML,/runId=ETH-OLD/);assert.match(intervention.innerHTML,/SIM-01/);
+  assert.match(node('#ops-runs').innerHTML,/runId=ETH-OLD/);assert.equal(intervention.innerHTML,'','the header only names a connected account');
   assert.doesNotMatch(node('#ops-plan').innerHTML,/ops-choose-plan|data-ops-select-view="signals"/,'the existing Signals tab is not duplicated as a forced BOT step');
   assert.match(node('#ops-plan').innerHTML,/class="ops-capital-actions" hidden/,'saving is only offered for an edited limit');
   assert.equal((tradingHTML().match(/ops-primary/g)||[]).length,1);
@@ -789,8 +789,9 @@ test('risk editing keeps drafts across policy tabs and saves only future-plan de
  const plan=()=>node('#ops-plan').innerHTML;
  const assertUnset=()=>{
   const card=plan().split('<div class="ops-protection-card">')[1];
-  assert.match(card,/未设置默认风控|No default protection set/);
-  assert.match(card,/data-ops-risk-open="protection"[^>]*aria-haspopup="dialog"[\s\S]*?<small class="ops-access-edit">(?:设置|Set up)<svg/);
+  assert.match(card,/<span class="ops-policy-state">(?:未设置|Not configured)<\/span>/);
+  assert.match(card,/<button type="button" data-ops-risk-open="protection" aria-haspopup="dialog">(?:设置|Set up)<svg/);
+  assert.match(card,/<button type="button" data-ops-risk-open="kelly" aria-haspopup="dialog">(?:凯利测算|Kelly estimate)<\/button>/);
   assert.doesNotMatch(card,/ops-protection-grid|Astarter 分层风控|Astarter layered protection|策略自带风控|Original strategy rules|\d+(?:\.\d+)?%/);
  };
  const renderWorkspace=source=>createWorkbenchConsole({host,research,workspace:source,desk:{readSnapshot:()=>trade,syncStatus:()=>sync}});
@@ -826,7 +827,7 @@ test('risk editing keeps drafts across policy tabs and saves only future-plan de
   assert.match(node('kelly-output').innerHTML,/25\.00/);change({riskTab:'protection'});assert.equal(dialog.form.values.policy_episode,'.15');
   submit();await Promise.resolve();
   assert.equal(dialog.open,false);assert.equal(workspace.s.workbenchRisk.protection.mode,'conservative');assert.equal(workspace.s.workbenchRisk.protection.parameters.episode,.0015);
-  assert.match(plan(),/Astarter (分层风控 · 保守|layered protection · Conservative)/);assert.match(plan(),/0\.15%/);assert.doesNotMatch(plan(),/未设置默认风控|No default protection set/);
+  assert.match(plan(),/Astarter (分层风控 · 保守|layered protection · Conservative)/);assert.match(plan(),/0\.15%/);assert.doesNotMatch(plan(),/ops-policy-state/);
   assert.match(node('#ops-plan').innerHTML,/模板默认风控已保存|Template risk defaults saved/);assert.equal(focused,'protection','closing after a panel refresh restores the recreated opener');
   const saved=JSON.stringify(workspace.s.workbenchRisk);open('protection');dialog.form.values.policy_episode='.1';
   cancel();await Promise.resolve();assert.equal(JSON.stringify(workspace.s.workbenchRisk),saved);assert.match(plan(),/0\.15%/);assert.doesNotMatch(plan(),/0\.1%/);
@@ -843,7 +844,7 @@ test('risk editing keeps drafts across policy tabs and saves only future-plan de
   const unchanged=JSON.stringify(refreshed.s.workbenchRisk);submit();assert.equal(JSON.stringify(refreshed.s.workbenchRisk),unchanged);assert.equal(dialog.open,true);
   sync.scope={accountId:'SIM-01',environment:'DEMO'};freshView.update();await Promise.resolve();assert.match(plan(),/0\.15%/);
   open('protection');change({riskPolicy:'original'});submit();await Promise.resolve();
-  assert.match(plan(),/策略自带风控|Original strategy rules/);assert.doesNotMatch(plan(),/ops-protection-grid|未设置默认风控|No default protection set/);
+  assert.match(plan(),/策略自带风控|Original strategy rules/);assert.doesNotMatch(plan(),/ops-protection-grid|ops-policy-state/);
   assert.deepEqual(new WorkspaceSim({storage}).s.workbenchRisk.protection,{id:'original',version:'strategy-original'});
  }finally{globalThis.document=previousDocument;globalThis.FormData=previousFormData;}
 });

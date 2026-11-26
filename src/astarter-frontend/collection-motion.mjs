@@ -1,4 +1,7 @@
+import {inside,distance,same,readingArea,clearSegment,newsDepartureDelays,runCourierPlan} from './collection-planner.mjs';
+export {planNewsCrew,planDataCrew,planSignalCrew,planDataWalk,nextDataPair,newsReturnPath,newsDepartureDelays} from './collection-planner.mjs';
 import {RESEARCH_GROUPS} from './multi-research.mjs';
+import {DATA_PAGES} from './data-center-fixtures.mjs';
 
 // ThreeUI Pro Cross Beam / Frame Beam: equal-speed perimeter, soft wash,
 // sharp core and a travelling highlight. Adapted to one shared SVG/timebase.
@@ -65,7 +68,10 @@ function courierWindow(root, pocket) {
     bottom:Math.min(view.bottom,win.innerHeight,dock?.height?dock.top:Infinity)};
   const bounds={left:Math.min(home.x,viewport.left+px),right:Math.max(home.x,viewport.right-px),
     top:Math.min(home.y,viewport.top+py),bottom:Math.max(home.y,viewport.bottom-py)};
-  return {doc,win,viewport,home,anchor:h,compact,px,py,bounds};
+  const boxes=new WeakMap(),styles=new WeakMap();
+  function box(el){let r=boxes.get(el);if(!r){r=el.getBoundingClientRect();boxes.set(el,r);}return r;}
+  function style(el){let s=styles.get(el);if(!s){s=win.getComputedStyle(el);styles.set(el,s);}return s;}
+  return {doc,win,viewport,home,anchor:h,compact,px,py,bounds,box,style};
 }
 
 const signalSolid=[controls,'.as-search','.liquid-native-host','.sig-filter-body','.sig-preferences-panel','.pw-trackbar','.layout-navigation-row','.sig-stats-chart-panel',
@@ -78,8 +84,16 @@ function clippedBox(rect,clip) {
   return right>left&&bottom>top?{left,right,top,bottom,width:right-left,height:bottom-top}:null;
 }
 
+// These containers bound their own scrolling rows/cards. Sticky cells stay inside
+// their table and floating menus render in a separate layer. A zero-size or
+// display:contents wrapper can still have visible children, so keep traversing it.
+const boundedBranches='section,article,aside,nav,table,thead,tbody,tr,ul,ol,li,dl,.dc-table-wrap,.hub-table-wrap,.hub-overview-charts,.hub-two,.hub-three,.hub-asset-cards,.hub-heatmap,.pd-news-list,.pd-market-table,.pd-social-layout,.df-timeline';
+function outsideView(rect,clip){
+  return rect.width>0&&rect.height>0&&(rect.bottom<=clip.top||rect.top>=clip.bottom||rect.right<=clip.left||rect.left>=clip.right);
+}
+
 function measuredFloor(root,frame,stops,solid) {
-  const {doc,win,home,anchor,compact,px,py,bounds,viewport}=frame;
+  const {doc,home,anchor,compact,px,py,bounds,viewport,box}=frame;
   const ink=[],obstacles=[],range=doc.createRange(),seen=new Set();
   function protect(rect,clip) {
     const b=clippedBox(rect,clip);
@@ -93,12 +107,12 @@ function measuredFloor(root,frame,stops,solid) {
   // scroll containers as well as the page so hidden copies cannot close an aisle.
   function read(el,clip) {
     if(el.matches(signalHidden))return;
-    const style=win.getComputedStyle(el);
+    if(el.matches(boundedBranches)&&outsideView(box(el),clip))return;
+    const style=frame.style(el);
     if(style.display==='none'||style.visibility==='hidden'||style.opacity==='0')return;
-    const r=el.getBoundingClientRect();
-    if(el.matches('article,aside')&&!clippedBox(r,clip))return;
-    if(el.matches(solid)){protect(r,clip);return;}
+    if(el.matches(solid)){protect(box(el),clip);return;}
     if(style.overflowX!=='visible'||style.overflowY!=='visible'){
+      const r=box(el);
       const content={left:style.overflowX==='visible'?clip.left:r.left,right:style.overflowX==='visible'?clip.right:r.right,
         top:style.overflowY==='visible'?clip.top:r.top,bottom:style.overflowY==='visible'?clip.bottom:r.bottom};
       clip=clippedBox(content,clip);if(!clip)return;
@@ -115,25 +129,47 @@ function measuredFloor(root,frame,stops,solid) {
   return {bounds,home,anchor,stops,obstacles,ink,compact};
 }
 
-export function measureSignalFloor(root,pocket) {
-  const feed=root.querySelector('.sig-tracking .sig-feed');
-  if(!feed)return null;
-  const frame=courierWindow(root,pocket),viewport=frame.viewport;
-  const stops=[],ids=new Set();
-  for(const row of feed.querySelectorAll('article[data-track-record]')){
-    const id=row.dataset.trackRecord,rect=clippedBox(row.getBoundingClientRect(),viewport);
-    if(!id||ids.has(id)||!rect||rect.height<24||rect.width<36)continue;
-    ids.add(id);
-    const time=row.querySelector('time');
-    const stamp=time&&clippedBox(time.getBoundingClientRect(),rect);
-    stops.push({id,row,rect,stamp,kind:'signal'});
+function signalSources(root,frame){
+  const feed=root.querySelector('.sig-tracking .sig-feed'),research=feed?null:root.querySelector('.biz-op-layout');
+  if(!feed&&!research)return null;
+  const clip=contentClipping(root,frame),stops=[],ids=new Set();
+  function add(row,id,kind,edge=false){
+    const visible=clip(row),rect=visible&&clippedBox(frame.box(row),visible);
+    if(!id||ids.has(id)||!rect||rect.height<24||rect.width<36)return;
+    const time=row.querySelector('time'),stamp=time&&clippedBox(frame.box(time),rect);
+    ids.add(id);stops.push({id,row,rect,stamp,kind,edge});
   }
-
-  return measuredFloor(root,frame,stops,signalSolid);
+  if(feed){
+    for(const row of feed.querySelectorAll('article[data-track-record]'))add(row,row.dataset.trackRecord,'signal');
+    const detail=root.querySelector('.sig-detail-aside .sig-reading-hero,.sig-detail-aside .sig-live-detail');
+    const id=detail&&root.querySelector('.sig-detail-aside [data-track-copy]')?.dataset.trackCopy;
+    if(id)add(detail,'analysis:'+id,'analysis');
+  }else{
+    for(const row of research.querySelectorAll('.biz-op-row[data-id]'))add(row,'finding:'+row.dataset.id,'finding',true);
+    const current=research.querySelector('.biz-op-row[aria-pressed="true"]')?.dataset.id;
+    const detail=research.querySelector('.biz-op-detail .decision-card');
+    if(detail&&current)add(detail,'finding-detail:'+current,'analysis');
+  }
+  return markSources(root,stops);
+}
+function walkingAreas(area,selector,frame,clip){
+  const out=[];
+  for(const module of area.querySelectorAll(selector)){
+    const visible=clip(module),rect=visible&&clippedBox(frame.box(module),visible);
+    if(rect&&rect.width>=32&&rect.height>=28)out.push(rect);
+  }
+  return out;
+}
+export function measureSignalFloor(root,pocket){
+  const frame=courierWindow(root,pocket),stops=signalSources(root,frame);
+  if(!stops)return null;
+  const floor=measuredFloor(root,frame,stops,signalSolid);
+  floor.walkAreas=walkingAreas(root,'.sig-event,.sig-empty,.sig-detail-aside,.biz-op-list,.biz-op-detail,.biz-signal-section',frame,contentClipping(root,frame));
+  return floor;
 }
 
 
-const dataSolid=[signalSolid,'.chart-canvas','[data-hub-plot]','.hub-breadth'].join(',');
+const dataSolid=[signalSolid,'.chart-canvas','[data-hub-plot]','.hub-overview-charts .hub-empty','.hub-breadth','iframe','video','object','embed'].join(',');
 const annotatedSources=new WeakMap();
 const elementText=(el,selector)=>el.querySelector(selector)?.textContent.trim()||'';
 const containsValue=text=>/\d/.test(text??'');
@@ -159,6 +195,10 @@ const dataStationTypes=[
   ['a.pd-market-tr','spot',el=>containsValue(elementText(el,'.pd-price'))&&el.getAttribute('href')],
   ['.pd-quote>div,.hub-detail-price','quote-detail',el=>containsValue(elementText(el,'strong,b,[data-hub-price]'))&&String(siblingIndex(el))],
   ['[data-hub-card],tr[data-hub-row]','quote',marketQuote],
+  ['.hub-kpis>.hub-stat','asset-metric',el=>containsValue(elementText(el,'strong'))&&String(siblingIndex(el))],
+  ['.hub-facts>div','change-period',el=>el.querySelector('dd .hub-up,dd .hub-down,dd .hub-flat')&&containsValue(elementText(el,'dd'))&&String(siblingIndex(el))],
+  ['[data-trading-chart][data-chart-source="market"]','candles',el=>Number(el.dataset.candleCount)>0&&el.querySelector('canvas')&&el.dataset.tradingChart],
+  ['.dc-section>p:has(>strong)','balance',el=>officialLink(el.parentElement)&&containsValue(elementText(el,'strong'))&&String(siblingIndex(el))],
   ['[data-hub-tile]','change',el=>containsValue(elementText(el,'[data-hub-change],strong'))&&el.dataset.hubTile],
   ['.hub-overview-charts>.hub-panel','overview',el=>{
     const plot=el.querySelector('[data-hub-plot][data-chart-ready="true"]');
@@ -170,7 +210,7 @@ const dataStationTypes=[
   ['.hub-sector,.hub-rank-row,.hub-venue,.hub-venue-list>li','ranking',el=>namedValue(el,'b','strong')],
   ['[data-chart]','series',el=>Number(el.dataset.visibleCount)>0&&containsValue(elementText(el,'.chart-readout dd'))&&el.dataset.chart],
   ['.dc-stat','stat',el=>containsValue(elementText(el,'strong'))&&String(siblingIndex(el))],
-  ['.dc-table tbody>tr:not([data-hub-row])','row',(el,row,scope)=>{
+  ['.dc-table tbody>tr:not([data-hub-row]),.dc-section table tbody>tr','row',(el,row,scope)=>{
     const cells=Array.from(el.cells),identity=cells[0]?.textContent.trim();
     if(!identity||cells.length<2)return null;
     // A dated row with empty value cells is an unreported observation.
@@ -193,17 +233,21 @@ function sourceContext(root) {
   return {area,scope,live:area.hasAttribute('data-public-data')&&query.get('data')!=='demo'};
 }
 
-function visibleStops(root,frame,{area,scope,live}) {
-  const {win,viewport}=frame,clips=new WeakMap(),byId=new Map(),panels=[...area.querySelectorAll('.dc-panel')];
-  const tables=[...area.querySelectorAll('.dc-table')];
+function contentClipping(root,frame) {
+  const {viewport,box}=frame;
+  const clips=new WeakMap();
   // Tables, media strips and dropdowns scroll independently of the main page.
   function contentClip(el) {
     if(!el||el===root.parentElement)return viewport;
     if(clips.has(el))return clips.get(el);
-    const parent=el.parentElement,s=win.getComputedStyle(el);
-    let clip=el.hidden||s.display==='none'||s.visibility==='hidden'||s.opacity==='0'||parent?.tagName==='DETAILS'&&!parent.open&&el.tagName!=='SUMMARY'?null:contentClip(parent);
+    const parent=el.parentElement;
+    let clip=el.hidden||parent?.tagName==='DETAILS'&&!parent.open&&el.tagName!=='SUMMARY'?null:contentClip(parent);
+    if(clip&&el.matches(boundedBranches)&&outsideView(box(el),clip))clip=null;
+    if(!clip){clips.set(el,null);return null;}
+    const s=frame.style(el);
+    if(s.display==='none'||s.visibility==='hidden'||s.opacity==='0')clip=null;
     if(clip&&(s.overflowX!=='visible'||s.overflowY!=='visible')){
-      const r=el.getBoundingClientRect();
+      const r=box(el);
       const inner={left:r.left+(el.clientLeft||0),top:r.top+(el.clientTop||0)};
       inner.right=inner.left+(el.clientWidth||r.width);inner.bottom=inner.top+(el.clientHeight||r.height);
       clip=clippedBox({left:s.overflowX==='visible'?clip.left:inner.left,right:s.overflowX==='visible'?clip.right:inner.right,
@@ -211,37 +255,45 @@ function visibleStops(root,frame,{area,scope,live}) {
     }
     clips.set(el,clip);return clip;
   }
+  return contentClip;
+}
+
+function visibleStops(root,{area,scope,live},contentClip,box) {
+  const byId=new Map(),panels=[...area.querySelectorAll('.dc-panel')],tables=[...area.querySelectorAll('.dc-table,.dc-section table')];
   const range=root.ownerDocument.createRange();
   for(const el of live?area.querySelectorAll(dataStations):[]){
     const row=el.hasAttribute('data-news-copy')?el.parentElement:el,clip=contentClip(row);
     if(!clip)continue;
-    const rect=clippedBox(row.getBoundingClientRect(),clip);
+    const rect=clippedBox(box(row),clip);
     if(!rect||rect.height<16||rect.width<24)continue;
     const [,kind,identify]=dataStationTypes.find(([selector])=>el.matches(selector));
     const key=identify(el,row,scope);
     if(!key)continue;
-    const table=kind==='row'?tables.indexOf(el.closest('.dc-table')):null;
+    const table=kind==='row'?tables.indexOf(el.closest('table')):null;
     if(kind==='row'){
       // Scrolling a published observation out of view can expose only dashes.
       // The sticky date or rank alone is insufficient to make that a station.
       const cells=Array.from(el.cells).slice(1);
       const schedule=scope.startsWith('intelligence:')&&officialLink(el);
       if(!cells.some(cell=>{
-        if(!clippedBox(cell.getBoundingClientRect(),rect)||!tableObservation(cell.textContent)&&!(schedule&&cell===cells[1]))return false;
+        if(!clippedBox(box(cell),rect)||!tableObservation(cell.textContent)&&!(schedule&&(cell===cells[1]||cell===cells[0]&&/\d\d:\d\d/.test(cell.textContent))))return false;
         range.selectNodeContents(cell);return [...range.getClientRects()].some(r=>clippedBox(r,rect));
       }))continue;
     }
     const section=kind==='stat'?panels.indexOf(el.closest('.dc-panel')):table;
     const id=kind==='news'?key:[scope,kind,...(section==null?[]:[section]),key].join(':');
-    const time=row.querySelector('time'),stamp=time&&clippedBox(time.getBoundingClientRect(),rect);
+    const time=row.querySelector('time'),stamp=time&&clippedBox(box(time),rect);
     const previous=byId.get(id);
     // Prefer the full article when its timestamp is readable. A visible side
     // copy still works when the primary article is outside the viewport.
     if(!previous||kind==='news'&&(Number(Boolean(stamp))*2+Number(el.hasAttribute('data-news-record'))>
       Number(Boolean(previous.stamp))*2+Number(previous.row.hasAttribute('data-news-record'))))
-      byId.set(id,{id,row,rect,stamp,kind});
+      byId.set(id,{id,row,rect,stamp,kind,edge:row.matches('a[href],button')});
   }
-  const stops=[...byId.values()],old=annotatedSources.get(root),active=new Set();
+  return markSources(root,[...byId.values()]);
+}
+function markSources(root,stops){
+  const old=annotatedSources.get(root),active=new Set();
   for(const stop of stops){active.add(stop.row);if(stop.row.dataset.courierSource!==stop.id)stop.row.dataset.courierSource=stop.id;}
   if(old)for(const row of old)if(!active.has(row))delete row.dataset.courierSource;
   annotatedSources.set(root,active);
@@ -250,532 +302,19 @@ function visibleStops(root,frame,{area,scope,live}) {
 
 export function dataPatrolStops(root,pocket) {
   const context=sourceContext(root);
-  return context?visibleStops(root,courierWindow(root,pocket),context):[];
+  if(!context)return [];
+  const frame=courierWindow(root,pocket);
+  return visibleStops(root,context,contentClipping(root,frame),frame.box);
 }
 
+const dataModules='.dc-panel,.dc-section,.pd-market-panel,.pd-social-stream,.pd-social-context,.df-timeline,.hub-market-summary,.hub-kpis,.hub-detail-price,.trading-chart,.pd-quote,.pd-sentiment,.pd-notice';
 export function measureDataFloor(root,pocket) {
   const context=sourceContext(root);
-  if(!context)return null;
-  const frame=courierWindow(root,pocket);
-  return measuredFloor(root,frame,visibleStops(root,frame,context),dataSolid);
-}
-
-
-const floorGraphs=new WeakMap();
-const inside=(p,r)=>p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom;
-const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-const same=(a,b)=>a.x===b.x&&a.y===b.y;
-const overlaps=(a,b)=>a.left<=b.right&&a.right>=b.left&&a.top<=b.bottom&&a.bottom>=b.top;
-
-function clearSegment(a,b,rects) {
-  const dx=b.x-a.x,dy=b.y-a.y;
-  const left=Math.min(a.x,b.x),right=Math.max(a.x,b.x),top=Math.min(a.y,b.y),bottom=Math.max(a.y,b.y);
-  for(const r of rects) {
-    if(right<r.left||left>r.right||bottom<r.top||top>r.bottom)continue;
-    if(!dx||!dy)return false;
-    const x1=(r.left-a.x)/dx,x2=(r.right-a.x)/dx,y1=(r.top-a.y)/dy,y2=(r.bottom-a.y)/dy;
-    if(Math.max(0,Math.min(x1,x2),Math.min(y1,y2))<=Math.min(1,Math.max(x1,x2),Math.max(y1,y2)))return false;
-  }
-  return true;
-}
-
-// Ease around bends only where a little arc fits the measured aisle.
-function roundBends(points,blocks) {
-  if(points.length<3)return points;
-  const result=[points[0]];
-  for(let i=1;i<points.length-1;i++){
-    const a=points[i-1],b=points[i],c=points[i+1],ab=distance(a,b),bc=distance(b,c);
-    const radius=Math.min(18,ab/4,bc/4);
-    if(radius<3){result.push(b);continue;}
-    const entry={x:b.x+(a.x-b.x)*radius/ab,y:b.y+(a.y-b.y)*radius/ab};
-    const exit={x:b.x+(c.x-b.x)*radius/bc,y:b.y+(c.y-b.y)*radius/bc};
-    const mid={x:(entry.x+2*b.x+exit.x)/4,y:(entry.y+2*b.y+exit.y)/4};
-    if(clearSegment(entry,mid,blocks)&&clearSegment(mid,exit,blocks))result.push(entry,mid,exit);
-    else result.push(b);
-  }
-  result.push(points.at(-1));return result;
-}
-
-function lowerBound(axis,n) {
-  let lo=0,hi=axis.length;
-  while(lo<hi){const mid=(lo+hi)>>>1;if(axis[mid]<n)lo=mid+1;else hi=mid;}
-  return lo;
-}
-
-// Route on measured aisles. Include both sides of every label and control so a slim
-// phone gutter is reachable even if it falls between the ordinary grid samples.
-function buildFloorGraph(floor) {
-  const {home,bounds,obstacles}=floor, ink=floor.ink||obstacles;
-  const blocks=[];
-  for(const [i,r] of obstacles.entries()){
-    if(!overlaps(r,bounds))continue;
-    if(!inside(home,r)||!floor.ink||inside(home,ink[i])){blocks.push(r);continue;}
-    // A companion can settle just inside the padding around a control. Its own
-    // footprint is a doorway; the underlying control itself remains protected.
-    const door={left:home.x-15,right:home.x+15,top:home.y-15,bottom:home.y+15};
-    if(r.left<door.left)blocks.push({...r,right:door.left});
-    if(r.right>door.right)blocks.push({...r,left:door.right});
-    if(r.top<door.top)blocks.push({...r,bottom:door.top});
-    if(r.bottom>door.bottom)blocks.push({...r,top:door.bottom});
-    blocks.push(ink[i]);
-  }
-  function axis(lo,hi,start,min,max) {
-    const values=new Set([lo,hi,start]);
-    for(let v=lo+18;v<hi;v+=18)values.add(v);
-    const add=v=>{if(v>lo&&v<hi)values.add(v);};
-    for(const r of blocks){
-      add(Math.floor(r[min]-.75));add(Math.ceil(r[max]+.75));
-      if(r[max]-r[min]<18)add((r[min]+r[max])/2);
-    }
-    return [...values].sort((a,b)=>a-b);
-  }
-  const xs=axis(bounds.left,bounds.right,home.x,'left','right'),ys=axis(bounds.top,bounds.bottom,home.y,'top','bottom');
-  const w=xs.length,h=ys.length,size=w*h,stride=w+1;
-  const coverage=new Int32Array((h+1)*stride),blocked=new Uint8Array(size);
-  for(const r of blocks){
-    const l=lowerBound(xs,r.left),e=lowerBound(xs,r.right+1e-6),t=lowerBound(ys,r.top),b=lowerBound(ys,r.bottom+1e-6);
-    coverage[t*stride+l]++;coverage[t*stride+e]--;coverage[b*stride+l]--;coverage[b*stride+e]++;
-  }
-  for(let y=0;y<h;y++){
-    let line=0;
-    for(let x=0;x<w;x++){const i=y*stride+x;line+=coverage[i];coverage[i]=line+(y?coverage[i-stride]:0);blocked[y*w+x]=coverage[i]>0;}
-  }
-  const base=lowerBound(ys,home.y)*w+lowerBound(xs,home.x),queue=new Int32Array(size),trees=new Map();
-  function tree(seed){
-    if(trees.has(seed))return trees.get(seed);
-    const parents=new Int32Array(size);parents.fill(-1);
-    let head=0,end=0;
-    if(!blocked[seed]){parents[seed]=seed;queue[end++]=seed;}
-    function add(i,previous){if(!blocked[i]&&parents[i]===-1){parents[i]=previous;queue[end++]=i;}}
-    while(head<end){
-      const i=queue[head++],x=i%w;
-      if(x>0)add(i-1,i);if(x<w-1)add(i+1,i);
-      if(i>=w)add(i-w,i);if(i<(h-1)*w)add(i+w,i);
-    }
-    trees.set(seed,parents);return parents;
-  }
-  const connected=tree(base),point=i=>({x:xs[i%w],y:ys[Math.floor(i/w)]});
-  function closest(p,range=28,allowed=blocks){
-    let best=-1,radius=range+.001;
-    const xl=lowerBound(xs,p.x-range),xr=lowerBound(xs,p.x+range+.001);
-    const yt=lowerBound(ys,p.y-range),yb=lowerBound(ys,p.y+range+.001);
-    for(let y=yt;y<yb;y++)for(let x=xl;x<xr;x++){
-      const i=y*w+x;if(connected[i]===-1)continue;
-      const q={x:xs[x],y:ys[y]},d=distance(p,q);
-      if(d<radius&&clearSegment(p,q,allowed)){best=i;radius=d;if(d===0)return i;}
-    }
-    return best;
-  }
-  function route(from,to) {
-    if(!inside(from,bounds)||!inside(to,bounds))return null;
-    if(clearSegment(from,to,blocks))return [from,to];
-    const first=closest(from),last=closest(to);
-    if(first<0||last<0)return null;
-    const parents=tree(last);
-    if(parents[first]<0)return null;
-    const line=[point(first)];
-    let at=first,prior=0;
-    while(at!==last){
-      const next=parents[at],delta=next-at;
-      if(prior&&prior!==delta)line.push(point(at));
-      prior=delta;at=next;
-    }
-    if(!same(line.at(-1),point(last)))line.push(point(last));
-    if(!same(line.at(-1),to))line.push(to);
-    const result=[from];
-    for(let i=0;i<line.length;){
-      let next=line.length-1;
-      while(next>i&&!clearSegment(result.at(-1),line[next],blocks))next--;
-      if(!same(result.at(-1),line[next]))result.push(line[next]);
-      i=next+1;
-    }
-    return result.length===1?[from,to]:roundBends(result,blocks);
-  }
-  function recall(from) {
-    if(!inside(from,bounds)){
-      // A viewport shrink can leave a visible runner's old coordinates outside
-      // the new frame. Keep its position, walk along the exterior, then enter
-      // at the nearest open point on that same edge.
-      const entries=[];
-      function edge(i,vertical){
-        if(connected[i]<0)return;
-        const p=point(i),approach=vertical?{x:from.x,y:p.y}:{x:p.x,y:from.y};
-        if(!clearSegment(approach,p,blocks))return;
-        entries.push({p,approach,travel:distance(from,approach)+distance(approach,p)});
-      }
-      if(from.x<bounds.left||from.x>bounds.right){
-        const x=from.x<bounds.left?0:w-1;for(let y=0;y<h;y++)edge(y*w+x,true);
-      }
-      if(from.y<bounds.top||from.y>bounds.bottom){
-        const y=from.y<bounds.top?0:h-1;for(let x=0;x<w;x++)edge(y*w+x,false);
-      }
-      entries.sort((a,b)=>a.travel-b.travel);
-      const entry=entries[0];if(!entry)return null;
-      const rest=route(entry.p,home);if(!rest)return null;
-      return same(from,entry.approach)?[from,...rest]:[from,entry.approach,...rest];
-    }
-    if(!blocks.some(r=>inside(from,r)))return route(from,home);
-    // Only an interrupted walk may begin underneath newly laid-out text.
-    // A straight exit through the origin's convex boxes can leave each box
-    // only once. Every other label/control remains forbidden on that step.
-    const exit=[...blocks.filter(r=>!inside(from,r)),...ink.filter(r=>!inside(from,r))];
-    let index=-1;
-    for(const radius of [32,64,128]){
-      index=closest(from,radius,exit);if(index>=0)break;
-    }
-    if(index<0)return null;
-    const p=point(index),rest=route(p,home);
-    return rest?[from,...rest]:null;
-  }
-  return {bounds,home,xs,ys,w,connected,point,blocks,ink,route,recall};
-}
-
-function floorGraph(floor) {
-  let graph=floorGraphs.get(floor);
-  if(!graph){graph=buildFloorGraph(floor);floorGraphs.set(floor,graph);}
-  return graph;
-}
-
-// A scroll can place a runner inside an island of otherwise safe whitespace.
-// Use smaller margins only until it rejoins the normal connected aisles.
-const recallGraphs=new WeakMap();
-function narrowRecallGraph(floor,xScale,yScale) {
-  let variants=recallGraphs.get(floor);
-  if(!variants){variants=new Map();recallGraphs.set(floor,variants);}
-  const key=xScale+','+yScale;
-  if(!variants.has(key)){
-    const obstacles=floor.ink.map((r,i)=>{
-      const pad=floor.obstacles[i];
-      return {left:r.left+(pad.left-r.left)*xScale,right:r.right+(pad.right-r.right)*xScale,
-        top:r.top+(pad.top-r.top)*yScale,bottom:r.bottom+(pad.bottom-r.bottom)*yScale};
-    });
-    variants.set(key,buildFloorGraph({...floor,obstacles}));
-  }
-  return variants.get(key);
-}
-
-function rejoinAisle(graph,walk) {
-  const prefix=[walk[0]];
-  let traveled=0;
-  for(let i=1;i<walk.length;i++){
-    const a=walk[i-1],b=walk[i],span=distance(a,b),steps=Math.max(1,Math.ceil(span/8));
-    for(let step=1;step<=steps;step++){
-      const t=step/steps,at={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};
-      if(graph.blocks.some(r=>inside(at,r)))continue;
-      const rest=graph.route(at,graph.home);
-      if(rest)return {path:[...prefix,...rest],narrow:traveled+t*span};
-    }
-    traveled+=span;prefix.push(b);
-  }
-  return {path:walk,narrow:traveled};
-}
-
-function returnThroughGap(floor,graph,from) {
-  // First preserve the largest body margin the measured gap allows. Keep
-  // full clearance on either axis when possible and leave the gap promptly.
-  for(const scale of [.75,.5,.3,.12,0]){
-    const tight=narrowRecallGraph(floor,scale,scale).recall(from);
-    if(!tight)continue;
-    let best=null;
-    for(const [x,y] of [[1,scale],[scale,1]]){
-      const walk=narrowRecallGraph(floor,x,y).recall(from);
-      if(!walk)continue;
-      const route=rejoinAisle(graph,walk);
-      if(!best||route.narrow<best.narrow)best=route;
-    }
-    return best?.path||rejoinAisle(graph,tight).path;
-  }
-  return null;
-}
-
-export function newsReturnPath(floor,from) {
-  if(!floor)return null;
-  const graph=floorGraph(floor),ordinary=graph.recall(from);
-  if(!floor.ink?.length||floor.ink.length!==floor.obstacles.length)return ordinary;
-  const originInk=floor.ink.filter(r=>inside(from,r));
-  if(!originInk.length)return ordinary||returnThroughGap(floor,graph,from);
-
-  // A freshly moved label can paint over a runner. Step across its nearest
-  // reachable edge before turning, so the runner never walks along that text.
-  const exits=[];
-  for(const r of originInk){
-    exits.push({x:r.left-1,y:from.y},{x:r.right+1,y:from.y},{x:from.x,y:r.top-1},{x:from.x,y:r.bottom+1});
-    for(const x of [r.left-1,r.right+1])for(const y of [r.top-1,r.bottom+1])exits.push({x,y});
-  }
-  const otherInk=floor.ink.filter(r=>!originInk.includes(r));
-  exits.sort((a,b)=>distance(from,a)-distance(from,b));
-  for(const at of exits){
-    if(!inside(at,graph.bounds)||originInk.some(r=>inside(at,r))||!clearSegment(from,at,otherInk))continue;
-    const rest=graph.recall(at)||returnThroughGap(floor,graph,at);
-    if(rest)return [from,...rest];
-  }
-  return ordinary||returnThroughGap(floor,graph,from);
-}
-
-function bubbleBox(floor,p,side){
-  const compact=floor.compact??(floor.bounds.right-floor.bounds.left<880),width=compact?24:26,top=compact?41:45;
-  const x=p.x+(side==='above-left'?-6:side==='above-right'?6:0);
-  return {left:x-width/2-1,right:x+width/2+1,top:p.y-top-1,bottom:p.y-top+(compact?22:24)+4};
-}
-function bubblePlace(floor,graph,p,first='above') {
-  for(const side of new Set([first,'above','above-left','above-right'])){
-    const bubble=bubbleBox(floor,p,side);
-    if(bubble.left<floor.bounds.left-7||bubble.right>floor.bounds.right+7||bubble.top<floor.bounds.top-10)continue;
-    if(!graph.ink.some(r=>overlaps(bubble,r)))return side;
-  }
-  return null;
-}
-
-function readingArea(graph,stop) {
-  const {bounds}=graph,r=stop.rect,rx=stop.kind==='signal'?10:stop.kind?20:12,ry=stop.kind==='signal'?10:stop.kind?22:13;
-  return {l:Math.max(bounds.left,r.left-rx),e:Math.min(bounds.right,r.right+rx),
-    top:Math.max(bounds.top,r.top-ry),bottom:Math.min(bounds.bottom,r.bottom+ry)};
-}
-
-function sourcePort(graph,stop,used,variation,spacing) {
-  const {home,xs,ys,w,connected}=graph,t=stop.stamp,{l,e,top,bottom}=readingArea(graph,stop);
-  if(e<=l||bottom<=top)return null;
-  const level=t?Math.max(top,Math.min(bottom,t.top+t.height/2)):top+(bottom-top)*.43;
-  const hints=[{x:t?t.right+25:l+(e-l)*.32,y:level},{x:e-16,y:level},{x:l+16,y:top+16},
-    {x:l+(e-l)*.55,y:bottom-14},{x:e-17,y:bottom-17},{x:l+(e-l)*.65,y:top+17}];
-  const preferred=hints[variation%hints.length];
-  let best=null,score=Infinity;
-  const x0=lowerBound(xs,l),x1=lowerBound(xs,e+.01),y0=lowerBound(ys,top),y1=lowerBound(ys,bottom+.01);
-  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
-    const i=y*w+x;if(connected[i]<0)continue;
-    const p={x:xs[x],y:ys[y]},cost=Math.abs(p.x-preferred.x)+1.6*Math.abs(p.y-preferred.y);
-    if(cost>=score||distance(p,home)<42||used.some(q=>distance(p,q)<spacing))continue;
-    best=p;score=cost;
-  }
-  return best;
-}
-
-function meetingSeats(floor,graph,jobs,occupied=[],atSource=false,readerClearance=36,protectPair=false,accept=null) {
-  const {xs,ys,w,connected,home}=graph,separation=(floor.compact??(floor.bounds.right-floor.bounds.left<880))?36:40;
-  const [a,b]=jobs.slice(0,2).map(job=>job.outbound.at(-1));
-  const target={x:(a.x+b.x+home.x)/3-separation/2,y:(a.y+b.y+home.y)/3};
-  const candidates=[],step=atSource?0:7,dockClearance=atSource?36:48;
-  const sourceClearance=protectPair?readerClearance:atSource?0:24;
-  // A meeting needs a broad pocket, so sample coarsely and then test the exact
-  // two body positions and independent speech-bubble rectangles inside it.
-  let lastY=-Infinity;
-  for(let y=0;y<ys.length;y++){
-    if(ys[y]-lastY<step)continue;lastY=ys[y];
-    let lastX=-Infinity;
-    for(let x=0;x<xs.length&&xs[x]+separation<=floor.bounds.right;x++){
-      if(xs[x]-lastX<step)continue;lastX=xs[x];
-      const index=y*w+x;if(connected[index]<0)continue;
-      const p={x:xs[x],y:ys[y]},q={x:p.x+separation,y:p.y};
-      if(distance(p,home)<dockClearance||distance(q,home)<dockClearance)continue;
-      if(sourceClearance&&[a,b].some(s=>distance(s,p)<sourceClearance||distance(s,q)<sourceClearance))continue;
-      candidates.push({p,q,score:distance(p,target)});
-    }
-  }
-  candidates.sort((a,b)=>a.score-b.score);
-  for(const {p,q} of candidates){
-    if(!clearSegment(p,q,graph.blocks))continue;
-    if(jobs.slice(2).some(job=>distance(job.outbound.at(-1),p)<readerClearance||distance(job.outbound.at(-1),q)<readerClearance))continue;
-    if(occupied.some(at=>distance(at,p)<48||distance(at,q)<48))continue;
-    const left=bubblePlace(floor,graph,p,'above-left'),right=bubblePlace(floor,graph,q,'above-right');
-    if(!left||!right||overlaps(bubbleBox(floor,p,left),bubbleBox(floor,q,right)))continue;
-    const seats=[{at:p,bubble:left,facing:'right'},{at:q,bubble:right,facing:'left'}];
-    if(!accept||accept(seats))return seats;
-  }
-  return null;
-}
-
-function readingJob(floor,graph,stop,target) {
-  const outbound=graph.route(floor.home,target);
-  return outbound?{stop,outbound,homeward:[...outbound].reverse(),inspectBubble:bubblePlace(floor,graph,target)}:null;
-}
-
-function sourceJob(floor,graph,stop,used,variation,spacing=38) {
-  const target=sourcePort(graph,stop,used,variation,spacing),job=target&&readingJob(floor,graph,stop,target);
-  if(job)used.push(target);
-  return job;
-}
-
-// A short phone can show a single strip of a card. Reserve physical room for
-// speakers first, then spread the remaining readers over that strip and its rim.
-function singleCardPocket(floor,graph,jobs,count,turn) {
-  const stop=jobs[0].stop,{l,e,top,bottom}=readingArea(graph,stop),points=[];
-  const {xs,ys,w,connected}=graph;
-  const x1=lowerBound(xs,e+.01),y1=lowerBound(ys,bottom+.01);
-  for(let y=lowerBound(ys,top);y<y1;y++)for(let x=lowerBound(xs,l);x<x1;x++){
-    const i=y*w+x;
-    if(connected[i]>=0){const at=graph.point(i);if(distance(floor.home,at)>=42)points.push(at);}
-  }
-  if(points.length<count)return null;
-  const corners=[{x:l,y:top},{x:e,y:bottom},{x:l,y:bottom},{x:e,y:top}],tried=[];
-  let chosen;
-  const seats=meetingSeats(floor,graph,jobs.slice(0,2),[],true,27,false,pair=>{
-    const [a,b]=pair.map(seat=>seat.at);
-    if(tried.some(p=>distance(p,a)<3))return false;
-    tried.push(a);
-    const free=points.filter(p=>distance(p,a)>=27&&distance(p,b)>=27);
-    if(free.length<count)return false;
-    for(let index=0;index<corners.length;index++){
-      const corner=corners[(turn+index)%corners.length],first=free.reduce((a,b)=>distance(b,corner)<distance(a,corner)?b:a);
-      const selected=[first],nearest=free.map(p=>distance(p,first));
-      while(selected.length<count){
-        let far=0;
-        for(let i=1;i<nearest.length;i++)if(nearest[i]>nearest[far])far=i;
-        if(nearest[far]<27)break;
-        const next=free[far];selected.push(next);
-        for(let i=0;i<free.length;i++)nearest[i]=Math.min(nearest[i],distance(next,free[i]));
-      }
-      if(selected.length===count){chosen=selected;return true;}
-    }
-    return false;
-  });
-  if(!seats)return null;
-  const planned=chosen.map(at=>readingJob(floor,graph,stop,at));
-  return planned.every(Boolean)?{seats,jobs:planned}:null;
-}
-
-function connectMeeting(floor,graph,pair,seats,firstIndex,zone) {
-  const travel=(job,seat)=>distance(job.outbound.at(-1),seat.at);
-  const swap=travel(pair[0],seats[1])+travel(pair[1],seats[0])<travel(pair[0],seats[0])+travel(pair[1],seats[1]);
-  const routes=pair.map((job,i)=>{
-    const seat=seats[swap?1-i:i];
-    return {seat,approach:graph.route(job.outbound.at(-1),seat.at),homeward:graph.route(seat.at,floor.home)};
-  });
-  if(routes.some(r=>!r.approach||!r.homeward))return false;
-  routes.forEach(({seat,approach,homeward},i)=>{
-    pair[i].meeting={approach,facing:seat.facing,bubble:seat.bubble,partner:firstIndex+1-i};
-    if(zone!==undefined)pair[i].meeting.zone=zone;
-    pair[i].homeward=homeward;
-  });
-  return true;
-}
-
-export function planNewsCrew(floor,limit,turn=0,recordId=null) {
-  if(!floor?.stops.length||limit<=0)return [];
-  const graph=floorGraph(floor),jobs=[],used=[];
-  const priority=recordId?floor.stops.filter(s=>s.id===recordId&&s.stamp?.width&&s.stamp.bottom>=floor.bounds.top&&s.stamp.top<=floor.bounds.bottom):[];
-  function add(stop,variation){
-    const job=sourceJob(floor,graph,stop,used,variation);
-    if(!job)return false;
-    jobs.push(job);return true;
-  }
-  for(const stop of priority)if(add(stop,0))break;
-  const ordered=floor.stops.slice(turn%floor.stops.length).concat(floor.stops.slice(0,turn%floor.stops.length))
-    .filter(stop=>!recordId||stop.id!==recordId||jobs.length);
-  for(let pass=0;pass<limit&&jobs.length<limit;pass++){
-    let progress=false;
-    for(const [i,stop] of ordered.entries()){
-      if(jobs.length>=limit)break;
-      if(!pass&&jobs.some(job=>job.stop===stop))continue;
-      if(add(stop,turn+i+pass*3))progress=true;
-    }
-    if(!progress&&pass)break;
-  }
-  if(jobs.length>1){
-    const seats=meetingSeats(floor,graph,jobs);
-    if(seats)connectMeeting(floor,graph,jobs.slice(0,2),seats,0);
-  }
-  return jobs;
-}
-
-// Read every visible record once before sending more readers to other
-// measured parts of a card. Tight screens keep at least a full figure apart.
-export function planSignalCrew(floor,limit,turn=0) {
-  if(!floor?.stops.length||limit<1)return [];
-  const start=turn%floor.stops.length,ordered=floor.stops.slice(start).concat(floor.stops.slice(0,start));
-  return planPairedCrew(floor,limit,turn,ordered);
-}
-
-export function planDataCrew(floor,limit,turn=0,recordId=null) {
-  if(!floor?.stops.length||limit<1)return [];
-  const start=turn%floor.stops.length,rotated=floor.stops.slice(start).concat(floor.stops.slice(0,start));
-  const priority=recordId&&rotated.find(stop=>stop.kind==='news'&&stop.id===recordId);
-  const groups=new Map();
-  for(const stop of rotated){
-    if(stop===priority)continue;
-    if(!groups.has(stop.kind))groups.set(stop.kind,[]);
-    groups.get(stop.kind).push(stop);
-  }
-  const ordered=priority?[priority]:[];
-  // Mix charts, observations, source records and market rows before revisiting
-  // another part of a large card. A requested article gets first choice of aisle.
-  for(let i=0;ordered.length<rotated.length;i++)
-    for(const items of groups.values())if(items[i])ordered.push(items[i]);
-  return planPairedCrew(floor,limit,turn,ordered);
-}
-
-function planPairedCrew(floor,limit,turn,ordered) {
-  const graph=floorGraph(floor),jobs=[],readers=[],zones=[],occupied=[];
-  for(const spacing of [38,32,27]){
-    for(let pass=0;jobs.length<limit;pass++){
-      const before=jobs.length;
-      for(const [i,stop] of ordered.entries()){
-        const job=sourceJob(floor,graph,stop,readers,turn+i+pass*5,spacing);
-        if(job)jobs.push(job);
-        if(jobs.length===limit)break;
-      }
-      if(before===jobs.length)break;
-    }
-  }
-  let reserved=null;
-  if(floor.compact&&ordered.length===1&&jobs.length>=2&&limit>2){
-    if(jobs.length===limit)reserved=meetingSeats(floor,graph,jobs,[],true,27,true);
-    if(!reserved){
-      const pocket=singleCardPocket(floor,graph,jobs,Math.floor(limit/2)*2,turn);
-      if(pocket){reserved=pocket.seats;jobs.splice(0,jobs.length,...pocket.jobs);}
-    }
-  }
-  if(jobs.length>1&&jobs.length%2)jobs.pop();
-  for(let i=0;i+1<jobs.length;i+=2){
-    const pair=jobs.slice(i,i+2),participants=[...pair,...jobs.filter(job=>!pair.includes(job))],protect=jobs.length>2;
-    let seats=i===0?reserved:null;
-    if(!seats)seats=meetingSeats(floor,graph,participants,occupied,false,36,protect);
-    if(!seats&&floor.compact)seats=meetingSeats(floor,graph,participants,occupied,true,27,protect);
-    // Preserve even very small discussion pockets. Additional pairs queue at
-    // their own reading positions before using the very same two seats.
-    if(!seats&&!zones.length)seats=meetingSeats(floor,graph,pair,[],true);
-    let zone;
-    if(seats){
-      zone={id:zones.length,seats,uses:0};zones.push(zone);occupied.push(...seats.map(s=>s.at));
-    }else if(zones.length){
-      const [a,b]=pair.map(j=>j.outbound.at(-1)),midpoint={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
-      const cost=z=>z.uses*64+distance(z.seats[0].at,midpoint);
-      zone=zones.reduce((best,z)=>cost(z)<cost(best)?z:best);
-    }
-    if(zone&&connectMeeting(floor,graph,pair,zone.seats,i,zone.id))zone.uses++;
-  }
-  return jobs;
-}
-
-// Stagger people who will share an aisle, even when their routes enter it at different corners.
-export function newsDepartureDelays(jobs,pace) {
-  const tick=150,reserved=[];
-  return jobs.map(({outbound},index)=>{
-    const trace=[];let length=0,next=tick/(2*pace);
-    for(let i=1;i<outbound.length;i++){
-      const a=outbound[i-1],b=outbound[i],span=distance(a,b);
-      if(!span)continue;
-      const dx=(b.x-a.x)/span,dy=(b.y-a.y)/span;
-      while(next<=length+span){
-        const offset=next-length;trace.push({x:a.x+offset*dx,y:a.y+offset*dy,dx,dy});next+=tick/pace;
-      }
-      length+=span;
-    }
-    const first=Math.floor(index*.7);let best=first,least=Infinity;
-    for(let slot=first;slot<=first+12;slot++){
-      let score=0;
-      for(const [t,p] of trace.entries()){
-        if(distance(p,outbound[0])<40)continue;
-        for(const q of reserved[slot+t]||[]){
-          if(p.dx*q.dx+p.dy*q.dy<.65)continue;
-          score+=Math.max(0,36-distance(p,q));
-        }
-      }
-      if(score<least){least=score;best=slot;}
-      if(!score)break;
-    }
-    trace.forEach((p,t)=>(reserved[best+t]??=[]).push(p));
-    return 50+best*tick;
-  });
+  if(!context&&!DATA_PAGES.includes(root.dataset?.renderedPage))return null;
+  const frame=courierWindow(root,pocket),clip=contentClipping(root,frame),area=context?.area||root;
+  const stops=context?visibleStops(root,context,clip,frame.box):[],floor=measuredFloor(root,frame,stops,dataSolid);
+  floor.walkAreas=walkingAreas(area,dataModules,frame,clip);
+  return floor;
 }
 
 export function mountNewsCourier(root,pocket,onReceived) {
@@ -823,11 +362,63 @@ export function signalMeetingRooms() {
   };
 }
 
+// Keep a single planner per mounted patrol. A newer geometry snapshot invalidates
+// old work naturally; the owner checks the view and wave before applying results.
+function createPlanner(win){
+  const requests=new Map(),snapshots=new WeakMap();
+  let worker,unavailable=false,serial=0,revision=0,disposed=false;
+  function fallback(run){
+    return new Promise((resolve,reject)=>win.setTimeout(()=>{
+      try{resolve(disposed?null:run());}catch(error){reject(error);}
+    },0));
+  }
+  function failed(){
+    unavailable=true;worker?.terminate();worker=null;
+    for(const pending of requests.values())pending.retry();
+    requests.clear();
+  }
+  function compute(operation,floor,args){
+    if(disposed)return Promise.resolve(null);
+    let snapshot=snapshots.get(floor);
+    if(!snapshot){
+      const {bounds,home,compact,stops,ink,obstacles,walkAreas}=floor;
+      const geometry={bounds,home,compact,ink,obstacles,walkAreas,stops:stops.map(({row,...stop})=>stop)};
+      snapshot={revision:++revision,floor:geometry};snapshots.set(floor,snapshot);
+    }
+    if(!worker&&!unavailable&&win.Worker){
+      try{worker=new win.Worker(new URL('./collection-planner.mjs',import.meta.url),{type:'module',name:'courier-routes'});
+        worker.onmessage=({data})=>{
+          const pending=requests.get(data.id);if(!pending)return;
+          requests.delete(data.id);data.error?pending.reject(new Error(data.error)):pending.resolve(data.result);
+        };
+        worker.onerror=failed;worker.onmessageerror=failed;
+      }catch{unavailable=true;}
+    }
+    const local=()=>runCourierPlan(operation,floor,args);
+    if(!worker)return fallback(local);
+    const id=++serial;
+    return new Promise((resolve,reject)=>{
+      requests.set(id,{resolve,reject,retry:()=>fallback(local).then(resolve,reject)});
+      try{worker.postMessage({id,operation,...snapshot,args});}catch{failed();}
+    });
+  }
+  return {compute,dispose(){disposed=true;worker?.terminate();worker=null;for(const pending of requests.values())pending.resolve(null);requests.clear();}};
+}
+function withSourceNodes(jobs,floor){
+  const stops=new Map(floor.stops.map(stop=>[stop.id,stop]));
+  return jobs.map(job=>({...job,stop:job.stop?stops.get(job.stop.id):null}));
+}
+function routeJobs(jobs){return jobs.map(job=>({...job,stop:job.stop&&{id:job.stop.id}}));}
+
 function mountCourierCrew(root,pocket,scene,onReceived) {
   const doc=root.ownerDocument,win=doc.defaultView,events=new AbortController();
+  const changedStamp=(a,b)=>a.length!==b.length||a.some((n,i)=>typeof n==='number'?typeof b[i]!=='number'||Math.abs(n-b[i])>4:n!==b[i]);
   const signals=scene==='signals',measureFloor=signals?measureSignalFloor:measureDataFloor;
+  const planner=createPlanner(win);
+  let starting=false,layoutVersion=0;
   const options={signal:events.signal,passive:true,capture:true},motion=win.matchMedia('(prefers-reduced-motion: reduce)');
   const prompts=[['🤔','💡'],['🧐','🧩'],['👀','👍']];
+  const sourceReactions={news:'📰',post:'💬',topic:'💬',calendar:'🗓️',release:'🗓️',candles:'📊',overview:'📊',series:'📊'};
   let wave=null,pending=null,turn=0,roleIndex=0,pressed=false,scrolling=false,away=false,recallRequested=false;
   let startTimer=0,scrollTimer=0,retryTimer=0,welcomeTimer=0,layoutFrame=0,lastWelcome=-Infinity;
   let observedFeed=null,typing=false,typingTimer=0;
@@ -835,8 +426,9 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   const openControls=signals?'.sig-controls details[open]':'.dc-info[open],.pd-info[open],[data-info-open],.dc-column-picker';
   const reduced=()=>motion.matches||doc.documentElement.dataset.reducedMotion==='true'||!win.Element.prototype.animate;
   const overlayOpen=()=>pocket.classList.contains('open')||pocket.querySelector('.mascot-menu:not([hidden])')||
-    doc.querySelector('dialog[open],.liquid-native-host [aria-expanded=true]')||root.querySelector(openControls);
-  const busy=()=>doc.hidden||away||pressed||scrolling||typing||pocket.inert||overlayOpen();
+    doc.querySelector('dialog[open],.liquid-native-host [aria-expanded=true]')||root.querySelector(openControls)||
+    win.innerWidth<=900&&root.querySelector('.layout-data-menu[open],.layout-actions-menu[open]');
+  const busy=()=>doc.hidden||(signals&&(away||pressed))||scrolling||typing||pocket.inert||overlayOpen();
   const story=id=>root.querySelector('[data-news-record="'+win.CSS.escape(id)+'"]');
   const transform=p=>'translate3d('+p.x+'px,'+p.y+'px,0)';
   const live=(crew,version)=>wave===crew&&crew.version===version;
@@ -846,22 +438,16 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   }
   function layoutStamp(stops) {
     const target=home(),stamp=[target.x,target.y,root.scrollTop,win.innerWidth,win.innerHeight];
-    if(signals){
-      for(const card of root.querySelectorAll('.sig-feed>[data-track-record]')){
-        const r=card.getBoundingClientRect();
-        if(r.bottom>=0&&r.top<=win.innerHeight)stamp.push(card.dataset.trackRecord,r.left,r.top,r.width,r.height);
-      }
-      return stamp;
-    }
-    stamp.push(win.location.search);
-    for(const stop of stops??dataPatrolStops(root,pocket)){
+    stamp.push(win.location.pathname+win.location.search);
+    const visible=stops??(signals?signalSources(root,courierWindow(root,pocket)):dataPatrolStops(root,pocket));
+    for(const stop of visible||[]){
       const r=stop.rect;
       stamp.push(stop.id,stop.kind,r.left,r.top,r.right,r.bottom);
     }
     return stamp;
   }
   function schedule(delay=50) {
-    if(events.signal.aborted||wave||startTimer||busy()||(!pending&&reduced()))return;
+    if(events.signal.aborted||wave||starting||startTimer||busy()||(!pending&&reduced()))return;
     startTimer=win.setTimeout(start,delay);
   }
   function queueLayout() {
@@ -876,6 +462,9 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     const hide=pause&&(scrolling||pocket.inert||Boolean(overlayOpen()));
     for(const m of crew.members)m.el.style.visibility=hide?'hidden':'';
     if(crew.paused===pause)return;
+    const now=win.performance.now();
+    if(pause)crew.pausedAt=now;
+    else for(const m of crew.members)if(m.travel)m.travel.started+=now-crew.pausedAt;
     crew.paused=pause;
     for(const m of crew.members){
       m.el.toggleAttribute('data-paused',pause);
@@ -920,6 +509,7 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   const hold=(crew,version,m,ms)=>playPath(crew,version,m,[m.position,m.position],ms);
   async function walk(crew,version,m,points,phase) {
     m.el.dataset.phase=phase;
+    if(!signals&&points.length)m.travel={path:same(m.position,points[0])?points:[m.position,...points],started:win.performance.now()};
     let leg=[m.position],facing=0;
     for(const p of points){
       const prev=leg.at(-1),dx=p.x-prev.x;
@@ -969,21 +559,23 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     }
     return meeting.done;
   }
-  function acknowledge() {
-    const now=win.performance.now();if(now-lastWelcome<1300)return;
-    lastWelcome=now;pocket.setAttribute('data-news-welcome','');
-    win.clearTimeout(welcomeTimer);welcomeTimer=win.setTimeout(()=>pocket.removeAttribute('data-news-welcome'),330);
+  function acknowledge(received=false) {
+    const now=win.performance.now();if(!received&&now-lastWelcome<1300)return;
+    lastWelcome=now;pocket.toggleAttribute('data-news-handoff',received);pocket.setAttribute('data-news-welcome','');
+    win.clearTimeout(welcomeTimer);welcomeTimer=win.setTimeout(()=>{
+      pocket.removeAttribute('data-news-welcome');pocket.removeAttribute('data-news-handoff');
+    },received?560:330);
   }
   async function dock(crew,version,m) {
     let target=home();
     if(distance(m.position,target)>3){recallRequested=true;queueLayout();return;}
     if(!await walk(crew,version,m,[target],'return'))return;
-    m.el.dataset.phase='dock';acknowledge();
+    m.el.dataset.phase='dock';if(!m.carrying)acknowledge();
     if(!await hold(crew,version,m,360))return;
     target=home();
     if(distance(m.position,target)>3){recallRequested=true;queueLayout();return;}
     if(m.carrying&&m.item&&story(m.item.record_id)){
-      m.carrying=false;delete m.el.dataset.carrying;onReceived(m.item);
+      m.carrying=false;delete m.el.dataset.carrying;onReceived(m.item);acknowledge(true);
     }
     m.el.remove();crew.members.delete(m);crew.waiting.delete(m);
     if(m.job.meeting&&!crew.recalling){
@@ -994,21 +586,18 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
         sendPair(crew,[key,Math.max(m.index,peer)],m.pass+1);
       }
     }
-    if(!crew.members.size){wave=null;recallRequested=false;win.clearTimeout(retryTimer);retryTimer=0;schedule();}
+    finishEmpty(crew);
   }
-  async function trip(crew,m) {
-    const version=crew.version,{job}=m;
-    if(!await hold(crew,version,m,m.departure))return;
-    if(!await walk(crew,version,m,job.outbound,'out'))return;
-    const sourceAttr=signals?'data-track-record':'data-courier-source';
+  async function readSource(crew,version,m) {
+    const {job}=m;
     const original=job.stop.row;
-    const row=original.isConnected&&original.getAttribute(sourceAttr)===job.stop.id?original:
-      root.querySelector('['+sourceAttr+'="'+win.CSS.escape(job.stop.id)+'"]');
+    const row=original.isConnected&&original.dataset.courierSource===job.stop.id?original:
+      root.querySelector('[data-courier-source="'+win.CSS.escape(job.stop.id)+'"]');
     const r=row?.getBoundingClientRect(),p=m.position;
-    const area=r?.width&&r.height&&readingArea(crew,{kind:job.stop.kind,rect:r});
+    const area=r?.width&&r.height&&readingArea(crew,{kind:job.stop.kind,edge:job.stop.edge,rect:r});
     const slack=signals?6:1;
     if(!area||p.x<area.l-slack||p.x>area.e+slack||p.y<area.top-slack||p.y>area.bottom+slack){
-      recallRequested=true;queueLayout();return;
+      recallRequested=true;queueLayout();return false;
     }
     if(!m.item&&job.stop.kind==='news'&&pending?.record_id===job.stop.id){
       m.item=pending;pending=null;m.el.dataset.job='delivery';
@@ -1016,25 +605,37 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     m.el.dataset.phase=m.item?'pickup':'inspect';
     if(m.item){
       if(!story(m.item.record_id)){
-        recallRequested=true;queueLayout();return;
+        recallRequested=true;queueLayout();return false;
       }
       m.carrying=true;m.el.dataset.carrying='true';m.pickup=row;m.pickup.setAttribute('data-news-pickup','');
     }
     if(job.inspectBubble&&(m.item||(m.index+crew.round+m.pass)%3===1)){
-      const emoji=m.item?'🔎':row.closest('.df-economic-calendar')?'🌍':'👀';
+      const emoji=m.item?'🔎':sourceReactions[job.stop.kind]||(row.closest('.dc-release-schedule')?'🗓️':'👀');
       reaction(m,emoji,job.inspectBubble);
     }
     const readMs=m.bubble.hidden?340:550;
-    if(!await hold(crew,version,m,readMs))return;
-    reaction(m);unmark(m);
+    if(!await hold(crew,version,m,readMs))return false;
+    reaction(m);unmark(m);return true;
+  }
+  async function trip(crew,m) {
+    const version=crew.version,{job}=m;
+    if(!signals)m.travel={path:job.outbound,started:win.performance.now()+m.departure};
+    if(m.departure&&!await hold(crew,version,m,m.departure))return;
+    if(!await walk(crew,version,m,job.outbound,'out'))return;
+    if(job.stop){
+      if(!await readSource(crew,version,m))return;
+    }else{
+      m.el.dataset.phase='standby';
+      if(!await hold(crew,version,m,220))return;
+    }
     if(job.meeting){
       const pair=Math.min(m.index,job.meeting.partner);
       if(!await crew.rooms.arrive(pair,job.meeting.zone??pair)||!live(crew,version))return;
-      if(!await walk(crew,version,m,job.meeting.approach,'to-meeting'))return;
+      if(!await walkInTurn(crew,version,m,job.meeting.approach,'to-meeting'))return;
       if(!await meet(crew,version,m)||!live(crew,version))return;
       if(m.index>job.meeting.partner&&!await hold(crew,version,m,240))return;
     }
-    if(await walk(crew,version,m,job.homeward,'return'))await dock(crew,version,m);
+    await returnToDock(crew,version,m,job.homeward);
   }
   function monitor(crew,version,work) {
     work.catch(error=>{
@@ -1045,9 +646,9 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   function newMember(crew,role,index,job,item,departure,pass=0) {
     const el=doc.createElement('div');
     el.className='news-courier';el.inert=true;el.setAttribute('aria-hidden','true');
-    el.dataset.courierRole=String(role.id);el.dataset.job=item?'delivery':'patrol';el.dataset.phase='out';
-    el.dataset.courierPage=scene;el.dataset.courierTarget=job.stop.id;el.dataset.courierKind=job.stop.kind;
-    if(signals)el.dataset.signalRecord=job.stop.id;
+    el.dataset.courierRole=String(role.id);el.dataset.phase='out';
+    el.dataset.courierPage=scene;setJob(el,job,item);
+
     el.dataset.courierRound=pass?crew.round+'.'+pass:String(crew.round);
     el.dataset.courierPair=String(Math.min(index,job.meeting?.partner??index));
     el.style.setProperty('--agent-color',role.color);el.style.setProperty('--run-stride',(170+role.id%6*13)+'ms');
@@ -1056,8 +657,57 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     doc.body.append(el);
     return {el,index,pass,role,job,item,departure,position:crew.home,animation:null,carrying:false,pickup:null,bubble:el.lastElementChild};
   }
-  function sendPair(crew,indexes,pass) {
-    const delays=newsDepartureDelays(indexes.map(i=>crew.jobs[i]),crew.pace);
+  function setJob(el,job,item) {
+    el.dataset.job=item?'delivery':job.stop?'patrol':'walk';
+    if(signals&&job.stop)el.dataset.signalRecord=job.stop.id;else delete el.dataset.signalRecord;
+    if(job.stop){el.dataset.courierTarget=job.stop.id;el.dataset.courierKind=job.stop.kind;}
+    else{delete el.dataset.courierTarget;delete el.dataset.courierKind;}
+  }
+  function movingTraffic(crew,now,except=null) {
+    const traffic=[];
+    for(const m of crew.members){
+      if(m!==except&&m.travel&&['out','to-meeting','return','yield'].includes(m.el.dataset.phase))
+        traffic.push({path:m.travel.path,startsIn:m.travel.started-now});
+    }
+    return traffic;
+  }
+  async function walkInTurn(crew,version,m,path,phase,canWait=true) {
+    if(!signals&&canWait){
+      const now=win.performance.now(),traffic=movingTraffic(crew,now,m);
+      if(traffic.length){
+        const [start]=newsDepartureDelays([{outbound:path}],crew.pace,traffic,crew.home);
+        if(start>50){
+          m.travel={path,started:now+start};m.el.dataset.phase='yield';
+          if(!await hold(crew,version,m,start))return false;
+        }
+      }
+    }
+    return walk(crew,version,m,path,phase);
+  }
+  async function returnToDock(crew,version,m,path,canWait=true) {
+    if(await walkInTurn(crew,version,m,path,'return',canWait))await dock(crew,version,m);
+  }
+  function finishEmpty(crew){
+    if(wave===crew&&!crew.members.size&&!crew.dispatches){wave=null;recallRequested=false;win.clearTimeout(retryTimer);retryTimer=0;schedule();}
+  }
+  function sendPair(crew,indexes,pass){
+    const version=crew.version;
+    crew.dispatches++;
+    crew.dispatchQueue=crew.dispatchQueue.then(async()=>{
+      if(!live(crew,version)||crew.recalling)return;
+      const assignedStory=pending&&crew.jobs.some(job=>job.stop?.id===pending.record_id);
+      if(!assignedStory){
+        const floor=crew.floor;
+        const next=await planner.compute('pair',floor,{jobs:routeJobs(crew.jobs),indexes,turn:crew.round+pass+indexes[0]});
+        if(!next||!live(crew,version)||crew.recalling)return;
+        withSourceNodes(next,floor).forEach((job,i)=>{crew.jobs[indexes[i]]=job;});
+      }
+      launchPair(crew,indexes,pass);
+    }).catch(()=>{if(live(crew,version)){recallRequested=true;queueLayout();}}).finally(()=>{crew.dispatches--;finishEmpty(crew);});
+  }
+  function launchPair(crew,indexes,pass){
+    const traffic=signals?[]:movingTraffic(crew,win.performance.now());
+    const delays=newsDepartureDelays(indexes.map(i=>crew.jobs[i]),crew.pace,traffic);
     const occupied=new Set([...crew.members].map(m=>m.role.id));
     for(const [slot,index] of indexes.entries()){
       let role=newsRoster[roleIndex++%newsRoster.length];
@@ -1067,63 +717,135 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
       crew.members.add(m);monitor(crew,crew.version,trip(crew,m));
     }
   }
-  function start() {
+  async function start() {
     startTimer=0;
     if(wave||events.signal.aborted||busy())return;
-    if(doc.getElementById('app-preload')){schedule(270);return;}
+    if(doc.body.classList.contains('app-loading')){schedule(100);return;}
     if(reduced()){
       if(pending&&story(pending.record_id)){const item=pending;pending=null;onReceived(item);}
       return;
     }
-    const floor=measureFloor(root,pocket);if(!floor)return;
+    const floor=measureFloor(root,pocket);
+    if(!floor){if(!signals)schedule(300);return;}
     const item=pending&&story(pending.record_id)?pending:null,width=win.innerWidth;
     const limit=width<600?6:width<1200?8:12;
-    const jobs=signals?planSignalCrew(floor,limit,turn):planDataCrew(floor,limit,turn,item?.record_id);
-    if(!jobs.length)return;
-    const pace=width<=900?3.45:2.65,departures=newsDepartureDelays(jobs,pace);
-    const crew={round:turn++,version:0,pace,jobs,home:floor.home,bounds:floor.bounds,stamp:layoutStamp(floor.stops),members:new Set(),waiting:new Set(),atMeeting:new Map(),meetings:new Map(),rooms:signalMeetingRooms(),recalling:false,paused:false};
+    const pace=width<=900?3.45:2.65,stamp=layoutStamp(floor.stops);
+    starting=true;
+    let result;
+    try{result=await planner.compute('plan',floor,{scene,limit,turn,recordId:item?.record_id,pace});}
+    catch{starting=false;schedule(1500);return;}
+    starting=false;
+    if(!result||events.signal.aborted||wave)return;
+    if(busy()||reduced()){queueLayout();return;}
+    if(changedStamp(stamp,layoutStamp())){schedule();return;}
+    const jobs=withSourceNodes(result.jobs,floor),departures=result.delays;
+    if(!jobs.length){schedule(1200);return;}
+    const crew={round:turn++,version:0,pace,jobs,floor,home:floor.home,bounds:floor.bounds,stamp,members:new Set(),waiting:new Set(),atMeeting:new Map(),meetings:new Map(),rooms:signalMeetingRooms(),recalling:false,paused:false,dispatches:0,dispatchQueue:Promise.resolve()};
     wave=crew;
     const roles=jobs.map(()=>newsRoster[roleIndex++%newsRoster.length]);
     jobs.forEach((job,i)=>{
-      const article=i===0&&item&&job.stop.id===item.record_id?item:null;
+      const article=i===0&&item&&job.stop?.id===item.record_id?item:null;
       if(article)pending=null;
       crew.members.add(newMember(crew,roles[(crew.round+i)%roles.length],i,job,article,departures[i]));
     });
     for(const m of crew.members)monitor(crew,crew.version,trip(crew,m));
   }
-  function sendHome(crew,floor,m) {
-    const path=floor&&newsReturnPath(floor,m.position);
+  function resetMeetings(crew) {
+    crew.version++;crew.rooms.clear();
+    for(const meeting of crew.meetings.values())meeting.finish(false);
+    crew.meetings.clear();crew.atMeeting.clear();crew.waiting.clear();
+    win.clearTimeout(retryTimer);retryTimer=0;
+  }
+  function routesStillFit(crew,floor) {
+    if(distance(crew.home,floor.home)>3)return false;
+    const byId=new Map(floor.stops.map(stop=>[stop.id,stop]));
+    for(const job of crew.jobs){
+      if(job.stop){
+        const stop=byId.get(job.stop.id),at=job.outbound.at(-1);
+        if(!stop)return false;
+        const area=readingArea(floor,stop);
+        if(at.x<area.l-1||at.x>area.e+1||at.y<area.top-1||at.y>area.bottom+1)return false;
+      }else if(byId.size)return false;
+      for(const path of [job.outbound,job.meeting?.approach,job.homeward]){
+        if(path?.some((point,i)=>i>0&&!clearSegment(path[i-1],point,floor.ink)))return false;
+      }
+    }
+    return true;
+  }
+  async function continueOnReflow(crew,floor,stamp,force,generation) {
+    if(!floor)return false;
+    if(crew.recalling){
+      if(distance(crew.home,floor.home)>3||crew.waiting.size)return false;
+      const safe=[...crew.members].every(m=>m.returnPath?.every((point,i,path)=>!i||clearSegment(path[i-1],point,floor.ink)));
+      if(safe)crew.stamp=stamp;
+      return safe;
+    }
+    if(!force&&routesStillFit(crew,floor)){crew.floor=floor;crew.stamp=stamp;return true;}
+    const people=[...crew.members].sort((a,b)=>a.index-b.index);
+    if(people.length!==crew.jobs.length||people.some(m=>m.carrying||m.job.stop&&m.el.dataset.phase!=='out'))return false;
+    const item=pending||people.find(m=>m.item)?.item;
+    const version=crew.version;
+    freeze(crew,true);
+    const starts=people.map(m=>{
+      const r=m.el.getBoundingClientRect(),at={x:r.left,y:r.top};
+      return m.el.dataset.phase==='out'&&distance(at,crew.home)<18?null:at;
+    });
+    const planned=await planner.compute('plan',floor,{scene,limit:people.length,turn,recordId:item?.record_id,pace:crew.pace,starts});
+    if(!planned||!live(crew,version)||generation!==layoutVersion)return true;
+    const jobs=withSourceNodes(planned.jobs,floor),paths=planned.redirects;
+    freeze(crew,Boolean(busy()));
+    if(jobs.length!==people.length||paths.some(path=>!path))return false;
+    resetMeetings(crew);
+    crew.home=floor.home;crew.bounds=floor.bounds;crew.floor=floor;crew.jobs=jobs;crew.stamp=stamp;
+    const delays=planned.delays;pending=item||null;
+    for(const m of people){
+      const job=jobs[m.index],start=starts[m.index]||floor.home;
+      interruptMotion(m);reaction(m);unmark(m);delete m.el.dataset.speaking;
+      m.job={...job,outbound:paths[m.index]};m.position=start;m.el.style.transform=transform(start);
+      m.departure=start===floor.home?delays[m.index]:0;
+      m.item=pending&&job.stop?.id===pending.record_id?pending:null;if(m.item)pending=null;
+      setJob(m.el,job,m.item);m.el.dataset.courierPair=String(Math.min(m.index,job.meeting?.partner??m.index));
+      m.el.dataset.phase='out';monitor(crew,crew.version,trip(crew,m));
+    }
+    return true;
+  }
+  async function sendHome(crew,floor,people){
+    const version=crew.version;
+    const paths=floor&&await planner.compute('returns',floor,{starts:people.map(m=>m.position)});
+    if(!live(crew,version))return;
+    people.forEach((m,i)=>dispatchHome(crew,floor,m,paths?.[i]));
+    retryWaiting(crew);
+  }
+  function dispatchHome(crew,floor,m,path){
+    m.returnPath=path;
     if(!path?.length){crew.waiting.add(m);m.el.dataset.phase='wait-route';return;}
     crew.waiting.delete(m);
     const version=crew.version;
-    monitor(crew,version,(async()=>{if(await walk(crew,version,m,path,'return'))await dock(crew,version,m);})());
+    // Leave immediately if a scroll has placed a control or label underfoot.
+    const canWait=inside(m.position,floor.bounds)&&!floor.obstacles.some(r=>inside(m.position,r));
+    monitor(crew,version,returnToDock(crew,version,m,path,canWait));
   }
   function retryWaiting(crew) {
     if(!crew.waiting.size||retryTimer||crew.paused)return;
     retryTimer=win.setTimeout(()=>{
       retryTimer=0;if(wave!==crew||busy())return;
       const floor=measureFloor(root,pocket);
-      for(const m of [...crew.waiting])sendHome(crew,floor,m);
-      retryWaiting(crew);
+      monitor(crew,crew.version,sendHome(crew,floor,[...crew.waiting]));
     },850);
   }
-  function recall(crew,stamp) {
-    crew.version++;crew.recalling=true;crew.rooms.clear();
-    for(const meeting of crew.meetings.values())meeting.finish(false);
-    crew.meetings.clear();crew.stamp=stamp;crew.atMeeting.clear();crew.waiting.clear();
-    win.clearTimeout(retryTimer);retryTimer=0;
-    const floor=measureFloor(root,pocket);
+  function recall(crew,stamp,floor) {
+    resetMeetings(crew);crew.recalling=true;crew.stamp=stamp;
+    if(floor)crew.home=floor.home;
     for(const m of crew.members){
-      interruptMotion(m);reaction(m);unmark(m);delete m.el.dataset.speaking;
+      interruptMotion(m);m.travel=null;reaction(m);unmark(m);delete m.el.dataset.speaking;
       if(m.item&&!m.carrying){pending??=m.item;m.item=null;m.el.dataset.job='patrol';}
-      sendHome(crew,floor,m);
     }
-    retryWaiting(crew);
+    monitor(crew,crew.version,sendHome(crew,floor,[...crew.members]));
   }
-  function layout() {
+  async function layout() {
     if(events.signal.aborted)return;
     if(feedSize){
-      const feed=root.querySelector(signals?'.sig-feed':'.dc-root');
+      const feed=root.querySelector(signals?'.sig-workspace,.biz-op-layout':'.dc-root');
       if(feed!==observedFeed){
         feedSize.disconnect();observedFeed=feed;
         if(feed)feedSize.observe(feed);
@@ -1138,11 +860,22 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
       return;
     }
     if(!wave){schedule();return;}
-    const pause=Boolean(busy());freeze(wave,pause);
+    const pause=Boolean(busy());freeze(wave,pause||Boolean(wave.updating));
     if(pause)return;
-    const stamp=layoutStamp(),moved=stamp.length!==wave.stamp.length||stamp.some((n,i)=>
-      typeof n==='number'?Math.abs(n-wave.stamp[i])>4:n!==wave.stamp[i]);
-    if(recallRequested||moved){recallRequested=false;recall(wave,stamp);}
+    const stamp=layoutStamp(),moved=changedStamp(stamp,wave.stamp);
+    if(recallRequested||moved){
+      const crew=wave,force=recallRequested;recallRequested=false;
+      if(!force&&crew.updating&&!changedStamp(stamp,crew.updating))return;
+      const generation=++layoutVersion;crew.updating=stamp;
+      const sameView=stamp.slice(2,6).every((value,i)=>value===crew.stamp[i+2]);
+      const floor=measureFloor(root,pocket);
+      try{
+        if(sameView&&await continueOnReflow(crew,floor,stamp,force,generation))return;
+        if(crew===wave&&generation===layoutVersion)recall(crew,stamp,floor);
+      }finally{
+        if(generation===layoutVersion){crew.updating=null;if(crew===wave)freeze(crew,Boolean(busy()));}
+      }
+    }
     else retryWaiting(wave);
   }
   function afterScroll() {
@@ -1150,7 +883,7 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     scrollTimer=win.setTimeout(()=>{scrolling=false;queueLayout();},140);
   }
   doc.addEventListener('scroll',afterScroll,options);
-  doc.addEventListener('pointerdown',()=>{pressed=true;if(wave)freeze(wave,true);},options);
+  doc.addEventListener('pointerdown',()=>{if(signals){pressed=true;if(wave)freeze(wave,true);}},options);
   for(const type of ['pointerup','pointercancel'])win.addEventListener(type,()=>{pressed=false;queueLayout();},options);
   for(const type of ['focusin','focusout','beforetoggle','toggle','close','visibilitychange'])doc.addEventListener(type,queueLayout,options);
   doc.addEventListener('visibilitychange',()=>{if(doc.hidden&&wave)freeze(wave,true);},options);
@@ -1159,23 +892,25 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     typing=true;if(wave)freeze(wave,true);win.clearTimeout(typingTimer);
     typingTimer=win.setTimeout(()=>{typing=false;queueLayout();},400);
   },options);
-  win.addEventListener('blur',()=>{away=true;pressed=false;if(wave)freeze(wave,true);},options);
+  win.addEventListener('blur',()=>{pressed=false;if(signals){away=true;if(wave)freeze(wave,true);}},options);
   win.addEventListener('focus',()=>{away=false;queueLayout();},options);
   win.addEventListener('resize',afterScroll,options);
   win.visualViewport?.addEventListener('resize',afterScroll,options);
   motion.addEventListener('change',queueLayout,options);
   const observer=new win.MutationObserver(records=>{
-    if(!wave||signals||records.some(r=>r.target===root||!root.contains(r.target)||r.target.closest?.('[data-hub-feed]')))queueLayout();
+    if(!wave||records.some(r=>r.type==='attributes'||r.target===root||!root.contains(r.target)||
+      r.target.closest?.('[data-hub-feed]')||wave.jobs[0]?.mode==='walk'&&r.target.matches?.('[data-hub-price],.dc-stat strong,.chart-readout dd')||
+      r.target.nodeName!=='svg'&&[...r.addedNodes,...r.removedNodes].some(n=>n.nodeType===1&&n.namespaceURI!=='http://www.w3.org/2000/svg')))queueLayout();
   });
   observer.observe(pocket,{attributes:true,attributeFilter:['style','data-avoidance','class','inert']});
   observer.observe(doc.documentElement,{attributes:true,attributeFilter:['data-reduced-motion']});
-  observer.observe(root,{childList:true,subtree:!signals});
+  observer.observe(root,signals?{childList:true,subtree:true,attributes:true,attributeFilter:['data-track-record','aria-current','aria-pressed','open']}:{childList:true,subtree:true,attributes:true,attributeFilter:['data-chart-ready','data-visible-count','data-public-data']});
   layout();
   return {
     offer(item){
       if(!item||pending?.record_id===item.record_id)return;
       pending=item;
-      if(wave&&!wave.jobs.some(job=>job.stop.id===item.record_id)&&dataPatrolStops(root,pocket).some(stop=>stop.id===item.record_id)){
+      if(wave&&!wave.jobs.some(job=>job.stop?.id===item.record_id)&&dataPatrolStops(root,pocket).some(stop=>stop.id===item.record_id)){
         recallRequested=true;queueLayout();
       }else schedule(90);
     },
@@ -1191,8 +926,8 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     },
     layout:queueLayout,
     dispose(){
-      events.abort();observer.disconnect();feedSize?.disconnect();win.cancelAnimationFrame(layoutFrame);win.clearTimeout(scrollTimer);win.clearTimeout(typingTimer);
-      win.clearTimeout(welcomeTimer);pocket.removeAttribute('data-news-welcome');pending=null;clearWave();
+      events.abort();planner.dispose();observer.disconnect();feedSize?.disconnect();win.cancelAnimationFrame(layoutFrame);win.clearTimeout(scrollTimer);win.clearTimeout(typingTimer);
+      win.clearTimeout(welcomeTimer);pocket.removeAttribute('data-news-welcome');pocket.removeAttribute('data-news-handoff');pending=null;clearWave();
     }
   };
 }

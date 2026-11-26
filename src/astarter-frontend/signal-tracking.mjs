@@ -67,7 +67,7 @@ export function signalPreferences(value={}){
 export const signalStrategy=c=>c?.id==='BTC'&&c.source==='market'?'S00':c?.id==='ETH'&&c.source==='onchain'?'RX03-S':null;
 export function filterSignalPreferences(rows,value){
  const p=signalPreferences(value);
- return rows.filter(({track:c})=>(p.scope==='all'||(p.scope==='crypto')===(c.asset.domain==='Crypto'))&&(p.focus==='all'||c.source===p.focus)&&(p.strategy==='all'||(c.record?c.record.strategy:signalStrategy(c))===p.strategy));
+ return rows.filter(({track:c,live})=>(p.scope==='all'||(p.scope==='crypto')===(c.asset.domain==='Crypto'))&&(p.focus==='all'||c.source===p.focus)&&(p.strategy==='all'||(!live&&(c.record?c.record.strategy:signalStrategy(c))===p.strategy)));
 }
 export function trackingRows(cases=TRACKING_CASES,{source='all',stage='all',query='',watched=[],watchOnly=false,asset='all',latestOnly=false}={}){
  const q=query.trim().toLowerCase(),symbol=cases.find(c=>c.id.toLowerCase()===q)?.id;
@@ -199,17 +199,30 @@ export function signalReferencePlan(row,{bars,receivedAt=null,calculatedAt=null}
  if(!(stop>0&&stop<last.close)){result.status='pending';missing('止损距离无效，暂不提供数值参考','The stop distance is invalid; numeric reference is unavailable');return result;}
  result.status='ready';result.levels={entry:last.close,stopLoss:stop,takeProfit:null,unit:'USDT'};return result;
 }
+const referenceMarkets = new WeakMap();
+const referenceReceiptUsable = (receipt, at) => Number.isFinite(receipt) && receipt <= at && at - receipt <= 30_000;
+
 export async function loadSignalReferencePlan(row,{fetchImpl=globalThis.fetch,signal,now=Date.now}={}){
  const initial=signalReferencePlan(row);if(initial.status!=='needs-bars')return initial;
  const request=candleRequest({market:row.record.instrument.market,period:'5m'}),query=new URLSearchParams({resource:'candles',symbol:request.symbol,interval:request.interval});
+ const cached=referenceMarkets.get(fetchImpl)?.get(request.symbol),openedAt=now();
+ if(cached&&!signal?.aborted&&cached.receivedAt>=initial.asOf&&referenceReceiptUsable(cached.receivedAt,openedAt)
+    &&Math.floor(cached.receivedAt/300_000)===Math.floor(openedAt/300_000)){
+  return signalReferencePlan(row,{...cached,calculatedAt:openedAt});
+ }
  let received=false;
  try{
   const response=await fetchImpl('/api/market-hub?'+query,{signal:signal?AbortSignal.any([signal,AbortSignal.timeout(8000)]):AbortSignal.timeout(8000),credentials:'omit',cache:'no-store'});
   if(!response.ok)throw Error('MARKET_UNAVAILABLE');
   received=true;
-  const body=await response.json(),bars=normalizeKlines(body.body,request),calculatedAt=now();
-  if(!Number.isFinite(body.receivedAt)||body.receivedAt>calculatedAt||calculatedAt-body.receivedAt>30_000)throw Error('STALE_MARKET');
-  return signalReferencePlan(row,{bars,receivedAt:body.receivedAt,calculatedAt});
+  const body=await response.json(),calculatedAt=now();
+  if(body?.schema!=='public-market-relay-v1'||body.resource!=='candles'||!referenceReceiptUsable(body.receivedAt,calculatedAt))throw Error('INVALID_MARKET');
+  const bars=normalizeKlines(body.body,request),result=signalReferencePlan(row,{bars,receivedAt:body.receivedAt,calculatedAt});
+  if(['ready','not-triggered'].includes(result.status)&&!signal?.aborted){
+   if(!referenceMarkets.has(fetchImpl))referenceMarkets.set(fetchImpl,new Map());
+   referenceMarkets.get(fetchImpl).set(request.symbol,{bars,receivedAt:body.receivedAt});
+  }
+  return result;
  }catch{
   if(received)return {...initial,status:'pending',reasons:[['行情快照无效或取数时间已过期，暂无法核算原信号时点','The market snapshot is invalid or its receipt time is stale; the original signal time cannot be calculated']]};
   return {...initial,status:'error',reasons:[['原时点行情请求失败，请重试核算','The original-time market request failed. Retry the calculation']]};

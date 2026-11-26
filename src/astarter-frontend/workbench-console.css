@@ -251,16 +251,78 @@ body[data-page=workbench] .ops-workbench-tabs>button:is([data-unread-count]:not(
 .ops-source-switch>button[data-unread-count]:not([data-unread-count=""])::after,.ops-receipt-group[data-unread-count]:not([data-unread-count=""]) .ops-receipt-meta>em::after{content:"";display:inline-block;width:5px;height:5px;flex:none;border-radius:50%;background:var(--error,#ed6474)}
 .ops-receipt-meta>em{display:inline-flex;align-items:center;justify-content:flex-end;gap:6px}
 
-/* Empty runs keep the account controls within reach. */
-.workbench-console #ops-runs:has(>.ops-empty){display:flex;align-items:center;justify-content:space-between;gap:12px}
-.workbench-console #ops-runs:has(>.ops-empty)>.ops-section-heading,.workbench-console #ops-runs>.ops-empty{margin:0}
-
-/* Frequent controls stay in the dock; policy parameters live in one dialog. */
-.ops-risk-shortcuts{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;margin-top:16px;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--b-ink) 3%,transparent)}
-.ops-policy-summary{display:flex;align-items:center;gap:10px;min-width:0;min-height:44px;padding:0;border:0;background:none;text-align:left;color:var(--b-ink)}
-.ops-policy-summary>span{display:grid;gap:2px;min-width:0}.ops-policy-summary small{font-size:12px;color:var(--b-muted)}.ops-policy-summary b{font:500 13px/20px var(--sans)}.ops-policy-summary>svg{width:15px;height:15px;flex:none;margin-left:auto;color:var(--b-muted)}
-.ops-kelly-shortcut{padding:8px 10px;border:1px solid var(--b-line);border-radius:8px;background:none;color:var(--b-ink);font:500 12px/20px var(--sans);white-space:nowrap}
-.ops-kelly-shortcut:hover,.ops-policy-summary:hover{background:var(--b-soft)}
+/* The account state and its actions share a row whenever their labels fit. */
+#ops-runs > .ops-section-heading,
+#ops-runs > .ops-example-source,
+.ops-run-empty,
+.ops-policy-heading {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ flex-wrap: wrap;
+ gap: 4px 10px;
+}
+#ops-runs > .ops-section-heading { margin: 0; }
+#ops-runs > .ops-section-heading .ops-link { min-height: 44px; color: var(--b-muted); }
+#ops-runs > .ops-run-list, #ops-runs > .ops-example-runs { margin-top: 8px; }
+.ops-run-empty {
+ padding-top: 4px;
+ border-top: 1px solid var(--b-line);
+}
+.ops-run-empty > .ops-empty { margin: 0; color: var(--b-muted); }
+.ops-policy-heading h3 {
+ margin: 0;
+ color: var(--b-ink);
+ font: 550 14px/22px var(--sans);
+}
+.ops-policy-state {
+ padding: 2px 7px;
+ border-radius: 5px;
+ background: var(--b-soft);
+ color: var(--b-muted);
+ font: 400 11px/18px var(--sans);
+}
+.ops-policy-name { margin: 5px 0 0; color: var(--b-ink); font: 500 14px/21px var(--sans); }
+.ops-policy-actions {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 6px;
+ margin-top: 12px;
+}
+.ops-policy-actions > button, #ops-runs .ops-example-toggle {
+ appearance: none;
+ box-sizing: border-box;
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ gap: 6px;
+ min-width: 0;
+ min-height: 44px;
+ max-width: 100%;
+ padding: 6px 10px;
+ border: 1px solid var(--b-line);
+ border-radius: 7px;
+ background: transparent;
+ color: var(--b-ink);
+ font: 500 12px/18px var(--sans);
+ overflow-wrap: anywhere;
+ cursor: pointer;
+}
+.ops-policy-actions > button { flex: 1 1 max-content; }
+.ops-policy-actions > button[data-ops-risk-open=protection] {
+ border-color: transparent;
+ background: color-mix(in srgb, var(--b-ink) 12%, transparent);
+}
+.ops-policy-actions > button svg { flex: none; width: 14px; height: 14px; }
+#ops-runs .ops-example-toggle {
+ border-color: transparent;
+ background: var(--b-soft);
+}
+@media (hover:hover) {
+ .ops-policy-actions > button:hover, #ops-runs .ops-example-toggle:hover { background: color-mix(in srgb,var(--b-ink) 17%,transparent); }
+ #ops-runs > .ops-section-heading .ops-link:hover { color: var(--b-ink); }
+}
+.ops-policy-actions > button:focus-visible, #ops-runs button:focus-visible { outline: 2px solid var(--b-action); outline-offset: 2px; }
 
 /* Swap-style amount grouping, within the existing account and approval flow. */
 body[data-workbench-view=photonic] .workbench-console .ops-section-heading>h3{font-size:14px;line-height:22px;letter-spacing:0}
@@ -333,7 +395,6 @@ body[data-page=workbench][data-workbench-view=photonic] .desk-feed-row[open] .de
 .ops-risk-meter meter::-webkit-meter-bar{height:4px;border:0;background:var(--b-soft)}.ops-risk-meter meter::-webkit-meter-optimum-value{background:var(--b-accent-ink)}.ops-risk-meter meter::-moz-meter-bar{background:var(--b-accent-ink)}
 .ops-risk-live{display:flex;align-items:flex-start;gap:7px;margin:0;color:var(--b-muted);font:400 12px/1.65 var(--sans)}.ops-risk-live>svg{width:15px;height:15px;flex:none;margin-top:2px;color:var(--ok)}.ops-risk-live[data-paused=true]{color:var(--warn)}.ops-risk-live[data-paused=true]>svg{color:inherit}
 .ops-protection-card{margin-top:20px;padding:14px;border:1px solid var(--b-line);border-radius:10px;background:color-mix(in srgb,var(--b-accent-ink) 3%,transparent)}
-.ops-protection-card .ops-risk-shortcuts{margin:0;padding:0;background:none;gap:8px}.ops-protection-card .ops-policy-summary small{font-size:11px}.ops-protection-card .ops-kelly-shortcut{padding-inline:8px}
 .ops-protection-label{margin:14px 0 0;font:400 11px/18px var(--sans);color:var(--b-muted)}
 .ops-protection-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;margin-top:16px}.ops-protection-grid>div{display:grid;gap:4px}.ops-protection-grid span{color:var(--b-muted);font-size:11px}.ops-protection-grid b{font:500 18px/24px var(--sans);font-variant-numeric:tabular-nums}
 .ops-protection-card .ops-field-help{margin:14px 0 0;font-size:11px;line-height:1.7}
@@ -354,3 +415,10 @@ dialog.product-dialog.ops-example-dialog{box-sizing:border-box;width:min(720px,c
 .ops-example-history>article{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;align-items:start;padding:16px 0;border-top:1px solid var(--b-line);font-size:13px}.ops-example-history>article>span{display:flex;gap:5px;flex-wrap:wrap;align-items:center;min-width:0}.ops-example-history b{font-weight:500;overflow-wrap:anywhere}.ops-example-history small{flex-basis:100%;font-size:11px;color:var(--b-muted)}.ops-example-history>article>span:last-child{justify-content:flex-end;text-align:right;font-variant-numeric:tabular-nums}.ops-example-history .token-icon{flex:none}
 .ops-example-dialog button:focus-visible{outline:2px solid var(--b-action);outline-offset:3px}
 @media(max-width:600px){.ops-example-source>button{min-height:44px}dialog.product-dialog.ops-example-dialog{width:calc(100vw - 20px);max-height:92dvh;padding:20px 16px;border-radius:12px}.ops-example-heading h2{font-size:20px}.ops-example-history>article{grid-template-columns:1fr 1fr;gap:12px}.ops-example-history>article>span:last-child{grid-column:2;grid-row:auto;justify-content:flex-start;text-align:left}.ops-risk-meter b{font-size:11px}}
+
+@keyframes ops-panel-enter { from { opacity:.76; } to { opacity:1; } }
+@media (prefers-reduced-motion:no-preference) {
+ html:not([data-reduced-motion=true]) body[data-workbench-view=photonic] .terminal-handoff > [role=tabpanel]:not([hidden]) {
+  animation:ops-panel-enter .16s ease-out;
+ }
+}

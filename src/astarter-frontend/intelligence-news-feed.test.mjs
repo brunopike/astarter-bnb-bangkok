@@ -41,6 +41,20 @@ test('offline, fixture, stale and unavailable providers never produce a news del
   assert.equal(next({snapshot}),rows[1]);
 });
 
+test('decoration-only flashes are omitted without suppressing real headlines from the same publisher', () => {
+  const symbol = item('symbol', blockbeats, '2026-11-17T18:00:01Z', '⚡️'),
+    real = item('real', blockbeats, '2026-11-17T18:00:00Z', '⚡️ 比特币突破 60,000 美元'),
+    records = [symbol, real];
+  assert.deepEqual(filterIntelligenceNews(records), [real]);
+  for (const html of [renderIntelligenceNewsFeed(records), renderIntelligenceNewsAside(records)]) {
+    assert.ok(html.includes(real.data.title));assert.ok(!html.includes(symbol.data.url));
+  }
+  const delivered = createNewsDeliveryReader();
+  const snapshot = {mode:'live_readonly',sources:[{provider_id:blockbeats,status:'OK'}],items:[symbol]};
+  assert.equal(delivered({snapshot}),null);
+  assert.equal(delivered({snapshot:{...snapshot,items:records}}),real);
+});
+
 test('uses source timestamps, Shanghai publication dates and declared assets for filters', () => {
   const ids = options => filterIntelligenceNews(rows, options).map(row => row.record_id);
   assert.deepEqual(ids(), ['latest','middle','earlier']);
