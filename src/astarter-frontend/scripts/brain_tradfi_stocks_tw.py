@@ -17,7 +17,7 @@ import tempfile
 
 import requests
 
-from brain_tradfi import json_bytes, save
+from brain_tradfi import json_bytes, mirror_revision, save
 
 MIRROR = '88jiayu/tw-chip-open-data'
 REVISION = 'f6a287051fb8190bc22a156b5ac5d3298988f89e'
@@ -322,8 +322,7 @@ def build(dest, until, existing=None, inputs=None, vintage=None, dated=None, mir
                 clipped=market+'-'+missed
                 if missed==day or any('STOCK_FIRST' not in src for src in previous.get(clipped,{})): continue
                 if head is None:
-                    head=json.loads(download('https://api.github.com/repos/'+MIRROR+'/commits/main'))['sha']
-                    if not re.fullmatch(r'[0-9a-f]{40}',head): raise ValueError('Invalid mirror commit')
+                    head=mirror_revision(MIRROR, 'main')
                 location=f'https://raw.githubusercontent.com/{MIRROR}/{head}/data/official/price_{market}/{missed}.json'
                 try:
                     data=download(location)

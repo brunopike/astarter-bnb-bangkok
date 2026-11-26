@@ -16,6 +16,7 @@ from tempfile import TemporaryDirectory
 
 import requests
 
+from brain_tradfi import mirror_revision
 from brain_tradfi_mandi import CROPS, LICENSE, make_shard, store
 from brain_tradfi_mandi_live import PRODUCTS
 
@@ -34,9 +35,7 @@ NAMES={k:v[0] for k,v in CROPS.items()} | {k:v[1] for k,v in PRODUCTS.items()}
 
 def download(revision=None):
     if not revision:
-        r=requests.get(f'https://api.github.com/repos/{REPO}/git/ref/heads/data',timeout=(5,20))
-        r.raise_for_status()
-        revision=r.json()['object']['sha']
+        revision=mirror_revision(REPO, 'data')
     if not re.fullmatch('[0-9a-f]{40}',revision):
         raise ValueError('Invalid immutable mirror commit')
     endpoint=f'https://codeload.github.com/{REPO}/tar.gz/{revision}'

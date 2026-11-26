@@ -12,6 +12,7 @@ import math
 import os
 from pathlib import Path
 import re
+import subprocess
 import tempfile
 
 import openpyxl
@@ -50,6 +51,18 @@ def session():
     s.headers['User-Agent'] = 'Astarter public market archive/1.0'
     s.mount('https://', HTTPAdapter(max_retries=Retry(total=3, backoff_factor=.8, status_forcelist=[429, 500, 502, 503, 504])))
     return s
+
+
+def mirror_revision(repository, branch):
+    ref = f'refs/heads/{branch}'
+    result = subprocess.check_output(
+        ['git', 'ls-remote', '--exit-code', f'https://github.com/{repository}.git', ref],
+        text=True, timeout=30,
+    )
+    match = re.fullmatch(r'([0-9a-f]{40})\t' + re.escape(ref), result.strip())
+    if not match:
+        raise ValueError('Invalid immutable mirror revision')
+    return match.group(1)
 
 
 def get(url, **kw):
