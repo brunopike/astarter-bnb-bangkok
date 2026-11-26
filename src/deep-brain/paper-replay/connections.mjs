@@ -1,6 +1,5 @@
 import {setTimeout as delay} from 'node:timers/promises';
-import {readFile} from 'node:fs/promises';
-import {featuredCase,sha256} from './replay.mjs';
+import {sha256} from './replay.mjs';
 
 function required(env,key) {
   if(!env[key]?.trim())throw Error('Set '+key+' before using this connection');
@@ -26,14 +25,8 @@ export async function explainMemory(record,{env=process.env,fetchImpl=fetch,cont
 export async function syncMemory(record,{env=process.env,fetchImpl=fetch}={}) {
   const root='https://api.livingbrain.com/v1/brains/'+encodeURIComponent(required(env,'LIVING_BRAIN_BRAIN_ID'));
   const headers={'x-api-key':required(env,'LIVING_BRAIN_API_KEY'),'x-subject-id':required(env,'LIVING_BRAIN_SUBJECT_ID'),'Content-Type':'application/json'};
-  let content=JSON.stringify(record),originRef='paper-replay:'+sha256(content);
-  const {verification,...example}=await featuredCase();
-  if(content===JSON.stringify(example)){
-    content=await readFile(new URL('./example/memory.txt',import.meta.url),'utf8');
-    if(sha256(content)!==verification.memory.contentSha256)throw Error('Reference memory checksum mismatch');
-    originRef=JSON.parse(content.split('\n')[1]).originRef;
-  }
-  const digest=sha256(content);
+  const content=JSON.stringify(record);
+  const digest=sha256(content),originRef='paper-replay:'+digest;
   const request=(route,options={})=>jsonRequest(root+route,{headers,...options},fetchImpl);
   let source;
   for(let offset=0;!source;offset+=100){

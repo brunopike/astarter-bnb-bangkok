@@ -383,13 +383,16 @@ test('outcome calendars survive delisting, including windows after the last reta
   assert.equal(unknown.body.error.code,'UNSUPPORTED_ASSET');
 });
 
-test('a featured fill on an empty store leads to its frozen signal, position, settlement and following learning receipt',async t=>{
-  const f=await fixture(t,[]),get=await f.start();
-  const example=await get('?example=btc-pullback');
-  assert.equal(example.status,200);
-  const {runId,decision:d,attribution:a}=example.body,receipt=d.execution;
-  const archived=await get('?run='+runId);
+test('an archived market links a fill to its frozen signal, position, settlement and next decision',async t=>{
+  const f=await fixture(t),get=await f.start();
+  const archived=await get('?asset='+bitcoin.key+'&days=90');
   assert.equal(archived.status,200);
+  const {runId,decisions}=archived.body;
+  const fill=decisions.slice(0,-2).find(row=>row.status==='filled');
+  assert.ok(fill);
+  const detail=await get('?run='+runId+'&decision='+fill.id);
+  assert.equal(detail.status,200);
+  const d=detail.body.decision,receipt=d.execution;
   assert.ok(d.candidates.some(row=>row.id===d.selected && row.eligible && row.signal));
   const evidence=await get('?run='+runId+'&decision='+d.id+'&evidence=1');
   assert.equal(evidence.body.snapshotId,d.snapshotId);
@@ -397,7 +400,9 @@ test('a featured fill on an empty store leads to its frozen signal, position, se
   assert.equal(receipt.status,'filled');
   assert.equal(receipt.amount,receipt.openRisk.amount);
   assert.ok(receipt.amount<=d.risk.amount);
-  assert.ok(Math.abs(a.referenceMove-a.slippage-a.entryFee-a.exitFee-receipt.netPnl)<1e-8);
+  const refExit=receipt.reason==='stop_loss'?receipt.stopPrice:receipt.settlementBar[4];
+  const move=receipt.quantity*(refExit-receipt.settlementBar[1]);
+  assert.ok(Math.abs(move-receipt.slippage-receipt.fees-receipt.netPnl)<1e-8);
   const following=archived.body.decisions.find(row=>row.barOpenAt>d.barOpenAt && row.asOf>=receipt.barCloseAt);
   const after=await get('?run='+runId+'&decision='+following.id);
   assert.equal(after.body.decision.previousReceiptId,receipt.id);

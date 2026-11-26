@@ -300,21 +300,6 @@ export function createBrainProofHandler({
     if(!['GET','HEAD'].includes(req.method)){reply(405,{error:{code:'METHOD_NOT_ALLOWED',message:'Use GET or HEAD.'}},{Allow:'GET, HEAD'});return;}
     try{
       const params=new URL(req.url,'http://localhost').searchParams;
-      if(params.has('example')){
-        assertKeys(params,['example']);
-        if(params.get('example')!=='btc-pullback')fail('PROOF_NOT_FOUND');
-        const {featuredCase,bundledMarket}=await import('../paper-replay/replay.mjs');
-        const example=await featuredCase();
-        try{await loadRun(example.runId);}catch(error){
-          if(error.code!=='PROOF_NOT_FOUND')throw error;
-          const bytes=await readFile(bundledMarket),data=JSON.parse(bytes);
-          const assetKey=example.asset.key,days=example.sample.observations;
-          const proof=buildBrainProof(data,{assetKey,days});
-          if(proof.runId!==example.runId)fail('PROOF_UNAVAILABLE');
-          await evaluate({bytes,data,sourceSha:digest(bytes),memo:new Map()},assetKey,days,proof);
-        }
-        reply(200,example);return;
-      }
       if(params.has('tool')){
         assertKeys(params,['tool']);
         if(params.get('tool')!=='1')fail('BAD_QUERY');

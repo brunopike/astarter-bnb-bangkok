@@ -9,21 +9,21 @@ import {paperPageHTML} from './page.mjs';
 
 const {values,positionals:[command='demo',id,...extra]}=parseArgs({allowPositionals:true,options:{
   store:{type:'string',default:join(homedir(),'.local','share','astarter','paper-replay')},
-  archive:{type:'string'},asset:{type:'string',default:'coin:bitcoin'},days:{type:'string',default:'90'},
+  archive:{type:'string'},asset:{type:'string'},days:{type:'string',default:'90'},
   session:{type:'string'},port:{type:'string',default:'4317'},remote:{type:'boolean'},help:{type:'boolean'}}});
 const output=value=>console.log(JSON.stringify(value,null,2));
 async function serve() {
   const port=Number(values.port);
   if(!Number.isInteger(port)||port<1||port>65535)throw Error('Invalid port');
   const {createBrainProofService}=await import('../api/brain-proof-service.mjs');
-  const proof=createBrainProofService();
+  const proof=createBrainProofService(values.archive?{archiveFile:values.archive}:{});
   const server=createServer(async(req,res)=>{
     try{
       const url=new URL(req.url,'http://localhost');
       if(url.pathname==='/api/brain/proof'){await proof(req,res);return;}
       if(url.pathname!=='/' || !['GET','HEAD'].includes(req.method)){res.writeHead(404);res.end();return;}
       const en=url.searchParams.get('lang')!=='zh';
-      const html=await paperPageHTML(en);
+      const html=await paperPageHTML(en,{archiveFile:values.archive,asset:url.searchParams.get('asset')});
       res.writeHead(200,{'content-type':'text/html; charset=utf-8'});res.end(req.method==='HEAD'?undefined:html);
     }catch{res.writeHead(503);res.end('Proof unavailable');}
   });

@@ -1,22 +1,39 @@
 # Astarter at BNB Bangkok
 
-**A fresh price can still lead to a stale decision.** When agents hand off a trade idea for a tokenized stock, a price alone is of little use. The next agent needs its timestamp, the market conditions, and the rule that would invalidate the trade. Astarter is an AI Trading OS that gives agents a shared market snapshot and ties each decision to the evidence available at the time.
+**You get one chance to record a trading decision before the market tests it.**
 
-[Run the local demo](#run-locally) · [Inspect the integrations](#what-you-can-verify) · [Download Hackathon frontend packages](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.8.1-frontend) · [Download v0.1.0](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
+Astarter is an AI Trading OS. Before the next UTC session opens, its spot paper trading engine records the market evidence, the strategy it selected and the largest position it will allow. After the session closes, you can check whether it followed that decision and how it did after costs. A decision to hold cash goes on the record too.
 
-## Two ways to turn research into a strategy
+[Open Deep Brain](https://dapp.ipfund.art/?page=brain&lang=en) · [Run the proof locally](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
-A sudden move in a BNB Chain tokenized stock is a reason to investigate. In the workflow below, the market agent checks price freshness, venue liquidity, and execution cost. The on-chain agent checks flows and looks for evidence that contradicts the trade. Both work from the same snapshot. If a source is missing or stale, the decision stays on watch and the agents request a new snapshot.
+## What earns a trade?
 
-The execution layer uses a verified decision in two ways. A **configured strategy** watches for its trigger and publishes a signal for user review or execution within an existing authorization and risk policy. A **candidate strategy** draws directly on the original snapshot, past cases, and the verified decision. Its public beta and historical backtest use the same strategy and parameter versions. Both paths write outcomes back to the case library so the next agent can see why a rule changed.
+| Layer | The question it answers | Evidence you can inspect |
+| --- | --- | --- |
+| **[Brain Layer](src/deep-brain/brain-agent-recall.mjs)** | What could the agent know at the time? | It checks closed candles against the venue and freezes the source, UTC cutoff and content hash. For the same asset it can recall up to three relevant memories from the preceding seven UTC days, including refusals. A receipt that arrived later belongs to a later review. |
+| **[Thinking Layer](src/deep-brain/brain-strategy-witness.mjs)** | Why this strategy, at this size, today? | Trend, breakout and pullback compete with holding cash. A strategy needs a current signal, enough observations and a positive score after modeled costs and downside risk. The winner gets a position cap and a stop. Elevated volatility or an equity drawdown triggers the conservative risk policy. Keeping the current signal fixed, it omits each of 60 calibration sessions in turn and shows which omissions change the winner. |
+| **[Execution Layer](src/deep-brain/brain-execution-invariants.mjs)** | Did the paper trade respect the decision? | The worker binds the instruction to its decision ID. An opening gap can veto entry, and risk checks can cut the position. After an independently checked candle closes, the verifier reconstructs entry, exit, slippage, fees and ending equity. An unsettled instruction has no reported return. |
+
+```mermaid
+flowchart TD
+    B["Brain · Freeze venue data and cutoff"] --> T["Thinking · Rank eligible strategies and cash"]
+    T --> R["Register the choice and risk cap before the open"]
+    R --> X{"Execution · Entry permitted?"}
+    X -->|Yes| F["Model entry, exit and costs"]
+    X -->|No| S["Record the reason to skip"]
+    F --> V["Verify the receipt after the session closes"]
+    S --> V
+    V --> M["Compare with benchmarks and save the outcome"]
+    M -.->|Available to later decisions| B
+```
+
+**How would you know whether it helps?** Follow the decisions registered in advance, including the skipped sessions. The engine registers two benchmarks before the open when a comparison is available. One stays in cash. The other puts 10% into the asset from open to close and pays the modeled fees and slippage. Compare the strategy with both over the same sessions, including losses and drawdowns. That measures what the rules earned during that period. The next session is still an open question. [Inspect the current read-only agent brief](https://dapp.ipfund.art/api/brain/proof?brief=1&asset=coin:bitcoin) · [Benchmark calculation](src/deep-brain/brain-forward-comparison.mjs)
 
 ### Shared-brain architecture
 
-The diagram shows the target workflow for research, strategy generation, and execution.
+The diagram below shows the wider product design. Agents research from a shared snapshot, then hand evidence and open questions to the next agent. An existing strategy can publish a signal within its configured policy. A proposed strategy can enter testing with its parameters and supporting evidence attached. Versioned results give later agents a way to trace why a rule changed.
 
 [![Astarter’s shared-brain architecture in three horizontal layers. The pinned snapshot directly informs new strategies. Both execution routes return versioned outcomes to shared memory.](docs/images/shared-brain-flow.drawio.png)](docs/images/shared-brain-flow.drawio.png)
-
-Living Brain provides persistent memory for cases and plans. The architecture pairs it with an Obsidian-compatible Markdown knowledge base for research notes, rules, and reviews. Agents can use their own working context while handing off source references and open questions. New evidence creates a new snapshot. The original snapshot stays available for replay, and feedback links to the exact strategy and parameter versions that produced the result.
 
 ## What you can verify
 
@@ -29,9 +46,17 @@ Living Brain provides persistent memory for cases and plans. The architecture pa
 
 The local demo runs in simulation mode. Continuous cross-agent scheduling, public beta publishing, and automatic feedback ingestion are design targets.
 
-## Run the three-layer paper trade
+## Verify a decision locally
 
-The [Deep Brain module](src/deep-brain) includes public market collection, strategy selection, position sizing, paper execution, memory storage and model review. Clone the repo, enter `src/deep-brain` and run `npm run demo` followed by `npm run verify` to reproduce a stopped-out BTC trade without credentials.
+With Node.js 24, run the following from the repository root. The verifier reads the market archive and checks the decision and execution receipts.
+
+```sh
+cd src/deep-brain
+npm run verify
+npm test
+```
+
+[Collect new observations, register forward paper decisions or query an agent memory](src/deep-brain/paper-replay/README.md).
 
 ## Frontend packages
 

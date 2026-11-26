@@ -65,26 +65,15 @@ http.createServer(async (req, res) => {
     }catch{res.writeHead(503);res.end('Paper proof unavailable');}
     return;
   }
-  if(file==='paper-replay/view.mjs'){
-    try{
-      const source=await readFile(new URL('./paper-replay/view.mjs',import.meta.url));
-      res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8'});res.end(req.method==='HEAD'?undefined:source);
-    }catch{res.writeHead(404);res.end();}
-    return;
-  }
   if(file==='paper-replay'){
     if(!['GET','HEAD'].includes(req.method)){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
     try{
       const en=new URL(req.url,'http://localhost').searchParams.get('lang')!=='zh';
       const {paperPageHTML}=await import('../deep-brain/paper-replay/page.mjs');
-      const html=await paperPageHTML(en);
+      const html=await paperPageHTML(en,{asset:new URL(req.url,'http://localhost').searchParams.get('asset')});
       res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(req.method==='HEAD'?undefined:html);
     }catch{
-      const locale=new URL(req.url,'http://localhost').searchParams.get('lang')==='zh'?'zh':'en';
-      try{
-        const html=await readFile(new URL('./paper-replay/'+locale+'.html',import.meta.url));
-        res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});res.end(req.method==='HEAD'?undefined:html);
-      }catch{res.writeHead(503);res.end('Paper replay unavailable');}
+      res.writeHead(302,{Location:'/?page=brain'});res.end();
     }
     return;
   }

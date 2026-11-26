@@ -1,4 +1,3 @@
-import {renderPaperCase} from './paper-replay/view.mjs';
 // Present the registered decision first. Historical simulation is loaded on demand.
 import {escapeUI as e} from './product-experience.mjs';
 import {uiGlyph} from './product-composition.mjs';
@@ -231,14 +230,9 @@ export function mountProofView(host,replayHost,learningHost,en){
     </div>`;
   replayHost.innerHTML=`
     <header class="br-layer-head"><div class="br-layer-title"><h2 id="br-backtest-title">${t('回测复盘','Backtest Review')}</h2></div>
-      <div class="bp-controls"><button type="button" class="ft-launch" data-open-fill aria-expanded="false" aria-controls="bp-fill-tour">${uiGlyph('play')}${t('看一次模拟成交','Watch a paper trade')}</button><label><span class="bp-sr">${t('市场','Market')}</span><select data-replay-market data-native-select></select></label>
+      <div class="bp-controls"><label><span class="bp-sr">${t('市场','Market')}</span><select data-replay-market data-native-select></select></label>
         <label><span class="bp-sr">${t('回测窗口','Window')}</span><select data-window data-native-select></select></label></div>
     </header>
-    <section class="bp-panel ft-tour" id="bp-fill-tour" data-fill-tour hidden>
-      <header class="ft-head"><div><span class="bp-market-name" data-fill-period></span><h3>${t('模拟成交回放','Paper Trade Replay')}</h3></div>
-        <button type="button" class="bp-refresh" data-close-fill>← ${t('关闭成交回放','Close trade replay')}</button></header>
-      <div class="bp-state" data-fill-status role="status"></div><div data-fill-body></div>
-    </section>
     <div class="bp-replay">
       <div class="bp-state" data-state role="status"></div>
       <div data-result hidden>
@@ -335,7 +329,6 @@ export function mountProofView(host,replayHost,learningHost,en){
       setOptions(market,[[scope,assets.find(item=>item.key===scope)?.market??scopeLabel??scope]],scope);
     }
     market.disabled=!all || assets.length<2;
-    if(tourPinned)return;
     const replayMarket=q('[data-replay-market]');
     setOptions(replayMarket,[...market.options].map(option=>[option.value,option.textContent]),selectedMarket);
     replayMarket.disabled=market.disabled;
@@ -422,7 +415,7 @@ export function mountProofView(host,replayHost,learningHost,en){
     ].join('')}</dl><p class="bp-method-note">${t('按历史日线逐日决策，成交价格、手续费与滑点按模拟规则计算。','Decisions use daily historical bars. Fills, fees and slippage follow the simulation rules.')}</p>
     <div class="bp-sources">${sourceLink(brain.sourceUrl,t('行情来源','Market source'))} ${sourceLink(run.sourceArchive?.url,t('冻结归档','Frozen archive'))} ${sourceLink(run.reportUrl,t('完整回测记录','Full replay record'))}</div>`;
     renderForward(run.forward,run.forwardError,quote);
-    cohort.hidden=tourPinned || scope!=='all' || days==='all';
+    cohort.hidden=scope!=='all' || days==='all';
     const list=run.decisions;
     const latestFill=list.findLast(item=>item.status==='filled')??list.at(-1);
     setOptions(day,[...list].reverse().map(item=>[item.id,date(item.barOpenAt)+' UTC'+(item.status==='filled'?' · '+t('成交','Fill'):'')]),preferredId??latestFill?.id??'');
@@ -453,7 +446,7 @@ export function mountProofView(host,replayHost,learningHost,en){
     <div class="bp-sources">${sourceLink(endpoint({forward:1,asset:run.asset.key,date:date(forward.targetOpenAt),evidence:1}),t('登记依据与回执','Registration and evidence'))}</div></details>${history}</div>`;
   }
   async function loadHistory(){
-    if(tourPinned || !replayVisible || !directory || !selectedMarket)return;
+    if(!replayVisible || !directory || !selectedMarket)return;
     replayRequest?.abort();
     const controller=replayRequest=new AbortController();
     clearRecord();notice(q('[data-state]'),t('正在读取回测记录…','Loading replay…'));
@@ -477,7 +470,6 @@ export function mountProofView(host,replayHost,learningHost,en){
     }
   }
   async function load(){
-    closeTour(false);
     mainRequest?.abort();currentRequest?.abort();replayRequest?.abort();clearRecord();
     reviewDate='';latestSession='';
     const controller=mainRequest=new AbortController();
@@ -782,101 +774,6 @@ export function mountProofView(host,replayHost,learningHost,en){
     target.focus({preventScroll:true});
     target.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
   }
-  const tour=q('[data-fill-tour]'),launch=q('[data-open-fill]'),tourBody=q('[data-fill-body]');
-  let tourRequest=null,tourPinned=false;
-  function closeTour(restore=true){
-    tourRequest?.abort();tourRequest=null;
-    tour.hidden=true;launch.hidden=false;launch.setAttribute('aria-expanded','false');
-    if(tourPinned){
-      tourPinned=false;period.disabled=false;
-      clearRecord();
-      if(directory)setControls();
-      if(restore)loadHistory();
-    }
-  }
-  q('[data-close-fill]').onclick=()=>{closeTour();launch.focus({preventScroll:true});};
-  function showFill(record,index,evidence){
-    const d=record.decision,x=d.execution,r=d.risk,qte=d.quote,f=d.features;
-    const previousClose=evidence.bars.at(-2)[4],threshold=f.average10*(1-f.atrPct/2);
-    const fee=x.fees,share=r.amount/d.equityBefore*100;
-    const money=v=>e(amount(v,qte));
-    const steps=[t('策略信号','Signal'),t('风控仓位','Position'),t('成交盈亏','Outcome')];
-    const frozen=evidence.bars.slice(-15),closes=frozen.map(bar=>bar[4]);
-    const lo=Math.min(...closes,threshold),hi=Math.max(...closes,threshold);
-    const y=v=>12+72*(hi-v)/(hi-lo||1),px=i=>6+288*i/(closes.length-1);
-    const line=closes.map((v,i)=>px(i)+','+y(v)).join(' ');
-    const closeChart=`<figure class="ft-chart"><figcaption><span>${t('日收盘价','Daily closes')} · ${e(qte)}</span><b>${e(number(f.close))}</b></figcaption>
-      <svg viewBox="0 0 300 96" role="img" aria-label="${e(t('截至信号日的收盘价','Closing prices through signal cutoff'))}">
-        <path d="M6 84H294 M6 48H294 M6 12H294" class="ft-grid"/>
-        <path class="ft-guide-line" d="M${px(closes.length-3)} ${y(threshold)} H294"/>
-        <polyline points="${line}" class="ft-line"/><circle cx="294" cy="${y(f.close)}" r="3.5"/>
-      </svg><div class="ft-axis"><span>${date(new Date(frozen[0][0]*1000).toISOString())}</span><span>${date(d.asOf)} UTC</span></div><div class="ft-chart-key">${t('信号日回调线','Pullback threshold at cutoff')} · ${e(number(threshold))}</div></figure>`;
-    const facts=rows=>`<dl class="ft-facts">${rows.map(([label,value])=>fact(label,value)).join('')}</dl>`;
-    const cash=d.candidates.find(c=>c.id==='cash'),winner=d.candidates.find(c=>c.id===d.selected);
-    const stages=[
-      `<div>${closeChart}</div><div><h4>${e(name(d.selected))}</h4>
-        <p>${e(t(`收盘价 ${number(f.close)} 高于前收盘 ${number(previousClose)}，并低于回调线 ${number(threshold)}。`,
-          `The close (${number(f.close)}) rose above the prior close (${number(previousClose)}) and stayed below the pullback threshold (${number(threshold)}).`))}</p>
-        ${strategyPlot(d.candidates,d.selected)}<small>${e(t(`回调策略在 ${cash.sampleCount} 场中有 ${winner.sampleCount} 个有效样本，得分在可选策略中最高。`,
-          `Pullback had the highest eligible score, based on ${winner.sampleCount} qualifying signals in ${cash.sampleCount} sessions.`))}</small></div>`,
-      `<div><div class="dp-plot-caption">${t('模拟账户仓位','Paper account allocation')}</div><div class="dp-allocation"><div class="dp-ring" style="--share:${share}%"><b>${e(percent(share))}</b></div>
-        <div><strong>${money(r.amount)}</strong><span>${t('批准仓位','Approved position')}</span></div></div>
-        ${facts([[t('期初权益','Opening equity'),amount(d.equityBefore,qte)],[t('风险预算','Risk budget'),amount(r.riskBudget,qte)]])}</div>
-        <div><h4>${e(reason(r.action))}</h4>${facts([[t('止损距离','Stop distance'),percent(r.stopFraction*100)],
-          [t('开盘跳空 / 上限','Opening gap / limit'),percent(Math.abs(x.settlementBar[1]/f.close-1)*100)+' / '+percent(r.openGapLimit*100)],
-          [t('开盘核准','Cleared at open'),amount(x.openRisk.amount,qte)]])}</div>`,
-      `<div><div class="dp-plot-caption">${t('扣费后模拟净损益','Paper P&L after costs')}</div><strong class="ft-pnl ${signClass(x.netPnl)}">${money(x.netPnl)}</strong>
-        <div class="ft-costs">${[[t('价格变动','Price move'),record.attribution.referenceMove],[t('滑点','Slippage'),-x.slippage],[t('手续费','Fees'),-fee]].map(([label,value])=>
-          `<div><span>${e(label)}</span><i aria-hidden="true"><i style="width:${100*Math.abs(value)/Math.max(Math.abs(record.attribution.referenceMove),x.slippage,fee,0.000001)}%"></i></i><b>${e(number(value))}</b></div>`).join('')}</div></div>
-        <div><h4>${e(reason(x.reason))}</h4>${facts([[t('模拟买入 / 卖出','Paper entry / exit'),number(x.entryPrice)+' / '+number(x.exitPrice)+' '+qte],
-          [t('当日低点 / 止损价','Session low / stop'),number(x.settlementBar[3])+' / '+number(x.stopPrice)+' '+qte],
-          [t('成交数量','Filled quantity'),amount(x.quantity,record.asset.symbol,8)]])}</div>`
-    ];
-    tourBody.innerHTML=`<div class="ft-tabs" role="group" aria-label="${t('成交回放步骤','Trade replay steps')}">${steps.map((label,i)=>
-      `<button type="button" data-fill-step="${i}"><i aria-hidden="true">${uiGlyph(['strategy','shield','pulse'][i])}</i>${e(label)}</button>`).join('')}</div>
-      <div class="ft-stage" data-fill-stage aria-live="polite"></div>
-      <div class="ft-actions"><div class="bp-sources">${sourceLink(endpoint({run:record.runId,decision:d.id,evidence:1}),t('冻结行情','Frozen candles'))}
-      ${sourceLink(endpoint({run:record.runId,decision:d.id}),t('决策与回执','Decision & receipt'))}</div><button type="button" class="ft-launch" data-fill-next></button></div>
-      <details class="ft-audit"><summary>${t('核对回执与模型解读','Inspect receipt and model review')}</summary>${renderPaperCase(record,en)}</details>`;
-    const buttons=[...tourBody.querySelectorAll('[data-fill-step]')],advance=q('[data-fill-next]');
-    function select(i){
-      buttons.forEach((btn,n)=>btn.setAttribute('aria-pressed',String(n===i)));
-      q('[data-fill-stage]').innerHTML=stages[i];
-      advance.textContent=(steps[i+1]??t('查看 Agent 学习','View Agent Learning'))+' →';
-      advance.onclick=i<2?()=>select(i+1):()=>{
-        replayRequest?.abort();clearRecord();tourPinned=true;run=index;
-        const replayMarket=q('[data-replay-market]');
-        setOptions(replayMarket,[[record.asset.key,record.asset.market]],record.asset.key);replayMarket.disabled=true;
-        setOptions(period,[[record.sample.observations,t(record.sample.observations+' 天',record.sample.observations+' days')]],record.sample.observations);period.disabled=true;
-        renderSummary(d.id);
-        const heading=learningHost.querySelector('h2');heading.tabIndex=-1;heading.focus({preventScroll:true});
-        learningHost.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
-      };
-    }
-    buttons.forEach((btn,i)=>btn.onclick=()=>select(i));select(0);
-  }
-  async function openTour(){
-    tourRequest?.abort();const controller=tourRequest=new AbortController(),signal=controller.signal;
-    tour.hidden=false;launch.hidden=true;launch.setAttribute('aria-expanded','true');
-    q('[data-close-fill]').focus({preventScroll:true});
-    tourBody.replaceChildren();q('[data-fill-period]').textContent='';
-    const status=q('[data-fill-status]');notice(status,t('正在核对模拟回执…','Checking the paper receipt…'));
-    try{
-      const record=await request({example:'btc-pullback'},signal),d=record.decision;
-      if(d.selected!=='pullback' || !d.candidates.some(c=>c.id===d.selected && c.eligible && c.signal) ||
-        d.execution.status!=='filled' || d.execution.decisionId!==d.id || d.execution.snapshotId!==d.snapshotId)throw Error('Invalid paper fill');
-      const [index,evidence]=await Promise.all([request({run:record.runId},signal),request({run:record.runId,decision:d.id,evidence:1},signal)]);
-      if(disposed || signal.aborted)return;
-      if(index.runId!==record.runId || index.asset.key!==d.assetKey || !index.decisions.some(row=>row.id===d.id && row.status==='filled') ||
-        !nextLearningSession(index.decisions,d) || evidence.runId!==record.runId || evidence.snapshotId!==d.snapshotId || evidence.decisionId!==d.id ||
-        evidence.bars?.length!==d.barCount || d.barCount<2 || evidence.bars.at(-1)[4]!==d.features.close)throw Error('Mismatched fill records');
-      q('[data-fill-period]').textContent=record.asset.market+' · '+date(d.barOpenAt)+' UTC';
-      showFill(record,index,evidence);status.hidden=true;
-    }catch{
-      if(!disposed && !signal.aborted)notice(status,t('暂时无法核对成交记录。','Could not verify this paper fill.'),openTour);
-    }
-  }
-  launch.onclick=openTour;
   for(const control of [market,q('[data-replay-market]')]){
     control.onchange=()=>{selectedMarket=control.value;load();};
   }
@@ -900,7 +797,7 @@ export function mountProofView(host,replayHost,learningHost,en){
       load();
     },
     dispose(){
-      disposed=true;tourRequest?.abort();observer.disconnect();mainRequest?.abort();currentRequest?.abort();replayRequest?.abort();recordRequest?.abort();cohortRequest?.abort();
+      disposed=true;observer.disconnect();mainRequest?.abort();currentRequest?.abort();replayRequest?.abort();recordRequest?.abort();cohortRequest?.abort();
     }
   };
 }

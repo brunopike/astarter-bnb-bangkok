@@ -66,8 +66,6 @@ Save the last response to a JSON file and run `node scripts/verify-brain-proof.m
 
 Run `node scripts/brain-proof-forward.mjs --refresh` periodically after UTC midnight to update completed candles, reconcile prior forward records, and pre-register the next UTC session. Repeated jobs are safe. The mode without `--refresh` uses the saved archive. By default forward records and the private working candle archive live under `~/.local/share/astarter/deep-brain/forward`. The read-only API serves that archive when present and falls back to the bundled archive on a fresh installation. Immutable replay reports are written under `~/.local/share/astarter/deep-brain/proof-replays`. Neither directory belongs in a public static file tree.
 
-## Runnable paper fill and memory review
+## Run locally
 
-Open **Paper trade review · BTC/USDT** in Decision proof, or request `GET /api/brain/proof?example=btc-pullback`. This dated historical example replays the original strategy and risk code against pinned public candles. The response includes the historical decision and settlement, attribution and a saved model review. The model explanation is read from the archive. Viewing the case incurs no model charge.
-
-Follow [the runnable example](../paper-replay/README.md) for offline replay, forward collection, durable memory, cloud readback and optional model calls.
+[Collect data, verify a paper decision, or read a saved memory](../paper-replay/README.md).
