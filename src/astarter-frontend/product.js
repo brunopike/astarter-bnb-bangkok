@@ -1,6 +1,6 @@
 import {routeHref,routeSearch} from './site-routes.mjs';
 import {syncSiteMeta} from './site-seo-client.mjs';
-import {assistantNavIcon,createMobileNavigation} from './mobile-navigation.mjs';
+import {assistantNavIcon,createDesktopNavigationSelection,createMobileNavigation} from './mobile-navigation.mjs';
 import {mountSweepingTitle} from './workbench-optical-header.mjs';
 import {createNumberInputs} from './product-number-input.mjs';
 import {CATALOG} from './strategy-catalog.mjs';
@@ -96,6 +96,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   return `<a href="${routeHref('?page='+d.home)}" data-page="${d.home}" title="${esc(label)}">${d.home==='assistant'?assistantNavIcon+'<span>'+esc(label)+'</span>':headerLabel(d)}</a>`;
  }).join('')+'<a class="biz-credit-link" href="/usage" data-page="usage"><span class="credit-name"></span><span class="credit-short"></span> <b id="biz-credit-count"></b></a>';
  document.querySelector('.topbar').insertBefore(nav,document.querySelector('.simulation-badge'));
+ const positionHeaderSelection=createDesktopNavigationSelection(nav);
  const assistantLink=nav.querySelector('[data-page="assistant"]');
  const creditLink=nav.querySelector('.biz-credit-link'),creditLabel=creditLink.querySelector('.credit-name'),creditShort=creditLink.querySelector('.credit-short'),creditValue=creditLink.querySelector('b');
  function syncCredits(){
@@ -180,6 +181,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   pageAnimation=surface.animate?.([{opacity:.76},{opacity:1}],{duration:170,easing:'ease-out',id:'page-enter'});
  }
  function updateNavigation(){
+  positionHeaderSelection();
   const section=mobileNavSection(page);
   const hrefFor=id=>id===section&&routeSearch()?routeSearch():restoreNavigationSearch(navigation.target(id),routeSearch());
   brand.href=routeHref(restoreNavigationSearch('?page=brain',routeSearch()));

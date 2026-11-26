@@ -51,6 +51,7 @@ for(const file of ['trading-preview.mjs','trading-preview-view.mjs'])allowed.add
 for(const file of ['market-hub-data.mjs','market-hub.mjs','market-hub.css','market-watchlist.mjs','atlas-feed-master.mjs'])allowed.add(file);
 for(const file of ['public-data-client.mjs','public-data-views.mjs','public-social-media.mjs','intelligence-calendar.mjs','intelligence-news-feed.mjs','intelligence-context.mjs','public-data.css'])allowed.add(file);
 for(const file of ['data-live-views.mjs','public-market-extended.mjs','public-macro.mjs','public-btc-disclosed.mjs','public-exchange-flows.mjs','public-eth-consensus.mjs','public-eth-disclosed.mjs','public-eth-exits.mjs','public-lightning.mjs','public-accumulation-view.mjs','public-etf.mjs','public-eth-etf-holdings.mjs','public-traders.mjs'])allowed.add(file);
+for(const file of ['experience-switch.mjs','experience-switch.css'])allowed.add(file);
 for(const file of ['workbench-terminal.mjs','workbench-terminal.css','agent-models.mjs','connection-options.mjs','connections.css','brand-icons.mjs','brand-icon-data.mjs','brand-icons.css',...BRAND_FILES])allowed.add(file);
 for(const file of ['membership.mjs','membership-account.mjs','membership-entry.mjs','membership-state.mjs','membership.css','membership-product.css','membership.html'])allowed.add(file);
 allowed.add('brand/binance-wallet.svg');

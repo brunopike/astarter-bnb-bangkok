@@ -76,3 +76,25 @@ test('the dock uses actual link bounds and only slides between selected sections
  route(null);assert.equal(host.dataset.dockSlide,undefined);
  route('data');assert.equal(host.dataset.dockSlide,'rest');
 });
+
+test('desktop selection follows primary links and reveals a clipped active link on compact headers',()=>{
+ const media=new EventTarget();media.matches=true;
+ const links=[{dataset:{page:'signals'},offsetLeft:20,offsetWidth:68},{dataset:{page:'markets'},offsetLeft:96,offsetWidth:54}];
+ let selected=links[0],resize;
+ const host={dataset:{},style:{setProperty(name,value){this[name]=value;}},clientWidth:120,scrollWidth:180,scrollLeft:0,
+  querySelector(){return selected;},querySelectorAll(){return links;}};
+ const create=runInNewContext(source+';createDesktopNavigationSelection',{
+  document:{documentElement:{dataset:{}}},matchMedia:()=>media,
+  ResizeObserver:class{constructor(fn){resize=fn;}observe(){}},getComputedStyle:()=>({translate:'20px',scale:'1'})
+ });
+ const sync=create(host);sync();
+ assert.equal(host.dataset.dockSlide,'rest');
+ assert.equal(host.style['--dock-left'],'20px');
+ selected=links[1];sync();
+ assert.equal(host.dataset.dockSlide,'right');
+ assert.equal(host.style['--dock-width'],'54px');
+ assert.equal(host.scrollLeft,30);
+ host.scrollLeft=0;sync();assert.equal(host.scrollLeft,0);
+ host.clientWidth=110;resize();assert.equal(host.scrollLeft,40);
+ selected=null;sync();assert.equal(host.dataset.dockSlide,undefined);
+});
