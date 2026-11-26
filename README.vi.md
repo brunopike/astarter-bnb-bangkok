@@ -8,6 +8,10 @@ Astarter là hệ điều hành giao dịch dùng AI. Trước khi phiên UTC ti
 
 [Mở Deep Brain](https://dapp.ipfund.art/?page=brain&lang=vi) · [Kiểm chứng trên máy](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
+**Tài liệu kỹ thuật bằng tiếng Anh**
+
+[36 tác nhân và CLI](AI-AGENTS-AND-CLI/README.md) · [Binance Agent OS và ví](BINANCE-AGENT-OS/README.md) · [Living Brain của ChatAndBuild](CHATANDBUILD-LIVING-BRAIN/README.md) · [BNB Chain và RWA](BNB-CHAIN-RWA/README.md) · [CoinMarketCap × Atlas](COINMARKETCAP-ATLAS/README.md) · [Kế hoạch sử dụng tín dụng AWS](AWS-CREDITS-PLAN/README.md)
+
 ## Các tác nhân nghiên cứu RWA như thế nào?
 
 **18 Team agents** chia nhau kiểm tra bằng chứng. A05 xem xét thanh khoản, A10 tìm bằng chứng phản bác giả thuyết và A15 đánh giá phần vốn chịu rủi ro. **18 Strategy agents** xác định thị trường, điều kiện vào lệnh, thoát lệnh và giới hạn rủi ro của từng chiến lược. Bộ máy giao dịch giao ngay mô phỏng so sánh ba phương án theo xu hướng, phá vỡ và điều chỉnh với giữ tiền mặt. Qua **Living Brain**, tác nhân tiếp theo có thể tìm lại kế hoạch hoặc bài học đã lưu và đối chiếu biên nhận với nguồn. Khi giải thích lãi lỗ, mô hình đọc biên nhận đã xác minh. Phần giải thích đi kèm mã biên nhận và hàm băm của dữ liệu đầu vào.

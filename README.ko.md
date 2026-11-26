@@ -8,6 +8,10 @@ Astarter는 AI 트레이딩 OS입니다. 현물 모의거래 엔진은 다음 UT
 
 [Deep Brain 열기](https://dapp.ipfund.art/?page=brain&lang=ko) · [로컬에서 검증하기](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
+**기술 문서(영문)**
+
+[에이전트 36개와 CLI](AI-AGENTS-AND-CLI/README.md) · [Binance Agent OS와 지갑](BINANCE-AGENT-OS/README.md) · [ChatAndBuild의 Living Brain](CHATANDBUILD-LIVING-BRAIN/README.md) · [BNB Chain과 RWA](BNB-CHAIN-RWA/README.md) · [CoinMarketCap × Atlas](COINMARKETCAP-ATLAS/README.md) · [AWS 크레딧 활용 계획](AWS-CREDITS-PLAN/README.md)
+
 ## 에이전트가 RWA를 조사하는 방법
 
 **Team agents 18개**가 조사를 나눠 맡습니다. A05는 유동성, A10은 가설에 반하는 증거, A15는 원금 손실 위험을 검토합니다. **Strategy agents 18개**는 전략별 시장과 진입·청산·위험 관리 규칙을 정의합니다. 현재 현물 모의 거래 엔진은 추세, 돌파, 눌림목 전략을 현금 보유와 비교합니다. 다음 담당자는 **Living Brain**에서 저장된 계획과 교훈을 검색하고 처리 기록의 출처를 확인할 수 있습니다. 손익을 설명할 때 모델은 검증된 기록을 읽고, 응답에는 기록 ID와 모델 입력의 해시가 함께 남습니다.

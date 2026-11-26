@@ -8,6 +8,10 @@ Astarter は AI トレーディング OS です。現物の模擬取引エンジ
 
 [Deep Brain を開く](https://dapp.ipfund.art/?page=brain&lang=ja) · [手元で検証する](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
+**技術ガイド（英語）**
+
+[36 のエージェントと CLI](AI-AGENTS-AND-CLI/README.md) · [Binance Agent OS とウォレット](BINANCE-AGENT-OS/README.md) · [ChatAndBuild の Living Brain](CHATANDBUILD-LIVING-BRAIN/README.md) · [BNB Chain と RWA](BNB-CHAIN-RWA/README.md) · [CoinMarketCap × Atlas](COINMARKETCAP-ATLAS/README.md) · [AWS クレジット活用計画](AWS-CREDITS-PLAN/README.md)
+
 ## エージェントが RWA を調査する仕組み
 
 **18 の Team agents** が調査を分担します。A05 は流動性、A10 は仮説に対する反証、A15 は資本リスクを検討します。**18 の Strategy agents** にはそれぞれ対象市場、売買条件、リスク管理ルールがあります。現物の模擬取引では、トレンド、ブレイクアウト、押し目と現金保有を比較します。**Living Brain** から次の担当が過去の計画や教訓を取り出し、記録の出所を確かめられます。損益の理由を説明するとき、モデルは検証済みの取引記録を読み、回答には記録 ID と入力のハッシュが付きます。

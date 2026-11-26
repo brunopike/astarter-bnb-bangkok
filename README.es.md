@@ -8,6 +8,10 @@ Astarter es un sistema operativo de trading con IA. Antes de que abra la siguien
 
 [Abrir Deep Brain](https://dapp.ipfund.art/?page=brain&lang=es) · [Verificar en local](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
+**Guías técnicas en inglés**
+
+[36 agentes y la CLI](AI-AGENTS-AND-CLI/README.md) · [Binance Agent OS y su billetera](BINANCE-AGENT-OS/README.md) · [Living Brain de ChatAndBuild](CHATANDBUILD-LIVING-BRAIN/README.md) · [BNB Chain y RWA](BNB-CHAIN-RWA/README.md) · [CoinMarketCap × Atlas](COINMARKETCAP-ATLAS/README.md) · [Plan de créditos de AWS](AWS-CREDITS-PLAN/README.md)
+
 ## Cómo investigan los agentes un activo del mundo real (RWA)
 
 Los **18 Team agents** se reparten la investigación. A05 examina la liquidez, A10 busca indicios que contradigan la tesis y A15 revisa el capital en riesgo. Los **18 Strategy agents** definen el mercado y las reglas de entrada, salida y riesgo de cada estrategia. El motor de simulación al contado compara tendencia, ruptura y retroceso con mantener efectivo. Con **Living Brain**, otro agente puede recuperar un plan o una lección y rastrear el origen de un registro. Para explicar un resultado, el modelo lee el registro verificado. La respuesta conserva el identificador del registro y el hash de la entrada.

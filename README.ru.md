@@ -8,6 +8,10 @@ Astarter — торговая операционная система с ИИ. �
 
 [Открыть Deep Brain](https://dapp.ipfund.art/?page=brain&lang=ru) · [Проверить локально](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
+**Технические материалы на английском**
+
+[36 агентов и CLI](AI-AGENTS-AND-CLI/README.md) · [Binance Agent OS и кошелёк](BINANCE-AGENT-OS/README.md) · [Living Brain от ChatAndBuild](CHATANDBUILD-LIVING-BRAIN/README.md) · [BNB Chain и RWA](BNB-CHAIN-RWA/README.md) · [CoinMarketCap × Atlas](COINMARKETCAP-ATLAS/README.md) · [План использования кредитов AWS](AWS-CREDITS-PLAN/README.md)
+
 ## Как агенты исследуют токенизированные активы (RWA)
 
 В команде **18 Team agents**. A05 проверяет ликвидность, A10 ищет данные против исходной гипотезы, а A15 оценивает капитал под риском. В каталоге **18 Strategy agents** с правилами выбора рынка, входа, выхода и ограничения риска. Движок спотовой симуляции сравнивает стратегии по тренду, на пробой и на откат с сохранением средств в деньгах. Через **Living Brain** следующий агент может найти сохранённый план или вывод и проверить источник записи. При разборе прибыли или убытка модель читает проверенную запись. Вместе с объяснением сохраняются идентификатор записи и хеш входных данных модели.

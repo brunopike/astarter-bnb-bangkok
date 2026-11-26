@@ -8,6 +8,10 @@ Astarter 是一个 AI 交易操作系统。下一个 UTC 交易日开盘前，�
 
 [打开 Deep Brain](https://dapp.ipfund.art/?page=brain&lang=zh) · [在本地验证](src/deep-brain) · [BNB Bangkok 黑客松](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
+**技术文档（英文）**
+
+[36 个 Agent 与 CLI](AI-AGENTS-AND-CLI/README.md) · [币安 Agent OS 与钱包](BINANCE-AGENT-OS/README.md) · [ChatAndBuild 的 Living Brain](CHATANDBUILD-LIVING-BRAIN/README.md) · [BNB Chain 与 RWA](BNB-CHAIN-RWA/README.md) · [CoinMarketCap × Atlas](COINMARKETCAP-ATLAS/README.md) · [AWS 额度使用计划](AWS-CREDITS-PLAN/README.md)
+
 ## Agent 如何研究一项 RWA
 
 **18 个 Team agents** 分工审查证据。A05 检查流动性，A10 寻找反证，A15 复核资金风险。**18 个 Strategy agents** 分别定义策略适用的市场、入场、退出和风控规则。当前现货模拟引擎实际比较趋势、突破、回调和持现。借助 **Living Brain**，下一位 Agent 可以找回已保存的计划或教训，并沿回执追到原始记录。需要解释盈亏时，模型读取已核验的回执，解读结果附上回执 ID 和模型输入的哈希。

@@ -8,6 +8,10 @@ Astarter is an AI Trading OS. Before the next UTC session opens, its spot paper 
 
 [Open Deep Brain](https://dapp.ipfund.art/?page=brain&lang=en) · [Run the proof locally](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
+**Technical guides**
+
+[36 agents & CLI](AI-AGENTS-AND-CLI/README.md) · [Binance Agent OS & wallet](BINANCE-AGENT-OS/README.md) · [ChatAndBuild’s Living Brain](CHATANDBUILD-LIVING-BRAIN/README.md) · [BNB Chain & RWA](BNB-CHAIN-RWA/README.md) · [CoinMarketCap × Atlas](COINMARKETCAP-ATLAS/README.md) · [AWS credits plan](AWS-CREDITS-PLAN/README.md)
+
 ## How the agents research an RWA
 
 The **18 Team agents** divide the research. A05 checks liquidity, A10 looks for evidence against a thesis, and A15 reviews capital at risk. The **18 Strategy agents** define the market, entry, exit and risk rules for individual strategies. The spot paper engine currently evaluates trend, breakout and pullback against cash. **Living Brain** lets a later agent retrieve a saved plan or lesson and trace a receipt back to its source. When asked to explain an outcome, the model receives the verified receipt. Its response records the receipt ID and the hash of the model input.
