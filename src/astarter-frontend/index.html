@@ -84,7 +84,7 @@ to{transform:translateY(calc((var(--i) - 3) * 15px)) rotate(calc((var(--i) - 3) 
  const fail=()=>{if(!complete){clearTimeout(wait);show();label.textContent=words[2];retry.hidden=false;root.classList.add('attention');}};
  const wait=setTimeout(()=>{label.textContent=words[1];retry.hidden=false;root.classList.add('attention');},15000);
  window.addEventListener('error',fail);
- document.querySelector('script[src^="/app.js"]').addEventListener('error',fail);
+ document.querySelector('script[type="module"][src$="/app.js"],script[type="module"][src*="/app.js?"]')?.addEventListener('error',fail);
  retry.addEventListener('click',()=>location.reload());
  window.__appPreload={fail,done({immediate=false}={}){
   if(complete)return;complete=true;clearTimeout(intro);clearTimeout(wait);window.removeEventListener('error',fail);
