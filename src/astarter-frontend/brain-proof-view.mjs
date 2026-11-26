@@ -195,19 +195,19 @@ export function mountProofView(host,replayHost,learningHost,en){
   const reason=id=>reasons[id]?.[en?1:0]??residual(id);
   const q=selector=>host.querySelector(selector)??replayHost.querySelector(selector);
   host.innerHTML=`
-    <header class="bp-heading"><h2 id="br-proof-title">${t('决策依据','Decision proof')}</h2>
+    <header class="bp-heading"><h2 id="br-proof-title">${t('决策依据','Decision Proof')}</h2>
       <div class="bp-controls"><label>${t('市场','Market')}<select data-market data-native-select></select></label></div>
     </header>
     <div class="bp-panel bp-current" data-current>
       <div class="bp-state" data-current-state role="status"></div><div data-current-result hidden></div>
     </div>`;
   replayHost.innerHTML=`
-    <header class="br-layer-head"><div class="br-layer-title"><h2 id="br-backtest-title">${t('回测复盘','Backtest review')}</h2></div>
+    <header class="br-layer-head"><div class="br-layer-title"><h2 id="br-backtest-title">${t('回测复盘','Backtest Review')}</h2></div>
       <div class="bp-controls"><button type="button" class="ft-launch" data-open-fill aria-expanded="false" aria-controls="bp-fill-tour">${uiGlyph('play')}${t('看一次模拟成交','Watch a paper trade')}</button><label><span class="bp-sr">${t('市场','Market')}</span><select data-replay-market data-native-select></select></label>
         <label><span class="bp-sr">${t('回测窗口','Window')}</span><select data-window data-native-select></select></label></div>
     </header>
     <section class="bp-panel ft-tour" id="bp-fill-tour" data-fill-tour hidden>
-      <header class="ft-head"><div><span class="bp-market-name" data-fill-period></span><h3>${t('模拟成交回放','Paper trade replay')}</h3></div>
+      <header class="ft-head"><div><span class="bp-market-name" data-fill-period></span><h3>${t('模拟成交回放','Paper Trade Replay')}</h3></div>
         <button type="button" class="bp-refresh" data-close-fill>← ${t('关闭成交回放','Close trade replay')}</button></header>
       <div class="bp-state" data-fill-status role="status"></div><div data-fill-body></div>
     </section>
@@ -220,7 +220,7 @@ export function mountProofView(host,replayHost,learningHost,en){
           <div class="bp-axis" data-period></div>
         </figure><dl class="bp-metrics" data-metrics></dl></div>
         <div class="bp-ledger">
-          <header class="bp-ledger-head"><h3>${t('决策回放','Decision replay')}</h3><div>
+          <header class="bp-ledger-head"><h3>${t('决策回放','Decision Replay')}</h3><div>
             <label class="bp-day"><span class="bp-sr">${t('选择执行日 (UTC)','Select execution day (UTC)')}</span><select data-day data-native-select></select></label>
             <button type="button" data-prev aria-label="${t('前一条决策','Previous decision')}" title="${t('前一条决策','Previous decision')}">‹</button>
             <button type="button" data-next-day aria-label="${t('后一条决策','Next decision')}" title="${t('后一条决策','Next decision')}">›</button>
@@ -231,7 +231,7 @@ export function mountProofView(host,replayHost,learningHost,en){
           <div class="bp-tools-nav">${[
             ['method','filter',t('成本与口径','Method & costs')],
             ['cohort','columns',t('市场对照','Compare markets')],
-            ['forward','history',t('事前登记','Forward record')]
+            ['forward','history',t('事前登记','Forward Record')]
           ].map(([key,icon,label])=>`<button type="button" data-review-tool="${key}" aria-controls="bp-tool-${key}" aria-expanded="false">${uiGlyph(icon)}${label}</button>`).join('')}</div>
           <div id="bp-tool-method" data-method hidden></div>
           <div id="bp-tool-cohort" data-cohort-body hidden></div>
@@ -239,7 +239,7 @@ export function mountProofView(host,replayHost,learningHost,en){
         </div>
       </div>
     </div>`;
-  learningHost.innerHTML=`<header class="br-layer-head"><div class="br-layer-title"><h2 id="br-learning-title">${t('Agent 自我学习','Agent learning')}</h2></div>
+  learningHost.innerHTML=`<header class="br-layer-head"><div class="br-layer-title"><h2 id="br-learning-title">${t('Agent 自我学习','Agent Learning')}</h2></div>
     <div class="bl-controls"><span class="bl-period" data-learning-period></span><button class="bl-replay" type="button" hidden
       aria-label="${t('重播学习过程','Replay learning sequence')}" title="${t('重播学习过程','Replay learning sequence')}">${uiGlyph('play')}</button></div></header>
     <div class="bl-body" data-learning-body aria-busy="false"></div>`;
@@ -408,7 +408,7 @@ export function mountProofView(host,replayHost,learningHost,en){
   function renderForward(forward,forwardError,quote){
     const output=q('[data-forward]');
     if(!forward){
-      output.innerHTML=`<div class="bp-forward"><h3>${t('事前登记','Forward record')}</h3><span>${forwardError?t('事前记录暂时无法读取','Forward record unavailable'):t('该市场暂无登记','No registration for this market')}</span></div>`;
+      output.innerHTML=`<div class="bp-forward"><h3>${t('事前登记','Forward Record')}</h3><span>${forwardError?t('事前记录暂时无法读取','Forward record unavailable'):t('该市场暂无登记','No registration for this market')}</span></div>`;
       return;
     }
     const prior=Array.isArray(forward.recent)?forward.recent:[];
@@ -417,7 +417,7 @@ export function mountProofView(host,replayHost,learningHost,en){
         <th scope="row">${sourceLink(endpoint({forward:1,asset:run.asset.key,date:row.date}),row.date)}</th>
         <td>${e(name(row.selected))}</td><td>${e(row.status==='settled'?reason(row.action)+' · '+amount(row.netPnl,forward.quote??quote):reason(row.status))}</td>
       </tr>`).join('')}</tbody></table></details>`:'';
-    output.innerHTML=`<div class="bp-forward"><h3>${t('事前登记','Forward record')}</h3><strong>${e(reason(forward.status))}</strong>
+    output.innerHTML=`<div class="bp-forward"><h3>${t('事前登记','Forward Record')}</h3><strong>${e(reason(forward.status))}</strong>
     <dl class="bp-facts">${fact(t('登记时间','Recorded at'),stamp(forward.recordedAt))}${fact(t('目标开盘','Target open'),stamp(forward.targetOpenAt))}
     ${fact(t('选定策略','Selected strategy'),name(forward.selected))}${fact(t('风控模式','Risk policy'),reason(forward.riskMode))}
     ${fact(t('模拟损益','Simulated P&L'),forward.receipt && Number.isFinite(forward.receipt.netPnl)?amount(forward.receipt.netPnl,forward.quote??quote):reason(forward.status))}</dl>
@@ -823,7 +823,7 @@ export function mountProofView(host,replayHost,learningHost,en){
     function select(i){
       buttons.forEach((btn,n)=>btn.setAttribute('aria-pressed',String(n===i)));
       q('[data-fill-stage]').innerHTML=stages[i];
-      advance.textContent=(steps[i+1]??t('查看 Agent 学习','View Agent learning'))+' →';
+      advance.textContent=(steps[i+1]??t('查看 Agent 学习','View Agent Learning'))+' →';
       advance.onclick=i<2?()=>select(i+1):()=>{
         replayRequest?.abort();clearRecord();tourPinned=true;run=index;
         const replayMarket=q('[data-replay-market]');

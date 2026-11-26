@@ -83,7 +83,7 @@ class AstarterBrain extends HTMLElement {
               <span class="br-route-status" data-lens></span>${uiGlyph('chevron')}
             </a>
           </nav>
-          <section class="br-market"><div class="ops-section-heading"><h3>${t('参考行情','Spot reference')}</h3><span>Coinbase · ETH/USD</span></div><div class="br-quote"><strong data-price></strong><span data-gain></span></div>
+          <section class="br-market"><div class="ops-section-heading"><h3>${t('参考行情','Spot Reference')}</h3><span>Coinbase · ETH/USD</span></div><div class="br-quote"><strong data-price></strong><span data-gain></span></div>
           <div class="br-chart"></div><div class="br-axis"><span>${t('数据截止','Data cutoff')}</span><span data-window></span></div></section>
           <a class="br-feedback" href="/paper-replay?lang=${en?'en':'zh'}">${uiGlyph('file')}<b>${t('模拟成交复盘','Paper trade review')}</b><span>BTC/USDT</span>${uiGlyph('chevron')}</a>
           <button type="button" class="br-feedback" data-return>${uiGlyph('history')}<b>${t('复盘回流','Memory return')}</b><span data-feedback></span>${uiGlyph('chevron')}</button>
@@ -292,7 +292,7 @@ class AstarterBrain extends HTMLElement {
       const kind=asset?'asset':'network';
       if(marketSection.dataset.kind!==kind){
         marketSection.dataset.kind=kind;
-        marketSection.innerHTML=`<div class="ops-section-heading"><h3>${t('行情快照','Market snapshot')}</h3><span></span></div>
+        marketSection.innerHTML=`<div class="ops-section-heading"><h3>${t('行情快照','Market Snapshot')}</h3><span></span></div>
           ${asset?`<div class="br-quote"><strong data-price></strong><div class="br-price-trend" hidden><span>7D</span><div data-trend-chart></div></div></div><dl class="ct-quote-table"></dl>`:
           `<table class="br-market-list"><thead><tr><th scope="col">${t('资产','Asset')}</th><th scope="col">${t('价格','Price')}</th><th scope="col">${t('24h 涨跌','24h change')}</th></tr></thead><tbody></tbody></table><p hidden>${t('暂无报价','Quotes unavailable')}</p>`}
           <div class="br-axis"><span>${t('采集时间','Captured')}</span><time></time></div>`;
