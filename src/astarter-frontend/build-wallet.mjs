@@ -5,11 +5,24 @@ import {fileURLToPath} from 'node:url';
 let local={};try{local=parseEnv(await readFile('.env.wallet.local','utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
 const projectId=(process.env.WALLETCONNECT_PROJECT_ID??local.WALLETCONNECT_PROJECT_ID??'').trim();
 if(projectId&&!/^[a-f0-9]{32}$/i.test(projectId))throw Error('WALLETCONNECT_PROJECT_ID must be the 32-character Astarter Reown project ID.');
+function withSignatureView(source){
+ const viewStart='  return /* @__PURE__ */ React20.createElement(Box, { position: "relative" }';
+ const viewEnd='\n}\n\n// src/components/RainbowKitProvider/usePreloadImages.ts';
+ const component=source.indexOf('function SignIn({');
+ const start=source.indexOf(viewStart,component);
+ const end=source.indexOf(viewEnd,start);
+ if(component<0||start<component||end<start||!source.slice(start,end).includes('testId: "auth-message-button"'))
+  throw Error('Check the RainbowKit signature view after upgrading.');
+ const view=fileURLToPath(new URL('./wallet-signature-view.jsx',import.meta.url));
+ // Keep RainbowKit's authentication state, signature handlers, and dialog lifecycle.
+ const render='  return React20.createElement(WalletSignatureView, { address, network: activeChain?.name, status, nonce: state.nonce, errorMessage: state.errorMessage, t: (key)=>i18n2.t(key), onSign: signIn, onNonce: () => { setState(x => ({ ...x, errorMessage: void 0 })); return getNonce(); }, onClose });';
+ return 'import {WalletSignatureView} from '+JSON.stringify(view)+';\n'+source.slice(0,start)+render+source.slice(end);
+}
 // RainbowKit 2.2 puts discovered extensions and recent wallets ahead of configured groups.
 // Apply the preference after discovery so the actual injected connector and keyboard order stay intact.
 const walletPicker={name:'astarter-wallet-picker',setup(builder){
  builder.onLoad({filter:/[\\/]@rainbow-me[\\/]rainbowkit[\\/]dist[\\/]index\.js$/},async({path})=>{
-  const source=await readFile(path,'utf8'),anchor='return walletConnectors;';
+  const source=withSignatureView(await readFile(path,'utf8')),anchor='return walletConnectors;';
   if(source.split(anchor).length!==2)throw Error('Check the RainbowKit wallet ordering hook after upgrading.');
   const localeCalls=/^(\s*)setLocale\((locale|browserLocale)\);$/gm;
   if(source.match(localeCalls)?.length!==2)throw Error('Check the RainbowKit picker locale effect after upgrading.');
