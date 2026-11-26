@@ -176,6 +176,12 @@ export async function readDay(part,signal,request=fetch){
 // Only animate toward a validated archive count. A scope change starts a new series.
 export function archiveCounter(button,format,signal){
   const caption=button.firstElementChild,doc=button.ownerDocument;
+  const touchFeedback=event=>{
+    if(event.pointerType==='touch'&&event.isPrimary)
+      button.toggleAttribute('data-count-pressed',event.type==='pointerdown');
+  };
+  for(const type of ['pointerdown','pointerup','pointercancel','lostpointercapture'])
+    button.addEventListener(type,touchFeedback,{passive:true,signal});
   let frame=0,current=0,target,identity;
   signal.addEventListener('abort',()=>cancelAnimationFrame(frame),{once:true});
   return (total,unit,key)=>{

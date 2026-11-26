@@ -196,6 +196,7 @@ astarter-brain .br-raw-ranges select {max-width:100%;flex:1}
 }
 
 astarter-brain .ct-archive-counts {
+  --ct-count-chain:var(--ct-ice);--ct-count-market:var(--ct-lilac);
   display:flex;flex-wrap:wrap;align-items:baseline;column-gap:clamp(18px,2vw,36px);margin-top:7px;
 }
 astarter-brain .ct-archive-counts button[data-raw-open] {
@@ -207,6 +208,16 @@ astarter-brain .ct-count-value {display:inline-grid;font:inherit}
 astarter-brain .ct-count-value::after,astarter-brain .ct-count-value i {grid-area:1/1}
 astarter-brain .ct-count-value::after {content:attr(data-total);visibility:hidden}
 astarter-brain .ct-count-value i {font:inherit;text-align:end}
+:root[data-theme=light] astarter-brain .ct-archive-counts {--ct-count-chain:#356c80;--ct-count-market:#695686}
+astarter-brain .ct-archive-counts [data-raw-open=heading] {--ct-count-accent:var(--ct-count-chain)}
+astarter-brain .ct-archive-counts [data-raw-open=tradfi] {--ct-count-accent:var(--ct-count-market)}
+astarter-brain .ct-archive-counts button:is(:focus-visible,:active,[data-count-pressed]) .ct-count-value {color:var(--ct-count-accent)}
+@media (hover:hover) {
+  astarter-brain .ct-archive-counts button:hover .ct-count-value {color:var(--ct-count-accent)}
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+  :root:not([data-reduced-motion=true]) astarter-brain .ct-archive-counts .ct-count-value {transition:color 140ms ease-out}
+}
 astarter-brain .ct-archive-counts button>span:last-child {font-size:.7em;color:var(--ct-ice)}
 @media(max-width:900px){
   astarter-brain .ct-archive-counts {flex-direction:column;align-items:start;gap:0;margin-top:10px}
