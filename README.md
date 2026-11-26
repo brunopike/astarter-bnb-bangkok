@@ -1,6 +1,6 @@
-# LensWave · Astarter at BNB Bangkok
+# Astarter at BNB Bangkok
 
-**A fresh price can still lead to a stale decision.** When agents hand off a trade idea for a tokenized stock, a price alone is of little use. The next agent needs its timestamp, the market conditions, and the rule that would invalidate the trade. LensWave is Astarter’s AI Trading OS. Its shared-brain architecture gives agents a common market snapshot and ties each decision to the evidence available at the time.
+**A fresh price can still lead to a stale decision.** When agents hand off a trade idea for a tokenized stock, a price alone is of little use. The next agent needs its timestamp, the market conditions, and the rule that would invalidate the trade. Astarter is an AI Trading OS that gives agents a shared market snapshot and ties each decision to the evidence available at the time.
 
 [Run the local demo](#run-locally) · [Inspect the integrations](#what-you-can-verify) · [Download v0.1.0](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
@@ -14,7 +14,7 @@ The execution layer uses a verified decision in two ways. A **configured strateg
 
 The diagram shows the target workflow for research, strategy generation, and execution.
 
-[![LensWave in three horizontal layers. The pinned snapshot directly informs new strategies. Both execution routes return versioned outcomes to shared memory.](docs/images/shared-brain-flow.drawio.png)](docs/images/shared-brain-flow.drawio.png)
+[![Astarter’s shared-brain architecture in three horizontal layers. The pinned snapshot directly informs new strategies. Both execution routes return versioned outcomes to shared memory.](docs/images/shared-brain-flow.drawio.png)](docs/images/shared-brain-flow.drawio.png)
 
 Living Brain provides persistent memory for cases and plans. The architecture pairs it with an Obsidian-compatible Markdown knowledge base for research notes, rules, and reviews. Agents can use their own working context while handing off source references and open questions. New evidence creates a new snapshot. The original snapshot stays available for replay, and feedback links to the exact strategy and parameter versions that produced the result.
 
@@ -39,7 +39,7 @@ npm ci
 npm start
 ```
 
-Open [LensWave on localhost](http://127.0.0.1:4188/). The public Atlas catalog works without an API key.
+Open [LensWave, Astarter’s trading workspace, on localhost](http://127.0.0.1:4188/). The public Atlas catalog works without an API key.
 
 ```sh
 curl -fsS 'http://127.0.0.1:4188/api/atlas/feeds?symbol=NVDAB'
