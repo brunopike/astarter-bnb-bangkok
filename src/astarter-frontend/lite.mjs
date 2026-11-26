@@ -37,7 +37,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   const styles = ['lite', 'lite-strategy-cards', 'lite-crew'].map((name) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/' + name + '.css';
+    link.href = '/' + name + '.css?v=20261127-lite-header';
     document.head.append(link);
     return link;
   });
