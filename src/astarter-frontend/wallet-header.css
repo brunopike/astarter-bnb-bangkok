@@ -67,3 +67,58 @@ body .topbar .wallet-account-menu :is(.wallet-menu-profile>.header-settings,.wal
 @media(max-width:1200px){body .header-wallet .wallet-login.is-authenticated>svg{display:none}}
 @media(max-width:480px){body .topbar .wallet-account-menu{border-radius:16px}body .topbar .wallet-menu-address strong{font-size:16px}}
 @media(prefers-reduced-motion:reduce){body .header-wallet .wallet-login.is-authenticated>svg{transition:none}}
+
+body .topbar>.header-preferences {display:none}
+@media (max-width:900px) {
+  body>.topbar:has(>.header-preferences) {gap:6px!important;padding-inline:12px!important}
+  body .topbar>.header-preferences {display:block;position:relative;flex:none}
+  body .topbar>.header-settings,
+  body .topbar .wallet-menu-profile {display:none}
+  body .topbar .header-preferences>summary {
+    display:grid;place-items:center;width:44px;height:44px;padding:0;list-style:none;
+    color:var(--b-ink);border:0;border-radius:9px;background:transparent;cursor:pointer;
+  }
+  .header-preferences>summary::-webkit-details-marker {display:none}
+  .header-preferences>summary svg {width:21px;height:21px}
+  body .topbar .header-preferences[open]>summary,
+  body .topbar .header-preferences>summary:hover {background:var(--b-soft)}
+  body .topbar .header-preferences :is(summary,button):focus-visible {outline:2px solid var(--optical-focus);outline-offset:-2px}
+  .header-preferences-panel {
+    position:absolute;inset-inline-end:0;top:calc(100% + 6px);box-sizing:border-box;
+    width:min(296px,calc(100vw - 24px));max-height:calc(100dvh - 78px);overflow:auto;
+    overscroll-behavior:contain;padding:8px;border:1px solid var(--b-line);border-radius:13px;
+    background:var(--b-panel);color:var(--b-ink);box-shadow:0 10px 30px #0003;font:500 14px/1.4 var(--sans);
+  }
+  .header-theme-row {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px}
+  .header-language-row {position:relative;padding:0 6px}
+  .header-language-row>.preference-label {position:absolute;inset-inline-start:6px;top:12px;pointer-events:none}
+  body .topbar .header-preferences .theme-switch {display:flex;gap:2px;padding:2px;background:var(--b-soft);border-radius:9px}
+  body .topbar .header-preferences .theme-switch button,
+  body .topbar .header-preferences .theme-switch button[aria-pressed=true] {
+    display:flex;align-items:center;justify-content:center;gap:5px;width:auto;min-width:44px;min-height:44px;padding:4px 7px;
+    font:500 13px/1.3 var(--sans);color:var(--b-muted);border-radius:7px;
+  }
+  body .topbar .header-preferences .theme-switch button[aria-pressed=true] {background:var(--b-panel);color:var(--b-ink);box-shadow:0 1px 3px #0002}
+  body .topbar .header-preferences .theme-switch button>span {position:static;width:auto;height:auto;clip-path:none;overflow:visible}
+  body .topbar .header-preferences .theme-switch button>svg {display:block;width:15px;height:15px}
+  body .topbar .header-preferences .language-picker {width:100%}
+  body .topbar .header-preferences .language-picker>summary {justify-content:flex-end;width:100%;min-height:44px;padding-inline:8px}
+  body .topbar .header-preferences .language-picker>summary>svg:first-child {display:block}
+  body .topbar .header-preferences .language-options {position:static;width:100%;max-height:none;box-shadow:none;overflow:visible;background:var(--b-soft);border:0}
+  body .topbar .header-preferences .language-options button {min-height:44px}
+  body .topbar .header-profile-link {
+    display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin-top:4px;padding:8px;
+    border:0;border-top:1px solid var(--b-line);background:transparent;color:var(--b-ink);font:inherit;text-align:start;cursor:pointer;
+  }
+  .header-profile-link svg {width:18px;height:18px}
+  .header-profile-link i {margin-inline-start:auto;padding-inline:5px;font:400 20px/1 var(--sans);color:var(--b-muted)}
+  body .topbar:has(>.header-preferences)>.header-wallet {flex:0 1 auto;min-width:44px;margin:0}
+  body .topbar>.header-wallet .wallet-login {width:auto;min-width:44px;max-width:100%;padding:6px 8px;gap:5px}
+  body .topbar>.header-wallet .wallet-login>span {display:block}
+}
+@media (max-width:420px) {
+  body>.topbar:has(>.header-preferences) {gap:4px!important;padding-inline:6px!important}
+  body .topbar:has(>.header-preferences)>.brand {margin-inline-start:0}
+  body>.topbar:has(>.header-preferences)>.product-nav>a[data-page=assistant][aria-current=page] {padding-inline:0}
+  body>.topbar:has(>.header-preferences)>.product-nav>a[data-page=assistant][aria-current=page]>span {display:none}
+}

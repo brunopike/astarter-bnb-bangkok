@@ -1,198 +1,223 @@
 .lite-strategy-deck {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 264px), 1fr));
   align-items: stretch;
-  gap: 14px;
-  container: lite-feed / inline-size;
+  gap: clamp(12px, 1vw, 17px);
 }
 .lite-strategy-deck[hidden] { display: none; }
-.lite-strategy-deck > :only-child {
-  grid-column: 1 / -1;
-  width: min(100%, 640px);
-}
+.lite-strategy-deck > :only-child { max-width: 560px; }
 
 body #product-page[data-layout='unified'] .lite-strategy-deck {
-  & .sig-event.sig-live-observation {
+  & .sig-event.lite-plan-card {
+    --lite-plan-hue: #587bff;
+    --lite-edge: color-mix(in srgb, var(--lite-plan-hue) 80%, var(--b-ink));
     --lite-card-tone: var(--b-muted);
-    --lite-edge: color-mix(in srgb, var(--b-violet) 76%, var(--b-ink));
     --chart-accent: var(--lite-card-tone);
+    --lite-pad: clamp(14px, 1.25vw, 22px);
+    --lite-border-color: color-mix(in srgb, var(--lite-plan-hue) 57%, var(--b-line));
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     position: relative;
-    padding: 16px 18px 12px;
-    transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+    isolation: isolate;
+    min-width: 0;
+    padding: 0;
+    overflow: clip;
+    border: 1px solid transparent;
+    border-radius: 18px;
+    background:
+      radial-gradient(ellipse at 108% -12%, color-mix(in srgb, var(--lite-plan-hue) 27%, var(--b-panel)), var(--b-panel) 72%) padding-box,
+      linear-gradient(135deg, var(--lite-border-color), var(--lite-plan-hue) 38%, var(--b-line) 88%) border-box;
+    color: var(--b-ink);
+    box-shadow: none;
   }
-  & [data-live-direction='up'].sig-live-observation { --lite-card-tone: var(--b-up); }
-  & [data-live-direction='down'].sig-live-observation { --lite-card-tone: var(--b-down); }
-  & .sig-live-observation.selected {
-    border-color: color-mix(in srgb, var(--lite-edge) 40%, var(--b-line));
-    background: color-mix(in srgb, var(--b-accent-ink) 2%, var(--b-panel));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--b-accent-ink) 12%, transparent);
-  }
-  /* Edge lighting adapted from https://21st.dev/@manuarora700/components/glowing-effect (MIT). */
-  & .sig-event.sig-live-observation::after {
+  & .lite-plan-card[data-lite-asset='ETH'] { --lite-plan-hue: #45cf86; }
+  & .lite-plan-card[data-lite-asset='SOL'] { --lite-plan-hue: #e6bd4c; }
+  & .lite-plan-card[data-live-direction='up'] { --lite-card-tone: var(--b-up); }
+  & .lite-plan-card[data-live-direction='down'] { --lite-card-tone: var(--b-down); }
+  & .sig-event.lite-plan-card.selected { --lite-border-color: var(--lite-plan-hue); }
+  /* Pointer-following edge lighting adapted from 21st.dev's Glowing Effect. */
+  & .sig-event.lite-plan-card::after {
     content: '';
     position: absolute;
-    inset: -1px;
-    z-index: 3;
-    pointer-events: none;
+    inset: 0;
     border-radius: inherit;
-    padding: 2px;
-    background: radial-gradient(ellipse 215px 125px at var(--lite-edge-x, 14%) var(--lite-edge-y, 0%),
-      var(--lite-edge), color-mix(in srgb, var(--lite-edge) 79%, transparent) 33%, transparent 100%);
+    z-index: 2;
+    pointer-events: none;
+    padding: 1px;
+    background: radial-gradient(ellipse 200px 125px at var(--lite-edge-x, 80%) var(--lite-edge-y, 0%), var(--lite-edge), transparent);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     opacity: 0;
-    transition: opacity 150ms ease-out;
+    transition: opacity .16s ease;
   }
-  & .sig-event.selected::after { opacity: .88; }
-  & .sig-event:has(:focus-visible)::after { opacity: 1; }
-  & .sig-event:active::after { opacity: 1; }
-  & .sig-event-body { height: 100%; }
-  & .sig-event-body > header {
-    display: grid;
-    grid-template: 'asset state' auto 'title title' auto / minmax(0, 1fr) auto;
+  & .lite-plan-card:is(.selected, :focus-within)::after { opacity: .85; }
+  & .lite-plan-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    padding: var(--lite-pad) var(--lite-pad) 0;
+  }
+  & .lite-plan-state {
+    display: flex;
+    min-height: 18px;
     align-items: center;
-    gap: 13px 8px;
-    margin: 0;
-    padding: 0;
-  }
-  & .sig-event-asset { grid-area: asset; gap: 9px; }
-  & .sig-event-asset > span:has(> b) { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 7px; }
-  & .sig-event-asset b { font-weight: 650; }
-  & .sig-event-asset small { margin: 0; font-size: 11px; }
-  & .sig-live-observation[data-live-direction] .sig-event-title {
-    grid-area: title;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
-    font-size: 18px;
-    line-height: 1.35;
-    font-weight: 550;
+    justify-content: space-between;
     color: var(--b-ink);
+    font-size: 11px;
+    line-height: 1.4;
   }
-  & .sig-card-state {
-    grid-area: state;
+  & .lite-plan-state > span:first-child {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 550;
-    color: var(--lite-card-tone);
-    background: color-mix(in srgb, var(--lite-card-tone) 10%, var(--b-panel));
-  }
-  & .sig-card-state svg { width: 12px; height: 12px; }
-  & [data-live-direction='up'] .sig-card-state svg { transform: rotate(-45deg); }
-  & [data-live-direction='down'] .sig-card-state svg { transform: rotate(45deg); }
-  & .sig-event-asset .sig-current-marker {
-    position: static;
-    display: inline-grid;
-    place-items: center;
-    width: 15px;
-    height: 15px;
-    margin-inline-start: -3px;
-    border-radius: 50%;
-    background: var(--lite-edge);
-    color: var(--b-panel);
-    font: 650 10px/1 var(--sans);
-  }
-  & .sig-live-market {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 12px;
-    margin: 14px 0 13px;
-  }
-  & .sig-stats-quote strong {
-    margin-top: 3px;
-    color: var(--b-ink);
-  }
-  & .sig-live-chart { max-width: 200px; }
-  & .sig-live-chart svg { height: 42px; }
-  & .sig-live-card-metrics {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
-    margin: 0;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--b-ink) 4%, var(--b-panel));
   }
-  & .sig-live-card-metrics > div { display: flex; gap: 2px 7px; align-items: baseline; }
-  & .sig-live-card-metrics dt { font-size: 11px; }
-  & .sig-live-card-metrics dd { font-weight: 550; }
+  & .lite-plan-state > span:first-child::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--lite-plan-hue);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lite-plan-hue) 15%, transparent);
+  }
+  & .lite-plan-state .sig-current-marker {
+    position: static;
+    display: grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--b-ink);
+    background: color-mix(in srgb, var(--lite-plan-hue) 26%, var(--b-panel));
+    font: 600 11px/1 var(--sans);
+  }
+  & .lite-plan-title {
+    margin: 12px 0 10px;
+    color: var(--b-ink);
+    font: 580 clamp(18px, 1.36vw, 23px)/1.24 var(--sans);
+    letter-spacing: -.025em;
+    text-wrap: balance;
+  }
+  & .lite-plan-pairline, & .lite-plan-pair {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  & .lite-plan-pairline { justify-content: space-between; flex-wrap: wrap; }
+  & .lite-plan-pair { color: var(--b-ink); font: 550 14px/1.3 var(--sans); }
+  & .lite-plan-period, & .lite-plan-readings dt, & .lite-plan-rules dt {
+    color: var(--b-muted);
+    font: 400 12px/1.4 var(--sans);
+  }
+  & .lite-plan-quote {
+    display: grid;
+    grid-template-columns: auto minmax(42px, 1fr);
+    gap: 9px;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 13px;
+    border-top: 1px solid color-mix(in srgb, var(--b-ink) 12%, transparent);
+  }
+  & .sig-stats-quote > .dot-number {
+    margin-top: 2px;
+    gap: 0 5px;
+    flex-wrap: nowrap;
+    color: var(--b-ink);
+    font-size: clamp(25px, 2vw, 32px);
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+  & .sig-stats-quote > strong > small { font-size: 11px; }
+  & .sig-live-chart { width: 100%; max-width: 140px; }
+  & .sig-live-chart svg { height: 38px; }
+  & .lite-plan-readings {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px 14px;
+    margin: 6px 0 0;
+    padding: 0;
+  }
+  & .lite-plan-readings > div { display: flex; align-items: baseline; gap: 5px; }
+  & .lite-plan-readings dt, & .lite-plan-readings dd { font-size: 11px; }
+  & .lite-plan-readings dd { margin: 0; color: var(--b-ink); font-variant-numeric: tabular-nums; }
+  & .lite-plan-rules {
+    display: grid;
+    gap: 9px;
+    margin: 15px 0;
+    padding: 0;
+  }
+  & .lite-plan-rules dt { margin-bottom: 2px; }
+  & .lite-plan-rules dd {
+    margin: 0;
+    color: color-mix(in srgb, var(--b-ink) 88%, var(--b-muted));
+    font: 400 13px/1.5 var(--sans);
+    text-wrap: pretty;
+  }
   & .lite-card-source {
     display: flex;
     flex-wrap: wrap;
+    align-items: baseline;
     justify-content: space-between;
-    gap: 2px 6px;
-    margin: auto 0 0;
-    padding: 11px 0 7px;
-    font-size: 11px;
+    gap: 3px 7px;
+    margin-top: auto;
+    padding: 0 0 12px;
+    color: var(--b-muted);
+    font: 400 11px/1.5 var(--sans);
     font-variant-numeric: tabular-nums;
   }
   & .lite-card-source a { color: inherit; text-decoration: none; }
   & .lite-card-source a:hover { text-decoration: underline; text-underline-offset: 3px; }
-  & .sig-event-body > footer {
+  & .lite-plan-actions {
     display: flex;
+    flex-direction: row;
+    align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 8px;
     margin: 0;
-    padding: 8px 0 0;
+    padding: 11px var(--lite-pad);
     border-top: 1px solid var(--b-line);
+    background: var(--b-panel);
   }
-  & .sig-event-body > footer button[data-ls] {
+  & .lite-plan-actions button {
     display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    gap: 7px;
-    min-height: 32px;
+    min-width: 0;
+    min-height: 36px;
+    padding: 6px 10px;
     margin: 0;
-    padding: 4px 0;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    white-space: normal;
-    transition: color .16s ease, background-color .16s ease;
-  }
-  & .sig-event-body > footer button[data-ls='select'] {
-    padding-inline: 10px;
-    background: var(--b-soft);
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--b-line);
+    border-radius: 8px;
+    background: transparent;
     color: var(--b-ink);
+    font: 500 12px/1.3 var(--sans);
+    cursor: pointer;
+    transition: background-color .16s ease, border-color .16s ease;
   }
-  & .selected .sig-event-body > footer button[data-ls='select'] {
-    background: color-mix(in srgb, var(--b-accent-ink) 12%, var(--b-panel));
-    color: var(--b-accent-ink);
-  }
-  & button[data-ls='select'] svg { width: 13px; transition: transform .16s ease; }
-  & :is(button, a):focus-visible { outline: 2px solid var(--b-accent-ink); outline-offset: 2px; }
+  & button[data-ls='select'] { border-color: transparent; background: var(--b-action); color: var(--b-action-fg); }
+  & .lite-plan-actions button:disabled { opacity: .5; cursor: default; }
+  & button[data-ls='select'] svg { width: 13px; height: 13px; transition: transform .16s ease; }
+  & :is(button, a):focus-visible { outline: 2px solid var(--lite-edge); outline-offset: 2px; }
 }
 @media (hover: hover) and (pointer: fine) {
   body #product-page[data-layout='unified'] .lite-strategy-deck {
-    & .sig-event:not(.selected):hover { border-color: color-mix(in srgb, var(--b-muted) 55%, var(--b-line)); }
     & button[data-ls='select']:not(:disabled):hover svg { transform: translateX(2px); }
-    & button[data-ls='evidence']:not(:disabled):hover { text-decoration: underline; text-underline-offset: 3px; }
+    & button[data-ls='evidence']:not(:disabled):hover { background: var(--b-soft); border-color: var(--b-control-line); }
   }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  :root:not([data-reduced-motion='true']) body #product-page[data-layout='unified'] .lite-strategy-deck .sig-event[data-pointer]::after {
+  :root:not([data-reduced-motion='true']) body #product-page[data-layout='unified'] .lite-strategy-deck .lite-plan-card[data-pointer]::after {
     --lite-edge-x: var(--surface-x);
     --lite-edge-y: var(--surface-y);
     opacity: 1;
   }
 }
-@container lite-feed (max-width: 660px) {
-  .lite-strategy-deck > .sig-event { grid-column: 1 / -1; }
-}
-@container lite-feed (max-width: 335px) {
-  body #product-page[data-layout='unified'] .lite-strategy-deck .sig-live-card-metrics > div {
-    display: grid;
-    gap: 2px;
-  }
-}
-@media (max-width: 640px) {
-  body #product-page[data-layout='unified'] .lite-strategy-deck {
-    & .sig-event.sig-live-observation { padding: 14px 14px 10px; }
-    & .sig-event-body > footer button[data-ls] { min-height: 44px; }
-  }
+@media (pointer: coarse), (max-width: 640px) {
+  body #product-page[data-layout='unified'] .lite-strategy-deck .lite-plan-actions button { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .lite-strategy-deck *, .lite-strategy-deck *::before, .lite-strategy-deck *::after { transition: none !important; }

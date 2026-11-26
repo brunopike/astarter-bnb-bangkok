@@ -8,7 +8,7 @@
   --lite-pad: clamp(14px, 1.4vw, 22px);
   box-sizing: border-box;
   width: 100%;
-  max-width: 1344px;
+  max-width: 1480px;
   margin-inline: auto;
   padding: clamp(14px, 2vw, 28px) 0 22px;
   color: var(--b-ink, var(--ink));
@@ -57,7 +57,6 @@
   }
   &
     :is(
-      .lite-command,
       .lite-command-group,
       .market-tools,
       .order-instrument,
@@ -75,7 +74,7 @@
     display: grid;
     align-items: start;
     gap: 16px;
-    grid-template-columns: minmax(0, 1fr) clamp(292px, 23.2vw, 350px);
+    grid-template-columns: minmax(0, 1fr) clamp(285px, 23vw, 330px);
   }
   & .order-dock {
     min-width: 0;
@@ -85,21 +84,83 @@
   }
   & #lite-ticket {
     min-width: 0;
+    container: lite-ticket / inline-size;
   }
   & .lite-command {
     position: relative;
     z-index: 3;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-    min-height: 38px;
+    display: grid;
+    grid-template-columns: minmax(max-content, 1fr) minmax(180px, 520px) max-content;
+    gap: clamp(14px, 2vw, 30px);
+    margin-bottom: 18px;
+    min-height: 84px;
   }
   & .lite-command h1 {
     color: var(--b-ink);
-    font-size: clamp(21px, 2vw, 28px);
+    font-size: clamp(24px, 2.25vw, 34px);
     line-height: 1.25;
     font-weight: 550;
     letter-spacing: -0.035em;
+  }
+  & #lite-deck-summary {
+    margin-top: 6px;
+    font: 500 12px/1.4 var(--sans);
+    color: var(--b-muted);
+  }
+  & #lite-deck-summary:empty { display: none; }
+  & #lite-crew { min-width: 0; }
+  & .lite-deck-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding-block: 10px 2px;
+    color: var(--b-muted);
+    font: 500 12px/1.2 var(--mono, monospace);
+  }
+  & .lite-deck-nav button {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 1px solid var(--b-line);
+    border-radius: var(--b-control-radius, 8px);
+    background: var(--b-panel);
+    color: var(--b-ink);
+  }
+  & .lite-deck-nav button:enabled:hover { background: var(--b-soft); }
+  & .lite-deck-nav svg { width: 15px; height: 15px; }
+  & .lite-deck-nav [data-deck-step='-1'] svg { transform: rotate(180deg); }
+  & #lite-strategy-host.lite-strategy-deck {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 12px;
+    scrollbar-width: none;
+  }
+  & #lite-strategy-host::-webkit-scrollbar { display: none; }
+  & #lite-strategy-host > .sig-event {
+    grid-column: auto;
+    min-width: 0;
+    width: auto;
+    scroll-snap-align: start;
+  }
+  &[data-lite-asset='BTC'] { --lite-order-accent: #587bff; }
+  &[data-lite-asset='ETH'] { --lite-order-accent: #45cf86; }
+  &[data-lite-asset='SOL'] { --lite-order-accent: #e6bd4c; }
+  & .dock-title h2 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  & .dock-title h2::before {
+    content: '';
+    width: 3px;
+    height: .95em;
+    background: var(--lite-order-accent, var(--b-line));
+    border-radius: 4px;
   }
   & .lite-empty {
     display: flex;
@@ -725,6 +786,20 @@
     white-space: nowrap;
   }
 }
+@container lite-ticket (max-width: 815px) {
+  .lite-main #lite-strategy-host.lite-strategy-deck {
+    grid-auto-columns: calc((100% - 12px) / 2);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+  }
+}
+@container lite-ticket (max-width: 570px) {
+  .lite-main #lite-strategy-host.lite-strategy-deck { grid-auto-columns: calc(100% - 24px); }
+}
+@container lite-ticket (max-width: 815px) {
+  .lite-main #lite-strategy-host:has(> :only-child) { grid-auto-columns: 100%; }
+}
 @media (max-width: 860px) {
   .lite-main {
     padding: 12px 0 20px;
@@ -743,10 +818,14 @@
     padding-inline: 0;
   }
   .lite-main .lite-command {
-    min-height: 44px;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 0 10px;
+    min-height: auto;
     padding: 0;
     margin-bottom: 8px;
   }
+  .lite-main .lite-command-group { grid-column: 2; grid-row: 1; }
+  .lite-main #lite-crew { grid-column: 1 / -1; grid-row: 2; }
   .lite-main .lite-command-group,
   .lite-main .market-tools {
     gap: 3px;

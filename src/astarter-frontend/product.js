@@ -32,7 +32,7 @@ import {captureDataChannel,captureDataTab,readDataTabScroll,interceptNavigation,
 import {enhanceProductCopy,friendlyText,helpContent,bindInfoPopovers} from './product-help.mjs';
 import {intelligenceExperience,intelligenceRows} from './intelligence-experience.mjs';
 import {marketOverview} from './market-observatory.mjs';
-import {createProductShell} from './product-shell.mjs';
+import {createProductShell,mountHeaderPreferences} from './product-shell.mjs';
 import {scopeHeader,ledgerPanel,L,patchExecutionPrices} from './execution-views.mjs';
 import {executionRenderStamp} from './execution-stream.mjs';
 import {createBusinessPages,DOMAINS} from './business-pages.js?v=20261126a';
@@ -89,7 +89,11 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   const compact=item&&item.id!=='workbench'?mobileLabel(item):full;
   return '<span class="header-nav-name">'+esc(full)+'</span>'+(compact!==full?'<span class="header-nav-short">'+esc(compact)+'</span>':'');
  }
- const settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.className='header-settings';settingsButton.setAttribute('data-localized-ui','');settingsButton.setAttribute('aria-label',L('个人中心','Account center'));settingsButton.title=L('个人中心','Account center');settingsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>';settingsButton.onclick=()=>go('profile');document.querySelector('.topbar').append(settingsButton);if(!isolated)mountWalletEntry(document.querySelector('.topbar'),settingsButton);
+ const settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.className='header-settings';settingsButton.setAttribute('data-localized-ui','');settingsButton.setAttribute('aria-label',L('个人中心','Account center'));settingsButton.title=L('个人中心','Account center');settingsButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>';settingsButton.onclick=()=>go('profile');
+ const header=document.querySelector('.topbar');
+ header.append(settingsButton);
+ if(!isolated)mountWalletEntry(header,settingsButton);
+ const headerMenu=mountHeaderPreferences(header,settingsButton.firstElementChild,settingsButton.onclick);
  const nav=document.createElement('nav');nav.className='product-nav';nav.setAttribute('data-no-translate','');nav.setAttribute('aria-label',L('产品页面','Product navigation'));
  nav.innerHTML=DOMAINS.filter(d=>!['settings','usage'].includes(d.home)).map(d=>{
   const label=d.home==='assistant'?mobileLabel(ASSISTANT_NAV):desktopLabel(d);
@@ -407,7 +411,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   petEnabled=enabled;const stored=save(companionPreference,enabled);closeCompanion();
   const setting=root.querySelector('[data-companion-enabled]');setting?.setAttribute('aria-checked',String(enabled));
   ensureMascot();
-  if(fromMenu){(document.querySelector('.header-wallet .wallet-login.is-authenticated')||settingsButton).focus({preventScroll:true});notify(L('页面助手已关闭，可在设置中重新开启。','Page companion hidden. Turn it back on in Settings.'),{action:()=>go('settings'),actionLabel:L('打开设置','Open settings')});}
+  if(fromMenu){(headerMenu.getClientRects().length?headerMenu:document.querySelector('.header-wallet .wallet-login')||settingsButton).focus({preventScroll:true});notify(L('页面助手已关闭，可在设置中重新开启。','Page companion hidden. Turn it back on in Settings.'),{action:()=>go('settings'),actionLabel:L('打开设置','Open settings')});}
   if(!stored)notify(L('显示偏好已在本页生效，浏览器未能保存。','Applied for this page, but the browser could not save your preference.'),{tone:'error'});
  }
  function companionBrief(){

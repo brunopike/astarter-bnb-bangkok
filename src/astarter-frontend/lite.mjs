@@ -2,6 +2,7 @@ import { mountStrategyCards, strategyForSignal, strategyLabelForId } from './lit
 import { ORDER_MARKETS } from './order-markets.mjs';
 import { createLiteDesk } from './lite-desk-data.mjs';
 import { mountLiteChat } from './lite-chat.mjs';
+import { mountLiteCrew } from './lite-crew.mjs';
 import { uiGlyph } from './product-composition.mjs';
 import { tokenIcon } from './brand-icons.mjs';
 
@@ -33,7 +34,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   const t = (zh, en) => (english ? en : zh);
   const query = new URLSearchParams(location.search);
   const lifetime = new AbortController();
-  const styles = ['lite', 'lite-strategy-cards'].map((name) => {
+  const styles = ['lite', 'lite-strategy-cards', 'lite-crew'].map((name) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = '/' + name + '.css';
@@ -41,15 +42,24 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     return link;
   });
   host.innerHTML = `<div class="lite-main" data-no-translate>
+    <header class="lite-command">
+      <div class="lite-heading">
+        <h1 id="lite-signals-title" tabindex="-1">${t('智选信号', 'Signals')}</h1>
+        <p id="lite-deck-summary"></p>
+      </div>
+      <div id="lite-crew"></div>
+      <div class="lite-command-group">
+        <details class="lite-menu" id="lite-settings-menu"><summary title="${t('信号设置', 'Signal settings')}" aria-label="${t('信号设置', 'Signal settings')}" aria-describedby="lite-feed-label"><span id="lite-feed-label"></span>${uiGlyph('sliders')}</summary><div class="lite-popover"><div id="lite-settings"></div><button id="lite-mode-button" class="lite-text" type="button"></button></div></details>
+      </div>
+    </header>
     <div class="lite-workspace">
       <section id="lite-ticket" aria-labelledby="lite-signals-title">
-        <header class="lite-command">
-          <h1 id="lite-signals-title" tabindex="-1">${t('智选信号', 'Signals')}</h1>
-          <div class="lite-command-group">
-            <details class="lite-menu" id="lite-settings-menu"><summary title="${t('信号设置', 'Signal settings')}" aria-label="${t('信号设置', 'Signal settings')}" aria-describedby="lite-feed-label"><span id="lite-feed-label"></span>${uiGlyph('sliders')}</summary><div class="lite-popover"><div id="lite-settings"></div><button id="lite-mode-button" class="lite-text" type="button"></button></div></details>
-          </div>
-        </header>
         <div id="lite-strategy-host"></div>
+        <nav class="lite-deck-nav" id="lite-deck-nav" hidden aria-label="${t('浏览策略卡', 'Browse strategy cards')}">
+          <button type="button" data-deck-step="-1" aria-controls="lite-strategy-host" aria-label="${t('上一张策略卡', 'Previous strategy card')}">${uiGlyph('chevron')}</button>
+          <span id="lite-deck-range" aria-live="polite" aria-atomic="true"></span>
+          <button type="button" data-deck-step="1" aria-controls="lite-strategy-host" aria-label="${t('下一张策略卡', 'Next strategy card')}">${uiGlyph('chevron')}</button>
+        </nav>
         <div id="lite-empty" class="lite-empty" role="status" hidden></div>
       </section>
       <aside class="order-dock" id="lite-controls" aria-labelledby="lite-controls-title">
@@ -106,7 +116,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       );
       if (known.length) return known;
     } catch {}
-    return ['BTC', 'ETH'];
+    return [...assets];
   }
   let symbols = readSymbols();
   let requestedAsset = query.get('asset')?.toUpperCase();
@@ -207,14 +217,22 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     return Array.from(byAsset.values()).filter((row) => symbols.includes(row.symbol));
   }
   function renderCards() {
-    const available = availableCards();
-    cards.setRows(available, {
+    cards.setRows(availableCards(), {
       selectedId: receipt ? null : current?.id,
       holdings: account?.holdings || [],
       busy
     });
+    el('inspect').hidden = !current || Boolean(receipt);
+  }
+  function updateDeckSummary(visibleSymbols) {
+    const count = visibleSymbols.length;
+    crew.setSymbols(visibleSymbols);
+    el('deck-summary').textContent = count
+      ? t(count + ' 张策略卡 · 1 分钟收盘', count + (count === 1 ? ' strategy card' : ' strategy cards') + ' · 1 min close')
+      : '';
+    scheduleDeckLayout();
     const empty = el('empty');
-    empty.hidden = available.length > 0;
+    empty.hidden = count > 0;
     if (!empty.hidden) {
       const message = loading
         ? t('正在读取信号…', 'Loading signals…')
@@ -223,8 +241,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
           : t('本轮信号已看完。', 'You’ve reviewed all current signals.');
       empty.innerHTML = message + (loading ? '' : ' ' + button('refresh', t('刷新', 'Refresh')));
     }
-    el('ticket').setAttribute('aria-busy', String(loading && !available.length));
-    el('inspect').hidden = !current || Boolean(receipt);
+    el('ticket').setAttribute('aria-busy', String(loading && !count));
   }
   const viewport = host.closest('#product-page');
   function reveal(section, align = 'nearest') {
@@ -239,6 +256,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
   function focusCard() {
     const target =
       el('strategy-host').querySelector('[aria-current="true"] [data-ls="select"]') || el('signals-title');
+    const card = target.closest('[data-lite-asset]');
+    if (card && card.parentElement === rail) bringCardIntoView(card);
     target.focus({ preventScroll: true });
     reveal(target);
   }
@@ -823,8 +842,59 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
         break;
     }
   }
-  const cards = mountStrategyCards(el('strategy-host'), {
+  const crew = mountLiteCrew(el('crew'), { lang, symbols: [] });
+  const rail = el('strategy-host');
+  const deckNav = el('deck-nav');
+  const [previousCard, nextCard] = deckNav.querySelectorAll('button');
+  let layoutFrame = 0;
+  let firstVisible = 0;
+  let initialDeckPosition = true;
+  function bringCardIntoView(card, animate = false) {
+    const reduced = document.documentElement.dataset.reducedMotion === 'true' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    rail.scrollTo({
+      left: rail.scrollLeft + card.getBoundingClientRect().left - rail.getBoundingClientRect().left,
+      behavior: animate && !reduced ? 'smooth' : 'instant'
+    });
+  }
+  function updateDeckLayout() {
+    layoutFrame = 0;
+    const items = [...rail.children];
+    if (initialDeckPosition && items.length && rail.clientWidth) {
+      const selected = items.find((item) => item.dataset.liteAsset === (current || receipt)?.symbol);
+      if (selected) bringCardIntoView(selected);
+      initialDeckPosition = false;
+    }
+    deckNav.hidden = items.length < 2 || rail.scrollWidth - rail.clientWidth < 3;
+    if (deckNav.hidden) return;
+    const box = rail.getBoundingClientRect();
+    const visible = items.filter((item) => {
+      const rect = item.getBoundingClientRect();
+      return Math.min(box.right, rect.right) - Math.max(box.left, rect.left) > rect.width * 0.65;
+    });
+    if (!visible.length) return;
+    firstVisible = items.indexOf(visible[0]);
+    const last = items.indexOf(visible.at(-1)) + 1;
+    const label = (visible.length === 1 ? last : (firstVisible + 1) + '–' + last) + ' / ' + items.length;
+    const range = el('deck-range');
+    if (range.textContent !== label) range.textContent = label;
+    previousCard.disabled = rail.scrollLeft <= 2;
+    nextCard.disabled = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 2;
+  }
+  function scheduleDeckLayout() {
+    if (!layoutFrame) layoutFrame = requestAnimationFrame(updateDeckLayout);
+  }
+  rail.addEventListener('scroll', scheduleDeckLayout, { passive: true, signal: lifetime.signal });
+  const railObserver = new ResizeObserver(scheduleDeckLayout);
+  railObserver.observe(rail);
+  deckNav.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-deck-step]');
+    if (!button || button.disabled) return;
+    const target = rail.children[firstVisible + Number(button.dataset.deckStep)];
+    if (target) bringCardIntoView(target, true);
+  }, { signal: lifetime.signal });
+  const cards = mountStrategyCards(rail, {
     lang,
+    onRendered: updateDeckSummary,
     onSelect: openTicket,
     onEvidence(row) {
       if (!selectCard(row)) return;
@@ -904,6 +974,9 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       request?.abort();
       request = null;
       chat?.destroy();
+      railObserver.disconnect();
+      cancelAnimationFrame(layoutFrame);
+      crew.destroy();
       cards.destroy();
       for (const style of styles) style.remove();
       if (host.contains(view)) view.remove();
