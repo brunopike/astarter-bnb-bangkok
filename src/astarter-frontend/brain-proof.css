@@ -364,3 +364,47 @@ astarter-brain .br-learning {--layer-color:var(--ct-lilac,var(--b-violet))}
   .bp-current-trace>.bp-stage {padding-block:14px}
   #product-page .dp-candles .chart-tools button {min-width:32px;min-height:32px}
 }
+
+.ft-tour {--dp-tone:var(--ct-ice,var(--b-violet))}
+.ft-launch,.ft-tabs button {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 14px;border:1px solid var(--b-line-strong);border-radius:7px;background:var(--b-panel);color:var(--b-ink);font:550 13px/1.35 var(--sans)}
+.ft-launch {background:color-mix(in srgb,var(--ct-ice,var(--b-violet)) 11%,var(--b-panel));border-color:color-mix(in srgb,var(--ct-ice,var(--b-violet)) 48%,var(--b-line))}
+.ft-launch:hover,.ft-tabs button:hover {border-color:var(--ct-ice,var(--b-violet))}
+.ft-launch svg,.ft-tabs svg {width:16px;height:16px}
+.ft-head,.ft-actions,.ft-tabs {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ft-head,.ft-actions,.ft-audit>summary {padding:16px clamp(14px,2vw,28px)}
+.ft-head {border-bottom:1px solid var(--b-line)}
+.ft-head h3,.ft-stage h4 {font:570 clamp(20px,2vw,28px)/1.3 var(--sans);letter-spacing:-.035em}
+.ft-tabs {justify-content:flex-start;padding:12px clamp(14px,2vw,28px);gap:6px}
+.ft-tabs button {background:transparent;color:var(--b-muted);border-color:transparent}
+.ft-tabs i {display:inline-flex}
+.ft-tabs button[aria-pressed=true] {border-color:var(--b-line);background:color-mix(in srgb,var(--ct-ice,var(--b-violet)) 8%,var(--b-panel));color:var(--b-ink)}
+.ft-tabs button[aria-pressed=true] i,.ft-launch svg {color:var(--ct-ice,var(--b-violet))}
+.ft-stage {display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,1fr);gap:clamp(18px,3.5vw,56px);padding:6px clamp(14px,2vw,28px) 20px;min-height:220px;align-items:start}
+.ft-stage>div {min-width:0}
+.ft-stage p,.ft-stage small,.ft-axis,.ft-facts dt,.ft-costs span {color:var(--b-muted);font:400 13px/1.5 var(--sans)}
+.ft-stage p {margin:7px 0 12px}
+.ft-chart {margin:0}
+.ft-chart figcaption,.ft-axis,.ft-facts>div {display:flex;justify-content:space-between;gap:12px}
+.ft-chart figcaption,.ft-costs b,.ft-facts dd {font:540 14px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+.ft-chart svg {display:block;width:100%;height:clamp(100px,12vw,175px);color:var(--ct-ice,var(--b-violet));fill:currentColor}
+.ft-grid,.ft-line {fill:none;vector-effect:non-scaling-stroke}.ft-grid {stroke:var(--b-line)}.ft-line {stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.ft-facts>div,.ft-costs>div {padding:8px 0;border-bottom:1px solid var(--b-line)}
+.ft-facts dd {text-align:right}
+.ft-stage .dp-allocation {margin:10px 0}
+.ft-pnl {font:570 clamp(29px,3vw,44px)/1.35 var(--sans);letter-spacing:-.04em}
+.ft-costs>div {display:grid;align-items:center;grid-template-columns:minmax(72px,auto) 1fr 65px;gap:12px}
+.ft-costs b {text-align:right}
+.ft-costs i {display:block;height:4px;background:var(--b-line)}
+.ft-costs i i {background:var(--b-muted)}
+.ft-actions,.ft-audit {border-top:1px solid var(--b-line)!important}
+.ft-actions .bp-sources {margin:0}
+@media (max-width:640px){
+  .ft-stage {grid-template-columns:minmax(0,1fr);gap:14px;min-height:0}
+  .ft-tabs {display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ft-tabs button {padding-inline:3px;gap:4px}
+  .ft-launch,.ft-tabs button,.ft-head button {min-height:44px}
+  .ft-chart svg {height:100px}
+}
+.ft-guide-line {stroke:var(--b-violet);stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.ft-chart-key {display:flex;align-items:center;gap:6px;color:var(--b-muted);font-size:12px}
+.ft-chart-key::before {content:"";width:18px;border-top:1px dashed var(--b-violet)}

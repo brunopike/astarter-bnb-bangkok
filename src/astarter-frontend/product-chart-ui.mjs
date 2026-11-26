@@ -143,9 +143,18 @@ export function mountCharts(root){
   host.querySelectorAll('[data-chart-action]').forEach(b=>b.onclick=()=>{const a=b.dataset.chartAction;let start=range.start,count=range.count;if(a==='in'||a==='out'){count=Math.round(count*(a==='in'?.66:1.5));start+=Math.round((range.count-count)/2);}else if(a==='fit'){count=full.length;start=0;}else start+=(a==='back'?-1:1)*Math.max(1,Math.round(count/4));range=windowRange(full.length,start,count);selected=null;draw();});
   host.querySelectorAll('[data-range-edge]').forEach(edge=>edge.oninput=()=>{const action=edge.dataset.rangeEdge,view={min:range.start,max:range.start+range.count},next=adjustRange(view,{min:0,max:full.length},Math.min(8,full.length),action,Number(edge.value)-view[action==='start'?'min':'max']);range={start:next.min,count:next.max-next.min};selected=null;draw();});
   slider.oninput=()=>{range=windowRange(full.length,Number(slider.value),range.count);draw();};
-  const observer=new ResizeObserver(()=>{if(Math.abs(canvas.clientWidth-w)>1)draw();});observer.observe(canvas);draw();
+  let resizeFrame=0;
+  const observer=new ResizeObserver(()=>{
+   if(resizeFrame)return;
+   resizeFrame=requestAnimationFrame(()=>{
+    resizeFrame=0;
+    const width=canvas.clientWidth;
+    if(width>0 && Math.abs(Math.max(240,width)-w)>1)draw();
+   });
+  });
+  observer.observe(canvas);draw();
   if(valid)engine=createChartEngine(canvas,{config:c,format:{label:chartLabel,axis:formatChartAxis,value:v=>formatNumber(v,v!==0&&Math.abs(v)<1?Math.min(8,Math.ceil(-Math.log10(Math.abs(v)))+3):2)},onRange(start,count){const next=windowRange(full.length,start,count);if(next.start!==range.start||next.count!==range.count){range=next;selected=null;draw();}},onInspect(index){if(index>=range.start&&index<range.start+range.count)read(index-range.start,true);},onReady:draw});
-  cleanup.push(()=>{observer.disconnect();engine?.dispose();});
+  cleanup.push(()=>{observer.disconnect();if(resizeFrame)cancelAnimationFrame(resizeFrame);engine?.dispose();});
  });const dispose=()=>cleanup.forEach(fn=>fn());dispose.updateDraft=cleanup[0].updateDraft;return dispose;
 }
 export function miniChart(values,color='var(--chart-accent)'){return sparkline(values,{width:150,height:38,color,fill:false});}
