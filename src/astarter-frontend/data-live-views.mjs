@@ -4,8 +4,9 @@ import {pair as L} from './locale.mjs';
 import {canAutoRefresh} from './product-composition.mjs';
 import {CROSS_MARKETS,GOLD_SPOT,validateGoldSpot,validateCrossSnapshot} from './cross-market-data.mjs';
 import {HUB_RESOURCES,normalizeHubResource} from './market-hub-data.mjs';
-import {publicRetryDelay,validatePublicEnvelope} from './public-data-client.mjs';
-import {publicCuratedSocialFeed} from './public-data-views.mjs';
+import {currentPublicEnvelope,publicRetryDelay,validatePublicEnvelope} from './public-data-client.mjs';
+import {publicCuratedSocialFeed,publicRecentSocialFilters} from './public-data-views.mjs';
+import {DIRECT_SOCIAL_REFRESH_MS,DIRECT_SOCIAL_VALID_MS,RECENT_SOCIAL_SCOPE,socialFiltersFromLocation} from './public-social-scope.mjs';
 import {CHAIN_METRICS,CHAIN_INSIGHT_MAX_AGE,DERIVATIVE_VIEWS,DERIVATIVE_SYMBOLS,validateChainInsight,validateDerivativeBody} from './public-market-extended.mjs';
 import {PUBLIC_LIGHTNING_SOURCE,validateLightningStatistics} from './public-lightning.mjs';
 import {publicAccumulationView} from './public-accumulation-view.mjs';
@@ -127,7 +128,8 @@ export function liveDataRoute(page,search){
    return make('traders',validAddress.test(address)?'traders':null,{address},30_000,5*MINUTE);
   }
   if(['rank','排行榜','发现交易员','交易员排行'].includes(view))return make('traders','traders',{},15*MINUTE,60*MINUTE);
-  return make('social','social',{selection_version:0,limit:50},2*MINUTE,60*MINUTE);
+  const featured=p.get('social_feed')==='featured';
+  return make('social','social',{selection_version:0,limit:50,feed:featured?'featured':'recent',...(featured?{}:socialFiltersFromLocation(p))},DIRECT_SOCIAL_REFRESH_MS,60*MINUTE);
  }
  return null;
 }
@@ -136,9 +138,11 @@ export function validateLiveDataResponse(response,route,now=Date.now()){
  const {kind,resource,query}=route;
  if(kind==='social'){
   const body=validatePublicEnvelope(response,'social',query);
-  if(body.mode!=='live_readonly'||body.coverage.scope!=='LUNARCRUSH_KOL_TOPICS'||body.quality==='unavailable'||!Number.isSafeInteger(body.as_of_ms)||body.as_of_ms<=0||body.as_of_ms>now+60_000)throw Error('INVALID_DATA');
-  if(body.as_of_ms!==body.coverage.observed_at_ms||!body.sources.some(source=>source.provider_id==='lunarcrush-v4'&&source.status==='OK'))throw Error('INVALID_DATA');
-  return {body,receivedAt:body.as_of_ms,asOf:body.as_of_ms,validUntil:body.as_of_ms+route.stale};
+  const direct=body.coverage.scope===RECENT_SOCIAL_SCOPE;
+  if(body.mode!=='live_readonly'||!['LUNARCRUSH_KOL_TOPICS','LUNARCRUSH_TOPICS',RECENT_SOCIAL_SCOPE].includes(body.coverage.scope)||body.quality==='unavailable'||!Number.isSafeInteger(body.as_of_ms)||body.as_of_ms<=0||body.as_of_ms>now+60_000)throw Error('INVALID_DATA');
+  if(body.as_of_ms!==body.coverage.observed_at_ms||!body.sources.some(source=>source.status==='OK'&&(direct||source.provider_id==='lunarcrush-v4')))throw Error('INVALID_DATA');
+  const fast=direct&&body.sources.some(source=>source.provider_id!=='lunarcrush-v4'&&source.status==='OK');
+  return {body,receivedAt:body.as_of_ms,asOf:body.as_of_ms,validUntil:body.as_of_ms+(fast?DIRECT_SOCIAL_VALID_MS:route.stale)};
  }
  if(response?.schema!=='public-market-relay-v1'||response.resource!==resource||!Number.isSafeInteger(response.receivedAt)||response.receivedAt<=0||response.receivedAt>now+60_000)throw Error('INVALID_DATA');
  const {body,receivedAt}=response;
@@ -708,8 +712,11 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   ]);
  }
  function social(s){
-  const d=s.receipt?.body,title=L(...titles.social);
-  return socialTabs('social')+(d?publicCuratedSocialFeed(d,title):section(title,empty(pending(s)),sourceLink('LunarCrush','https://lunarcrush.com')));
+  const d=currentPublicEnvelope(s.receipt?.body,now(),!!s.error||offline()),title=L(...titles.social);
+  const featured=s.route.query.feed==='featured',feeds=nav(L('动态筛选','Feed selection'),[tab(L('最近动态','Recent posts'),'social',{},!featured),tab(L('精选作者','Featured creators'),'social',{social_feed:'featured'},featured)]);
+  const filters=featured?'':publicRecentSocialFilters(s.route.query,'data-dc-route-select');
+  const toolbar=`<div class="pd-social-toolbar">${socialTabs('social')}${feeds}${filters}</div>`;
+  return toolbar+(d?publicCuratedSocialFeed(d,title):section(title,empty(pending(s)),featured?sourceLink('LunarCrush','https://lunarcrush.com'):''));
  }
  const performanceWindows={day:['日','Day'],week:['周','Week'],month:['月','Month'],allTime:['全部','All time']};
  function traders(s){

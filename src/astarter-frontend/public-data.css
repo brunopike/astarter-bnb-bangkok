@@ -40,6 +40,17 @@
 .pd-kol-heading details:not([open]){min-width:max-content}
 
 /* Give the original posts reading space and keep the market-wide figures together. */
+.pd-social-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.dc-root .pd-social-toolbar .dc-section-nav,.pd-social-toolbar .pd-feed-tabs{margin:0!important}
+.pd-social-filters{display:flex;align-items:center;gap:8px;margin-inline-start:auto}
+.pd-social-filters label{display:block;min-width:0}
+.pd-social-filters :is(select,.liquid-native-host){width:8rem}
+.pd-social-filters select{min-height:40px;max-width:100%;border:1px solid var(--line);border-radius:8px;padding:0 12px;background:var(--surface);color:var(--text);font:500 13px var(--sans)}
+@media(max-width:700px){
+ .pd-social-toolbar{gap:8px}
+ .pd-social-filters{width:100%;margin:2px 0 0}
+ .pd-social-filters select{min-height:44px}
+}
 .pd-social-layout {
  display:grid;
  grid-template-columns:minmax(0,1fr) minmax(17rem,22rem);
@@ -138,3 +149,5 @@
   display:inline-flex;align-items:center;justify-content:flex-end;min-height:44px;min-width:44px;margin-block:-8px;
  }
 }
+/* The feed switch uses pressed buttons; preserve the site's existing active-tab surface. */
+.pd-feed-tabs button[aria-pressed=true]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px #0002}

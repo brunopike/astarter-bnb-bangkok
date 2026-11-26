@@ -139,7 +139,7 @@ function dexAssets(body, receivedAt, {requested=null, term=null, includeQuotes=f
 }
 
 export const brainCatalog = Object.freeze(snapshot.sources.flatMap(source=>{
-  if(source.provider==='CoinGecko')return normalizeHubResource('assets',source.rows,Date.parse(source.receivedAt)).data.map(a=>coinAsset(a,source.receivedAt));
+  if(source.provider==='CoinGecko')return normalizeHubResource('assets',source.rows,Date.parse(source.receivedAt),'coingecko').data.map(a=>coinAsset(a,source.receivedAt));
   return dexAssets(source.rows,source.receivedAt);
 }).filter(Boolean).map(Object.freeze));
 

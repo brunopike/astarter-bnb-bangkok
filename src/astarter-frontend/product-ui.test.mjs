@@ -40,6 +40,24 @@ test('pages without section navigation keep their heading and bound actions afte
   }
  }finally{if(previous)Object.defineProperty(globalThis,'document',previous);else delete globalThis.document;}
 });
+test('data receipts paint under a closed data filter and wait during an open menu or a moving selection',async t=>{
+ const {canAutoRefresh}=await import('./product-composition.mjs');
+ const original=globalThis.document; t.after(()=>{if(original)globalThis.document=original;else delete globalThis.document;});
+ let floating=false,gliding=false,filter='data-dc-route-select',native=false;
+ const host={querySelector:selector=>filter&&selector.includes('['+filter+']')?{}:null};
+ const activeElement={get tagName(){return native?'SELECT':'BUTTON';},matches:selector=>native?selector.includes('select['+filter+']')||selector.split(',').includes('select'):selector.includes('.lq-select__trigger'),closest:()=>host};
+ globalThis.document={activeElement,querySelector:()=>floating?{}:null};
+ const root={querySelector:selector=>gliding&&selector.includes('.layout-tab-glide')?{}:null,querySelectorAll:()=>[],contains:()=>true};
+ assert.equal(canAutoRefresh(root),true);
+ filter='data-pd-social-filter';
+ assert.equal(canAutoRefresh(root),true,'receipts can render with focus on the saved news social filter');
+ floating=true;assert.equal(canAutoRefresh(root),false);
+ floating=false;gliding=true;assert.equal(canAutoRefresh(root),false);
+ gliding=false;native=true;
+ assert.equal(canAutoRefresh(root),true,'the native social filter can receive results while focused');
+ native=false;filter='data-account-choice';
+ assert.equal(canAutoRefresh(root),false,'other focused forms retain their existing refresh protection');
+});
 test('data refresh controls preserve owner bindings, busy state and the selected shared interval',async()=>{
  const {dataRefreshControls}=await import('./product-composition.mjs');
  for(const scope of ['dc','hub','pd']){

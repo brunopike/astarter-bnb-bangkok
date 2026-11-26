@@ -1,5 +1,10 @@
 // Public research reads only. Never imports the simulation, account or credit stores.
 import {approvedTokenImageURL,registerTokenMetadata} from './brand-icons.mjs';
+import {
+ BLUESKY_DID, BLUESKY_HANDLE, BLUESKY_RKEY, NOSTR_HEX, DIRECT_SOCIAL_VALID_MS,
+ RECENT_SOCIAL_PROVIDERS, RECENT_SOCIAL_SCOPE, SOCIAL_PLATFORMS, SOCIAL_POST_WINDOW_MS, SOCIAL_SYMBOLS,
+ blueskyProfile, nostrPermalink, shortSocialKey
+} from './public-social-scope.mjs';
 export const PUBLIC_SCHEMA='AstarterPublicData.v1';
 export const PUBLIC_PROJECTION='public-data-projection.v1';
 export const PUBLIC_ASSETS=Object.freeze({bitcoin:'BTC',ethereum:'ETH',solana:'SOL'});
@@ -18,7 +23,7 @@ const freeze=v=>{if(v&&typeof v==='object'){Object.values(v).forEach(freeze);Obj
 export function publicQuery(resource,input={}){
  if(!Object.hasOwn(PUBLIC_RESOURCES,resource))throw new Error('INVALID_QUERY');
  const params=input instanceof URLSearchParams?input:new URLSearchParams(Object.entries(input).filter(([,v])=>v!==undefined&&v!==null).map(([k,v])=>[k,Array.isArray(v)?v.join(','):String(v)]));
- const allowed=new Set(['selection_version',...(['markets','assets'].includes(resource)?['asset_ids']:['news','social'].includes(resource)?['limit']:['provider_id','chain_id'])]);
+ const allowed=new Set(['selection_version',...(['markets','assets'].includes(resource)?['asset_ids']:resource==='social'?['limit','feed','symbol','platform']:resource==='news'?['limit']:['provider_id','chain_id'])]);
  for(const key of params.keys())if(!allowed.has(key)||params.getAll(key).length!==1)throw new Error('INVALID_QUERY');
  const integer=(key,fallback,min,max)=>{const s=params.get(key)??String(fallback);if(!/^(0|[1-9]\d*)$/.test(s)||Number(s)<min||Number(s)>max)throw new Error('INVALID_QUERY');return Number(s);};
  const out={selection_version:integer('selection_version',0,0,2147483647)};
@@ -26,7 +31,16 @@ export function publicQuery(resource,input={}){
   const ids=(params.get('asset_ids')??Object.keys(PUBLIC_ASSETS).join(',')).split(',');
   if(!ids.length||new Set(ids).size!==ids.length||ids.some(id=>!Object.hasOwn(PUBLIC_ASSETS,id)))throw new Error('INVALID_QUERY');
   out.asset_ids=ids.join(',');
- }else if(['news','social'].includes(resource))out.limit=integer('limit',20,1,50);
+ }else if(['news','social'].includes(resource)){
+  out.limit=integer('limit',20,1,50);
+  if(resource==='social'&&params.has('feed')){if(!['recent','featured'].includes(params.get('feed')))throw Error('INVALID_QUERY');out.feed=params.get('feed');}
+  if(resource==='social')for(const [key,values] of [['symbol',SOCIAL_SYMBOLS],['platform',SOCIAL_PLATFORMS]]){
+   if(!params.has(key))continue;
+   const value=params.get(key);
+   if(out.feed!=='recent'||!values.includes(value))throw Error('INVALID_QUERY');
+   out[key]=value;
+  }
+ }
  else {if(params.get('provider_id')!=='etherscan')throw new Error('INVALID_QUERY');out.provider_id='etherscan';if(params.has('chain_id')){const chain=params.get('chain_id');if(!Object.hasOwn(PUBLIC_CHAINS,chain))throw new Error('INVALID_QUERY');out.chain_id=chain;}}
  return out;
 }
@@ -39,6 +53,8 @@ const observed=value=>Number.isSafeInteger(value)&&value>0&&value<=8640000000000
 const assetSymbols=Object.values(PUBLIC_ASSETS);
 const symbolList=value=>Array.isArray(value)&&value.length<=3&&new Set(value).size===value.length&&value.every(symbol=>assetSymbols.includes(symbol));
 const rankedCount=(value,min,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&value>=min&&value<=max;
+const recentSymbolList=value=>Array.isArray(value)&&value.length<=SOCIAL_SYMBOLS.length&&
+ new Set(value).size===value.length&&value.every(symbol=>SOCIAL_SYMBOLS.includes(symbol));
 function platformURL(value,platform){
  if(!text(value,2048)||!safePublicURL(value))return false;
  const url=new URL(value);return !url.port&&lunarPlatforms[platform].some(host=>url.hostname===host||url.hostname.endsWith('.'+host));
@@ -52,13 +68,58 @@ function validateLunarCoverage(coverage,requestedAt){
   const scores=topic.sentimentByNetwork;
   check(scores&&typeof scores==='object'&&!Array.isArray(scores)&&Object.entries(scores).every(([network,score])=>(network==='News'||Object.hasOwn(lunarPlatforms,network))&&Number.isFinite(score)&&score>=0&&score<=100));
  }
- const curated=coverage.scope==='LUNARCRUSH_KOL_TOPICS';
- check(Array.isArray(errors)&&errors.length<=(curated?9:6)&&errors.every(error=>error&&assetSymbols.includes(error.symbol)&&(curated?['topic','posts','creators']:['topic','posts']).includes(error.resource)&&text(error.code,80)));
+ const curated=coverage.scope==='LUNARCRUSH_KOL_TOPICS',recent=coverage.feed==='recent';
+ if(recent)check(!curated&&coverage.discovery?.category==='cryptocurrencies'&&['OK','UNAVAILABLE'].includes(coverage.discovery.status));
+ check(Array.isArray(errors)&&errors.length<=(curated?9:recent?7:6)&&errors.every(error=>error&&text(error.code,80)&&(recent&&error.resource==='category-posts'?error.symbol==='CRYPTO':assetSymbols.includes(error.symbol)&&(curated?['topic','posts','creators']:['topic','posts']).includes(error.resource))));
  if(curated){
   const policy=coverage.curation;
   check(policy&&policy.minFollowers===50000&&policy.maxTopicRank===100&&policy.minCreatorInteractions24h===1000&&policy.minDistinctPosts===2&&policy.maxPostsPerAuthor===1);
   check(symbolList(policy.checkedTopics)&&symbolList(policy.failedTopics)&&policy.checkedTopics.length+policy.failedTopics.length===3&&policy.checkedTopics.every(symbol=>!policy.failedTopics.includes(symbol)));
   check(rankedCount(policy.rankedCreators,0)&&rankedCount(policy.qualifiedCreators,0,policy.rankedCreators));
+ }
+}
+
+function validateRecentCoverage(body){
+ const {coverage,sources,requested_at_ms:requested}=body;
+ const at=coverage.observed_at_ms;
+ check(coverage.feed==='recent'&&body.mode==='live_readonly'&&coverage.curation===undefined&&
+  observed(at)&&at===body.as_of_ms&&at<=requested+1000);
+ check(sources.length===RECENT_SOCIAL_PROVIDERS.length&&new Set(sources.map(s=>s?.provider_id)).size===sources.length&&
+  sources.every(source=>source&&RECENT_SOCIAL_PROVIDERS.includes(source.provider_id)&&
+   (source.status==='OK'?observed(source.last_success_at_ms)&&source.last_success_at_ms<=at:
+    source.status==='UNAVAILABLE'&&source.last_success_at_ms===null)));
+ check(sources.some(source=>source.status==='OK'&&source.last_success_at_ms===at));
+ const lunar=sources.find(source=>source.provider_id==='lunarcrush-v4');
+ const bluesky=sources.find(source=>source.provider_id==='bluesky-latest-v1');
+ if(lunar.status==='OK'){
+  check(coverage.lunar&&coverage.lunar.observed_at_ms===lunar.last_success_at_ms);
+  validateLunarCoverage({...coverage.lunar,feed:'recent'},requested);
+ }else check(coverage.lunar===null);
+ check(recentSymbolList(coverage.bluesky_failed_symbols)&&
+   (bluesky.status==='OK'||coverage.bluesky_failed_symbols.length===0));
+}
+
+function validateDirectSocialPost(item,body){
+ const d=item.data,source=body.sources.find(source=>source.status==='OK'&&source.provider_id===item.provider_id);
+ const bluesky=item.provider_id==='bluesky-latest-v1';
+ check(source&&(bluesky||item.provider_id==='nostr-relay-v1')&&d.platform===(bluesky?'Bluesky':'Nostr')&&
+  d.metric_kind==='SOCIAL_ORIGINAL_POST'&&d.kol===undefined&&text(d.text,644)&&Array.from(d.text).length<=321&&
+  recentSymbolList(d.symbols)&&d.symbols.length>0);
+ const at=d.observed_at_ms,published=d.published_at_ms,a=d.author;
+ check(at===source.last_success_at_ms&&observed(published)&&published<=at&&published>at-SOCIAL_POST_WINDOW_MS&&
+  at===item.received_at_ms&&at===item.available_at_ms&&published===item.event_time_ms&&
+  item.valid_until_ms===Math.min(published+SOCIAL_POST_WINDOW_MS,at+DIRECT_SOCIAL_VALID_MS));
+ check(a&&a.bot===null&&text(d.post_id,64)&&text(d.creator_id,190));
+ const id=item.provider_id+':'+d.creator_id+':'+d.post_id;
+ check(item.record_id===id&&item.subject_id===id);
+ if(bluesky){
+  const profile=blueskyProfile(d.creator_id);
+  check(BLUESKY_DID.test(d.creator_id)&&BLUESKY_RKEY.test(d.post_id)&&a.url===profile&&
+   d.url===profile+'/post/'+d.post_id&&text(a.acct,253)&&BLUESKY_HANDLE.test(a.acct)&&a.acct!=='handle.invalid'&&
+   text(a.display_name,300)&&[d.likes,d.reposts,d.replies].every(lunarCount));
+ }else{
+  check(NOSTR_HEX.test(d.creator_id)&&NOSTR_HEX.test(d.post_id)&&a.url===null&&a.display_name===null&&
+   a.acct===shortSocialKey(d.creator_id)&&d.url===nostrPermalink(d.post_id)&&[d.likes,d.reposts,d.replies].every(value=>value===null));
  }
 }
 
@@ -71,9 +132,17 @@ export function validatePublicEnvelope(body,resource,input={}){
  check(body.items.length<=200&&body.sources.length<=50&&body.missing_capabilities.every(v=>text(v,200)));
  if(['news','social'].includes(resource))check(body.items.length<=q.limit);
  const curated=resource==='social'&&body.coverage.scope==='LUNARCRUSH_KOL_TOPICS',lunar=curated||resource==='social'&&body.coverage.scope==='LUNARCRUSH_TOPICS';
+ const recent=resource==='social'&&body.coverage.feed==='recent';
+ const merged=resource==='social'&&body.coverage.scope===RECENT_SOCIAL_SCOPE;
  if(resource==='social'){
-  check(observed(body.requested_at_ms)&&(lunar||body.coverage.scope==='SOCIAL_TAG_SAMPLES')&&body.sources.some(source=>source?.provider_id===(lunar?'lunarcrush-v4':'mastodon-tag-v1')));
-  if(lunar)validateLunarCoverage(body.coverage,body.requested_at_ms);
+  if(q.feed==='recent')check(recent&&(merged||body.coverage.scope==='LUNARCRUSH_TOPICS'&&!q.symbol&&!q.platform));
+  if(q.feed==='featured')check(curated);
+  check(observed(body.requested_at_ms));
+  if(merged){check(q.feed==='recent');validateRecentCoverage(body);}
+  else{
+   check((lunar||body.coverage.scope==='SOCIAL_TAG_SAMPLES')&&body.sources.some(source=>source?.provider_id===(lunar?'lunarcrush-v4':'mastodon-tag-v1')));
+   if(lunar)validateLunarCoverage(body.coverage,body.requested_at_ms);
+  }
  }
  for(const s of body.sources)check(text(s.provider_id,200)&&text(s.status,80)&&time(s.last_success_at_ms)&&(s.reason_code===null||text(s.reason_code,100))&&(s.retry_after_seconds===null||Number.isFinite(s.retry_after_seconds)&&s.retry_after_seconds>=0));
  const seen=new Set(),subjects=new Set(),authors=new Set();
@@ -98,12 +167,14 @@ export function validatePublicEnvelope(body,resource,input={}){
    check(text(d.news_id,300)&&text(d.title,2000)&&typeof d.summary==='string'&&d.summary.length<=30000&&typeof d.url==='string'&&d.url.length<=3000&&Number.isSafeInteger(d.published_at_ms)&&d.published_at_ms>=0);
    check(Array.isArray(d.asset_ids)&&d.asset_ids.every(id=>Object.hasOwn(PUBLIC_ASSETS,id)));
    if(d.symbols!==undefined)check(Array.isArray(d.symbols)&&d.symbols.length<=8&&new Set(d.symbols).size===d.symbols.length&&d.symbols.every(s=>['BTC','ETH','SOL','SPX','NDX','XAU','DXY','US10Y'].includes(s)));
-  }else if(lunar){
+  }else if(lunar||merged&&item.provider_id==='lunarcrush-v4'){
    check(item.provider_id==='lunarcrush-v4'&&d.metric_kind==='LUNARCRUSH_POST'&&text(d.post_id,300)&&Object.hasOwn(lunarPlatforms,d.platform));
    check(text(d.text,1200)&&Array.from(d.text).length<=600&&platformURL(d.url,d.platform));
    check(d.author&&(d.author.acct===null||text(d.author.acct,200))&&(d.author.display_name===null||text(d.author.display_name,300))&&d.author.url===null&&d.author.bot===null);
-   check(Array.isArray(d.symbols)&&d.symbols.length>0&&d.symbols.length<=3&&new Set(d.symbols).size===d.symbols.length&&d.symbols.every(symbol=>Object.values(PUBLIC_ASSETS).includes(symbol))&&lunarCount(d.interactions_24h));
-   check(observed(d.published_at_ms)&&d.observed_at_ms===body.coverage.observed_at_ms&&d.published_at_ms<=d.observed_at_ms+60000&&d.published_at_ms===item.event_time_ms&&d.observed_at_ms===item.received_at_ms&&d.observed_at_ms===item.available_at_ms&&item.valid_until_ms===d.observed_at_ms+3600000);
+   check((merged?recentSymbolList(d.symbols):symbolList(d.symbols))&&(recent||d.symbols.length>0)&&lunarCount(d.interactions_24h));
+   const lunarAt=merged?body.coverage.lunar?.observed_at_ms:body.coverage.observed_at_ms;
+   check(observed(d.published_at_ms)&&observed(lunarAt)&&d.observed_at_ms===lunarAt&&d.published_at_ms<=d.observed_at_ms+60000&&d.published_at_ms===item.event_time_ms&&d.observed_at_ms===item.received_at_ms&&d.observed_at_ms===item.available_at_ms&&item.valid_until_ms===d.observed_at_ms+3600000);
+   if(recent)check(d.kol===undefined&&typeof d.creator_id==='string'&&d.creator_id.startsWith(creatorNetworks[d.platform]+'::')&&/^[a-z]+::[A-Za-z0-9_-]{1,100}$/.test(d.creator_id)&&d.published_at_ms>=d.observed_at_ms-86400000-8000&&rankedCount(d.interactions_24h,0));
    if(curated){
     const kol=d.kol,policy=body.coverage.curation;
     check(kol&&text(kol.creatorId,300)&&rankedCount(kol.followers,policy.minFollowers)&&rankedCount(kol.topicRank,1,policy.maxTopicRank)&&rankedCount(kol.creatorInteractions24h,policy.minCreatorInteractions24h)&&rankedCount(kol.qualifyingPostCount,policy.minDistinctPosts));
@@ -111,6 +182,8 @@ export function validatePublicEnvelope(body,resource,input={}){
     check(kol.creatorId.startsWith(creatorNetworks[d.platform]+'::')&&/^[a-z]+::[A-Za-z0-9_-]{1,100}$/.test(kol.creatorId)&&!authors.has(kol.creatorId));authors.add(kol.creatorId);
     check(d.published_at_ms>=d.observed_at_ms-86400000-8000&&d.interactions_24h>0);
    }
+  }else if(merged){
+   validateDirectSocialPost(item,body);
   }else if(resource==='social'){
    check(item.provider_id==='mastodon-tag-v1'&&d.observed_at_ms<=body.requested_at_ms+1000);
    check(d.metric_kind==='PUBLIC_SOCIAL_POST'&&d.platform==='Mastodon'&&d.instance==='mastodon.social'&&text(d.post_id,300)&&safePublicURL(d.url)!==null&&text(d.text,600)&&typeof d.truncated==='boolean');
@@ -134,6 +207,9 @@ export function validatePublicEnvelope(body,resource,input={}){
  check(body.quality==='unavailable'?body.items.length===0&&body.as_of_ms===null:body.as_of_ms!==null);
  if(!body.items.length&&body.quality!=='unavailable')check(resource==='social'||resource==='news'&&body.coverage.scope==='NEWS_FEED'&&body.sources.some(s=>s.last_success_at_ms!==null)&&(body.quality!=='fresh'||body.sources.some(s=>s.status==='OK')));
  if(body.items.length)check(body.as_of_ms!==null);
+ if(merged)check(body.items.every((item,index)=>item.event_time_ms>body.requested_at_ms-SOCIAL_POST_WINDOW_MS&&
+  (!index||body.items[index-1].event_time_ms>=item.event_time_ms)&&
+  (!q.symbol||item.data.symbols.includes(q.symbol))&&(!q.platform||item.data.platform===q.platform)));
  if(curated)check(body.items.length<=body.coverage.curation.qualifiedCreators);
  return freeze(body);
 }
@@ -141,10 +217,12 @@ export function validatePublicEnvelope(body,resource,input={}){
 // Expiry is evaluated against the fact's validity, never against the refresh time.
 export function currentPublicEnvelope(body,now=Date.now(),readFailed=false){
  if(!body)return null;
- const items=body.items.map(item=>({...item,quality:readFailed||item.valid_until_ms!==null&&(now>item.valid_until_ms||item.provider_id==='lunarcrush-v4'&&now===item.valid_until_ms)?'stale':item.quality}));
+ const items=body.items.map(item=>({...item,quality:readFailed||item.valid_until_ms!==null&&(now>item.valid_until_ms||
+  ['LUNARCRUSH_POST','SOCIAL_ORIGINAL_POST'].includes(item.data?.metric_kind)&&now===item.valid_until_ms)?'stale':item.quality}));
  const stale=items.filter(item=>item.quality==='stale').length;
- const emptyFeed=items.length===0&&['NEWS_FEED','SOCIAL_TAG_SAMPLES'].includes(body.coverage.scope)&&body.as_of_ms!==null&&body.quality!=='unavailable';
- const emptyFeedStale=emptyFeed&&(readFailed||now-body.as_of_ms>(body.coverage.scope==='SOCIAL_TAG_SAMPLES'?300000:60000));
+ const emptyFeed=items.length===0&&['NEWS_FEED','SOCIAL_TAG_SAMPLES',RECENT_SOCIAL_SCOPE].includes(body.coverage.scope)&&body.as_of_ms!==null&&body.quality!=='unavailable';
+ const emptyValid=body.coverage.scope===RECENT_SOCIAL_SCOPE?DIRECT_SOCIAL_VALID_MS:body.coverage.scope==='SOCIAL_TAG_SAMPLES'?300000:60000;
+ const emptyFeedStale=emptyFeed&&(readFailed||now-body.as_of_ms>emptyValid);
  const lunarStale=['LUNARCRUSH_TOPICS','LUNARCRUSH_KOL_TOPICS'].includes(body.coverage.scope)&&body.quality!=='unavailable'&&(readFailed||now>=body.coverage.observed_at_ms+3600000);
  const quality=lunarStale||emptyFeedStale||(readFailed&&items.length>0)||(stale>0&&stale===items.length)?'stale':stale&&body.quality==='fresh'?'partial':body.quality;
  return {...body,items,quality};

@@ -17,7 +17,7 @@ function postMatches(link,id,handle){
 }
 
 export function socialMediaAttributes(item){
- const d=item?.data,handle=d?.author?.acct,creator=/^twitter::([1-9]\d{0,19})$/.exec(d?.kol?.creatorId||'');
+ const d=item?.data,handle=d?.author?.acct,creator=/^twitter::([1-9]\d{0,19})$/.exec(d?.kol?.creatorId||d?.creator_id||'');
  if(item?.provider_id!=='lunarcrush-v4'||d?.metric_kind!=='LUNARCRUSH_POST'||d.platform!=='X'||!creator||
    typeof handle!=='string'||!handlePattern.test(handle)||typeof d.post_id!=='string'||!idPattern.test(d.post_id)||!postMatches(d.url,d.post_id,handle))return '';
  return ` data-social-x-handle="${handle}" data-social-x-creator="${creator[1]}"`;
@@ -69,6 +69,19 @@ async function readMedia(win,identity,signal){
  return focalMedia(JSON.parse(text+decoder.decode()),identity);
 }
 
+// Keep the following post under the reader's eyes if an earlier photo changes height.
+function preserveReadingPosition(root,card,change){
+ const anchor=card.nextElementSibling||card.querySelector('footer');
+ const viewport=root.scrollTop>0&&root.getBoundingClientRect?.();
+ const before=viewport&&anchor?.getBoundingClientRect?.().top;
+ const reading=Number.isFinite(before)&&before<=viewport.top+Math.min(120,viewport.height/4);
+ change();
+ if(reading){
+  const shift=anchor.getBoundingClientRect().top-before;
+  if(Math.abs(shift)>.5)root.scrollTop+=shift;
+ }
+}
+
 function showMedia(root,card,identity,media){
  const doc=card.ownerDocument,avatar=card.querySelector('[data-social-avatar]'),gallery=card.querySelector('[data-social-photos]');
  const current=()=>identity.painted?.media===media&&root.isConnected!==false&&root.contains(card)&&card.dataset.socialPost===identity.id&&
@@ -83,26 +96,36 @@ function showMedia(root,card,identity,media){
  if(avatar&&media.avatar)image(media.avatar,'',img=>avatar.replaceChildren(img));
  if(!gallery)return;
  const anchors=[];
+ const expected=media.photos.filter(photo=>!media.failed.has(photo.url)).length;
  let photosPending=media.photos.length;
- function restoreScroll(){
-  photosPending--;
-  if(photosPending===0&&identity.left&&current())gallery.scrollLeft=identity.left;
+ function photoSettled(){
+  if(--photosPending||!current())return;
+  const count=gallery.childElementCount;
+  if(count&&String(count)!==gallery.dataset.count){
+   preserveReadingPosition(root,card,()=>{gallery.dataset.count=String(count);});
+  }
+  if(identity.left)gallery.scrollLeft=identity.left;
  }
  for(const photo of media.photos)image(photo.url,photo.alt,img=>{
   const link=doc.createElement('a');link.href='https://x.com/'+identity.handle+'/status/'+identity.id+'/photo/'+photo.index;
   link.target='_blank';link.rel='noopener noreferrer';link.referrerPolicy='no-referrer';
   if(!photo.alt)link.setAttribute('aria-label',L('前往来源','View source')+' · '+photo.index);
   link.append(img);
-  gallery.insertBefore(link,anchors.slice(photo.index).find(Boolean)||null);
-  anchors[photo.index-1]=link;gallery.dataset.count=String(gallery.childElementCount);gallery.hidden=false;
- },restoreScroll);
+  preserveReadingPosition(root,card,()=>{
+   gallery.insertBefore(link,anchors.slice(photo.index).find(Boolean)||null);
+   anchors[photo.index-1]=link;
+   gallery.dataset.count=String(expected);gallery.hidden=false;
+  });
+ },photoSettled);
 }
 
-function resetMedia(card,row){
+function resetMedia(root,card,row){
  row.painted=null;
  const avatar=card.querySelector('[data-social-avatar]'),gallery=card.querySelector('[data-social-photos]');
  if(avatar)avatar.replaceChildren(...row.fallback);
- if(gallery){gallery.replaceChildren();gallery.hidden=true;delete gallery.dataset.count;}
+ if(gallery&&!gallery.hidden)preserveReadingPosition(root,card,()=>{
+  gallery.replaceChildren();gallery.hidden=true;delete gallery.dataset.count;
+ });
 }
 
 function observe(root){
@@ -130,7 +153,7 @@ function observe(root){
     row.painted=hit;if(hit.media)showMedia(root,card,row,hit.media);
     continue;
    }
-   if(row.painted)resetMedia(card,row);
+   if(row.painted)resetMedia(root,card,row);
    if(pending.has(row.key)||pending.size>=3||Date.now()<limitedUntil)continue;
    const controller=new AbortController();pending.set(row.key,controller);
    const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(8000)]);
@@ -156,7 +179,7 @@ function observe(root){
     if(!idPattern.test(id)||!idPattern.test(creator)||typeof handle!=='string'||!handlePattern.test(handle))continue;
     const key=[id,handle.toLowerCase(),creator].join(':');keys.add(key);
     const previous=targets.get(card);if(previous?.key===key)continue;
-    if(previous)resetMedia(card,previous);
+    if(previous)resetMedia(root,card,previous);
     const fallback=Array.from(card.querySelector('[data-social-avatar]')?.childNodes||[]);
     const row={id,handle,creator,key,visible:false,painted:null,fallback,left:positions.get(key)||0};
     const gallery=card.querySelector('[data-social-photos]');

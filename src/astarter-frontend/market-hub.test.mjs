@@ -867,3 +867,33 @@ test('switching from a pending hourly request to daily history ignores its late 
  const old=history.refresh(false,'6h');await history.refresh(false,'30d');assert.equal(aborted.aborted,true);
  release();await old;assert.deepEqual(seen,['render']);assert.equal(history.read().endAt,end);assert.equal(history.read().rows[0].values.length,31);
 });
+
+test('the asset detail shows the Atlas USD reference separately from the venue quote',async t=>{
+ const previous={location:globalThis.location,document:globalThis.document,window:globalThis.window,fetch:globalThis.fetch};
+ let hub;
+ t.after(()=>{hub?.client.dispose();for(const [key,value] of Object.entries(previous)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}});
+ globalThis.window=new EventTarget();
+ globalThis.document=Object.assign(new EventTarget(),{hidden:false,documentElement:{dataset:{}}});
+ globalThis.location=new URL('http://localhost/?page=markets&asset=BTC&coin=bitcoin');
+ const now=Date.now(),timestamp=Math.floor(now/1000),calls=[];
+ globalThis.fetch=async url=>{
+  calls.push(url);
+  return Response.json({configured:true,prices:{BTC:{feedId:626,quote:'USD',timestamp,price:109.5}}});
+ };
+ hub=createMarketHub({root:{querySelector:()=>null,querySelectorAll:()=>[]},rerender(){},notify(){},saved:{assets:[]}});
+ const asset=normalizeHubResource('assets',[coin()],NOW).data[0],assets=[asset,{...asset,id:'second-btc'}];
+ hub.client.setActive=()=>{};
+ hub.client.read=key=>({snapshot:{asOf:now,receivedAt:now,data:key==='assets'?assets:[]}});
+ hub.client.quote=()=>({provider:'Binance',price:107,quote:'USDT',asOf:now,change:0});
+ hub.render('markets');
+ await new Promise(resolve=>setImmediate(resolve));
+ let html=hub.render('markets');
+ assert.deepEqual(calls,['/api/atlas/prices']);
+ assert.match(html,/data-hub-price="bitcoin" data-price="107"/);
+ assert.match(html,/data-hub-quote-provider>Binance \/ USDT/);
+ assert.match(html,/data-hub-atlas-value="bitcoin">109\.5\d* USD · [^<]+</);
+ globalThis.location=new URL('http://localhost/?page=markets&asset=BTC&coin=second-btc');
+ html=hub.render('markets');
+ assert.doesNotMatch(html,/data-atlas-feed=|data-hub-atlas-value=/);
+ assert.match(html,/data-hub-price="second-btc" data-price="107"/);
+});

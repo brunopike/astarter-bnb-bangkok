@@ -194,7 +194,7 @@ export function createMarketHubRelay({fetchImpl=globalThis.fetch,now=Date.now,se
      }
     }
     let body,source=request.source??policy.source;
-    if(request.collectSnapshot)({body,source}=await request.collectSnapshot(load));
+    if(request.collectSnapshot)({body,source}=await request.collectSnapshot(load,now));
     else if(request.collect)body=await request.collect(load,now);
     else if(policy.parallel)await Promise.all(sources.map(load));
     else for(const [index,source] of sources.entries())await load(source,index);

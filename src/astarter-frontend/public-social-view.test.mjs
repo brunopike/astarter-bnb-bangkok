@@ -18,8 +18,8 @@ function harness(t,{fetchImpl,search='?page=intelligence'}={}){
  const doc=Object.assign(new EventTarget(),{hidden:false,body:{},activeElement:null,querySelector:()=>null}),win=new EventTarget(),calls=[];doc.activeElement=doc.body;
  const controls=new Map();let html='',at=NOW,page='intelligence',view;
  class Control extends EventTarget{constructor(data={}){super();this.dataset=data;this.value='';this.isConnected=true;this.selectionStart=this.selectionEnd=null;}focus(){doc.activeElement=this;}setSelectionRange(){}matches(){return false;}}
- const root={contains:()=>false,querySelector:s=>controls.get(s)||null,querySelectorAll:s=>s==='[data-pd-feed]'?[...controls.values()].filter(n=>n.dataset.pdFeed):[]};
- function install(){controls.clear();for(const id of ['news','social'])if(html.includes(`data-pd-feed="${id}"`))controls.set(`[data-pd-feed="${id}"]`,new Control({pdFeed:id}));for(const id of ['refresh','limit','search'])controls.set(`[data-pd-${id}]`,new Control());controls.get('[data-pd-limit]').value='20';view.bind();}
+ const root={contains:()=>false,querySelector:s=>controls.get(s)||null,querySelectorAll:s=>s==='[data-pd-feed]'?[...controls.values()].filter(n=>n.dataset.pdFeed):s==='[data-pd-social-feed]'?[...controls.values()].filter(n=>n.dataset.pdSocialFeed):[]};
+ function install(){controls.clear();for(const id of ['news','social'])if(html.includes(`data-pd-feed="${id}"`))controls.set(`[data-pd-feed="${id}"]`,new Control({pdFeed:id}));for(const id of ['recent','featured'])if(html.includes(`data-pd-social-feed="${id}"`))controls.set(`[data-pd-social-feed="${id}"]`,new Control({pdSocialFeed:id}));for(const id of ['refresh','limit','search'])controls.set(`[data-pd-${id}]`,new Control());controls.get('[data-pd-limit]').value='20';view.bind();}
  const location=new URL(search,'https://astarter.imstark.site/'),history={state:null,pushState(state,unused,url){this.state=state;location.href=url;}};
  const globals={document:doc,window:win,location,history,navigator:{onLine:true},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:fn=>{queueMicrotask(fn);return 1;}};
  for(const [k,value]of Object.entries(globals))Object.defineProperty(globalThis,k,{configurable:true,value});
@@ -118,6 +118,19 @@ function curatedEnvelope(selection,{verified=true,withPost=true}={}){
  }else b.items=[];
  if(!verified){b.quality='partial';b.coverage.errors=['BTC','ETH','SOL'].map(symbol=>({symbol,resource:'creators',code:'UNAVAILABLE'}));}return b;
 }
+test('news social mode switches recent and featured with matching typed queries and original selection isolation',async t=>{
+ const h=harness(t,{search:'?page=intelligence&feed=social',fetchImpl:async u=>{
+  const kind=u.searchParams.get('resource'),selection=Number(u.searchParams.get('selection_version'));
+  if(kind!=='social')return json(kind==='sentiment'?sentiment():envelope(kind,selection));
+  if(u.searchParams.get('feed')!=='recent')return json(curatedEnvelope(selection));
+  const body=lunarEnvelope(selection);Object.assign(body.coverage,{feed:'recent',discovery:{category:'cryptocurrencies',status:'OK'}});body.items[0].data.creator_id='twitter::123';body.items[0].data.text='RECENT_MODE_SOURCE_POST';return json(body);
+ }});
+ h.render();await settleUI();assert.match(h.html,/Creator Name/);
+ h.control('[data-pd-social-feed="recent"]').dispatchEvent(new Event('click'));await settleUI();
+ assert.equal(location.searchParams.get('social_feed'),'recent');assert.match(h.html,/RECENT_MODE_SOURCE_POST/);assert.doesNotMatch(h.html,/Creator Name/);
+ assert.equal(h.calls.filter(c=>c.url.searchParams.get('resource')==='social').at(-1).url.searchParams.get('feed'),'recent');
+ h.control('[data-pd-social-feed="featured"]').dispatchEvent(new Event('click'));await settleUI();assert.match(h.html,/Creator Name/);assert.doesNotMatch(h.html,/RECENT_MODE_SOURCE_POST/);
+});
 test('curated posts distinguish topic activity from verified creator reach and topic ranking',async t=>{
  const h=harness(t,{fetchImpl:async u=>{const kind=u.searchParams.get('resource'),sequence=Number(u.searchParams.get('selection_version'));return json(kind==='sentiment'?sentiment():kind==='social'?curatedEnvelope(sequence):envelope(kind,sequence));}});
  h.render();await settleUI();h.click('social');await settleUI();assert.match(h.html,/全量主题热度|Topic-wide activity/);assert.match(h.html,/精选 KOL|Featured creators/);assert.match(h.html,/654,321/);assert.match(h.html,/BTC · #17/);assert.match(h.html,/50,000/);assert.match(h.html,/href="https:\/\/www.youtube.com\/channel\/UC-example"/);assert.match(h.html,/href="https:\/\/www.youtube.com\/watch\?v=clip-id"/);assert.equal(h.view.companionBrief().title,'Creator Name');assert.equal(JSON.parse(h.view.sourceSnapshot().text).items[0].kol.qualifyingPostCount,3);

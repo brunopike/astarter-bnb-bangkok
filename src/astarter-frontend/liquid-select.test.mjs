@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {selectOptions,chooseOption} from './liquid-select-state.mjs';
+import {selectOptions,chooseOption,replacementSelect} from './liquid-select-state.mjs';
 
 function native(options,selectedIndex=0) {
  const events=[],groups=[...new Set(options.map(option=>option.parentElement).filter(group=>group?.tagName==='OPTGROUP'))];
@@ -114,4 +114,14 @@ test('fields of a page rendered by a click are measured and enhanced after its f
  assert.deepEqual(fields.map(page.reads),[1,1]);
  assert.ok(fields.every(select=>select.parentElement.className==='liquid-native-host'&&select.parentElement.children[1].renders===1&&!page.watched(select)));
  stop();
+});
+
+test('when a filter repaints, only its unique matching native control can reclaim focus',()=>{
+ const field=values=>({attributes:Object.entries(values).map(([name,value])=>({name,value})),getAttribute:key=>values[key]??null});
+ const original=field({'data-news-date':'','aria-label':'Date',tabindex:'-1','aria-hidden':'true'});
+ const next=field({'data-news-date':'','aria-label':'Date'}),other=field({'data-news-source':'','aria-label':'Source'});
+ assert.equal(replacementSelect(original,{querySelectorAll:()=>[other,next]}),next);
+ assert.equal(replacementSelect(original,{querySelectorAll:()=>[next,next]}),null);
+ assert.equal(replacementSelect(original,{querySelectorAll:()=>[other]}),null);
+ assert.equal(replacementSelect(field({}),{querySelectorAll:()=>[next]}),null);
 });

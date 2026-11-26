@@ -1,8 +1,8 @@
 import {readFileSync} from 'node:fs';
 import {homedir} from 'node:os';
 import path from 'node:path';
-import {HUB_RESOURCES,HUB_SYMBOLS} from './market-hub-data.mjs';
-import {atlasFeedById,atlasFeedFor} from './atlas-feed-master.mjs';
+import {HUB_RESOURCES,normalizeHubResource} from './market-hub-data.mjs';
+import {ATLAS_OVERVIEW_SYMBOLS,atlasFeedFor,currentAtlasPrice} from './atlas-feed-master.mjs';
 
 const CMC='https://pro-api.coinmarketcap.com';
 let keysLoaded=false;
@@ -24,7 +24,7 @@ export function coinMarketCapKey(){loadMarketKeys();return process.env.COINMARKE
 export function atlasApiKey(){loadMarketKeys();return process.env.ATLAS_API_KEY||'';}
 
 const HUB_SLUGS={
- bitcoin:'bitcoin',ethereum:'ethereum',solana:'solana',bnb:'binancecoin',xrp:'ripple',dogecoin:'dogecoin',cardano:'cardano',avalanche:'avalanche-2',chainlink:'chainlink','polkadot-new':'polkadot',sui:'sui','near-protocol':'near',uniswap:'uniswap',aptos:'aptos',aave:'aave',litecoin:'litecoin','bitcoin-cash':'bitcoin-cash',tron:'tron','shiba-inu':'shiba-inu'
+ bitcoin:'bitcoin',ethereum:'ethereum',solana:'solana',bnb:'binancecoin',xrp:'ripple',dogecoin:'dogecoin',cardano:'cardano',avalanche:'avalanche-2',chainlink:'chainlink','polkadot-new':'polkadot',sui:'sui','near-protocol':'near',uniswap:'uniswap',aptos:'aptos',aave:'aave',litecoin:'litecoin','bitcoin-cash':'bitcoin-cash',tron:'tron','shiba-inu':'shiba-inu',toncoin:'the-open-network'
 };
 const CMC_CATEGORIES=[
  ['6433de7df79a2653906cd680','layer-1','Layer 1'],
@@ -34,7 +34,12 @@ const CMC_CATEGORIES=[
  ['6051a82566fc1b42617d6dc6','meme-token','Meme']
 ];
 const finite=value=>typeof value==='number'&&Number.isFinite(value);
-const unix=value=>{const at=Date.parse(value);return Number.isFinite(at)?Math.floor(at/1000):null;};
+const unix=value=>{
+ if(typeof value==='number'||typeof value==='string'&&/^\d+$/.test(value)){
+  const epoch=Number(value);return Number.isSafeInteger(epoch)&&epoch>0?(epoch>1e12?Math.floor(epoch/1000):epoch):null;
+ }
+ const at=Date.parse(value);return Number.isFinite(at)?Math.floor(at/1000):null;
+};
 
 export function coinMarketCapGlobalBody(raw){
  const data=raw?.data,quote=data?.quote?.USD,updated=unix(data?.last_updated);
@@ -63,7 +68,7 @@ export function coinMarketCapAssetsBody(raw){
    total_volume:finite(quote.volume_24h)?quote.volume_24h:null,
    price_change_percentage_24h:finite(quote.percent_change_24h)?quote.percent_change_24h:null,
    price_change_percentage_7d_in_currency:finite(quote.percent_change_7d)?quote.percent_change_7d:null,
-   market_cap_rank:coin.cmc_rank,last_updated:coin.last_updated||quote.last_updated,sparkline_in_7d:{price:[]}
+   market_cap_rank:coin.cmc_rank,last_updated:quote.last_updated||coin.last_updated,sparkline_in_7d:{price:[]}
   });
  }
  return rows.length?rows:null;
@@ -81,7 +86,7 @@ export function coinMarketCapCategoriesBody(raw){
 }
 export function coinMarketCapSentimentBody(raw){
  if(!Array.isArray(raw?.data))return null;
- const rows=raw.data.map(row=>({timestamp:String(row.timestamp),value:String(row.value)})).filter(row=>/^\d+$/.test(row.timestamp)&&/^\d+$/.test(row.value)&&Number(row.value)<=100);
+ const rows=raw.data.map(row=>({timestamp:String(unix(row?.timestamp)),value:String(row?.value)})).filter(row=>/^\d+$/.test(row.timestamp)&&/^\d+$/.test(row.value)&&Number(row.value)<=100);
  return rows.length?{data:rows}:null;
 }
 
@@ -95,46 +100,84 @@ export function coinMarketCapRequest(resource){
  const route=CMC_ROUTES[resource],key=coinMarketCapKey();
  if(!route||!key)return null;
  const fallback=HUB_RESOURCES[resource];
- return {maxBytes:route.maxBytes,async collectSnapshot(load){
+ return {maxBytes:Math.max(route.maxBytes,fallback.maxBytes),async collectSnapshot(load,now=Date.now){
+  let older;
   try{
-   const raw=await load({url:CMC+route.path,headers:{'X-CMC_PRO_API_KEY':key},maxBytes:route.maxBytes});
+   const raw=await load({url:CMC+route.path,headers:{'X-CMC_PRO_API_KEY':key},maxBytes:route.maxBytes,timeoutMs:4000});
+   const status=raw?.status?.error_code;
+   if(status!==0&&status!=='0')throw Error('CMC_UNAVAILABLE');
    const body=route.map(raw);
-   if(!body)throw Error('INVALID_DATA');
-   return {body,source:'coinmarketcap'};
-  }catch{return {body:await load(fallback.url),source:fallback.source};}
+   const at=now(),sample=normalizeHubResource(resource,body,at,'coinmarketcap');
+   const snapshot={body,source:'coinmarketcap'};
+   if(sample.asOf===null||at-sample.asOf<=fallback.stale)return snapshot;
+   older={snapshot,asOf:sample.asOf};
+  }catch{}
+  try{
+   const body=await load(fallback.url);
+   const sample=normalizeHubResource(resource,body,now(),fallback.source);
+   return older&&(sample.asOf??0)<=older.asOf?older.snapshot:{body,source:fallback.source};
+  }catch(error){
+   if(older)return older.snapshot;
+   throw error;
+  }
  }};
 }
 
-let atlasCache=null,atlasPending=null;
-function atlasTargets(symbol){
- const symbols=symbol?[String(symbol).toUpperCase()]:HUB_SYMBOLS;
- return symbols.map(item=>atlasFeedFor(item)).filter(feed=>feed?.pull);
+const atlasSlots=new Map();
+const ATLAS_BATCH_SIZE=18;
+async function readAtlasBatch(feeds,key,fetchImpl,now){
+ const response=await fetchImpl('https://api.atlasoracle.io/report/v1/price/latest',{
+  method:'POST',headers:{Accept:'application/json','Content-Type':'application/json','X-API-KEY':key},
+  body:JSON.stringify({signed:true,feedIds:feeds.map(feed=>String(feed.id))}),redirect:'error',signal:AbortSignal.timeout(5000)
+ });
+ if(!response.ok){await response.body?.cancel();throw Error('atlas-price-failed');}
+ const raw=await response.json();
+ if(String(raw?.status?.error_code)!=='0'||!Array.isArray(raw?.data?.priceDetails))throw Error('atlas-price-failed');
+ const requested=new Map(feeds.map(feed=>[String(feed.id),feed])),prices={};
+ for(const row of raw.data.priceDetails){
+  const feed=requested.get(String(row?.feedId));
+  if(!feed)continue;
+  const price=typeof row.price==='number'?row.price:
+   typeof row.price==='string'&&/^\d+(?:\.\d+)?$/.test(row.price)?Number(row.price):NaN;
+  const timestamp=typeof row.timestampSeconds==='number'?row.timestampSeconds:
+   typeof row.timestampSeconds==='string'&&/^\d{1,10}$/.test(row.timestampSeconds)?Number(row.timestampSeconds):NaN;
+  const sample=currentAtlasPrice({feedId:feed.id,price,timestamp,quote:feed.quote},feed,now());
+  if(sample&&(!prices[feed.symbol]||sample.timestamp>prices[feed.symbol].timestamp))prices[feed.symbol]=sample;
+ }
+ return prices;
 }
 export async function pullAtlasPrices({fetchImpl=globalThis.fetch,symbol,now=Date.now}={}){
  const key=atlasApiKey();
  if(!key)return {configured:false,prices:{}};
- const feeds=atlasTargets(symbol);
+ const feeds=(symbol?[String(symbol).toUpperCase()]:ATLAS_OVERVIEW_SYMBOLS).map(atlasFeedFor).filter(feed=>feed?.pull);
  if(!feeds.length)return {configured:true,prices:{}};
- if(!symbol&&atlasCache&&now()-atlasCache.at<30000)return {configured:true,prices:atlasCache.prices};
- if(!symbol&&atlasPending)return atlasPending;
- const work=(async()=>{
-  const response=await fetchImpl('https://api.atlasoracle.io/report/v1/price/latest',{
-   method:'POST',headers:{Accept:'application/json','Content-Type':'application/json','X-API-KEY':key},
-   body:JSON.stringify({signed:true,feedIds:feeds.map(feed=>String(feed.id))})
-  });
-  const raw=await response.json();
-  if(!response.ok||String(raw?.status?.error_code)!=='0'||!Array.isArray(raw?.data?.priceDetails))throw Error('atlas-price-failed');
-  const prices={};
-  for(const row of raw.data.priceDetails){
-   const feed=atlasFeedById(row.feedId),price=Number(row.price),timestamp=Number(row.timestampSeconds);
-   if(!feed||!Number.isFinite(price)||price<=0||!Number.isFinite(timestamp))continue;
-   prices[feed.symbol]={feedId:feed.id,price,timestamp};
+ const id=symbol?feeds[0].id:'overview';
+ let slot=atlasSlots.get(id);
+ if(!slot){slot={until:0,result:null,pending:null};atlasSlots.set(id,slot);}
+ const read=()=>{
+  const prices={},missing=[];
+  for(const feed of feeds){
+   const row=currentAtlasPrice(slot.result[feed.symbol],feed,now());
+   if(row)prices[feed.symbol]=row;else missing.push(feed.symbol);
   }
-  if(!symbol)atlasCache={at:now(),prices};
-  return {configured:true,prices};
- })();
- if(!symbol)atlasPending=work.finally(()=>{atlasPending=null;});
- return work;
+  return {configured:true,source:'Atlas Oracle',prices,missing};
+ };
+ if(slot.until>now()){
+  if(!slot.result)throw Error('atlas-price-unavailable');
+  return read();
+ }
+ if(!slot.pending){
+  const batches=[];
+  for(let i=0;i<feeds.length;i+=ATLAS_BATCH_SIZE)batches.push(readAtlasBatch(feeds.slice(i,i+ATLAS_BATCH_SIZE),key,fetchImpl,now));
+  slot.pending=Promise.allSettled(batches).then(results=>{
+   const rows=results.filter(part=>part.status==='fulfilled').map(part=>part.value);
+   slot.until=now()+(rows.length===results.length?30_000:10_000);
+   if(!rows.length){slot.result=null;throw Error('atlas-price-unavailable');}
+   slot.result=Object.assign({},...rows);
+  }).finally(()=>{slot.pending=null;});
+ }
+ await slot.pending;
+ return read();
 }
 export async function handleAtlasPrices(req,res){
  const url=new URL(req.url,'http://127.0.0.1');
@@ -150,7 +193,7 @@ export async function handleAtlasPrices(req,res){
   res.end(req.method==='HEAD'?undefined:JSON.stringify(body));
  }catch{
   res.writeHead(502,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});
-  res.end(JSON.stringify({error:'atlas-price-unavailable'}));
+  res.end(req.method==='HEAD'?undefined:JSON.stringify({error:'atlas-price-unavailable'}));
  }
  return true;
 }

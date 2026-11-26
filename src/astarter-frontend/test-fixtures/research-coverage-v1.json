@@ -359,21 +359,25 @@
             "page_limit": 50,
             "relay_path": "/api/market-hub?resource=social&selection_version=0&limit=50",
             "requests": [
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/bitcoin/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/bitcoin/posts/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/bitcoin/creators/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/ethereum/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/ethereum/posts/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/ethereum/creators/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/solana/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/solana/posts/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path_ends_with": "/topic/solana/creators/v1", "upstream_parameters": {}}
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/creators/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/creators/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/creators/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path": "/api4/public/category/cryptocurrencies/posts/v1", "upstream_parameters": {}}
             ],
-            "location": "workbench-console.mjs L621; public-data-client.mjs L32; licensed-feeds.mjs L64; public-lunarcrush.mjs L125-L126"
+            "location": "public-data-client.mjs L29-L36; licensed-feeds.mjs L65; public-lunarcrush.mjs L143-L165 at aa5fe94"
           },
-          "response_maximum_rows": {"posts": 5000, "creators": 5000, "location": "public-lunarcrush.mjs L47, L63"},
+          "response_maximum_rows": {"posts": 5000, "creators": 5000, "category-posts": 5000, "location": "public-lunarcrush.mjs L46-L47, L62-L63, L156-L163 at aa5fe94"},
+          "discovery": {"category": "cryptocurrencies", "error_symbol": "CRYPTO"},
+          "featured_scope": "LUNARCRUSH_KOL_TOPICS",
+          "recent": {"scope": "SOCIAL_RECENT_POSTS", "relay_path": "/api/market-hub?resource=social&selection_version=0&limit=50&feed=recent", "providers": ["lunarcrush-v4", "bluesky-latest-v1", "nostr-relay-v1"], "direct_valid_ms": 180000, "location": "public-social-scope.mjs L1-L5; licensed-feeds.mjs L46-L97 at aacf600"},
           "answer_maximum_items": {"value": 50, "location": "public-data-client.mjs L28"},
-          "research_keeps": "one 24-hour topic fact per asset (posts, contributors, interactions and sentiment by network) and each curated KOL post for its evidence asset, without the post text; the latest answer only, no series",
+          "research_keeps": "Research accepts the featured LunarCrush topic summaries for BTC, ETH and SOL and qualified KOL posts for their evidence asset. The recent list combines LunarCrush category and topic posts, Bluesky originals and Nostr notes. All three sources remain outside research evidence on this route, including posts about BTC, ETH and SOL.",
           "research_keeps_location": "workbench-public-evidence.mjs L6-L7, L20-L34; live-research.mjs L143",
           "fact_time": {"topic": "asOf, or observed_at_ms marked as retrieval time when asOf is null", "kol_post": "published_at_ms"},
           "evidence_valid_for_ms": {

@@ -1,5 +1,6 @@
 import {tokenIcon} from './brand-icons.mjs';
 import {uiGlyph,bindSearchRender,dataRefreshControls} from './product-composition.mjs';
+import {interceptNavigation,isCurrentDataLink} from './product-layout.mjs';
 import {createPublicDataViews} from './public-data-views.mjs';
 import {createLiveDataViews,liveDataRoute} from './data-live-views.mjs';
 import {bindSocialPostMedia} from './public-social-media.mjs';
@@ -27,7 +28,65 @@ const section=(title,body,action='',cls='')=>`<section class="dc-panel ${cls}"><
 const empty=text=>`<div class="dc-empty">${text}</div>`;
 // Keep the identifying column in view, skipping favorite and rank columns.
 const rankLabel=label=>label==='#'||label==='排名'||label===L('排名','Rank');
-const table=(heads,rows)=>`<div class="dc-table-wrap" tabindex="0" role="region" aria-label="${esc(L('数据表，可横向滚动','Data table, scroll horizontally'))}"><table class="dc-table" data-key-column="${heads[0]===''?(rankLabel(heads[1])?3:2):rankLabel(heads[0])?2:1}"><thead><tr>${heads.map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>${rows.length?'':empty('没有匹配的结果，试试其他筛选。')}</div>`;
+function bindTableNavigation(root){
+ if(!root.addEventListener||typeof ResizeObserver==='undefined')return ()=>{};
+ const selector='.dc-root .dc-table-wrap',shortcuts='ArrowLeft ArrowRight Home End';
+ function update(wrap){
+  const max=wrap.scrollWidth-wrap.clientWidth;
+  if(max<=1||!wrap.clientWidth){
+   if(wrap.hasAttribute('data-column-overflow')){delete wrap.dataset.columnOverflow;wrap.removeAttribute('aria-keyshortcuts');}
+   return;
+  }
+  const rtl=getComputedStyle(wrap).direction==='rtl',offset=Math.min(max,Math.max(0,rtl?-wrap.scrollLeft:wrap.scrollLeft));
+  const left=rtl?offset<max-1:offset>1,right=rtl?offset>1:offset<max-1;
+  const edges=left&&right?'left right':left?'left':'right';
+  if(wrap.dataset.columnOverflow!==edges)wrap.dataset.columnOverflow=edges;
+  if(!wrap.hasAttribute('aria-keyshortcuts'))wrap.setAttribute('aria-keyshortcuts',shortcuts);
+ }
+ const observer=new ResizeObserver(entries=>{
+  for(const {target} of entries){
+   const wrap=target.closest(selector);
+   if(wrap?.isConnected)update(wrap);
+  }
+ });
+ root.addEventListener('scroll',event=>{
+  if(event.target.matches?.(selector))update(event.target);
+ },{capture:true,passive:true});
+ root.addEventListener('keydown',event=>{
+  const wrap=event.target;
+  if(event.defaultPrevented||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||!wrap.matches?.(selector))return;
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+  const max=wrap.scrollWidth-wrap.clientWidth;
+  if(max<=1)return;
+  const table=wrap.querySelector('table'),cells=table.tHead?.rows[0]?.cells;
+  if(!cells?.length)return;
+  event.preventDefault();
+  const rtl=getComputedStyle(wrap).direction==='rtl',sign=rtl?-1:1,offset=wrap.scrollLeft*sign;
+  let target=event.key==='End'?max:0;
+  if(event.key.startsWith('Arrow')){
+   const keyIndex=Number(table.dataset.keyColumn||1)-1,frozen=cells[keyIndex];
+   const pinned=frozen&&getComputedStyle(frozen).position==='sticky'?frozen.getBoundingClientRect().width:0;
+   const frame=wrap.getBoundingClientRect();
+   const stops=[...cells].slice(keyIndex+1).map(cell=>{
+    const rect=cell.getBoundingClientRect();
+    return offset+(rtl?frame.right-rect.right:rect.left-frame.left)-pinned;
+   });
+   const forward=(event.key==='ArrowRight')!==rtl;
+   target=forward?(stops.find(stop=>stop>offset+2)??max):(stops.findLast(stop=>stop<offset-2)??0);
+  }
+  wrap.scrollLeft=sign*Math.max(0,Math.min(target,max));
+ });
+ document.addEventListener('hive:page-leave',()=>observer.disconnect());
+ return wraps=>{
+  observer.disconnect();
+  for(const wrap of wraps){
+   observer.observe(wrap);
+   const table=wrap.querySelector('table');
+   if(table)observer.observe(table);
+  }
+ };
+}
+const table=(heads,rows,label=L('数据表，可横向滚动','Data table, scroll horizontally'))=>`<div class="dc-table-wrap" tabindex="0" role="region" aria-label="${esc(label)}"><table class="dc-table" data-key-column="${heads[0]===''?(rankLabel(heads[1])?3:2):rankLabel(heads[0])?2:1}"><thead><tr>${heads.map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>${rows.length?'':empty('没有匹配的结果，试试其他筛选。')}</div>`;
 const tabs=(items,value,key,label)=>`<div class="dc-tabs" role="group" aria-label="${esc(label)}">${items.map(i=>`<button type="button" data-dc-filter="${key}" data-value="${esc(i)}" aria-pressed="${i===value}">${esc(i)}</button>`).join('')}</div>`;
 const chip=s=>`<span class="dc-chip">${esc(s)}</span>`;
 const quote=a=>a.symbol==='US10Y'?num(a.price)+'%':num(a.price,a.price<.001?8:a.price<10?4:2);
@@ -43,6 +102,7 @@ export function createDataCenter({root,account,watchStorage=globalThis.localStor
  const publicData=createPublicDataViews({root,rerender,notify,onAskSource,onNewsDelivery});
  const liveData=createLiveDataViews({root,rerender,link,section,table,stat,chartPanel,empty});
  const tableWraps=()=>root.querySelectorAll?.('.dc-root .dc-table-wrap')||[];
+ const observeTables=bindTableNavigation(root);
  let tableRoute='',scrolledTables=[];
  let page='markets',state={market:'全部',search:'',sort:'volume',chain:'全部指标',chainSearch:'',news:'全部',important:false,newsSearch:'',day:24,social:'全部动态',socialSearch:'',socialAsset:'全部',socialLimit:12,derivative:'资金费率',range:'90D',period:'1H',fund:'全部基金',rankPeriod:'4h',marketPage:1,marketSize:20,marketDirection:'desc',minVolume:0,minOi:0,changeFilter:'全部涨跌',positiveOnly:false,columns:false,advanced:false,marketView:'overview',fullMarket:false,heat:'涨跌幅',chainType:'全部类型',grouped:true,metricPrice:false,metricLog:false,metricTable:false,derivativeSearch:'',derivativePeriod:'当前',margin:'USDT / USD',exchange:'全部交易所',assetView:'价格',newsLimit:10,newsDate:'2026-10-24',socialView:'动态',traderTab:'持仓',etfAsset:'BTC',etfRange:'30D',oiPeriod:'4h',rankDirection:'涨幅',oiDirection:'增长',lsExchange:'Binance',assetRange:'7D',assetMarket:'合约',traderChart:'账户净值',traderRange:'90D',traderRank:'收益率'};
  const saved={alerts:read('hive.dc.alerts'),assets:read('hive.dc.assets'),metrics:read('hive.dc.metrics'),stories:read('hive.dc.stories'),traders:read('hive.dc.traders'),posts:read('hive.dc.posts')};
@@ -125,6 +185,7 @@ export function createDataCenter({root,account,watchStorage=globalThis.localStor
  }
  function refresh(){const y=root.scrollTop;rerender();root.scrollTop=y;}
  function bind(){
+ observeTables(tableWraps());
  if(scrolledTables.length){
   const tables=tableWraps();
   for(const {index,columns,left} of scrolledTables){
@@ -142,7 +203,17 @@ export function createDataCenter({root,account,watchStorage=globalThis.localStor
  hub.bind();
  publicData.bind();
  liveData.bind();
- root.querySelectorAll('[data-dc-link]').forEach(a=>a.onclick=e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();const href=a.getAttribute('href');if(!DATA_PAGES.includes(document.body.dataset.page)&&onRelatedLink(href))return;history.pushState(null,'',href);window.dispatchEvent(new PopStateEvent('popstate'));});
+ root.querySelectorAll('[data-dc-link]').forEach(a=>a.onclick=event=>{
+  if(!interceptNavigation(event))return;
+  const href=a.getAttribute('href');
+  if(!DATA_PAGES.includes(document.body.dataset.page)&&onRelatedLink(href))return;
+  if(isCurrentDataLink(a,new URL(location.href))){
+   if(a.closest('.data-subtabs'))a.focus({preventScroll:true});
+   return;
+  }
+  history.pushState(null,'',href);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+ });
  root.querySelectorAll('[data-dc-filter]').forEach(b=>b.onclick=()=>{const key=b.dataset.dcFilter;state[key]=key==='day'?Number(b.dataset.value):b.dataset.value;if(['social','socialAsset'].includes(key))state.socialLimit=12;if(key==='traderTab'){const view=({'持仓':'positions','交易记录':'trades','历史动态':'history','表现分析':'performance'})[b.dataset.value];if(view){const url=new URL(location.href);url.searchParams.set('view',view);history.replaceState(null,'',url);}}if(key==='socialAsset'){const url=new URL(location.href);if(b.dataset.value==='全部')url.searchParams.delete('asset');else url.searchParams.set('asset',b.dataset.value);history.replaceState(null,'',url);}if(['market','chain'].includes(key))state.marketPage=1;if(key==='social'&&param('view')&&param('view')!=='动态'){const url=new URL(location.href);url.searchParams.set('view','动态');history.replaceState(null,'',url);}if(key==='derivative'){const url=new URL(location.href);url.searchParams.set('view',b.dataset.value);history.replaceState(null,'',url);}refresh();if(['day','social','socialAsset'].includes(key)){const selected=root.querySelector(`[data-dc-filter="${key}"][data-value="${state[key]}"]`);selected?.focus({preventScroll:true});if(key!=='day')selected?.scrollIntoView({block:'nearest',inline:'nearest'});}});
  root.querySelectorAll('[data-dc-search]').forEach(input=>{const key=input.dataset.dcSearch;bindSearchRender(input,value=>{state[key]=value;state.marketPage=1;if(key==='socialSearch')state.socialLimit=12;},()=>{refresh();return root.querySelector(`[data-dc-search="${key}"]`);});});
  root.querySelectorAll('[data-dc-select]').forEach(input=>input.onchange=()=>{state[input.dataset.dcSelect]=input.value;state.marketPage=1;refresh();});

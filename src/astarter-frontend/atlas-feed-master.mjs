@@ -1,3 +1,4 @@
+import {HUB_ASSET_IDS} from './market-hub-data.mjs';
 // Public Atlas Pull catalog. Feed id is the number in https://atlasoracle.io/feeds/{id}.
 // Captured 2026-11-26 from the public feed search. Prices are not stored here.
 export const ATLAS_FEEDS=Object.freeze([
@@ -198,6 +199,26 @@ for(const feed of ATLAS_FEEDS){
 export function atlasFeedFor(symbol){
   const key=String(symbol||'').toUpperCase();
   return preferred.get(key)||null;
+}
+// An asset identity is pinned independently of the ticker. Contract-address search
+// results and unrelated assets that share a ticker must never inherit a reference.
+const atlasMarketIds={...HUB_ASSET_IDS,USDT:'tether',USDC:'usd-coin',HYPE:'hyperliquid',ZEC:'zcash',XMR:'monero',
+ LEO:'unus-sed-leo',USDE:'ethena-usde',XLM:'stellar',DAI:'multi-collateral-dai',USD1:'usd1',PYUSD:'paypal-usd',
+ HBAR:'hedera',ASTER:'aster',WLFI:'world-liberty-financial-wlfi'};
+const alternateMarketIds={DAI:'dai',HBAR:'hedera-hashgraph',WLFI:'world-liberty-financial'};
+export const ATLAS_OVERVIEW_SYMBOLS=Object.freeze(Object.keys(atlasMarketIds));
+export function atlasMarketFeed(asset){
+ if(!asset||asset.address||!asset.id||!Object.hasOwn(atlasMarketIds,asset.symbol))return null;
+ if(asset.id!==atlasMarketIds[asset.symbol]&&asset.id!==alternateMarketIds[asset.symbol])return null;
+ const feed=atlasFeedFor(asset.symbol);
+ return feed?.pull&&feed.quote==='USD'?feed:null;
+}
+// Keep the upstream observation time, independently of fetch or cache time.
+export function currentAtlasPrice(row,feed,now=Date.now()){
+ if(!feed||row?.feedId!==feed.id||row.quote!==feed.quote||!Number.isFinite(row.price)||row.price<=0||
+    !Number.isSafeInteger(row.timestamp)||row.timestamp<=0)return null;
+ const age=now-row.timestamp*1000;
+ return age>=-5000&&age<=120000?row:null;
 }
 export function atlasFeedById(id){
   const feedId=Number(id);

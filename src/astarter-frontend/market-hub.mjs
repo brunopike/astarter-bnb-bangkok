@@ -1,6 +1,6 @@
 import {routeSearch} from './site-routes.mjs';
 import {createMarketHubClient,HUB_ASSET_IDS,HUB_RESOURCES,HUB_CATEGORIES,hubSeriesChange,hubSourceTime,HUB_REFRESH_SECONDS,parseHubRefreshSeconds} from './market-hub-data.mjs';
-import {atlasFeedFor} from './atlas-feed-master.mjs';
+import {atlasMarketFeed,currentAtlasPrice} from './atlas-feed-master.mjs';
 import {loadWatchAssets,WATCH_ASSETS_KEY,watchAssetKey,isWatchAsset,watchAssetIcon,watchChain,fetchWatchAssets} from './market-watchlist.mjs';
 import {formatDataTime} from './product-help.mjs';
 import {tokenIcon,venueIcon,registerTokenMetadata} from './brand-icons.mjs';
@@ -145,12 +145,27 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
  const panel=(title,html,key,extra=null,cls='')=>`<section class="dc-panel hub-panel ${cls}"><header><h2>${title}</h2>${extra??source(key)}</header>${html}</section>`;
  const stat=(title,value,sub='',extra='')=>`<section class="hub-stat"><span>${title}</span><strong>${value}</strong><div>${sub}</div>${extra}</section>`;
  const getQuote=a=>{const q=client.quote(a);return a.address?{...q,asOf:a.asOf??null,receivedAt:a.receivedAt??null}:q;};
- let atlasPrices={},atlasPriceAt=0;
- const atlasFeed=a=>a.address?null:atlasFeedFor(a.symbol);
- const atlasPrice=a=>!a.address&&Number.isFinite(atlasPrices?.[a.symbol]?.price)?atlasPrices[a.symbol]:null;
- const atlasAttr=a=>{const feed=atlasFeed(a),price=atlasPrice(a);return (feed?` data-atlas-feed="${feed.id}"`:'')+(price?` data-atlas-price="${price.price}"`:'');};
+ let atlasPrices={},atlasPriceAt=0,atlasController=null;
+ const atlasPrice=a=>currentAtlasPrice(atlasPrices[a.symbol],atlasMarketFeed(a));
+ const atlasAttr=a=>{const feed=atlasMarketFeed(a),row=atlasPrice(a);return feed?` data-atlas-feed="${feed.id}" data-atlas-asset="${esc(a.id)}"`+(row?` data-atlas-price="${row.price}"`:''):'';};
+ const atlasValue=a=>{const row=atlasPrice(a);return row?price(row.price)+' '+row.quote+' · '+formatDataTime(row.timestamp*1000):'—';};
+ const atlasLabel=()=>L('Atlas 预言机参考价','Atlas Oracle reference');
+ const atlasField=a=>`<span data-hub-atlas-value="${esc(a.id)}">${esc(atlasValue(a))}</span>`;
+ function patchAtlas(){
+  const rows=new Map(assets().map(a=>[a.id,a]));
+  for(const el of root.querySelectorAll('[data-hub-atlas-value],[data-atlas-asset]')){
+   const asset=rows.get(el.dataset.hubAtlasValue||el.dataset.atlasAsset);
+   if(!asset)continue;
+   if(el.dataset.hubAtlasValue){
+    const value=atlasValue(asset);if(el.textContent!==value)el.textContent=value;
+   }else{
+    const row=atlasPrice(asset);if(row)el.dataset.atlasPrice=String(row.price);else delete el.dataset.atlasPrice;
+   }
+  }
+ }
  const quoteSource=(a,q)=>q.provider+' · '+(a.address?L('数据时间','Data time')+' '+formatDataTime(q.asOf)+' · '+L('获取时间','Retrieved at')+' '+formatDataTime(q.receivedAt):formatDataTime(q.asOf));
- function quoteCell(a){const q=getQuote(a);return `<span class="hub-price" data-hub-price="${esc(a.id)}" data-price="${q.price}" title="${esc(quoteSource(a,q))}">${price(q.price)}</span><small data-hub-unit="${esc(a.id)}">${q.quote}</small>`;}
+ const quoteTitle=(a,q)=>quoteSource(a,q)+(atlasPrice(a)?'\n'+atlasLabel()+' · '+atlasValue(a):'');
+ function quoteCell(a){const q=getQuote(a);return `<span class="hub-price" data-hub-price="${esc(a.id)}" data-price="${q.price}" title="${esc(quoteTitle(a,q))}">${price(q.price)}</span><small data-hub-unit="${esc(a.id)}">${q.quote}</small>`;}
  function assetRow(a,index){const q=getQuote(a);return `<tr data-hub-row="${esc(a.symbol)}"${atlasAttr(a)}><td><button type="button" class="hub-watch" data-hub-watch="${esc(a.id)}" aria-label="${esc(L('收藏','Favorite')+' '+a.symbol)}" aria-pressed="${watched(a)}">${uiGlyph('star')}</button></td><td class="hub-rank">${Number.isSafeInteger(a.rank)&&a.rank>0?esc(a.rank):'—'}</td><td>${link(icon(a)+`<span><b>${esc(a.symbol)}</b><small>${esc(a.name)}${a.chain?' · '+esc(watchChain(a.chain)):''}</small></span>`,{asset:a.symbol,coin:a.id},'hub-asset')}</td><td>${quoteCell(a)}</td><td data-hub-change="${esc(a.id)}">${change(q.change)}</td><td>${hubMoney(a.volume)}</td><td>${hubMoney(a.cap)}</td><td class="hub-spark">${a.series.length>1?link(miniChart(a.series,'var(--chart-series-1)'),{asset:a.symbol,coin:a.id},'hub-spark-link').replace('<a ',`<a aria-label="${esc(a.symbol+' '+L('完整价格图表','full price chart'))}" `):'—'}</td><td>${change(a.change7d)}</td></tr>`;}
  // Card hierarchy adapted from 21st reuno-ui Crypto Dashboard (demo 5479); existing data and chart consumers are retained.
  function assetCard(a){
@@ -160,7 +175,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
    <div class="hub-card-quote"><div>${quoteCell(a)}</div><span><span data-hub-change="${esc(a.id)}">${change(q.change)}</span><small>24h</small></span></div>
    <div class="hub-card-trend"><div><span>${L('7日走势','7-day trend')} · USD</span>${change(a.change7d)}</div>${a.series?.length>1?link(miniChart(a.series,'var(--chart-series-1)'),{asset:a.symbol,coin:a.id},'hub-card-chart').replace('<a ',`<a aria-label="${esc(a.symbol+' '+L('完整价格图表','full price chart'))}" `):`<div class="hub-card-chart hub-card-chart-empty">${L('暂无走势','History unavailable')}</div>`}</div>
    <dl>${metric(L('24h 成交额','24h volume')+` · <span data-hub-card-volume-unit="${esc(a.id)}">${esc(q.quote)}</span>`,`<span data-hub-card-volume="${esc(a.id)}">${hubMoney(q.volume).replace('$','')}</span>`)}${metric(L('市值','Market cap')+' · USD',hubMoney(a.cap).replace('$',''))}${metric(L('24h 高点','24h high')+' · USD',Number.isFinite(a.high)&&a.high>0?price(a.high):'—')}${metric(L('24h 低点','24h low')+' · USD',Number.isFinite(a.low)&&a.low>0?price(a.low):'—')}</dl>
-   <details class="dc-info hub-card-source"><summary data-hub-card-source="${esc(a.id)}" aria-label="${esc(a.symbol+' · '+L('数据来源与时间','Source and time'))}">i</summary><div><b>${L('当前报价','Current quote')}</b><p data-hub-card-quote-source="${esc(a.id)}">${esc(quoteSource(a,q))} · ${esc(q.quote)}</p><b>${L('走势、市值与高低点','Trend, cap and range')}</b><p>${a.address?'DEX Screener':esc(a.provider||HUB_RESOURCES.assets.provider)} · USD · ${formatDataTime(a.asOf)}${atlasPrice(a)?' · Atlas '+hubNumber(atlasPrice(a).price):''}</p></div></details>
+   <details class="dc-info hub-card-source"><summary data-hub-card-source="${esc(a.id)}" aria-label="${esc(a.symbol+' · '+L('数据来源与时间','Source and time'))}">i</summary><div><b>${L('当前报价','Current quote')}</b><p data-hub-card-quote-source="${esc(a.id)}">${esc(quoteSource(a,q))} · ${esc(q.quote)}</p><b>${L('走势、市值与高低点','Trend, cap and range')}</b><p>${a.address?'DEX Screener':esc(a.provider||HUB_RESOURCES.assets.provider)} · USD · ${formatDataTime(a.asOf)}</p>${atlasMarketFeed(a)?`<b>${atlasLabel()}</b><p>${atlasField(a)}</p>`:''}</div></details>
   </article>`;
  }
  function tableRows(){
@@ -251,19 +266,20 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
   if(!a)return header(esc(param('asset')))+`<div class="hub-empty hub-detail-empty">${emptyRows('assets')}${link(L('返回市场总览','Back to market overview'))}</div>`+sourceDetails();
   if(a.address)return contractDetail(a);
   const q=getQuote(a),spark=a.series.map((value,i)=>({value,at:a.asOf-(a.series.length-1-i)*3600000}));
-  return header(icon(a)+' '+esc(a.symbol)+`<small>${esc(a.name)}</small>`)+`<div class="hub-detail-toolbar"${atlasAttr(a)}>${link('← '+L('市场总览','Market overview'))}<span><span data-hub-quote-provider>${q.provider} / ${q.quote}</span> · <time data-hub-quote-time>${formatDataTime(q.asOf)}</time></span><button type="button" class="dc-button" data-hub-watch="${esc(a.id)}">${watched(a)?L('已加入自选','On watchlist'):L('加入自选','Add to watchlist')}</button></div><section class="hub-detail-price"><strong>${quoteCell(a)}</strong><div data-hub-change="${esc(a.id)}">${change(q.change)}</div><span>24h</span></section><div class="hub-kpis hub-detail-kpis">${stat(L('市值 / USD','Market cap / USD'),hubMoney(a.cap))}${stat(L('24h 成交额 / USD','24h volume / USD'),hubMoney(a.volume))}${stat(L('24h 最高 / USD','24h high / USD'),hubMoney(a.high))}${stat(L('24h 最低 / USD','24h low / USD'),hubMoney(a.low))}</div>${hubCandleIdentity(a)?tradingChartPanel('hub-asset-candles',{...hubCandleIdentity(a),hostedMarket:true}):''}${hubCandleIdentity(a)?`<details class="hub-candle-history"><summary>${L('7日汇总报价走势','7d aggregate price history')}</summary>`:''}${panel(L('7d 价格走势','7d price history')+' '+info(L('CoinGecko 返回的 7d 小时价格样本，时间坐标按末次报价和每小时样本间隔重建，属于近似时间。即时价格单独来自已标明的交易所报价，不改写历史采样点。','CoinGecko 7d hourly samples. Approximate timestamps are reconstructed from the latest quote and hourly spacing. Live venue prices do not overwrite history samples.')),chart(a.symbol,spark,'var(--chart-series-1)'),'assets')}${hubCandleIdentity(a)?'</details>':''}<div class="hub-two">${panel(L('观察重点','What to watch'),`<dl class="hub-facts"><div><dt>${L('24h 涨跌','24h change')}</dt><dd data-hub-change="${esc(a.id)}">${change(q.change)}</dd></div><div><dt>${L('7d 涨跌','7d change')}</dt><dd>${change(a.change7d)}</dd></div><div><dt>${L('报价来源','Price source')}</dt><dd data-hub-quote-provider>${q.provider} / ${q.quote}</dd></div><div><dt>${L('最近报价','Latest quote')}</dt><dd data-hub-quote-time>${formatDataTime(q.asOf)}</dd></div></dl><button class="dc-button" type="button" data-hub-ask>${uiGlyph('chat')} ${L("分析数据","Analyze data")}</button>`,'assets')}${panel(L('行情变化','Market updates'),`${feedHeader()}<ol class="hub-feed" data-hub-feed>${eventRows()}</ol>`,'tickers',`<span class="hub-stream-state" data-hub-stream></span>`)}</div>`+sourceDetails();
+  return header(icon(a)+' '+esc(a.symbol)+`<small>${esc(a.name)}</small>`)+`<div class="hub-detail-toolbar"${atlasAttr(a)}>${link('← '+L('市场总览','Market overview'))}<span><span data-hub-quote-provider>${q.provider} / ${q.quote}</span> · <time data-hub-quote-time>${formatDataTime(q.asOf)}</time></span><button type="button" class="dc-button" data-hub-watch="${esc(a.id)}">${watched(a)?L('已加入自选','On watchlist'):L('加入自选','Add to watchlist')}</button></div><section class="hub-detail-price"><strong>${quoteCell(a)}</strong><div data-hub-change="${esc(a.id)}">${change(q.change)}</div><span>24h</span></section><div class="hub-kpis hub-detail-kpis">${stat(L('市值 / USD','Market cap / USD'),hubMoney(a.cap))}${stat(L('24h 成交额 / USD','24h volume / USD'),hubMoney(a.volume))}${stat(L('24h 最高 / USD','24h high / USD'),hubMoney(a.high))}${stat(L('24h 最低 / USD','24h low / USD'),hubMoney(a.low))}</div>${hubCandleIdentity(a)?tradingChartPanel('hub-asset-candles',{...hubCandleIdentity(a),hostedMarket:true}):''}${hubCandleIdentity(a)?`<details class="hub-candle-history"><summary>${L('7日汇总报价走势','7d aggregate price history')}</summary>`:''}${panel(L('7d 价格走势','7d price history')+' '+info(L('CoinGecko 返回的 7d 小时价格样本，时间坐标按末次报价和每小时样本间隔重建，属于近似时间。即时价格单独来自已标明的交易所报价，不改写历史采样点。','CoinGecko 7d hourly samples. Approximate timestamps are reconstructed from the latest quote and hourly spacing. Live venue prices do not overwrite history samples.')),chart(a.symbol,spark,'var(--chart-series-1)'),'assets')}${hubCandleIdentity(a)?'</details>':''}<div class="hub-two">${panel(L('观察重点','What to watch'),`<dl class="hub-facts"><div><dt>${L('24h 涨跌','24h change')}</dt><dd data-hub-change="${esc(a.id)}">${change(q.change)}</dd></div><div><dt>${L('7d 涨跌','7d change')}</dt><dd>${change(a.change7d)}</dd></div><div><dt>${L('报价来源','Price source')}</dt><dd data-hub-quote-provider>${q.provider} / ${q.quote}</dd></div><div><dt>${L('最近报价','Latest quote')}</dt><dd data-hub-quote-time>${formatDataTime(q.asOf)}</dd></div>${atlasMarketFeed(a)?`<div><dt>${atlasLabel()}</dt><dd>${atlasField(a)}</dd></div>`:''}</dl><button class="dc-button" type="button" data-hub-ask>${uiGlyph('chat')} ${L("分析数据","Analyze data")}</button>`,'assets')}${panel(L('行情变化','Market updates'),`${feedHeader()}<ol class="hub-feed" data-hub-feed>${eventRows()}</ol>`,'tickers',`<span class="hub-stream-state" data-hub-stream></span>`)}</div>`+sourceDetails();
  }
  function contractDetail(a){
   const q=getQuote(a);
   return header(icon(a)+' '+esc(a.symbol)+`<small>${esc(a.name)}</small>`)+`<div class="hub-detail-toolbar"${atlasAttr(a)}>${link('← '+L('我的自选','My watchlist'),{view:'watchlist'})}<button type="button" class="dc-button" data-hub-watch="${esc(a.id)}">${watched(a)?L('已加入自选','On watchlist'):L('加入自选','Add to watchlist')}</button></div><div class="hub-contract"><b>${esc(watchChain(a.chain))}</b><code>${esc(a.address)}</code></div><section class="hub-detail-price"><strong>${quoteCell(a)}</strong>${change(q.change)}<span>24h</span>${info(quoteSource(a,q),a.symbol+' · '+L('数据来源与时间','Source and time'))}</section><div class="hub-kpis">${stat(L('市值 / USD','Market cap / USD'),hubMoney(a.cap))}${stat(L('24h 成交额 / USD','24h volume / USD'),hubMoney(a.volume))}${stat(L('池内流动性 / USD','Pool liquidity / USD'),hubMoney(a.liquidity))}${stat(L('交易平台','Trading venue'),esc(a.venue))}</div><button type="button" class="dc-button" data-hub-ask>${uiGlyph('chat')} ${L("分析数据","Analyze data")}</button>`;
  }
  function refreshAtlasPrices(){
-  if(typeof window==='undefined'||!enabled||Date.now()-atlasPriceAt<30000)return;
+  if(typeof window==='undefined'||!enabled||document.hidden||atlasController||Date.now()-atlasPriceAt<Math.max(30000,refreshSeconds*1000))return;
   atlasPriceAt=Date.now();
-  fetch('/api/atlas/prices',{credentials:'omit',cache:'no-store'}).then(response=>response.ok?response.json():null).then(body=>{
-   if(!enabled||!body?.prices)return;
-   atlasPrices=body.prices;rerender();
-  }).catch(()=>{});
+  const request=new AbortController();atlasController=request;
+  fetch('/api/atlas/prices',{credentials:'omit',cache:'no-store',signal:request.signal}).then(response=>response.ok?response.json():null).then(body=>{
+   if(!enabled||request.signal.aborted||!body?.prices)return;
+   atlasPrices=body.prices;patchAtlas();
+  }).catch(()=>{}).finally(()=>{if(atlasController===request)atlasController=null;});
  }
  function refreshHourly(force=false){
   const overview=!param('asset')&&(!param('view')||param('view')==='overview');
@@ -273,7 +289,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
  function sync(page){
   const active=hubOwnsRoute(page,location.search);
   if(active&&!enabled){dataVersion=resourceVersion();lastAutoPaint=-Infinity;}
-  if(!active&&enabled){cancelPaint();needsPaint=userPaint=false;charts.dispose();watchController?.abort();}
+  if(!active&&enabled){cancelPaint();needsPaint=userPaint=false;charts.dispose();watchController?.abort();atlasController?.abort();atlasController=null;atlasPriceAt=0;}
   enabled=active;if(!enabled)hourly.suspend();client.setActive(enabled&&typeof document!=='undefined'&&!document.hidden);
   if(enabled)refreshAtlasPrices();
   return enabled;
@@ -311,7 +327,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
   for(const a of assets()){
    const q=getQuote(a);
    for(const el of root.querySelectorAll(`[data-hub-price="${CSS.escape(a.id)}"]`)){
-    el.title=quoteSource(a,q);if(el.dataset.price===String(q.price))continue;const old=Number(el.dataset.price);el.dataset.price=String(q.price);el.textContent=price(q.price);
+    el.title=quoteTitle(a,q);if(el.dataset.price===String(q.price))continue;const old=Number(el.dataset.price);el.dataset.price=String(q.price);el.textContent=price(q.price);
     if(Number.isFinite(old)&&document.documentElement.dataset.reducedMotion!=='true'&&!matchMedia('(prefers-reduced-motion:reduce)').matches)el.animate([{opacity:.45},{opacity:1}],{duration:180,easing:'ease-out'});
    }
    for(const el of root.querySelectorAll(`[data-hub-unit="${CSS.escape(a.id)}"]`))if(el.textContent!==q.quote)el.textContent=q.quote;
@@ -323,6 +339,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
     for(const el of root.querySelectorAll('[data-hub-quote-provider]'))el.textContent=q.provider+' / '+q.quote;
    }
   }
+  patchAtlas();
   const eventVersion=String(client.events[0]?.id||0);
   for(const el of root.querySelectorAll('[data-hub-feed]'))if(el.dataset.eventVersion!==eventVersion&&!el.matches(':hover')&&!el.contains(document.activeElement)){el.innerHTML=eventRows();el.dataset.eventVersion=eventVersion;}
   patchStatus();
@@ -389,7 +406,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
   patchStatus();
   charts.mount(root,heroModels);
  }
- return {render,bind,sync,capture:rememberView,previewAsset:(target,signal)=>readRelatedAsset(target,{rows:assets(),quote:getQuote,signal}),tick(){if(!enabled)return;client.setActive(!document.hidden);if(document.hidden)watchController?.abort();client.tick();refreshWatch();refreshHourly();if(Date.now()-lastPaint>1000){lastPaint=Date.now();patchPrices();if(needsPaint)schedule();}},sourceSnapshot,
+ return {render,bind,sync,capture:rememberView,previewAsset:(target,signal)=>readRelatedAsset(target,{rows:assets(),quote:getQuote,signal}),tick(){if(!enabled)return;client.setActive(!document.hidden);if(document.hidden)watchController?.abort();client.tick();refreshWatch();refreshHourly();refreshAtlasPrices();if(Date.now()-lastPaint>1000){lastPaint=Date.now();patchPrices();if(needsPaint)schedule();}},sourceSnapshot,
   companionBrief(cursor=0){
    if(!enabled)return null;
    const rows=assets(),requested=param('asset'),a=requested?selectedAsset():rows[Math.max(0,cursor)%Math.max(1,rows.length)];

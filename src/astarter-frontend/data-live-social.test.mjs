@@ -8,6 +8,10 @@ function curated({qualified=true,verified=true,partial=false}={}){
  const item={record_id:'lunarcrush:x-123',subject_id:'x-123',provider_id:'lunarcrush-v4',quality:'fresh',event_time_ms:NOW-60000,received_at_ms:NOW,available_at_ms:NOW,valid_until_ms:NOW+HOUR,venue_or_chain:null,source_revision:null,data:{metric_kind:'LUNARCRUSH_POST',post_id:'x-123',platform:'YouTube',text:'QUALIFIED_CREATOR_POST <img>',url:'https://www.youtube.com/watch?v=clip-id',author:{acct:'Creator Name',display_name:'Creator Name',url:null,bot:null},symbols:['BTC'],published_at_ms:NOW-60000,observed_at_ms:NOW,interactions_24h:485,kol:{creatorId:'youtube::UC-example',followers:654321,topicRank:17,profileUrl:'https://www.youtube.com/channel/UC-example',creatorInteractions24h:17000,qualifyingPostCount:3,evidenceSymbol:'BTC'}}};
  return {schema_version:'AstarterPublicData.v1',tenant_scope:'PUBLIC',projection_version:'public-data-projection.v1',request_id:'social-'+NOW,selection_version:0,mode:'live_readonly',real_trading_connected:false,execution_binding:'NONE',quality:partial||!verified?'partial':'fresh',as_of_ms:NOW,requested_at_ms:NOW,coverage:{scope:'LUNARCRUSH_KOL_TOPICS',observed_at_ms:NOW,topics:[{symbol:'BTC',topic:'bitcoin',asOf:null,posts24h:100,contributors24h:30,interactions24h:1234,sentimentByNetwork:{X:50}}],errors:partial||!verified?[{symbol:'SOL',resource:'creators',code:'UNAVAILABLE'}]:[],curation:policy},missing_capabilities:['social.individual_engagement_breakdown'],sources:[{provider_id:'lunarcrush-v4',status:'OK',last_success_at_ms:NOW,reason_code:null,retry_after_seconds:null}],items:qualified&&verified?[item]:[]};
 }
+function recent(){
+ const body=curated();body.coverage.scope='LUNARCRUSH_TOPICS';body.coverage.feed='recent';body.coverage.discovery={category:'cryptocurrencies',status:'OK'};delete body.coverage.curation;
+ body.items[0].data.creator_id=body.items[0].data.kol.creatorId;delete body.items[0].data.kol;body.items[0].data.symbols=[];body.items[0].data.text='RECENT_CRYPTO_POST';return body;
+}
 function mastodon(){
  const body=curated(),item=body.items[0];body.coverage={scope:'SOCIAL_TAG_SAMPLES'};body.sources[0].provider_id=item.provider_id='mastodon-tag-v1';item.valid_until_ms=NOW+300000;
  item.data={metric_kind:'PUBLIC_SOCIAL_POST',platform:'Mastodon',instance:'mastodon.social',post_id:'123',url:'https://mastodon.social/@alice/123',author:{acct:'alice',display_name:'Alice',url:'https://mastodon.social/@alice',bot:false},text:'WRONG_MASTODON_CHANNEL',truncated:false,published_at_ms:NOW-60000,edited_at_ms:null,observed_at_ms:NOW,symbols:['BTC'],likes:0,reposts:0,replies:0};return body;
@@ -30,7 +34,7 @@ function assertTabs(html,active){
  assert.match(links[1][3],/^(交易员排行|Trader leaderboard)$/);
  assert.doesNotMatch(html,/page=intelligence|新闻与社媒|News and social|mastodon|social-sample/i);
 }
-function harness(t,{body=curated(),fetchImpl,search='?page=social'}={}){
+function harness(t,{body=curated(),fetchImpl,search='?page=social&social_feed=featured'}={}){
  const names=['document','window','location','navigator'],old=new Map(names.map(name=>[name,Object.getOwnPropertyDescriptor(globalThis,name)]));
  const doc={hidden:false,activeElement:null,addEventListener(){},querySelector(){return null;}},win=new EventTarget(),loc={search};
  for(const [name,value]of Object.entries({document:doc,window:win,location:loc,navigator:{onLine:true}}))Object.defineProperty(globalThis,name,{configurable:true,value});
@@ -43,6 +47,15 @@ function harness(t,{body=curated(),fetchImpl,search='?page=social'}={}){
  t.after(()=>{win.dispatchEvent(new Event('pagehide'));for(const [name,descriptor]of old){if(descriptor)Object.defineProperty(globalThis,name,descriptor);else delete globalThis[name];}});
  return {view,calls,get html(){return html;},render,goto(search,nextPage='social'){loc.search=search;page=nextPage;return render();},refresh(){assert.ok(refreshButton);refreshButton.dispatchEvent(new Event('click'));},setNow(value){at=value;}};
 }
+
+test('activity defaults to recent discovery and can switch to featured without relabeling the feed',async t=>{
+ assert.equal(liveDataRoute('social','').query.feed,'recent');
+ assert.equal(liveDataRoute('social','social_feed=featured').query.feed,'featured');
+ const h=harness(t,{search:'?page=social',fetchImpl:async url=>Response.json(new URL(url,'https://example.test').searchParams.get('feed')==='featured'?curated():recent())});
+ h.render();await settle();assert.match(h.html,/RECENT_CRYPTO_POST/);assert.doesNotMatch(h.html,/50,000|QUALIFIED_CREATOR_POST/);
+ assert.match(h.html,/cryptocurrencies|加密市场/);
+ h.goto('?page=social&social_feed=featured');await settle();assert.match(h.html,/QUALIFIED_CREATOR_POST/);assert.match(h.html,/50,000/);assert.doesNotMatch(h.html,/RECENT_CRYPTO_POST/);
+});
 
 test('every live activity alias reads the curated LunarCrush route while ranking and addresses retain their own meaning',()=>{
  const home=liveDataRoute('social','');
@@ -57,7 +70,7 @@ test('every live activity alias reads the curated LunarCrush route while ranking
  for(const invalid of ['orbit',''])assert.equal(liveDataRoute('social','trader='+invalid).resource,null);
 });
 test('curated route validates its exact feed and preserves observed time and one-hour source expiry',()=>{
- const route=liveDataRoute('social','view=posts'),receipt=validateLiveDataResponse(curated(),route,NOW);
+ const route=liveDataRoute('social','view=posts&social_feed=featured'),receipt=validateLiveDataResponse(curated(),route,NOW);
  assert.equal(receipt.receivedAt,NOW);assert.equal(receipt.validUntil,NOW+HOUR);assert.equal(receipt.asOf,NOW);
  for(const bad of [mastodon(),{...curated(),mode:'offline_fixture'},{...curated(),as_of_ms:NOW+61000},{...curated(),as_of_ms:NOW-1}])assert.throws(()=>validateLiveDataResponse(bad,route,NOW));
 });
@@ -79,13 +92,13 @@ test('failed or expired social refresh retains source time and cannot relabel ol
  assert.match(h.html,/data-quality="stale"/);assert.match(h.html,/Source unavailable|来源暂不可用|Stale data|数据已过期/);assert.match(h.html,/QUALIFIED_CREATOR_POST/);assert.match(h.html,/2026-11-18T05:59:00\.000Z/);assert.doesNotMatch(h.html,/Mastodon/);
 });
 test('legacy and restored URLs, manual refresh, ranking and address detail fetch only their own relay resource',async t=>{
- const old='?page=social&view=mastodon',rank='?page=social&view=rank',profile='?page=social&trader='+address;
+ const old='?page=social&view=mastodon&social_feed=featured',rank='?page=social&view=rank',profile='?page=social&trader='+address;
  const h=harness(t,{search:old,fetchImpl:async url=>{
   const q=new URL(url,'https://example.test').searchParams;
   return Response.json(q.get('resource')==='social'?curated():traderReceipt({profile:q.has('address')}));
  }});
- h.render();await settle();assertTabs(h.html,'social');assert.equal(h.view.companionBrief('social').href,'?page=social');
- h.goto('?page=social&view=posts');h.goto('?page=social');assert.equal(h.calls.length,1);
+ h.render();await settle();assertTabs(h.html,'social');assert.equal(h.view.companionBrief('social').href,'?page=social&social_feed=featured');
+ h.goto('?page=social&view=posts&social_feed=featured');h.goto('?page=social&social_feed=featured');assert.equal(h.calls.length,1);
  h.refresh();await settle();
  h.goto(rank);await settle();assertTabs(h.html,'traders');assert.match(h.html,/Hyperliquid/);assert.ok(h.html.includes('href="'+profile+'"'));assert.doesNotMatch(h.html,/LunarCrush|QUALIFIED_CREATOR_POST/);
  h.goto(profile);await settle();assertTabs(h.html,'traders');assert.match(h.html,/Public address performance|公开地址表现/);assert.ok(h.html.includes(address));assert.doesNotMatch(h.html,/LunarCrush/);
@@ -93,7 +106,7 @@ test('legacy and restored URLs, manual refresh, ranking and address detail fetch
  h.goto(rank);await settle();assertTabs(h.html,'traders');
  h.goto(old);await settle();assertTabs(h.html,'social');assert.match(h.html,/QUALIFIED_CREATOR_POST/);assert.doesNotMatch(h.html,/Hyperliquid/);
  h.goto(rank);await settle();assertTabs(h.html,'traders');
- const feedUrl='/api/market-hub?resource=social&selection_version=0&limit=50',rankUrl='/api/market-hub?resource=traders',profileUrl=rankUrl+'&address='+address;
+ const feedUrl='/api/market-hub?resource=social&selection_version=0&limit=50&feed=featured',rankUrl='/api/market-hub?resource=traders',profileUrl=rankUrl+'&address='+address;
  assert.deepEqual(h.calls.map(call=>call.url),[feedUrl,feedUrl,rankUrl,profileUrl,profileUrl]);
  assert.match(h.html,/Hyperliquid/);assert.doesNotMatch(h.html,/QUALIFIED_CREATOR_POST/);
  h.setNow(NOW+HOUR+1);h.view.tick('social');await settle();
@@ -112,7 +125,7 @@ test('late responses from either tab cannot replace the active source',async t=>
  const replies=[],h=harness(t,{fetchImpl:()=>new Promise(resolve=>replies.push(resolve))});
  h.render();h.goto('?page=social&view=rank');assert.equal(h.calls[0].init.signal.aborted,true);
  replies[0](Response.json(curated()));await settle();assertTabs(h.html,'traders');assert.match(h.html,/Hyperliquid/);assert.doesNotMatch(h.html,/QUALIFIED_CREATOR_POST|LunarCrush/);
- h.goto('?page=social');assert.equal(h.calls[1].init.signal.aborted,true);
+ h.goto('?page=social&social_feed=featured');assert.equal(h.calls[1].init.signal.aborted,true);
  replies[1](Response.json(traderReceipt()));await settle();assertTabs(h.html,'social');assert.doesNotMatch(h.html,/Hyperliquid/);
  replies[2](Response.json(curated()));await settle();assertTabs(h.html,'social');assert.match(h.html,/QUALIFIED_CREATOR_POST/);
 });
