@@ -1,4 +1,5 @@
 import {mountCortexaGraph,maxZoom} from './brain-cortexa-graph.mjs';
+import {mountParticlePortrait} from './brain-particle-portrait.mjs';
 import {uiGlyph} from './product-composition.mjs';
 import {opticalFace} from './workbench-optical-header.mjs';
 import {watchAssetIcon} from './market-watchlist.mjs';
@@ -10,6 +11,7 @@ function markup({t,brainLayerTitle,thinkingSection,executionSection,nodeButtons,
   return `<link rel="stylesheet" href="/brain-cortexa.css">
     <section class="ct-hero" data-layer="brain" aria-labelledby="ct-brain-layer">
       <div class="space" data-expanded="false">
+        <div class="ct-particles" aria-hidden="true"><canvas data-sky></canvas><canvas data-portrait></canvas></div>
         <canvas class="ct-graph-canvas" aria-hidden="true"></canvas>${nodeButtons}
         <header class="ct-heading">
           <h1 id="ct-brain-layer" lang="en" data-no-translate>${opticalFace(brainLayerTitle,'span')}</h1>
@@ -45,11 +47,35 @@ function connect(root) {
   const {signal}=controls;
   let measureFrame=0;
   const reduced=()=>preference.matches || document.documentElement.dataset.reducedMotion==='true';
+  const portrait=mountParticlePortrait(space.querySelector('[data-portrait]'));
+  let sky=null,skyRequested=false,onscreen=false,pickerOpen=false,atMap=false;
+  function syncScene(){
+    const state={visible:onscreen && !document.hidden && !pickerOpen && !atMap,reduced:reduced(),light:document.documentElement.dataset.theme==='light'};
+    portrait.update(state);
+    sky?.update({...state,visible:state.visible && !state.reduced});
+    if(!skyRequested && state.visible && !state.reduced && !navigator.connection?.saveData){
+      skyRequested=true;
+      import('./brain-particle-dust.mjs').then(({mountParticleDust})=>{
+        if(signal.aborted)return;
+        const compact=stack.matches || shortLandscape.matches || matchMedia('(pointer:coarse)').matches;
+        sky=mountParticleDust(space.querySelector('[data-sky]'),{compact});
+        syncScene();
+      }).catch(()=>{});
+    }
+  }
+  const visibility=new IntersectionObserver(entries=>{onscreen=entries.at(-1).isIntersecting;syncScene();});
+  visibility.observe(hero);
+  const theme=new MutationObserver(syncScene);
+  theme.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-reduced-motion']});
+  document.addEventListener('visibilitychange',syncScene,{signal});
+  preference.addEventListener('change',syncScene,{signal});
+  root.addEventListener('cortexa-picker',({detail})=>{pickerOpen=detail;syncScene();},{signal});
   space.addEventListener('cortexa-graph',({detail:graph})=>{
     const percentage=Math.round(graph.zoom*100)+'%';
     if(zoomReadout.textContent!==percentage) zoomReadout.textContent=percentage;
     const reading=!graph.entering && (space.dataset.reading==='true'?graph.mix>.66:graph.mix>=.74);
     space.dataset.graphSettled=String(graph.mix===1);
+    if(atMap!== (graph.mix===1)){atMap=graph.mix===1;syncScene();}
     space.dataset.reading=String(reading);
     note.inert=!reading;
   },{signal});
@@ -86,6 +112,7 @@ function connect(root) {
   measure();
   return ()=>{
     controls.abort();
+    visibility.disconnect();theme.disconnect();portrait.dispose();sky?.dispose();
     size.disconnect();
     cancelAnimationFrame(measureFrame);
   };

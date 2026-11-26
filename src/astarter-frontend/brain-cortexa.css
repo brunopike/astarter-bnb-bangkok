@@ -14,6 +14,11 @@ astarter-brain[data-view=cortexa] {--ct-ice:#91cfe3;--ct-lilac:#b4a8de;--ct-fiel
     margin:0;isolation:isolate;overflow:hidden;background:var(--b-bg)
   }
   .ct-hero .space:focus {outline:none}
+  .ct-particles,.ct-particles canvas {position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .ct-particles {overflow:hidden;opacity:calc(1 - var(--graph-mix));transform:scale(var(--portrait-zoom,1))}
+  .ct-particles canvas {display:block}
+  .space[data-graph-settled=true] .ct-particles {visibility:hidden}
+  .space[data-cortexa-graph] > .ct-graph-canvas {opacity:var(--graph-mix,0)}
   .cortexa-art,.ct-frame,.ct-poster {position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none;border:0}
   .cortexa-art {z-index:0;background:#07090d;overflow:hidden}
   .ct-poster-plane {

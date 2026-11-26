@@ -1,6 +1,6 @@
 > **当前发布入口（2026-11-12）**：4188 应用的 GitHub / Vercel 发布说明见 [DEPLOYMENT.md](./DEPLOYMENT.md)。下面按时间保留原有开发记录，不能作为云端服务已接通的证明。
 
-This public Hackathon edition opens Onchain Deep Brain and its interactive evidence graph. The [hosted demo](https://dapp.ipfund.art/) also includes a licensed particle portrait. The public source includes the graph, research notes, and asset picker. To run it, use Node.js 24, then run `npm ci` and `npm start`.
+This public Hackathon edition opens Deep Brain with a self-contained animated particle portrait. On mobile, WebGL renders 55,000 background particles with four bloom levels. Select **Explore** to open the evidence graph. The portrait pauses while the graph is open or the hero is offscreen. The [hosted demo](https://demo.astarter.io/?page=brain) uses the licensed 3D portrait. To run it, use Node.js 24, then run `npm ci` and `npm start`.
 
 
 # HIVE · 当前前端 v0.34（2026-10-29 API 动态图标与场景清理）

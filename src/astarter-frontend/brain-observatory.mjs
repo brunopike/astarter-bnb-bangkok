@@ -433,7 +433,6 @@ class AstarterBrain extends HTMLElement {
     q('[data-return]').onclick=()=>{thinking.seek(4);showMemory(memory.selectReview());};
     this.controller=()=>{window.removeEventListener('hashchange',openLinkedArchive);disposeMarkets();blockArchive.dispose();proof.dispose();disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
     showZoom(1);showNote(0);
-    graph.setZoom(2.1);
   }
   disconnectedCallback(){this.controller?.();this.controller=null;}
 }
