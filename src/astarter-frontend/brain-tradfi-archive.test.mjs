@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-import {validateSeries,validateRows,validateSummary,validateShards,validateWholesale,matchingSeries,marketGroupCoverage,relatedSeries,settlementReleaseUrl} from './brain-tradfi-archive.mjs';
+import {validateSeries,validateRows,validateSummary,validateShards,validateWholesale,matchingSeries,linkedTaiwanBars,marketGroupCoverage,relatedSeries,settlementReleaseUrl} from './brain-tradfi-archive.mjs';
 const read=name=>readFileSync(new URL('./brain-evidence/tradfi/'+name+'.json',import.meta.url));
 const all=validateSeries(JSON.parse(read('catalog')));
 test('published market observations match instrument, units, dates, and checksum',()=>{
@@ -99,10 +99,23 @@ test('homepage totals reconcile with independently categorized actual observatio
   assert.equal(sum.catalogSha256,createHash('sha256').update(read('catalog')).digest('hex'));
   assert.equal(sum.series,all.length);
   const groups={dailyBars:0,wholesaleQuotes:0,oracleReads:0,otherObservations:0};
+  const catalog=JSON.parse(read('catalog')),file='tw-stock-sources.json';
+  const digest=catalog.supportingFiles?.[file];
+  const receipt=digest?read('tw-stock-sources'):null;
+  if(digest)assert.equal(createHash('sha256').update(receipt).digest('hex'),digest);
+  const links=receipt?JSON.parse(receipt):{};
   for(const s of all){
     const bucket=['wholesaleRange','wholesaleModal'].includes(s.statistic)?'wholesaleQuotes':s.statistic==='oracle'?'oracleReads':
        ['ohlcv','ohlc'].includes(s.statistic)||s.fields?.slice(0,5).join(',')==='date,close,open,high,low'?'dailyBars':'otherObservations';
     groups[bucket]+=s.count;
+    if(s.statistic==='close'&&links.ohlcvByIssuer?.[s.ticker]){
+      const verified=linkedTaiwanBars(s.ticker,JSON.parse(read(s.id)).rows,links);
+      const listed=all.find(m=>m.id==='tw-stock-twse-'+s.ticker);
+      if(listed)assert.equal(JSON.parse(read(listed.id)).rows.some(([day])=>verified.has(day)),false);
+      assert.equal(s.linkedDailyBars,verified.size);
+      groups.otherObservations-=verified.size;
+      groups.dailyBars+=verified.size;
+    }else assert.equal(s.linkedDailyBars??0,0);
   }
   for(const [key,count] of Object.entries(groups))assert.equal(sum[key],count);
   if(sum.wholesaleRangeQuotes!==undefined){
@@ -185,4 +198,16 @@ test('reject corrupt market-month references and invalid venue sessions',()=>{
   assert.equal(validateRows(item,good),good.rows);
   assert.throws(()=>validateRows(item,{id:s.id,rows:[[s.start,10,9,8,8,50,'202402',20,30]]}));
   assert.throws(()=>validateRows(item,{id:s.id,rows:[[s.start,10,9,11,8,55,'202402',20,30]]}));
+});
+
+
+test('supplemental Taiwan bars match the close archive, daily range and source',()=>{
+  const day='2026-11-26',prices=[2145,2150,2170,2120,45892693],closes=[[day,2145]];
+  const source='https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data';
+  const receipt={days:{['twse-'+day]:{[source]:'a'.repeat(64)}},ohlcvByIssuer:{'2330':{[day]:prices}}};
+  assert.deepEqual(linkedTaiwanBars('2330',closes,receipt).get(day),{values:prices,source});
+  assert.throws(()=>linkedTaiwanBars('2330',[[day,2140]],receipt),/Invalid/);
+  assert.throws(()=>linkedTaiwanBars('2330',closes,{...receipt,days:{}}),/source/);
+  assert.throws(()=>linkedTaiwanBars('2330',closes,{...receipt,ohlcvByIssuer:{2330:{[day]:[2145,2150,2148,2120,1]}}}),/Invalid/);
+  assert.equal(linkedTaiwanBars('2330',closes,{days:receipt.days}).size,0);
 });

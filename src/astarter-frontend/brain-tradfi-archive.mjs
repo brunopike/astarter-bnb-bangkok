@@ -30,13 +30,21 @@ const isoDate=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&
   Number.isFinite(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;
 const barSeries=s=>s.statistic==='ohlc'||s.statistic==='ohlcv'||s.fields?.slice(1,5).join(',')==='close,open,high,low';
 
+const taiwanCloses={2330:'tsmc',2317:'honhai',1590:'airtac',4958:'zhending'};
+function linkedBarCount(s){
+  const n=s.linkedDailyBars??0;
+  if(!Number.isSafeInteger(n)||n<0||n>s.count||(n&&(s.statistic!=='close'||s.group!=='stock'||taiwanCloses[s.ticker]!==s.id)))
+    throw Error('Invalid linked daily-bar count');
+  return n;
+}
 export function marketGroupCoverage(entries){
   const result={};
   for(const s of entries){
     const key=s.group==='commodity'?'commodities':s.group;
     const g=result[key]??={count:0,dailyBars:0,start:s.start,end:s.end};
     g.count+=s.count;
-    if(barSeries(s))g.dailyBars+=s.count;
+    const linked=linkedBarCount(s);
+    g.dailyBars+=barSeries(s)?s.count:linked;
     if(s.start<g.start)g.start=s.start;
     if(s.end>g.end)g.end=s.end;
   }
@@ -190,6 +198,23 @@ export function validateRows(s,data){
   }
   return data.rows;
 }
+export function linkedTaiwanBars(stock,closeRows,proof){
+  const closeByDate=new Map(closeRows.map(([day,value])=>[day,value]));
+  const stored=proof.ohlcvByIssuer?.[stock]??{};
+  const bars=new Map();
+  for(const [day,values] of Object.entries(stored)){
+    const [close,open,high,low,volume]=values;
+    if(!isoDate(day)||values.length!==5||closeByDate.get(day)!==close||
+      ![close,open,high,low].every(value=>Number.isFinite(value)&&value>0)||
+      low>Math.min(open,close)||high<Math.max(open,close)||!Number.isSafeInteger(volume)||volume<1)
+      throw Error('Invalid linked Taiwan daily bar');
+    const sources=Object.entries(proof.days['twse-'+day]??{}).filter(([href,sum])=>
+      /^https:\/\//.test(href)&&digestPattern.test(sum)&&(!href.includes('STOCK_FIRST')||['1590','4958'].includes(stock)));
+    if(!sources.length)throw Error('Missing Taiwan bar source');
+    bars.set(day,{values,source:sources[0][0]});
+  }
+  return bars;
+}
 export async function readSeries(s,signal){
   const data=await checkedFile(s.id,s.sha256,signal);
   return wholesale(s)?validateShards(s,data):validateRows(s,data);
@@ -238,6 +263,7 @@ export function mountTradfiArchive(root,en){
   const cache=new Map(),lifetime=new AbortController();
   let series=[],rows=[],page=0,controller,revision=0,searchTimer,placeTimer,shards=[],monthData=null,markets=[],filteredQuotes=[];
   let summary,summaryRequest,catalogHash='',checkedAt=0,optionLimit=resultLimit;
+  let twProofHash,linkedBars=new Map();
   const coverage=q('[data-category-coverage]'),coverageOptions=q('[data-coverage-options]');
   function showCoverage(values){
     if(!values)return;
@@ -290,7 +316,9 @@ export function mountTradfiArchive(root,en){
   async function getCatalog(signal,force){
     const totals=await getSummary(force);
     if(catalogHash===totals.catalogSha256&&series.length)return;
-    const entries=validateSeries(await checkedFile('catalog',totals.catalogSha256,signal));
+    const catalog=await checkedFile('catalog',totals.catalogSha256,signal),entries=validateSeries(catalog);
+    twProofHash=catalog.supportingFiles?.['tw-stock-sources.json'];
+    if(twProofHash!==undefined&&!digestPattern.test(twProofHash))throw Error('Invalid Taiwan source index');
     if(entries.length!==totals.series||entries.reduce((n,s)=>n+s.count,0)!==totals.count)throw Error('Market summary coverage');
     const oldGroup=group.value;
     group.replaceChildren(option('',t('全部市场','All markets')),...Object.entries(groups)
@@ -316,7 +344,7 @@ export function mountTradfiArchive(root,en){
       'Showing '+matches.length+' of '+number.format(count)+'. Type a name to narrow the list.'):count?t('匹配 '+count+' 项',count+' matching series'):'';
     return chosen();
   }
-  const clear=()=>{rows=[];shards=[];monthData=null;filteredQuotes=[];tbody.replaceChildren();q('thead tr').replaceChildren();paging.hidden=true;
+  const clear=()=>{rows=[];linkedBars=new Map();shards=[];monthData=null;filteredQuotes=[];tbody.replaceChildren();q('thead tr').replaceChildren();paging.hidden=true;
     year.replaceChildren();month.replaceChildren();market.replaceChildren();info.replaceChildren();q('[data-places]').hidden=true;
     q('[data-year-wrap]').hidden=false;q('[data-month-wrap]').hidden=true;};
   const remember=(key,value)=>{if(cache.size>=8&&!cache.has(key))cache.delete(cache.keys().next().value);cache.set(key,value);return value;};
@@ -373,6 +401,8 @@ export function mountTradfiArchive(root,en){
         const day=r[0].replaceAll('-','');
         dayCell.replaceChildren(link(r[0]+' ↗','https://www.tpex.org.tw/storage/ch/gold/historical/daily/'+day.slice(0,4)+'/'+day.slice(0,6)+'/EMdes410.'+day+'-C.csv'));
       }
+      const linked=linkedBars.get(r[0]);
+      if(linked&&bars)dayCell.replaceChildren(link(r[0]+' ↗',linked.source));
       tr.append(dayCell,el('td',number.format(r[1])));
       if(settlement){
         const file=el('td');file.append(link(r[3]+' ↗',settlementReleaseUrl(r[3],s.releaseOverrides)));
@@ -414,11 +444,20 @@ export function mountTradfiArchive(root,en){
         const period=s.sourcePeriods.find(([a,b])=>a<=r[0]&&r[0]<=b);
         const report=s.reports.find(o=>o.id===period?.[2]);
         const href=s.archivedSourceUrls?.[r[0]]??report?.downloadUrl?.replace('{YYYYMMDD}',r[0].replaceAll('-',''));
-        const td=el('td');if(/^https:\/\//.test(href))td.append(link(t('报表 ↗','Report ↗'),href));tr.append(td);
+        const td=el('td');if(/^https:\/\//.test(href))td.append(link(t('报表 ↗','Report ↗'),href));
+        if(linked){
+          const [,o,h,l,v]=linked.values,details=el('details');details.className='br-oracle-round';
+          details.append(el('summary',t('当日成交','Trading details')),el('small',t('开盘 ','Open ')+number.format(o)),
+            el('small',t('最高 ','High ')+number.format(h)),el('small',t('最低 ','Low ')+number.format(l)),
+            el('small',t('成交量 ','Volume ')+number.format(v)+t(' 股',' shares')),link(t('成交来源 ↗','Price source ↗'),linked.source));
+          td.append(details);
+        }
+        tr.append(td);
       }
       return tr;
     }));
-    status.textContent=s.start+' — '+s.end+' · '+number.format(s.count)+t(' 条记录',' observations')+
+    status.textContent=rows[0][0]+' — '+rows.at(-1)[0]+' · '+number.format(rows.length)+t(' 条记录',' observations')+
+      (bars&&linkedBars.size?t(' · 含 '+linkedBars.size+' 个已计入收盘档案的交易日。',' · Includes '+linkedBars.size+' trading days counted in the closing-price archive.'):'')+
       (bars?' · '+s.unit:'')+
       (s.sourceStatus==='discontinued'?t(' · 历史档案，来源已停止更新。',' · Historical archive. This source is discontinued.'):'')+
       (futures?t(' · 未复权近月期货，成交量单位为手。',' · Unadjusted front-month contract. Volume in contracts.'):'')+
@@ -525,7 +564,27 @@ export function mountTradfiArchive(root,en){
         if(shards.some(sh=>sh.month===priorMonth))month.value=priorMonth;
         await getMonth(s,signal,id);
       }else{
-        rows=data;const years=[...new Set(rows.map(r=>r[0].slice(0,4)))].reverse();
+        rows=data;
+        const closeSeries=s.statistic==='close'&&s.ticker?s:
+          s.exchange==='TWSE'&&s.related?.length===1?series.find(other=>other.id===s.related[0]&&other.statistic==='close'):null;
+        if(twProofHash&&closeSeries&&taiwanCloses[closeSeries.ticker]===closeSeries.id){
+          const proof=cache.get(twProofHash)??await checkedFile('tw-stock-sources',twProofHash,signal);
+          if(id!==revision||signal.aborted)return;
+          remember(twProofHash,proof);
+          if((closeSeries.linkedDailyBars??0)!==Object.keys(proof.ohlcvByIssuer?.[closeSeries.ticker]??{}).length)
+            throw Error('Taiwan bar index differs from receipt');
+          if(proof.ohlcvByIssuer?.[closeSeries.ticker]){
+            const closes=closeSeries===s?data:cache.get(closeSeries.sha256)??await readSeries(closeSeries,signal);
+            if(id!==revision||signal.aborted)return;
+            remember(closeSeries.sha256,closes);
+            linkedBars=linkedTaiwanBars(closeSeries.ticker,closes,proof);
+            if(closeSeries!==s){
+              if(rows.some(r=>linkedBars.has(r[0])))throw Error('Duplicate Taiwan daily bar');
+              rows=[...rows,...Array.from(linkedBars,([day,v])=>[day,...v.values])].sort((a,b)=>a[0].localeCompare(b[0]));
+            }
+          }
+        }
+        const years=[...new Set(rows.map(r=>r[0].slice(0,4)))].reverse();
         year.replaceChildren(...years.map(y=>option(y,y)));page=0;render();
       }
     }catch{failure(signal);}

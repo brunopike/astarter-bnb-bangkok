@@ -7,7 +7,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 import sys
 import brain_tradfi
-from brain_market_summary import source_receipts, summarize
+from brain_market_summary import attach_market_provenance, summarize
 import brain_tradfi_holdings
 import brain_tradfi_oracles
 import brain_tradfi_daily
@@ -57,7 +57,7 @@ if __name__ == '__main__':
               brain_tradfi_stocks_tw.build,brain_tradfi_settlements.build,brain_tradfi_energy.build,
               brain_tradfi_energy.build_gas,brain_tradfi_energy.build_gold,
               brain_tradfi_mandi_live.build,brain_tradfi_mandi_recent.build,brain_tradfi_oracles.build)
-    local_sources={brain_tradfi_futures.build:'Asia/Taipei',brain_tradfi_stocks_tw.build:'Asia/Taipei',
+    local_sources={brain_tradfi_tw.build:'Asia/Taipei',brain_tradfi_futures.build:'Asia/Taipei',brain_tradfi_stocks_tw.build:'Asia/Taipei',
                    brain_tradfi_energy.build_gold:'Asia/Taipei',brain_tradfi_mandi_live.build:'Asia/Kolkata',
                    brain_tradfi_mandi_recent.build:'Asia/Kolkata'}
     for updater in updaters:
@@ -71,7 +71,7 @@ if __name__ == '__main__':
             print(errors[-1],file=sys.stderr,flush=True)
     catalog_path=args.root/'catalog.json'
     catalog=json.loads(catalog_path.read_bytes())
-    catalog['supportingFiles']=source_receipts(args.root,catalog['series'])
+    attach_market_provenance(args.root,catalog)
     brain_tradfi.save(catalog_path,catalog)
     brain_tradfi.save(args.root/'summary.json',summarize(catalog_path.read_bytes()))
     sys.exit(bool(errors))

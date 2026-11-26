@@ -80,6 +80,11 @@ class DailyTests(unittest.TestCase):
         )
         self.assertEqual(meta["fields"], ["date", "close", "open", "high", "low"])
         self.assertEqual(rows, [["2016-01-04", 103, 105, 107, 101]])
+        _, cutoff_rows = next(d.taiex_bars(
+            date(2016, 1, 4), lambda *_: csv_data.encode(),
+            [["2016-01-05", 106, 104, 108, 103]],
+        ))
+        self.assertEqual(cutoff_rows, rows)
         with self.assertRaises(ValueError):
             next(
                 d.taiex_bars(

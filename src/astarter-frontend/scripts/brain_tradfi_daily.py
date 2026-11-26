@@ -343,7 +343,8 @@ def taiex_bars(until, load, previous):
     details["fields"] = ["date", "close", "open", "high", "low"]
     if any(len(row) != 5 for row in old.values()):
         raise ValueError("TAIEX OHLC upgrade incomplete for previously archived dates")
-    yield details, sorted(old.values())
+    # The catalog can already contain a later completed session in exchange time.
+    yield details, sorted(row for day, row in old.items() if day <= until.isoformat())
 
 
 def build(dest, until, load=load, sources=None):
@@ -389,6 +390,10 @@ def build(dest, until, load=load, sources=None):
                 final = sorted(history.values())
                 if not final:
                     raise ValueError("Empty observation series " + key)
+                if provider == "nbu":
+                    entry["observationUrl"] = re.sub(
+                        r"(?<=&end=)\d{8}", final[-1][0].replace("-", ""), entry["observationUrl"]
+                    )
                 save(target, {"id": key, "rows": final})
                 entry.update(
                     start=final[0][0],

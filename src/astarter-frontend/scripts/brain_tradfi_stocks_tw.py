@@ -204,7 +204,20 @@ def compile_market(dest, until, issuers, snapshots, existing=None, keep=True):
         related[ticker]={r[0]:r[1] for r in linked['rows']}
     series=defaultdict(dict); known={}; receipts={}
     source_file=dest/PROOF
-    if keep and source_file.is_file(): receipts=json.loads(source_file.read_bytes())['days']
+    shared={}
+    if keep and source_file.is_file():
+        proof=json.loads(source_file.read_bytes())
+        receipts=proof['days']
+        for ticker, older in proof.get('ohlcvByIssuer',{}).items():
+            if ticker not in LEGACY: raise ValueError('Unknown linked issuer')
+            for day, values in older.items():
+                if len(values)!=5 or not receipts.get('twse-'+day):
+                    raise ValueError('Missing linked Taiwan bar provenance')
+                close,opening,high,low,volume=values
+                verified=bar([opening,high,low,close,volume])
+                if verified is None or verified!=values:
+                    raise ValueError('Invalid linked Taiwan bar')
+                series['twse',ticker][day]=verified
     other=[]
     for m in old['series']:
         if not m['id'].startswith(PREFIX):
@@ -214,7 +227,9 @@ def compile_market(dest, until, issuers, snapshots, existing=None, keep=True):
         key=(m['exchange'].lower(),m['symbol']);known[key]=m
         data=(dest/(m['id']+'.json')).read_bytes()
         if sha256(data).hexdigest()!=m['sha256']: raise ValueError('Stored stock SHA-256 mismatch')
-        series[key]={r[0]:r[1:] for r in json.loads(data)['rows']}
+        for row in json.loads(data)['rows']:
+            if row[0] in series[key]: raise ValueError('Linked and standalone Taiwan bar on the same date')
+            series[key][row[0]]=row[1:]
     touched=Counter()
     for market,day,rows,url,digest in snapshots:
         date.fromisoformat(day)
@@ -234,7 +249,7 @@ def compile_market(dest, until, issuers, snapshots, existing=None, keep=True):
             raise ValueError('No eligible issuer prices in '+market+' on '+day)
         touched[market]+=valid_rows
         receipts.setdefault(market+'-'+day,{})[url]=digest
-    if not touched and not known: raise ValueError('No eligible issuer prices returned')
+    if not touched and not any(series.values()): raise ValueError('No eligible issuer prices returned')
     omitted=0;meta=[]
     # Prepare the entire batch before replacing any public files.
     with tempfile.TemporaryDirectory(dir=dest) as temp:
@@ -244,7 +259,8 @@ def compile_market(dest, until, issuers, snapshots, existing=None, keep=True):
             if market=='twse' and ticker in related:
                 for day in set(by_date)&related[ticker].keys():
                     if by_date[day][0]!=related[ticker][day]: raise ValueError('Published Taiwan close conflict at '+day)
-                    del by_date[day];omitted+=1
+                    shared.setdefault(ticker,{})[day]=by_date.pop(day)
+                    omitted+=1
             if not by_date: continue
             rows=[[day,*v] for day,v in sorted(by_date.items())]
             key=PREFIX+market+'-'+ticker
@@ -266,7 +282,9 @@ def compile_market(dest, until, issuers, snapshots, existing=None, keep=True):
                       licenseUrl=LICENSE,sourceIndex=PROOF,start=rows[0][0],end=rows[-1][0],count=len(rows),sha256=digest)
             if market=='twse' and ticker in LEGACY: item['related']=[LEGACY[ticker]]
             meta.append(item)
-        save(stage/PROOF,{'version':1,'days':receipts,'registryUrls':MASTERS,
+        save(stage/PROOF,{'version':1,'days':receipts,
+                   'ohlcvByIssuer':{ticker:dict(sorted(days.items())) for ticker,days in sorted(shared.items())},
+                   'registryUrls':MASTERS,
                    'historicalKyDataset':'https://data.gov.tw/dataset/11759','licenseUrl':LICENSE})
         save(stage/'catalog.json',{**old,'series':other+meta})
         stage.rename(dest/'.tw-stock-pending')

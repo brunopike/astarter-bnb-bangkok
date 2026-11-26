@@ -30,6 +30,11 @@ class TaiwanStockTests(unittest.TestCase):
         row=json.loads(first)['rows'][0]
         self.assertEqual(row,['2026-05-05',104,101,105,100,20000])
         self.assertFalse((self.dest/'tw-stock-twse-0050.json').exists())
+        proof=self.dest/'tw-stock-sources.json'
+        before=proof.read_bytes()
+        self.assertEqual(json.loads(before)['ohlcvByIssuer']['2330']['2026-05-04'],[104,101,105,100,20000])
+        compile_market(self.dest,date(2026,5,5),self.issuers,[])
+        self.assertEqual(proof.read_bytes(),before)
         result=compile_market(self.dest,date(2026,5,5),self.issuers,incoming)
         self.assertEqual((result['rows'],file.read_bytes()),(2,first))
         compile_market(self.dest,date(2026,5,4),self.issuers,[self.quotes('2026-05-06',prices)])
