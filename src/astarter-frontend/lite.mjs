@@ -579,7 +579,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     const retryDelay = failedReads ? Math.min(30_000, 5_000 * 2 ** (failedReads - 1)) : Infinity;
     nextReadAt = Math.min(
       at + retryDelay,
-      ...incoming.filter((row) => row.validUntil > at).map((row) => row.validUntil),
+      ...incoming.map((row) => row.validUntil),
       at + (mode === 'practice' ? 30_000 : 60_000)
     );
     if (
