@@ -1,7 +1,7 @@
 import {renderPaperCase} from './paper-replay/view.mjs';
 // Present the registered decision first. Historical simulation is loaded on demand.
 import {escapeUI as e} from './product-experience.mjs';
-import {sparkline} from './product-charts.mjs';
+import {uiGlyph} from './product-composition.mjs';
 
 const strategies={
   trend:['趋势跟随','Trend following'],breakout:['突破','Breakout'],pullback:['回调','Pullback'],cash:['持有现金','Cash']
@@ -93,10 +93,87 @@ function formatters(en){
 const signClass=value=>(value>0?'is-positive':value<0?'is-negative':'');
 const fact=(label,value)=>`<div><dt>${e(label)}</dt><dd>${e(value)}</dd></div>`;
 
-export function mountProofView(host,replayHost,en){
+// The next calendar decision may have been frozen before this session closed.
+export function nextLearningSession(decisions,record){
+  const close=Date.parse(record.execution.barCloseAt);
+  return decisions.find(row=>row.barOpenAt>record.barOpenAt && Date.parse(row.asOf)>=close);
+}
+export function linksLearningReceipt(before,after){
+  return Boolean(before.execution?.id && after.assetKey===before.assetKey && after.mode===before.mode &&
+    after.previousReceiptId===before.execution.id && after.previousReceiptAt===before.execution.barCloseAt &&
+    Date.parse(after.asOf)>=Date.parse(before.execution.barCloseAt));
+}
+
+// Native adaptation of Klyv Animated Beam (21st.dev/@klyv-ui/components/klyv-animated-beam).
+/*
+MIT License
+
+Copyright (c) 2026 Klyv contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+function mountLearningBeam(flow,replay,signal){
+  const svg=flow.querySelector('.bl-links');
+  const nodes=[...flow.querySelectorAll('.bl-node')];
+  const links=[...svg.querySelectorAll('g')];
+  function measure(){
+    const bounds=flow.getBoundingClientRect();
+    if(!bounds.width || !bounds.height)return;
+    const centers=nodes.map(node=>{
+      const r=node.getBoundingClientRect();
+      return {x:r.left-bounds.left+r.width/2,y:r.top-bounds.top+r.height/2};
+    });
+    svg.setAttribute('viewBox',`0 0 ${bounds.width} ${bounds.height}`);
+    links.forEach((group,i)=>{
+      const a=centers[i],b=centers[i+1],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+      const bend=Math.min(29,len*.13)*(i===0?1:-1);
+      for(const path of group.children){
+        const bow=bend*Number(path.dataset.bow);
+        const cx=(a.x+b.x)/2-dy/len*bow,cy=(a.y+b.y)/2+dx/len*bow;
+        path.setAttribute('d',`M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`);
+      }
+    });
+  }
+  measure();
+  const resize=new ResizeObserver(measure);
+  for(const element of [flow,...nodes])resize.observe(element);
+  let inView=false;
+  function updatePlayback(){
+    flow.toggleAttribute('data-visible',inView&&!document.hidden);
+    if(inView&&!document.hidden)flow.setAttribute('data-play','');
+  }
+  const observer=new IntersectionObserver(([entry])=>{inView=entry.intersectionRatio>=.25;updatePlayback();},{threshold:.25});
+  observer.observe(flow);
+  document.addEventListener('visibilitychange',updatePlayback,{signal});
+  replay.hidden=false;
+  replay.addEventListener('click',()=>{
+    flow.removeAttribute('data-play');
+    void flow.offsetWidth;
+    flow.setAttribute('data-play','');
+  },{signal});
+  signal.addEventListener('abort',()=>{resize.disconnect();observer.disconnect();replay.hidden=true;},{once:true});
+}
+
+export function mountProofView(host,replayHost,learningHost,en){
   // In these two locales the financial terms here are already rendered explicitly.
   if(/^(en|zh)(-|$)/.test(host.closest('astarter-brain')?.dataset.locale??'en')){
-    host.dataset.noTranslate='';replayHost.dataset.noTranslate='';
+    for(const section of [host,replayHost,learningHost])section.dataset.noTranslate='';
   }
   const t=(zh,english)=>en?english:zh;
   const {number,percent,amount}=formatters(en);
@@ -115,30 +192,61 @@ export function mountProofView(host,replayHost,en){
     `;
   replayHost.innerHTML=`
     <header class="br-layer-head"><div class="br-layer-title"><h2 id="br-backtest-title">${t('回测复盘','Backtest review')}</h2></div>
-      <div class="bp-controls"><label>${t('市场','Market')}<select data-replay-market data-native-select></select></label>
-        <label>${t('回测窗口','Window')}<select data-window data-native-select></select></label></div>
+      <div class="bp-controls"><label><span class="bp-sr">${t('市场','Market')}</span><select data-replay-market data-native-select></select></label>
+        <label><span class="bp-sr">${t('回测窗口','Window')}</span><select data-window data-native-select></select></label></div>
     </header>
     <div class="bp-replay">
       <div class="bp-state" data-state role="status"></div>
       <div data-result hidden>
-        <header class="bp-run"><div><strong data-instrument></strong><span data-venue></span></div><span data-period></span></header>
-        <div class="bp-overview"><figure class="bp-equity" hidden><figcaption>${t('模拟账户权益','Simulated equity')}<strong data-equity-value></strong></figcaption><div data-equity-chart aria-hidden="true"></div></figure>
-        <dl class="bp-metrics" data-metrics></dl></div>
-        <details class="bp-method"><summary>${t('成本与计算口径','Costs & methodology')}</summary><div data-method></div></details>
-        <details class="bp-cohort" data-cohort hidden><summary>${t('同期市场对照','Cross-market comparison')}</summary><div data-cohort-body></div></details>
+        <div class="bp-overview"><figure class="bp-equity" hidden>
+          <figcaption><div><span>${t('模拟净值','Simulated equity')}</span><strong data-equity-value></strong></div><small data-venue></small></figcaption>
+          <div class="bp-chart-frame"><div class="bp-equity-plot" data-equity-chart></div><div class="bp-chart-scale" data-equity-scale aria-hidden="true"></div></div>
+          <div class="bp-axis" data-period></div>
+        </figure><dl class="bp-metrics" data-metrics></dl></div>
         <div class="bp-ledger">
-          <header class="bp-ledger-head"><h3>${t('决策记录','Decision ledger')}</h3><div>
+          <header class="bp-ledger-head"><h3>${t('决策回放','Decision replay')}</h3><div>
             <label class="bp-day"><span class="bp-sr">${t('选择执行日 (UTC)','Select execution day (UTC)')}</span><select data-day data-native-select></select></label>
             <button type="button" data-prev aria-label="${t('前一条决策','Previous decision')}" title="${t('前一条决策','Previous decision')}">‹</button>
             <button type="button" data-next-day aria-label="${t('后一条决策','Next decision')}" title="${t('后一条决策','Next decision')}">›</button>
           </div></header>
           <div data-detail></div>
         </div>
-        <div data-forward></div>
+        <div class="bp-tools">
+          <div class="bp-tools-nav">${[
+            ['method','filter',t('成本与口径','Method & costs')],
+            ['cohort','columns',t('市场对照','Compare markets')],
+            ['forward','history',t('事前登记','Forward record')]
+          ].map(([key,icon,label])=>`<button type="button" data-review-tool="${key}" aria-controls="bp-tool-${key}" aria-expanded="false">${uiGlyph(icon)}${label}</button>`).join('')}</div>
+          <div id="bp-tool-method" data-method hidden></div>
+          <div id="bp-tool-cohort" data-cohort-body hidden></div>
+          <div id="bp-tool-forward" data-forward hidden></div>
+        </div>
       </div>
     </div>`;
+  learningHost.innerHTML=`<header class="br-layer-head"><div class="br-layer-title"><h2 id="br-learning-title">${t('Agent 自我学习','Agent learning')}</h2></div>
+    <div class="bl-controls"><span class="bl-period" data-learning-period></span><button class="bl-replay" type="button" hidden
+      aria-label="${t('重播学习过程','Replay learning sequence')}" title="${t('重播学习过程','Replay learning sequence')}">${uiGlyph('play')}</button></div></header>
+    <div class="bl-body" data-learning-body aria-busy="false"></div>`;
+  const learningBody=learningHost.querySelector('[data-learning-body]'),learningPeriod=learningHost.querySelector('[data-learning-period]');
+  const emptyLearning=t('等待所选市场的模拟复盘记录。','Awaiting a replay record for this market.');
+  function learningState(message,action){
+    learningPeriod.textContent='';
+    notice(learningBody,message,action);
+    learningBody.setAttribute('aria-busy','false');
+  }
+  learningState(emptyLearning);
   const market=q('[data-market]'),period=q('[data-window]'),day=q('[data-day]');
-  const previous=q('[data-prev]'),next=q('[data-next-day]'),cohort=q('[data-cohort]');
+  const previous=q('[data-prev]'),next=q('[data-next-day]'),cohort=q('[data-review-tool="cohort"]');
+  const toolButtons=replayHost.querySelectorAll('[data-review-tool]');
+  function showTool(key){
+    for(const button of toolButtons){
+      const open=button.dataset.reviewTool===key;
+      button.setAttribute('aria-expanded',String(open));
+      q('#'+button.getAttribute('aria-controls')).hidden=!open;
+    }
+    if(key==='cohort')loadCohort();
+  }
+  for(const button of toolButtons)button.onclick=()=>showTool(button.getAttribute('aria-expanded')==='true'?'':button.dataset.reviewTool);
   let scope=null,scopeLabel='',selectedMarket='',days=90,directory=null,run=null;
   let replayVisible=false;
   const currentResult=q('[data-current-result]'),currentState=q('[data-current-state]');
@@ -162,9 +270,10 @@ export function mountProofView(host,replayHost,en){
     }
   }
   function clearRecord(){
+    learningState(emptyLearning);
     recordRequest?.abort();recordRequest=null;
     run=null;cohortRequest?.abort();cohortRequest=null;cohortLoaded=false;
-    cohort.open=false;cohort.hidden=true;q('[data-forward]').replaceChildren();
+    showTool('');cohort.hidden=true;q('[data-forward]').replaceChildren();
     q('[data-result]').hidden=true;
   }
   function setOptions(el,rows,value){
@@ -189,31 +298,69 @@ export function mountProofView(host,replayHost,en){
     if(!windows.some(window=>String(window)===String(days)))days=directory.defaultDays??windows[0];
     setOptions(period,windows.map(window=>[window,window==='all'?t('全部历史','Full history'):t(window+' 天',window+' days')]),days);
   }
-  function headline(label,value,tone=''){
-    return `<div><dt>${e(label)}</dt><dd class="${tone}">${e(value)}</dd></div>`;
+  function renderEquity(){
+    const {asset,decisions,assumptions,summary}=run,figure=q('.bp-equity');
+    let balance=assumptions.initialCapital;
+    const equitySeries=decisions.map(row=>(balance+=Number.isFinite(row.netPnl)?row.netPnl:NaN));
+    figure.hidden=!equitySeries.length || !equitySeries.every(Number.isFinite);
+    if(figure.hidden)return;
+    q('[data-equity-value]').innerHTML=e(number(balance))+' <small>'+e(asset.quote)+'</small>';
+    q('[data-venue]').textContent=asset.venue;
+    q('[data-period]').innerHTML='<time>'+date(summary.startAt)+'</time><time>'+date(summary.endAt)+' UTC</time>';
+    const low=Math.min(...equitySeries),high=Math.max(...equitySeries);
+    q('[data-equity-scale]').innerHTML=high===low?`<span style="top:50%">${e(number(high))}</span>`:
+      `<span style="top:8%">${e(number(high))}</span><span style="top:92%">${e(number(low))}</span>`;
+    const points=equitySeries.map((value,i)=>({
+      x:equitySeries.length===1?50:100*i/(equitySeries.length-1),
+      y:high===low?50:8+84*(high-value)/(high-low)
+    }));
+    const line=points.map(({x,y})=>x.toFixed(3)+','+y.toFixed(3)).join(' ');
+    const dots=points.map(({x,y},i)=>decisions[i].status==='filled'
+      ?`<i class="bp-fill-dot" style="left:${x}%;top:${y}%" aria-hidden="true"></i>`:'').join('');
+    q('[data-equity-chart]').innerHTML=`<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs><linearGradient id="bp-equity-wash" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="currentColor" stop-opacity=".17"/><stop offset="1" stop-color="currentColor" stop-opacity=".01"/></linearGradient></defs>
+        <polygon points="0,100 ${line} 100,100" fill="url(#bp-equity-wash)"/>
+        <polyline points="${line}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      </svg>${dots}<span class="bp-cursor" aria-hidden="true"><i></i></span>
+      <output class="bp-chart-readout" aria-hidden="true"></output>
+      <input data-chart-day type="range" aria-label="${t('选择回放日期','Select replay date')}" min="0" max="${points.length-1}" step="1">`;
+    const slider=q('[data-chart-day]');
+    const box=slider.parentElement,readout=box.querySelector('output');
+    const pointLabel=index=>date(decisions[index].barOpenAt)+' · '+amount(equitySeries[index],asset.quote);
+    slider.onpointermove=event=>{
+      if(event.pointerType!=='mouse' || event.buttons)return;
+      const rect=slider.getBoundingClientRect();
+      const fraction=Math.min(1,Math.max(0,(event.clientX-rect.left)/rect.width));
+      const index=Math.round(fraction*(points.length-1));
+      box.style.setProperty('--bp-peek',points[index].x+'%');box.dataset.preview='';
+      readout.textContent=pointLabel(index);
+    };
+    slider.onpointerleave=()=>{delete box.dataset.preview;readout.textContent=pointLabel(Number(slider.value));};
+    slider.oninput=()=>markSession(Number(slider.value));
+    slider.onchange=()=>{const row=decisions[Number(slider.value)];if(row && row.id!==day.value)loadRecord(row.id);};
+    function markSession(index){
+      const point=points[index];if(!point)return;
+      delete box.dataset.preview;
+      box.style.setProperty('--bp-x',point.x+'%');box.style.setProperty('--bp-y',point.y+'%');
+      const text=pointLabel(index);
+      slider.value=index;slider.setAttribute('aria-valuetext',text);
+      readout.textContent=text;
+    }
+    return markSession;
   }
+  let markEquityDay=null;
   function renderSummary(){
     const {asset,brain,summary:s,assumptions:a}=run,quote=asset.quote;
-    q('[data-instrument]').textContent=asset.market;
-    q('[data-venue]').textContent=asset.venue+' · '+t('历史模拟','Historical simulation');
-    q('[data-period]').textContent=date(s.startAt)+' – '+date(s.endAt)+' UTC';
-    q('[data-metrics]').innerHTML=[
-      headline(t('策略净收益率','Strategy net return'),percent(s.netReturnPct,true),signClass(s.netReturnPct)),
-      headline(t('买入持有','Buy & hold'),percent(s.buyHoldReturnPct,true)),
-      headline(t('最大回撤','Max drawdown'),percent(s.maxDrawdownPct)),
-      headline(t('成交 / 决策','Trades / decisions'),number(s.trades,0)+' / '+number(s.observations,0))
-    ].join('');
-    const equity=[a.initialCapital];
-    for(const session of run.decisions){
-      if(!Number.isFinite(session.netPnl))break;
-      equity.push(equity.at(-1)+session.netPnl);
-    }
-    const figure=q('.bp-equity');
-    figure.hidden=!Number.isFinite(a.initialCapital) || !run.decisions.length || equity.length!==run.decisions.length+1;
-    if(!figure.hidden){
-      q('[data-equity-value]').textContent=amount(equity.at(-1),quote);
-      q('[data-equity-chart]').innerHTML=sparkline(equity,{width:420,height:76,color:'#91cfe3'});
-    }
+    markEquityDay=renderEquity();
+    const scale=Math.max(...[s.netReturnPct,s.buyHoldReturnPct].filter(Number.isFinite).map(Math.abs),.01);
+    const performance=(label,value)=>{
+      const width=Number.isFinite(value)?Math.abs(value)/scale*50:0;
+      return `<div class="bp-return"><dt>${label}</dt><dd><span class="bp-bar" aria-hidden="true"><i style="width:${width}%;${value<0?'right':'left'}:50%"></i></span>
+        <b class="${signClass(value)}">${e(percent(value,true))}</b></dd></div>`;
+    };
+    q('[data-metrics]').innerHTML=performance(t('策略净收益','Net return'),s.netReturnPct)+performance(t('买入持有','Buy & hold'),s.buyHoldReturnPct)+
+      `<div class="bp-stat"><dt>${t('最大回撤','Max drawdown')}</dt><dd>${e(percent(s.maxDrawdownPct))}</dd></div>
+       <div class="bp-stat"><dt>${t('成交 / 决策','Trades / decisions')}</dt><dd>${e(number(s.trades,0))} <small>/ ${e(number(s.observations,0))}</small></dd></div>`;
     q('[data-method]').innerHTML=`<dl class="bp-facts">${[
       fact(t('初始资金','Starting capital'),amount(a.initialCapital,quote)),
       fact(t('扣费后损益','Net P&L'),amount(s.netPnl,quote)),
@@ -233,7 +380,7 @@ export function mountProofView(host,replayHost,en){
     cohort.hidden=scope!=='all' || days==='all';
     const list=run.decisions;
     const latestFill=list.findLast(item=>item.status==='filled')??list.at(-1);
-    setOptions(day,[...list].reverse().map(item=>[item.id,date(item.barOpenAt)+' UTC · '+name(item.selected)+' · '+reason(item.status)]),latestFill?.id??'');
+    setOptions(day,[...list].reverse().map(item=>[item.id,date(item.barOpenAt)+' UTC'+(item.status==='filled'?' · '+t('成交','Fill'):'')]),latestFill?.id??'');
     q('[data-state]').hidden=true;q('[data-result]').hidden=false;
     if(list.length)loadRecord(day.value);
     else{
@@ -272,10 +419,14 @@ export function mountProofView(host,replayHost,en){
       run=response;renderSummary();
     }catch(error){
       if(disposed || controller.signal.aborted)return;
-      if(error.code==='INSUFFICIENT_EVIDENCE')notice(q('[data-state]'),t('历史样本不足，无法核对这个窗口。','There is insufficient history for this window.'));
-      else if(error.code==='INVALID_EVIDENCE')notice(q('[data-state]'),t('归档行情未通过完整性检查。','The market archive failed its integrity checks.'));
-      else if(error.code==='UNSUPPORTED_ASSET')notice(q('[data-state]'),t('该市场暂无历史回测。','No historical replay for this market.'));
-      else notice(q('[data-state]'),t('回测记录暂时无法读取。','Replay data is temporarily unavailable.'),loadHistory);
+      const errors={
+        INSUFFICIENT_EVIDENCE:t('历史样本不足，无法核对这个窗口。','There is insufficient history for this window.'),
+        INVALID_EVIDENCE:t('归档行情未通过完整性检查。','The market archive failed its integrity checks.'),
+        UNSUPPORTED_ASSET:t('该市场暂无历史回测。','No historical replay for this market.')
+      };
+      const message=errors[error.code]??t('回测记录暂时无法读取。','Replay data is temporarily unavailable.');
+      const retry=errors[error.code]?null:loadHistory;
+      notice(q('[data-state]'),message,retry);learningState(message,retry);
     }finally{
       if(replayRequest===controller)replayRequest=null;
     }
@@ -293,14 +444,14 @@ export function mountProofView(host,replayHost,en){
       if(replayVisible)loadHistory();
       if(!selectedMarket){
         const empty=t('暂无可核对的市场。','No market is available for review.');
-        clearRecord();notice(currentState,empty);notice(q('[data-state]'),empty);
+        clearRecord();notice(currentState,empty);notice(q('[data-state]'),empty);learningState(empty);
         return;
       }
       await loadCurrent();
     }catch{
       if(!disposed && !controller.signal.aborted){
         const message=t('市场列表暂时无法读取。','The market list is temporarily unavailable.');
-        notice(currentState,message,load);notice(q('[data-state]'),message,load);
+        notice(currentState,message,load);notice(q('[data-state]'),message,load);learningState(message,load);
       }
     }
   }
@@ -479,8 +630,7 @@ export function mountProofView(host,replayHost,en){
       </details><div class="bp-review-actions">
         <label>${t('交易日 (UTC)','Session (UTC)')} <input type="date" data-session aria-label="${t('查看交易日的登记','Review registered session')}" value="${e(response.targetDate)}" max="${e(latestSession || response.targetDate)}"></label>
         ${reviewDate?`<button type="button" data-latest class="bp-refresh">${t('返回当前','Current session')}</button>`:''}
-        <button type="button" class="bp-refresh" data-refresh>${t('重新核对','Check again')}</button>
-        </div></footer>`;
+        <button type="button" class="bp-refresh" data-refresh>${t('重新核对','Check again')}</button></div></footer>`;
     currentState.hidden=true;currentResult.hidden=false;
     const sensitivity=q('[data-choice-sensitivity]');
     if(sensitivity){
@@ -525,8 +675,16 @@ export function mountProofView(host,replayHost,en){
     const candidates=record.candidates.map(c=>`<li><div><b>${e(name(c.id))}</b><span>${e(c.id===record.selected?t('入选','Selected'):c.eligible?t('可选','Eligible'):t('未通过','Ineligible'))}</span></div>
       <small>${e(reason(c.reason))}${Number.isFinite(c.score)?' · '+t('得分 ','Score ')+e(number(c.score,4)):''}${Number.isFinite(c.sampleCount)?' · '+e(number(c.sampleCount,0))+' '+t('个样本','samples'):''}</small></li>`).join('');
     const source=`<div class="bp-sources">${sourceLink(evidenceUrl,t('冻结输入','Frozen inputs'))} ${sourceLink(record.sourceUrl??brain.sourceUrl,t('行情来源','Market source'))}</div>`;
-    q('[data-detail]').innerHTML=`<div class="bp-trace">
-      ${stage('Brain Layer',t('锁定行情快照','Market snapshot'),facts([
+    const identifiers=`<details class="bp-ids"><summary>${t('决策与回执编号','Decision and receipt IDs')}</summary><dl class="bp-facts">${[
+      fact(t('回测','Replay'),run.runId),fact(t('证据归档','Evidence archive'),brain.evidenceId),
+      fact(t('决策快照','Snapshot'),record.snapshotId),fact(t('决策','Decision'),record.id),fact(t('风控版本','Risk policy'),r.policyVersion),
+      fact(t('模拟回执','Simulated receipt'),x.id)
+    ].join('')}</dl>${sourceLink(endpoint({run:run.runId,decision:record.id}),t('原始决策记录','Decision JSON'))}</details>`;
+    const step=(icon,layer,main,caption,body,tone='')=>`<details class="bp-step">
+      <summary><span class="bp-step-icon">${uiGlyph(icon)}</span><span class="bp-step-layer">${layer}</span>${uiGlyph('chevron')}
+        <strong class="${tone}">${e(main)}</strong><small>${e(caption)}</small></summary><div class="bp-step-body">${body}</div></details>`;
+    q('[data-detail]').innerHTML=`<div class="bp-trace bp-replay-trace">
+      ${step('layers','Brain Layer',number(record.barCount,0)+' '+t('根日线','daily bars'),t('收盘 ','Close ')+amount(record.features.close,quote),facts([
         fact(t('可用数据截至','Information cutoff'),stamp(record.asOf)),
         fact(t('研判时间','Decision time'),stamp(record.observedAt)),
         fact(t('交易市场','Instrument'),asset.venue+' · '+asset.market),
@@ -534,14 +692,15 @@ export function mountProofView(host,replayHost,en){
         fact(t('最后收盘','Last known close'),amount(record.features.close,quote,8)),
         fact(t('波动幅度 (ATR)','ATR / close'),percent(record.features.atrPct*100))
       ])+source)}
-      ${stage('Thinking Layer',name(record.selected),facts([
+      ${step('strategy','Thinking Layer',name(record.selected),reason(r.action),facts([
         fact(t('选用依据','Selection rule'),reason(record.reason)),
         fact(t('风控决策','Risk decision'),reason(r.mode)+' · '+reason(r.action)+' · '+reason(r.reason)),
         fact(t('风险预算','Risk budget'),amount(r.riskBudget,quote)),
         fact(t('冻结下单额度','Planned allocation'),amount(r.amount,quote)),
         fact(t('止损 / 开盘跳空上限','Stop / gap limit'),percent(r.stopFraction*100)+' / '+percent(r.openGapLimit*100))
       ])+`<details><summary>${t('候选策略','Candidates')} · ${record.candidates.length}</summary><ul class="bp-candidates">${candidates}</ul></details>`)}
-      ${stage('Execution Layer',reason(x.status),facts([
+      ${step('pulse','Execution Layer',filled?(x.netPnl>0?'+':'')+amount(x.netPnl,quote):reason(x.status),
+        filled?t('扣费后','Net P&L')+' · '+reason(x.reason):reason(x.reason),facts([
         fact(t('目标开盘','Target open'),stamp(record.barOpenAt)),
         fact(t('开盘期初权益','Opening equity'),amount(x.equityBefore,quote)),
         fact(t('开盘复核','Risk check at open'),x.openRisk?reason(x.openRisk.action)+' · '+reason(x.openRisk.reason):'—'),
@@ -554,32 +713,100 @@ export function mountProofView(host,replayHost,en){
         ]:[]),
         fact(t('扣费后损益','Net P&L'),amount(x.netPnl,quote)),
         fact(t('期末权益','Closing equity'),amount(x.equityAfter,quote))
-      ]))}
-    </div><details class="bp-ids"><summary>${t('决策与回执编号','Decision and receipt IDs')}</summary><dl class="bp-facts">${[
-      fact(t('回测','Replay'),run.runId),fact(t('证据归档','Evidence archive'),brain.evidenceId),
-      fact(t('决策快照','Snapshot'),record.snapshotId),fact(t('决策','Decision'),record.id),fact(t('风控版本','Risk policy'),r.policyVersion),
-      fact(t('模拟回执','Simulated receipt'),x.id)
-    ].join('')}</dl>${sourceLink(endpoint({run:run.runId,decision:record.id}),t('原始决策记录','Decision JSON'))}</details>`;
+      ])+identifiers,filled?signClass(x.netPnl):'')}
+    </div>`;
+  }
+  async function learnFromRecord(record,activeRun,signal){
+    const receipt=record.execution,following=nextLearningSession(activeRun.decisions,record);
+    learningPeriod.textContent=activeRun.asset.market+' · '+date(record.barOpenAt)+' UTC';
+    const reviewUrl=decision=>endpoint({run:activeRun.runId,decision:decision.id});
+    const inspectLabel=t('查看校准依据','Inspect calibration');
+    const cell=(icon,label,main,detail,inspect=false)=>`<div class="bl-cell">${inspect
+      ?`<button type="button" class="bl-node bl-inspect" aria-label="${inspectLabel}" title="${inspectLabel}" aria-controls="bl-calibration" aria-expanded="false">${icon}</button>`
+      :`<div class="bl-node" aria-hidden="true">${icon}</div>`}
+      <div class="bl-copy"><h3>${e(label)}</h3><strong>${main}</strong><p>${e(detail)}</p></div></div>`;
+    const observed=cell(uiGlyph('file'),t('模拟执行结果','Paper outcome'),e(reason(receipt.reason)),
+      name(record.selected)+' · '+t('净损益 ','Net P&L ')+amount(receipt.netPnl,activeRun.asset.quote));
+    const origin=sourceLink(reviewUrl(record),t('原始决策与回执','Decision and receipt'));
+    learningBody.innerHTML=`<div class="bl-grid">${observed}</div><div class="bl-feedback"></div>`;
+    const feedback=learningBody.querySelector('.bl-feedback');
+    if(!following){
+      feedback.innerHTML=`<p>${e(t('此窗口尚无包含本场结果的后续决策。','This window ends before a later decision can use this outcome.'))}</p>${origin}`;
+      return;
+    }
+    learningBody.setAttribute('aria-busy','true');
+    try{
+      const response=await request({run:activeRun.runId,decision:following.id},signal);
+      if(signal.aborted || disposed || run!==activeRun)return;
+      const after=response.decision;
+      if(response.runId!==activeRun.runId || after?.id!==following.id || !linksLearningReceipt(record,after))throw Error('Unlinked learning record');
+      const score=value=>(value>0?'+':'')+number(value,4);
+      const focus=record.selected==='cash'?record.candidates.filter(c=>c.id!=='cash').sort((a,b)=>b.score-a.score)[0]:
+        record.candidates.find(c=>c.id===record.selected);
+      const update=after.candidates.find(c=>c.id===focus?.id);
+      if(!update || !Number.isFinite(update.score) || !Number.isFinite(focus.score))throw Error('Missing calibration');
+      // Zero is twelve o'clock. Both score markers share the candidates' symmetric scale.
+      const range=Math.max(...[...record.candidates,...after.candidates].map(c=>c.score).filter(Number.isFinite).map(Math.abs),.000001);
+      const rim=score=>{const angle=score/range*2.1;return [32+27*Math.sin(angle),32-27*Math.cos(angle)];};
+      const [x1,y1]=rim(focus.score),[x2,y2]=rim(update.score);
+      const arc=`M ${x1} ${y1} A 27 27 0 ${Math.abs(update.score-focus.score)/range*2.1>Math.PI?1:0} ${update.score>focus.score?1:0} ${x2} ${y2}`;
+      const nucleus=`<svg class="bl-nucleus" viewBox="0 0 64 64" fill="none" stroke="currentColor" aria-hidden="true">
+        <circle cx="32" cy="32" r="27" stroke-dasharray=".8 3.25" opacity=".55"/><path d="M32 2v5" opacity=".8"/>
+        <path class="bl-score-arc" d="${arc}" pathLength="1"/><circle cx="${x1}" cy="${y1}" r="1.8" fill="var(--b-panel)"/>
+        <circle cx="${x2}" cy="${y2}" r="2.2" fill="currentColor"/>
+        <g class="bl-orbits">${[0,60,120].map(angle=>`<ellipse cx="32" cy="32" rx="19" ry="7.5" transform="rotate(${angle} 32 32)"/>`).join('')}</g>
+        <circle cx="32" cy="32" r="4" fill="currentColor"/></svg>`;
+      const change=cell(nucleus,t('策略评分','Strategy score'),`<span class="bl-prior">${e(score(focus.score))}</span> <i>→</i> <span class="bl-updated">${e(score(update.score))}</span>`,
+        name(focus.id)+' · '+t('有效样本 ','Qualifying samples ')+number(focus.sampleCount,0)+' → '+number(update.sampleCount,0),true);
+      const choice=cell(uiGlyph(after.selected==='cash'?'pause':'strategy'),t('后续模拟决策','Subsequent decision'),e(name(after.selected)),date(after.barOpenAt)+' UTC · '+reason(after.reason));
+      const calibration=number(activeRun.assumptions.calibrationBars,0);
+      const link=`<g><path class="bl-fiber" data-bow="-1"/><path class="bl-fiber" data-bow="0"/><path class="bl-track" data-bow="1"/>
+        <path class="bl-comet bl-halo" data-bow="1" pathLength="100"/><path class="bl-comet" data-bow="1" pathLength="100"/></g>`;
+      learningBody.innerHTML=`<div class="bl-grid bl-flow"><svg class="bl-links" fill="none" aria-hidden="true">${link}${link}</svg>${observed}${change}${choice}</div>
+        <details class="bl-comparison" id="bl-calibration"><summary>${inspectLabel}</summary>
+        <p>${e(t('评分使用最近 '+calibration+' 场的扣费后表现，并计入下行风险。','Scores use the last '+calibration+' sessions of after-cost returns and account for downside risk.'))}</p>
+        <table><thead><tr><th>${t('候选策略','Candidate')}</th><th>${date(record.asOf)}</th><th>${date(after.asOf)}</th></tr></thead><tbody>
+        ${record.candidates.map(c=>{const revised=after.candidates.find(v=>v.id===c.id);return `<tr><th scope="row">${e(name(c.id))}</th><td>${e(score(c.score))}</td><td>${e(revised?score(revised.score):'—')}</td></tr>`;}).join('')}</tbody></table></details>
+        <footer class="bl-footer"><div>${origin} ${sourceLink(reviewUrl(after),t('后续决策原件','Subsequent decision record'))}</div>
+        <button type="button" class="bp-refresh" data-next-learning>${t('复盘这次决策','Review this decision')} →</button></footer>`;
+      mountLearningBeam(learningBody.querySelector('.bl-flow'),learningHost.querySelector('.bl-replay'),signal);
+      const dial=learningBody.querySelector('.bl-inspect'),comparison=learningBody.querySelector('.bl-comparison');
+      dial.onclick=()=>{comparison.open=!comparison.open;};
+      comparison.ontoggle=()=>dial.setAttribute('aria-expanded',String(comparison.open));
+      learningBody.querySelector('[data-next-learning]').onclick=()=>{
+        loadRecord(after.id);day.focus({preventScroll:true});day.scrollIntoView({block:'center',behavior:'instant'});
+      };
+    }catch{
+      if(!signal.aborted && !disposed)notice(feedback,t('暂时无法核对后续决策与本场回执。','The subsequent decision could not be matched to this receipt.'),()=>loadRecord(record.id));
+    }finally{
+      if(!signal.aborted)learningBody.setAttribute('aria-busy','false');
+    }
   }
   async function loadRecord(id){
     recordRequest?.abort();
     const controller=recordRequest=new AbortController();
     const activeRun=run;
+    learningState(emptyLearning);
     const index=activeRun.decisions.findIndex(item=>item.id===id);
     if(index<0)return;
     day.disabled=false;day.value=id;previous.disabled=index===0;next.disabled=index===activeRun.decisions.length-1;
+    markEquityDay?.(index);
     notice(q('[data-detail]'),t('正在核对决策记录…','Loading decision record…'));
     try{
       const response=await request({run:activeRun.runId,decision:id},controller.signal);
       if(controller.signal.aborted || disposed || run!==activeRun)return;
       if(response.runId!==run.runId || response.decision?.id!==id)throw new Error('Mismatched decision');
       renderRecord(response.decision,response.evidenceUrl);
+      void learnFromRecord(response.decision,activeRun,controller.signal);
     }catch{
-      if(!controller.signal.aborted && !disposed)notice(q('[data-detail]'),t('该条决策暂时无法读取。','This decision is temporarily unavailable.'),()=>loadRecord(id));
+      if(!controller.signal.aborted && !disposed){
+        const message=t('该条决策暂时无法读取。','This decision is temporarily unavailable.');
+        notice(q('[data-detail]'),message,()=>loadRecord(id));learningState(message,()=>loadRecord(id));
+      }
     }
   }
   async function loadCohort(){
-    if(!cohort.open || cohortLoaded)return;
+    if(cohort.getAttribute('aria-expanded')!=='true' || cohortLoaded || cohortRequest)return;
     cohortRequest?.abort();
     const controller=cohortRequest=new AbortController(),el=q('[data-cohort-body]');
     notice(el,t('正在核对同期市场…','Loading market comparison…'));
@@ -599,7 +826,7 @@ export function mountProofView(host,replayHost,en){
       cohortLoaded=true;
     }catch{
       if(!controller.signal.aborted && !disposed)notice(el,t('同期市场对照暂时无法读取。','Market comparison is temporarily unavailable.'),loadCohort);
-    }
+    }finally{if(cohortRequest===controller)cohortRequest=null;}
   }
   function changeSession(value){
     reviewDate=value;
@@ -640,14 +867,13 @@ export function mountProofView(host,replayHost,en){
     if(!entries.some(entry=>entry.isIntersecting))return;
     replayVisible=true;observer.disconnect();loadHistory();
   },{root:host.closest('#product-page'),rootMargin:'300px 0px'});
-  observer.observe(replayHost);
+  observer.observe(replayHost);observer.observe(learningHost);
   day.onchange=()=>loadRecord(day.value);
   const step=offset=>{
     const index=run?.decisions.findIndex(item=>item.id===day.value)??-1;
     if(index>=0 && run.decisions[index+offset])loadRecord(run.decisions[index+offset].id);
   };
   previous.onclick=()=>step(-1);next.onclick=()=>step(1);
-  cohort.ontoggle=loadCohort;
   return {
     focusStage,
     setScope(key,label){
