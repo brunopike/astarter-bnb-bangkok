@@ -75,11 +75,11 @@ export function liteStrategyCard(row, { strategy, selected = false, busy = false
     ? 'Wait for a close above EMA20, positive 5-bar change and RSI14 above 50.'
     : '等待收盘站上 EMA20、5 根涨幅转正、RSI14 高于 50。';
   const exit = {
-    sell: en ? 'All three exit conditions are met. Confirm to sell your full paper position.' : '退出条件已满足，可在操作台确认卖出全部模拟持仓。',
-    buy: en ? 'When all three reverse, confirm to sell the full paper position.' : '三项指标均转弱时，可确认卖出全部模拟持仓。',
+    sell: en ? 'All three exit conditions are met. Confirm to sell your full position.' : '退出条件已满足，可在操作台确认卖出全部持仓。',
+    buy: en ? 'When all three reverse, confirm to sell the full position.' : '三项指标均转弱时，可确认卖出全部持仓。',
     watch: o.direction === 'down'
-      ? (en ? 'No paper position to close on this downward signal.' : '当前无该币模拟持仓，本次下行信号无需平仓。')
-      : (en ? 'Wait for all three readings to turn down before closing a held position.' : '待三项指标均转弱，再确认是否卖出已有模拟持仓。')
+      ? (en ? 'No position to close on this downward signal.' : '当前无该币持仓，本次下行信号无需平仓。')
+      : (en ? 'Wait for all three readings to turn down before closing a held position.' : '待三项指标均转弱，再确认是否卖出已有持仓。')
   }[strategy.side];
   const action = selected ? (en ? 'View ticket' : '查看操作台') : strategy.actionable
     ? (en ? 'Use strategy' : '使用此策略') : (en ? 'View signal' : '查看信号');

@@ -64,7 +64,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       </section>
       <aside class="order-dock" id="lite-controls" aria-labelledby="lite-controls-title">
         <div class="dock-title"><h2 id="lite-controls-title" tabindex="-1">${t('操作台', 'Order ticket')}</h2>
-          <details id="lite-account-menu" class="lite-menu"><summary>${t('模拟账户', 'Paper account')}${uiGlyph('chevron')}</summary><div class="lite-popover" id="lite-account-info"></div></details>
+          <details id="lite-account-menu" class="lite-menu"><summary>${t('练习账户', 'Practice account')}${uiGlyph('chevron')}</summary><div class="lite-popover" id="lite-account-info"></div></details>
         </div>
         <div id="lite-trade-panel"></div>
         <div id="lite-queue-tools" class="lite-queue"></div>
@@ -291,26 +291,26 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       '报价已偏离这条信号，请等待下一根收盘后再读取。',
       'The quote moved away from this signal. Refresh after the next close.'
     ],
-    INSUFFICIENT_FUNDS: ['模拟余额不足，请调低金额。', 'Your paper balance is too low. Lower the amount.'],
+    INSUFFICIENT_FUNDS: ['可用资金不足，请调低金额。', 'Insufficient funds. Lower the amount.'],
     INVALID_AMOUNT: [
       '请输入 10 至 1,000 USDT，最多两位小数。',
       'Enter 10–1,000 USDT with up to two decimal places.'
     ],
     UNAVAILABLE: ['暂时无法核对最新报价，请稍后再试。', 'A fresh quote is unavailable. Try again shortly.'],
     DUST_POSITION: [
-      '当前持仓的模拟卖出所得不足 0.01 USDT。',
-      'Paper proceeds for this position are below 0.01 USDT.'
+      '该持仓的预计卖出所得不足 0.01 USDT。',
+      'Estimated proceeds for this position are below 0.01 USDT.'
     ],
     POSITION_CHANGED: [
-      '模拟持仓已变动，请核对最新数量后再确认。',
-      'Your paper position changed. Review the updated quantity before confirming.'
+      '持仓已变动，请核对最新数量后再确认。',
+      'Your position changed. Review the updated quantity before confirming.'
     ],
     NO_POSITION: [
-      '当前模拟账户没有该资产的持仓。',
-      'No position in this asset remains in your paper account.'
+      '此账户已无该资产持仓。',
+      'This account no longer holds this asset.'
     ],
     STORAGE_UNAVAILABLE: [
-      '无法读取本机模拟账户，请检查浏览器存储设置后重试。',
+      '无法读取本机账户，请检查浏览器存储设置后重试。',
       'Device storage is unavailable. Check browser storage settings and retry.'
     ]
   };
@@ -389,8 +389,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
           sold ? t('净收回', 'Net proceeds') : t('总支出', 'Total spent'),
           fmt(receipt.amount) + ' USDT'
         ) +
-        orderLine(t('模拟手续费', 'Paper fee'), fmt(receipt.fee) + ' USDT');
-      target.innerHTML = `<div class="fill-state"><div class="fill-heading"><span class="fill-check" aria-hidden="true">${uiGlyph('check')}</span><h3>${sold ? t('模拟卖出已成交', 'Paper sell filled') : t('模拟买入已成交', 'Paper buy filled')}</h3></div>
+        orderLine(t('手续费', 'Fee'), fmt(receipt.fee) + ' USDT');
+      target.innerHTML = `<div class="fill-state"><div class="fill-heading"><span class="fill-check" aria-hidden="true">${uiGlyph('check')}</span><h3>${sold ? t('已记录卖出', 'Sell recorded') : t('已记录买入', 'Buy recorded')}</h3></div>
     ${planLabel ? `<p class="fill-strategy">${esc(planLabel)}</p>` : ''}<strong class="fill-size">${fmt(receipt.quantity, 6)} ${esc(receipt.symbol)}</strong>
     <div class="order-values">${details}</div><div class="dock-actions">${exercise ? button('practice-exit', t('练习卖出', 'Practice selling'), 'lite-action') : ''}${button('next', t('下一条信号', 'Next signal') + ' →', 'secondary-btn')}</div></div>`;
       return;
@@ -405,7 +405,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       (!expired && selectedStrategy?.label) ||
       (expired ? t('信号已到期', 'Signal expired') : t('等待可执行信号', 'Waiting for a trade signal'));
     const status = buy ? t('买入', 'Buy') : sell ? t('卖出', 'Sell') : t('观察', 'Watch');
-    const balance = orderLine(t('可用模拟资金', 'Available paper funds'), fmt(account?.balance) + ' USDT');
+    const balance = orderLine(t('可用资金', 'Available funds'), fmt(account?.balance) + ' USDT');
     const symbol = current?.symbol || '—';
     const form = buy
       ? `<label class="field-label" for="lite-order-amount">${t('投入金额', 'Order amount')}</label>
@@ -435,8 +435,8 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
             busy
               ? t('正在核对…', 'Checking…')
               : sell
-                ? t('开始模拟卖出', 'Start paper sell')
-                : t('开始模拟买入', 'Start paper buy'),
+                ? t('确认卖出', 'Confirm sell')
+                : t('确认买入', 'Confirm buy'),
             'lite-action',
             busy || !account
           )
@@ -498,19 +498,19 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     const feed = mode === 'practice' ? t('演练行情', 'Practice feed') : t('实时行情', 'Live feed');
     const holdings = account?.holdings || [];
     const positions = holdings.length
-      ? `<div class="account-holdings"><small>${t('模拟持仓', 'Paper positions')}</small>${holdings.map((h) => `<div><b>${esc(h.symbol)}</b><span>${fmt(h.quantity, 6)}</span>${mode === 'practice' ? `<button type="button" data-cmd="practice-exit" data-symbol="${esc(h.symbol)}">${t('练习卖出', 'Practice selling')}</button>` : ''}</div>`).join('')}</div>`
+      ? `<div class="account-holdings"><small>${t('持仓', 'Positions')}</small>${holdings.map((h) => `<div><b>${esc(h.symbol)}</b><span>${fmt(h.quantity, 6)}</span>${mode === 'practice' ? `<button type="button" data-cmd="practice-exit" data-symbol="${esc(h.symbol)}">${t('练习卖出', 'Practice selling')}</button>` : ''}</div>`).join('')}</div>`
       : '';
     el('account-info').innerHTML =
-      `<h3>${t('本机模拟账户', 'Device paper account')}</h3><small>${feed} · ${t('可用余额', 'Available')}</small><strong class="account-number">${fmt(account?.balance)} USDT</strong>${positions}<p>${t('实时与演练分账，回执保存在此浏览器。', 'Live and practice feeds have separate paper balances. Receipts stay in this browser.')}</p>`;
+      `<h3>${t('本机练习账户', 'Local practice account')}</h3><small>${feed} · ${t('可用余额', 'Available')}</small><strong class="account-number">${fmt(account?.balance)} USDT</strong>${positions}<p>${t('两种行情独立记账。操作仅记录在此浏览器。', 'Each feed has its own balance. Trades are recorded only in this browser.')}</p>`;
     el('history-count').textContent = String(receipts.length);
     el('history-list').innerHTML = receipts.length
       ? receipts
           .map(
             (r) =>
-              `<div class="history-item"><div><b>${esc((r.side === 'sell' ? t('模拟卖出 ', 'Paper sell ') : t('模拟买入 ', 'Paper buy ')) + r.symbol)}</b><small>${day(r.filledAt)} ${clock(r.filledAt)} · ${fmt(r.quantity, 6)} ${esc(r.symbol)}</small><small>${t('成交价 ', 'Fill price ')}${fmt(r.price)} USDT</small></div><div class="history-amount">${r.side === 'sell' ? '+' : '−'}${fmt(r.amount)} USDT<small>${t('含手续费 ', 'Incl. fee ')}${fmt(r.fee, 3)} USDT</small></div></div>`
+              `<div class="history-item"><div><b>${esc((r.side === 'sell' ? t('卖出 ', 'Sell ') : t('买入 ', 'Buy ')) + r.symbol)}</b><small>${day(r.filledAt)} ${clock(r.filledAt)} · ${fmt(r.quantity, 6)} ${esc(r.symbol)}</small><small>${t('成交价 ', 'Fill price ')}${fmt(r.price)} USDT</small></div><div class="history-amount">${r.side === 'sell' ? '+' : '−'}${fmt(r.amount)} USDT<small>${t('含手续费 ', 'Incl. fee ')}${fmt(r.fee, 3)} USDT</small></div></div>`
           )
           .join('')
-      : `<p class="history-empty">${accountError ? errorText('STORAGE_UNAVAILABLE') : t('目前还没有模拟成交。', 'No paper fills yet.')}</p>`;
+      : `<p class="history-empty">${accountError ? errorText('STORAGE_UNAVAILABLE') : t('暂无操作记录。', 'No activity yet.')}</p>`;
   }
   function settings() {
     el('settings').innerHTML =
@@ -684,7 +684,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
       }
       if (lifetime.signal.aborted) return;
       el('announcement').textContent =
-        side === 'sell' ? t('模拟卖出已成交', 'Paper sell filled') : t('模拟买入已成交', 'Paper buy filled');
+        side === 'sell' ? t('已记录卖出', 'Sell recorded') : t('已记录买入', 'Buy recorded');
     } catch (e) {
       formError = e.message;
       if (['POSITION_CHANGED', 'NO_POSITION', 'INSUFFICIENT_FUNDS'].includes(formError)) {

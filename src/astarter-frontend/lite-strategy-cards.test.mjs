@@ -67,9 +67,9 @@ test('Lite and Full share the observation, quote, metrics and price history with
 
 test('the Lite deck describes the actual entry and manual exit, with separate watch actions', () => {
   for (const [observation, holding, status, action, exit] of [
-    [eth, null, 'Entry conditions met', 'Use strategy', 'confirm to sell the full paper position.'],
-    [sol, null, 'Watching for entry', 'View signal', 'No paper position to close'],
-    [sol, 2, 'Exit conditions met', 'Use strategy', 'Confirm to sell your full paper position.']
+    [eth, null, 'Entry conditions met', 'Use strategy', 'confirm to sell the full position.'],
+    [sol, null, 'Watching for entry', 'View signal', 'No position to close'],
+    [sol, 2, 'Exit conditions met', 'Use strategy', 'Confirm to sell your full position.']
   ]) {
     const strategy = strategyForSignal(observation, holding, 'en', at);
     const html = liteStrategyCard(liveSignalRow(observation), { strategy, lang: 'en' });

@@ -136,7 +136,7 @@ function evidence(signal, lang) {
   const historical = signal.mode === 'practice' || signal.validUntil <= Date.now();
   const title = [
     signal.symbol,
-    signal.mode === 'practice' ? copy(lang, '模拟演练', 'Practice scenario') : signal.source,
+    signal.mode === 'practice' ? copy(lang, '演练场景', 'Practice scenario') : signal.source,
     signal.period
   ].join(' · ');
   return {
