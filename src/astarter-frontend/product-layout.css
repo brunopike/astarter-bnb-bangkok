@@ -391,30 +391,11 @@ body #product-page .pv-preview-label{font-size:13px;font-weight:500;color:var(--
 @media(max-width:380px){body #product-page[data-layout=unified] .trading-nav{gap:18px!important}body #product-page .trading-nav .trading-tab-long{display:none}body #product-page .trading-nav .trading-tab-short{display:inline}}
 
 /* Data-page subviews use the existing segmented level; primary navigation keeps its rule. */
-body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs{position:relative;isolation:isolate;display:inline-flex;align-items:center;width:max-content;max-width:100%;min-height:0;gap:3px;padding:3px;margin:0 0 16px;border:1px solid var(--b-line);border-radius:9px;background:var(--b-soft);overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
-body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs>:is(a,button){display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;min-height:44px;padding:8px 12px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--b-muted);font:500 var(--b-text-control,14px)/1.5 var(--sans);text-decoration:none}
+body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs{display:inline-flex;align-items:center;width:max-content;max-width:100%;min-height:0;gap:3px;padding:3px;margin:0 0 16px;border:1px solid var(--b-line);border-radius:9px;background:var(--b-soft);overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
+body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs>:is(a,button){display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;min-height:44px;padding:8px 12px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--b-muted);font:400 var(--b-text-control,14px)/1.5 var(--sans);text-decoration:none}
 body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs>:is(a,button)[aria-current=page]{background:var(--optical-selection,var(--b-panel));color:var(--b-ink);font-weight:500}
 body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs>:is(a,button)::after{display:none!important;content:none!important}
-body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs:has(>.layout-tab-glide)>[aria-current=page]{background:transparent}
-.data-subtabs .layout-tab-glide{position:absolute;z-index:-1;border-radius:6px;pointer-events:none;background:var(--optical-selection,var(--b-panel));transform-origin:left center}
-@media(min-width:901px){
- body #product-page[data-layout=unified] .layout-navigation-row>.layout-data-menu{display:block;min-width:0;flex:0 1 auto}
- body #product-page[data-layout=unified] .layout-data-menu>.layout-section-tabs{position:relative}
- body #product-page[data-layout=unified] .layout-data-menu>.layout-section-tabs:has(>.layout-tab-glide) [aria-current=page]::after{display:none!important}
- .layout-section-tabs>.layout-tab-glide{position:absolute;z-index:1;border-radius:2px;pointer-events:none;background:var(--b-ink);transform-origin:left center}
-}
-@keyframes layout-menu-in{from{opacity:.35;transform:translateY(-3px)}to{opacity:1;transform:none}}
-@media(max-width:900px) and (prefers-reduced-motion:no-preference){
- :root:not([data-reduced-motion=true]) .layout-data-menu>summary>svg{transition:transform 140ms ease-out}
- :root:not([data-reduced-motion=true]) :is(.layout-data-menu[open]>.layout-section-tabs,.layout-actions-menu[open]>.layout-heading-actions){animation:layout-menu-in 135ms ease-out}
-}
-body #product-page[data-layout=unified] .data-subtabs>:is(a,button):focus-visible{outline:2px solid var(--optical-focus,var(--b-action));outline-offset:-3px}
-@media(hover:hover) and (pointer:fine){
- body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs>:is(a,button):hover{color:var(--b-ink)}
-}
-@media(forced-colors:active){
- body #product-page[data-layout=unified] .data-subtabs>[aria-current=page]{outline:2px solid SelectedItem;outline-offset:-3px}
-}
+body #product-page[data-layout=unified] :is(.layout-market-tools,.dc-root)>.data-subtabs>:is(a,button)[aria-current=page]::before{display:inline-block;content:'✓';font-size:14px}
 body #product-page[data-layout=unified] .layout-heading-actions .data-header-info,
 body #product-page[data-layout=unified] .layout-heading-actions .data-header-info>summary{--b-info-target:var(--b-touch-height,44px)}
 
@@ -425,3 +406,8 @@ body #product-page[data-layout=unified] .layout-heading-actions .data-header-inf
  body #product-page[data-layout=unified] .layout-actions-menu:has(.data-refresh-controls)>.layout-heading-actions{box-sizing:border-box;width:max-content;max-width:calc(100vw - 32px)}
  body #product-page[data-layout=unified] .layout-actions-menu>.layout-heading-actions>.layout-action-group:has(.data-refresh-controls){flex:1 1 0;max-width:100%;flex-wrap:wrap!important}
 }
+
+/* The brain owns its canvas and reading surface within the shared site shell. */
+body[data-page=brain] #product-page{padding:0!important;margin-inline:0!important;width:100%;max-width:none;display:block;overflow-y:auto;background:var(--b-bg)}
+.brain-entry{display:inline-flex;align-items:center;gap:4px;color:inherit;font-size:12px;font-weight:600;white-space:nowrap;text-decoration:none;border:1px solid var(--line,#465257);border-radius:6px;padding:5px 8px}
+.brain-entry:hover,.brain-entry:focus-visible{color:var(--accent,currentColor);text-decoration:underline}

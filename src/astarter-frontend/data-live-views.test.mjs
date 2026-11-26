@@ -1,49 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {compactExchangeFlow,createLiveDataViews,liveDataRoute,validateLiveDataResponse} from './data-live-views.mjs';
+import {createLiveDataViews,liveDataRoute,validateLiveDataResponse} from './data-live-views.mjs';
 import {publicChainInsightRequest,publicDerivativesRequest} from './public-market-extended.mjs';
 import {createMarketHubRelay} from './market-hub-relay.mjs';
-import {CROSS_MARKETS} from './cross-market-data.mjs';
 
 const NOW=Date.UTC(2026,10,18,4,30);
 const envelope=(resource,body)=>({schema:'public-market-relay-v1',resource,receivedAt:NOW,body});
-
-test('disclosed wallet amounts round only nonzero discarded digits and preserve tiny signed flows',()=>{
- for(const [raw,signed,expected] of [
-  ['801.132819697385325757',true,'≈+801.1328'],
-  ['-801.13285',true,'≈-801.1329'],
-  ['12.300000',false,'12.3'],
-  ['1234567890123456789999.99995',true,'≈+1,234,567,890,123,456,790,000'],
-  ['0.000150',false,'≈0.0002'],
-  ['0.00000001',true,'+1e−8'],
-  ['-0.000000000000000001',true,'-1e−18'],
-  ['0.000000123456789',false,'≈1.2346e−7'],
-  ['0.00009999996',false,'≈1e−4'],
-  ['0',true,'0'],['0.000000',true,'0'],[null,true,'—'],['',false,'—'],['not available',true,'—']
- ])assert.equal(compactExchangeFlow(raw,signed),expected,String(raw));
-});
-
-test('full precision remains a native local display preference across asset selection and refresh',t=>{
- const previous=Object.fromEntries(['localStorage','location','document'].map(key=>[key,Object.getOwnPropertyDescriptor(globalThis,key)]));
- const stored=new Map(),location={search:'?page=tracking&metric=exchange-asset-flows&asset=ETH'};
- const storage={getItem:key=>stored.get(key)??null,setItem:(key,value)=>stored.set(key,value)};
- for(const [key,value] of Object.entries({location,localStorage:storage,document:{hidden:true,addEventListener(){}}}))Object.defineProperty(globalThis,key,{configurable:true,value});
- t.after(()=>{for(const [key,descriptor] of Object.entries(previous))if(descriptor)Object.defineProperty(globalThis,key,descriptor);else Reflect.deleteProperty(globalThis,key);});
- const input={checked:false},root={querySelector:q=>q==='[data-flow-precision]'?input:null};
- const create=()=>createLiveDataViews({root,link:label=>label,section:(_title,content)=>content,empty:label=>label,
-  fetchImpl:()=>assert.fail('a precision change fetched data'),rerender:()=>assert.fail('a precision change replaced the view')});
- const view=create();
- assert.match(view.render('tracking'),/type="checkbox" data-flow-precision>/);
- view.bind();input.checked=true;input.onchange();
- assert.equal(location.search,'?page=tracking&metric=exchange-asset-flows&asset=ETH');
- location.search='?page=tracking&metric=exchange-asset-flows&asset=BTC';
- assert.match(view.render('tracking'),/data-flow-precision checked/);
- const refreshed=create();assert.match(refreshed.render('tracking'),/data-flow-precision checked/);
- refreshed.bind();input.checked=false;input.onchange();
- assert.doesNotMatch(create().render('tracking'),/data-flow-precision checked/);
- location.search='?page=tracking&metric=exchange-balance';
- assert.doesNotMatch(refreshed.render('tracking'),/data-flow-precision/);
-});
 
 test('XAU spot refreshes independently while daily candles are unavailable and a stale source keeps its original timestamp',async t=>{
  const keys=['document','location','navigator'],previous=keys.map(k=>Object.getOwnPropertyDescriptor(globalThis,k));
@@ -62,111 +24,6 @@ test('XAU spot refreshes independently while daily candles are unavailable and a
  now+=15_001;price+=2;asOf+=15_000;view.tick('markets');await new Promise(resolve=>setImmediate(resolve));
  assert.match(html,/3,772\.125/);assert.equal(calls.filter(x=>x==='gold-spot').length,2);
  now+=125_000;view.tick('markets');await new Promise(resolve=>setImmediate(resolve));assert.match(html,/data-quality="stale"/);
-});
-
-function crossMarketView(t){
- const keys=['document','location','navigator'],prior=keys.map(key=>Object.getOwnPropertyDescriptor(globalThis,key));
- const doc={hidden:false,addEventListener(){},querySelector:()=>null,activeElement:null},location={search:'?page=markets&asset=XAU'};
- for(const [key,value] of Object.entries({document:doc,location,navigator:{onLine:true}}))Object.defineProperty(globalThis,key,{configurable:true,value});
- t.after(()=>keys.forEach((key,i)=>prior[i]?Object.defineProperty(globalThis,key,prior[i]):Reflect.deleteProperty(globalThis,key)));
- const requests=[],buttons=new Map(),badges=new Map();
- let html='',clock=NOW;
- const root={scrollTop:0,contains:element=>!!element&&doc.activeElement===element,querySelectorAll:()=>[],querySelector(selector){
-  const action=selector.match(/^\[data-dc-cross-refresh="([^"]+)"\]$/);
-  if(action){if(!buttons.has(action[1]))buttons.set(action[1],{});return buttons.get(action[1]);}
-  const status=selector.match(/^\[data-dc-cross-status="([^"]+)"\] \.pd-quality$/);
-  return status?{set outerHTML(markup){badges.set(status[1],markup);}}:null;
- }};
- const view=createLiveDataViews({root,now:()=>clock,rerender:render,link:v=>v,empty:v=>v,
-  section:(title,body,source)=>`<section><h2>${title}</h2>${source}${body}</section>`,
-  stat:(...values)=>values.join(' '),chartPanel:(key,{bars,period})=>`<div data-chart="${key}" data-period="${period}">${bars.at(-1).close}</div>`,
-  fetchImpl:(url,options)=>new Promise(resolve=>{
-   const p=new URL(url,'https://astarter.test').searchParams;
-   requests.push({resource:p.get('resource'),symbol:p.get('symbol'),options,resolve});
-  })
- });
- function render(){html=view.render('markets');view.bind();}
- render();
- return {requests,badges,get html(){return html;},get now(){return clock;},advance:ms=>{clock+=ms;},tick:()=>view.tick('markets'),
-  retry:resource=>buttons.get(resource).onclick(),navigate:symbol=>{location.search='?page=markets&asset='+symbol;render();},
-  focusChart:()=>{doc.activeElement={matches:()=>true};},releaseChart:()=>{doc.activeElement=null;},
-  card:resource=>html.match(/<section>[\s\S]*?<\/section>/g).find(card=>card.includes(`data-dc-cross-status="${resource}"`)),
-  async deliver(resource,response){
-   const req=requests.findLast(row=>row.resource===resource&&!row.done);
-   assert.ok(req,'pending '+resource);req.done=true;req.resolve(response);await new Promise(setImmediate);
-  }};
-}
-
-function spotPacket(price,asOf,receivedAt=asOf){
- return Response.json({schema:'public-market-relay-v1',resource:'gold-spot',receivedAt,body:{source:'Gold API',symbol:'XAU',currency:'USD',unit:'USD/troy oz',price,asOf}});
-}
-function dailyPacket(symbol,close,receivedAt,period='1D'){
- const spec=CROSS_MARKETS[symbol],gold=symbol==='XAU',day=86400;
- const time=Date.UTC(2026,10,17,gold?0:14)/1000,closedAt=time+(gold?day:7*3600),validUntil=closedAt+day+1800;
- const closeTimeBasis=gold?'source-daily-bound':'source-session';
- const bar={time,closedAt,validUntil,closeTimeBasis,open:close-1,high:close+2,low:close-3,close,volume:null};
- return Response.json({schema:'public-market-relay-v1',resource:'cross-candles',receivedAt,body:{schema:'cross-market-daily-v1',symbol,source:spec.source,
-  unit:spec.unit,timezone:spec.timezone,period,volumeKind:'unavailable',session:'last-close',quoteAsOf:closedAt,receivedAt,closedAt,closeTimeBasis,sessionDate:'2026-11-17',validUntil,bars:[bar]}});
-}
-const unavailable=(retry)=>Response.json({error:'PUBLIC_SOURCE_UNAVAILABLE'},{status:502,headers:retry?{'Retry-After':retry}:{}});
-
-test('a 502 identifies the XAU daily card, keeps the spot quote and retries only the requested source after Retry-After',async t=>{
- const ui=crossMarketView(t),spot='gold-spot',daily='cross-candles';
- await ui.deliver(spot,spotPacket(3770.125,NOW-6000,NOW));await ui.deliver(daily,unavailable('30'));
- assert.match(ui.card(spot),/3,770\.125/);assert.match(ui.card(spot),/Gold API/);
- assert.match(ui.card(spot),/data-quality="fresh"/);assert.match(ui.card(spot),/datetime="2026-11-18T04:29:54.000Z"/);
- assert.match(ui.card(daily),/Dukascopy · XAU\/USD BID/);assert.match(ui.card(daily),/日线暂不可用|Daily candles unavailable/);
- assert.match(ui.card(daily),/data-dc-cross-refresh="cross-candles" disabled/);assert.match(ui.card(daily),/2026-11-18 04:30:30 UTC/);
- assert.doesNotMatch(ui.card(daily),/3,770|data-chart|data-quality="fresh"/);assert.doesNotMatch(ui.html,/data-dc-live-refresh/);
- ui.retry(daily);ui.advance(29_000);ui.retry(daily);assert.equal(ui.requests.length,2);
- ui.advance(1_000);ui.tick();
- assert.deepEqual(ui.requests.map(r=>r.resource),[spot,daily,spot]);
- await ui.deliver(spot,spotPacket(3772.125,ui.now-1000,ui.now));
- assert.doesNotMatch(ui.card(daily),/data-dc-cross-refresh="cross-candles" disabled/);
- ui.retry(daily);ui.retry(daily);
- assert.deepEqual(ui.requests.slice(3).map(r=>[r.options.method,r.resource,r.symbol]),[['GET',daily,'XAU']]);
- await ui.deliver(daily,dailyPacket('XAU',3750.5,ui.now));
- assert.match(ui.card(daily),/data-quality="fresh"/);assert.match(ui.card(daily),/data-chart="tradfi-XAU" data-period="1D">3750\.5/);
- assert.match(ui.card(spot),/3,772\.125/);assert.doesNotMatch(ui.card(spot),/3,750|Dukascopy/);
- assert.doesNotMatch(ui.card(daily),/3,772|Gold API/);
- ui.advance(61_000);ui.tick();
- await ui.deliver(daily,unavailable('9000000000000'));await ui.deliver(spot,spotPacket(3773,ui.now,ui.now));
- assert.match(ui.card(daily),/data-quality="stale"/);assert.match(ui.card(daily),/data-dc-cross-refresh="cross-candles" disabled/);
- assert.match(ui.card(spot),/3,773/);assert.match(ui.card(spot),/data-quality="fresh"/);
-});
-
-test('history and backoff survive market tabs and reject mismatched or outdated packets without relabelling the prior observation',async t=>{
- const ui=crossMarketView(t),spot='gold-spot',daily='cross-candles';
- await ui.deliver(spot,spotPacket(3770,NOW-5000,NOW));await ui.deliver(daily,dailyPacket('XAU',3745,NOW));
- ui.navigate('DXY');assert.doesNotMatch(ui.html,/3,745|3,770/);
- await ui.deliver(daily,dailyPacket('DXY',104.825,NOW));assert.match(ui.html,/104\.825/);
- ui.advance(61_000);ui.navigate('XAU');
- await ui.deliver(daily,unavailable());await ui.deliver(spot,spotPacket(3699,NOW-9000,ui.now));
- for(const [resource,value,stamp] of [[daily,'3,745','2026-11-18T04:30:00.000Z'],[spot,'3,770','2026-11-18T04:29:55.000Z']]){
-  assert.ok(ui.card(resource).includes(value));assert.ok(ui.card(resource).includes(stamp));
-  assert.match(ui.card(resource),/data-quality="stale"/);
- }
- assert.match(ui.card(daily),/历史日线|Historical daily candles/);assert.match(ui.card(daily),/2026-11-17 · UTC/);
- assert.doesNotMatch(ui.html,/104\.825|3,699/);
- ui.retry(daily);await ui.deliver(daily,dailyPacket('XAU',3870,ui.now,'1H'));
- assert.match(ui.card(daily),/data-chart="tradfi-XAU" data-period="1D">3745/);assert.doesNotMatch(ui.card(daily),/3870/);
- ui.navigate('DXY');assert.doesNotMatch(ui.html,/3,745|3,770/);await ui.deliver(daily,unavailable('90'));
- const count=ui.requests.length;
- ui.navigate('XAU');ui.navigate('DXY');ui.tick();
- assert.equal(ui.requests.length,count);assert.match(ui.card(daily),/104\.825/);
- assert.match(ui.card(daily),/data-quality="stale"/);assert.doesNotMatch(ui.card(daily),/3,745/);
-});
-
-test('a chart reader sees each visible receipt marked stale until its replacement can be painted',async t=>{
- const ui=crossMarketView(t),spot='gold-spot',daily='cross-candles';
- await ui.deliver(spot,spotPacket(3770,NOW-1000,NOW));await ui.deliver(daily,dailyPacket('XAU',3745,NOW));
- const displayed=ui.html;
- ui.focusChart();ui.advance(61_000);ui.tick();
- await ui.deliver(daily,unavailable());await ui.deliver(spot,spotPacket(3775,ui.now,ui.now));
- assert.equal(ui.html,displayed);assert.match(ui.badges.get(daily),/data-quality="stale".*(历史日线|Historical daily candles)/);
- assert.match(ui.badges.get(spot),/data-quality="stale".*(历史报价|Last known quote)/);
- ui.releaseChart();ui.tick();assert.match(ui.card(spot),/3,775/);assert.match(ui.card(spot),/data-quality="fresh"/);
- assert.match(ui.card(daily),/3,745/);assert.match(ui.card(daily),/data-quality="stale"/);
 });
 
 test('Bitview uses aligned daily observations, preserves zero and omits gaps and open dates',()=>{

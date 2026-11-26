@@ -486,9 +486,9 @@ test('live news keeps publication time and multiple asset matches without reusin
 });
 test('the information feed labels the actual BTC daily index separately and expires it by source time',()=>{
  const now=Date.UTC(2026,10,17,14),asOf=Date.UTC(2026,10,17),research=new MarketResearch({now:()=>now/1000});
- research.background.sentiment={state:'ready',version:1,snapshot:{schema:'research-background-v1',resource:'sentiment',provider:'CoinMarketCap',asOf,receivedAt:now,validUntil:asOf+129600000,data:{value:12}}};
+ research.background.sentiment={state:'ready',version:1,snapshot:{schema:'research-background-v1',resource:'sentiment',provider:'Alternative.me',asOf,receivedAt:now,validUntil:asOf+129600000,data:{value:12}}};
  const row=workbenchInformation(research,null,{now}).find(row=>row.id.startsWith('sentiment:'));
- assert.ok(row);assert.equal(row.symbol,'BTC');assert.equal(row.at,asOf);assert.equal(row.source,'CoinMarketCap');assert.equal(row.kind,'news');assert.ok(row.text.includes('12/100'));
+ assert.ok(row);assert.equal(row.symbol,'BTC');assert.equal(row.at,asOf);assert.equal(row.source,'Alternative.me');assert.equal(row.kind,'news');assert.ok(row.text.includes('12/100'));
  assert.equal(workbenchFeedSelection([row],'news','ETH').length,0);assert.equal(workbenchInformation(research,null,{now:asOf+129600000}).filter(row=>row.id.startsWith('sentiment:')).length,0);
  const many=[...Array.from({length:30},(_,i)=>({id:'news:'+i,kind:'news',age:i})),row],visible=workbenchFeedSelection(many,'news');assert.equal(visible.length,24);assert.ok(visible.includes(row),'the daily index remains available alongside a busy news feed');assert.equal(visible.at(-1).at,asOf);
 });
@@ -789,8 +789,8 @@ test('risk editing keeps drafts across policy tabs and saves only future-plan de
  const plan=()=>node('#ops-plan').innerHTML;
  const assertUnset=()=>{
   const card=plan().split('<div class="ops-protection-card">')[1];
-  assert.match(card,/<span class="ops-policy-state">(?:未设置|Not configured)<\/span>/);
-  assert.match(card,/<div class="ops-policy-actions"[^>]*>[\s\S]*?data-ops-risk-open="protection" aria-haspopup="dialog">(?:设置|Set up)<svg[^]*?<\/button>\s*<button [^>]*data-ops-risk-open="kelly" aria-haspopup="dialog">(?:凯利测算|Kelly estimate)<\/button>/);
+  assert.match(card,/未设置默认风控|No default protection set/);
+  assert.match(card,/data-ops-risk-open="protection"[^>]*aria-haspopup="dialog"[\s\S]*?<small class="ops-access-edit">(?:设置|Set up)<svg/);
   assert.doesNotMatch(card,/ops-protection-grid|Astarter 分层风控|Astarter layered protection|策略自带风控|Original strategy rules|\d+(?:\.\d+)?%/);
  };
  const renderWorkspace=source=>createWorkbenchConsole({host,research,workspace:source,desk:{readSnapshot:()=>trade,syncStatus:()=>sync}});
@@ -826,7 +826,7 @@ test('risk editing keeps drafts across policy tabs and saves only future-plan de
   assert.match(node('kelly-output').innerHTML,/25\.00/);change({riskTab:'protection'});assert.equal(dialog.form.values.policy_episode,'.15');
   submit();await Promise.resolve();
   assert.equal(dialog.open,false);assert.equal(workspace.s.workbenchRisk.protection.mode,'conservative');assert.equal(workspace.s.workbenchRisk.protection.parameters.episode,.0015);
-  assert.match(plan(),/Astarter (分层风控 · 保守|layered protection · Conservative)/);assert.match(plan(),/0\.15%/);assert.doesNotMatch(plan(),/ops-policy-state/);
+  assert.match(plan(),/Astarter (分层风控 · 保守|layered protection · Conservative)/);assert.match(plan(),/0\.15%/);assert.doesNotMatch(plan(),/未设置默认风控|No default protection set/);
   assert.match(node('#ops-plan').innerHTML,/模板默认风控已保存|Template risk defaults saved/);assert.equal(focused,'protection','closing after a panel refresh restores the recreated opener');
   const saved=JSON.stringify(workspace.s.workbenchRisk);open('protection');dialog.form.values.policy_episode='.1';
   cancel();await Promise.resolve();assert.equal(JSON.stringify(workspace.s.workbenchRisk),saved);assert.match(plan(),/0\.15%/);assert.doesNotMatch(plan(),/0\.1%/);
@@ -843,7 +843,7 @@ test('risk editing keeps drafts across policy tabs and saves only future-plan de
   const unchanged=JSON.stringify(refreshed.s.workbenchRisk);submit();assert.equal(JSON.stringify(refreshed.s.workbenchRisk),unchanged);assert.equal(dialog.open,true);
   sync.scope={accountId:'SIM-01',environment:'DEMO'};freshView.update();await Promise.resolve();assert.match(plan(),/0\.15%/);
   open('protection');change({riskPolicy:'original'});submit();await Promise.resolve();
-  assert.match(plan(),/策略自带风控|Original strategy rules/);assert.doesNotMatch(plan(),/ops-protection-grid|ops-policy-state/);
+  assert.match(plan(),/策略自带风控|Original strategy rules/);assert.doesNotMatch(plan(),/ops-protection-grid|未设置默认风控|No default protection set/);
   assert.deepEqual(new WorkspaceSim({storage}).s.workbenchRisk.protection,{id:'original',version:'strategy-original'});
  }finally{globalThis.document=previousDocument;globalThis.FormData=previousFormData;}
 });

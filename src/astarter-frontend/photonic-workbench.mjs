@@ -1,6 +1,7 @@
+import {BRAIN_PAGE_NAME,brainEntrySearch} from './product-data.mjs';
 import {publicResearchSummary} from './workbench-public-evidence.mjs';
 import {L} from './execution-views.mjs';
-import {t} from './locale.mjs';
+import {t,getLocale} from './locale.mjs';
 import {escapeUI as esc} from './product-experience.mjs';
 import {uiGlyph,captureProductFocus} from './product-composition.mjs';
 import {tokenIcon} from './brand-icons.mjs';
@@ -64,8 +65,7 @@ export function photonicRuntimeReadings(phase,index=null,expanded=false){
  const rows=expanded?slots:Number.isInteger(index)&&slots[index]?[slots[index]]:[];
  return rows.length?`<dl class="pw-runtime-readings">${rows.map(slot=>{
   const [name,value]=liveRuntimeRow(phase,slot);
-  const current=expanded&&assets&&slot===slots[index]?' id="pw-runtime-current-reading" aria-current="true"':'';
-  return `<div data-runtime-${assets?'asset':'role'}="${esc(assets?slot.symbol:ROLES[slot.id].id)}" data-state="${slot.state}"${current}><dt>${esc(name)}</dt><dd>${esc(value)}</dd></div>`;
+  return `<div data-runtime-${assets?'asset':'role'}="${esc(assets?slot.symbol:ROLES[slot.id].id)}" data-state="${slot.state}"><dt>${esc(name)}</dt><dd>${esc(value)}</dd></div>`;
  }).join('')}</dl>`:'';
 }
 export function photonicRuntime(research,tasks=[]){
@@ -705,7 +705,7 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
   <div class="pw-optics"><canvas aria-hidden="true"></canvas><div class="pw-inputs">${SOURCES.map(([key,,,icon])=>`<button type="button" data-pw-source="${key}" style="--pw-color:var(--optical-${key})">${uiGlyph(icon)}<span></span><small></small><b class="pw-source-value"></b><i></i><span class="pw-src-tag"></span><span class="pw-src-viz" aria-hidden="true"></span><span class="pw-src-meter" aria-hidden="true"><i></i></span><span class="pw-source-metrics"></span></button>`).join('')}</div>
  <div class="pw-core"><div class="pw-core-subject"></div><div class="pw-prism" role="group" tabindex="0"><canvas aria-hidden="true"></canvas></div><div class="pw-core-state"></div></div>
  <div class="pw-outputs" tabindex="0" role="region" aria-label="${L('研究结果，可独立上下滚动','Research results, scroll independently')}">${['ready','watch','blocked'].map((key,i)=>`<div class="pw-output" data-pw-output="${key}" style="--pw-color:${['var(--pw-ready)','var(--pw-watch)','var(--pw-blocked)'][i]}"><button type="button" class="pw-output-filter" data-pw-filter="${key}"><span></span><b>0</b></button><i aria-hidden="true"></i><div class="pw-out-runs"></div></div>`).join('')}</div></div>
- <section class="pw-lane-summary"><div class="pw-lane-controls pw-runtime-controls"><div class="pw-runtime-heading"><b></b><span></span></div><button type="button" class="pw-patrol" data-pw-patrol aria-pressed="true"></button><div class="pw-runtime-track">${RUN_PHASES.map(([key],i)=>`<button type="button" data-run-phase="${key}" style="--phase:${i};--runtime-color:hsl(${i*52} 88% 65%)" aria-expanded="false" aria-controls="pw-runtime-detail"><span class="pw-runtime-title"><span class="pw-runtime-name"></span><span class="pw-runtime-count" aria-hidden="true"></span></span><span class="pw-runtime-bars" aria-hidden="true"></span><small></small></button>`).join('')}<section id="pw-runtime-detail" class="pw-runtime-detail" hidden><header><span><i></i><span id="pw-runtime-detail-title"></span></span><b></b><button type="button" data-runtime-close hidden>${uiGlyph('close')}</button></header><p class="pw-runtime-measure" hidden></p><div class="pw-runtime-detail-body"></div></section></div></div><dl class="pw-lane-stats">${Array.from({length:4},()=>'<div><dt></dt><dd><span></span><small></small></dd><p></p></div>').join('')}</dl></section>
+ <section class="pw-lane-summary"><div class="pw-lane-controls pw-runtime-controls"><div class="pw-runtime-heading"><b></b><span></span><a class="brain-entry" data-brain-route="brain" href="${esc(brainEntrySearch())}"></a></div><button type="button" class="pw-patrol" data-pw-patrol aria-pressed="true"></button><div class="pw-runtime-track">${RUN_PHASES.map(([key],i)=>`<button type="button" data-run-phase="${key}" style="--phase:${i};--runtime-color:hsl(${i*52} 88% 65%)" aria-expanded="false" aria-controls="pw-runtime-detail"><span class="pw-runtime-title"><span class="pw-runtime-name"></span><span class="pw-runtime-count" aria-hidden="true"></span></span><span class="pw-runtime-bars" aria-hidden="true"></span><small></small></button>`).join('')}<section id="pw-runtime-detail" class="pw-runtime-detail" hidden><header><span><i></i><span id="pw-runtime-detail-title"></span></span><b></b><button type="button" data-runtime-close hidden>${uiGlyph('close')}</button></header><p class="pw-runtime-measure" hidden></p><div class="pw-runtime-detail-body"></div></section></div></div><dl class="pw-lane-stats">${Array.from({length:4},()=>'<div><dt></dt><dd><span></span><small></small></dd><p></p></div>').join('')}</dl></section>
  <div class="pw-task"><div class="pw-assets" role="group"></div><div class="pw-task-summary"><div class="pw-task-status"></div><button class="pw-task-open" type="button">${uiGlyph('arrow')}</button></div><p class="pw-task-evidence"></p></div>
  <section class="pw-operations" aria-label="${L('AI 协作与策略处理','AI research and strategy operations')}">
  <article class="pw-operation pw-research-operation"><header><h3>${L('协作研究','Collaborative research')}</h3></header><div class="pw-operation-readout pw-research-readout"></div><div class="pw-operation-art">${LANDING_RESEARCH_ART}</div><div class="pw-research-sources"></div></article>
@@ -778,7 +778,7 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
  decision.addEventListener('click',event=>{if(event.target.closest('button')&&projection?.task)onOpen?.(projection.task.symbol);});
  let uiTime=1;
  let width=1,height=1,dpr=1,dark=true,clock=0,lastUI='',projection=null,source='trend',output=null,disposed=false,patrol=!matchMedia('(max-width:900px)').matches,patrolElapsed=0,patrolAt=performance.now(),holdUntil=0,completedSymbol='';
- let runtimePhases=[],runtimeButton=null,runtimeAnchor=null,runtimeSymbol=null,runtimeExpanded=false,runtimeMarkup='';
+ let runtimePhases=[],runtimeButton=null,runtimeAnchor=null,runtimeExpanded=false,runtimeMarkup='';
  document.body.dataset.researchHold='false';
  let redraw=true,lastPaint=0,fps=null,nativeBlock=null,moving=false,wasRunning=false,beamKey='',sway=0;
  const beam=createLandingPhotonicBeam(canvas,reducedMotion);
@@ -839,7 +839,7 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
   ctx.globalAlpha=.66;ctx.font=`500 ${Math.min(10,pr.width*.057)}px ${lensMono}`;ctx.fillStyle=`rgb(${ink})`;ctx.fillText(L('持续研究','RESEARCH'),cx,cy-pr.height*.32);
   const step=parseInt(lens.index)||0,cell=pr.width*.05;
   for(let i=0;i<6;i++){ctx.globalAlpha=i<step?.75:.15;ctx.fillRect(cx-cell*3+i*cell,cy-pr.height*.265,cell*.65,1);}
-  ctx.globalAlpha=.66;ctx.font=`500 ${Math.min(10,pr.width*.055)}px ${font}`;ctx.fillText('LENSWAVE',cx,cy+pr.height*.29);
+  ctx.globalAlpha=.66;ctx.font=`500 ${Math.min(10,pr.width*.055)}px ${font}`;ctx.fillText(getLocale()==='zh'?'AI 交易':'LENSWAVE',cx,cy+pr.height*.29);
   const monitor=projection?.sources.find(item=>item.key===root.dataset.monitor);
   if(monitor){const index=SOURCES.findIndex(item=>item[0]===monitor.key),text=L(SOURCES[index][1],SOURCES[index][2]),phase=cadence.state.time%1.2;ctx.font=`400 100px ${font}`;const size=Math.min(12,pr.width*.36/(ctx.measureText(text).width/100));ctx.font=`400 ${size}px ${font}`;ctx.globalAlpha=.78*(moving&&cadence.state.rate>.02?Math.min(1,phase/.18,(1.2-phase)/.18):1);ctx.fillText(text,cx,cy+pr.height*.13);}
   ctx.globalAlpha=1;
@@ -874,8 +874,7 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
   if(!runtimeButton)return;
   const phase=runtimePhases.find(item=>item.key===runtimeButton.dataset.runPhase);if(!phase)return;
   const summary=phase.summary||photonicPhaseSummary(phase.key,getContext().tasks);
-  const slot=runtimeAnchor?.closest('[data-run-slot]');
-  const index=runtimeSymbol?summary.assets.findIndex(asset=>asset.symbol===runtimeSymbol):slot?Number(slot.dataset.runSlot):null;
+  const slot=runtimeAnchor?.closest('[data-run-slot]'),index=slot?Number(slot.dataset.runSlot):null;
   const state=summary.state==='waiting'?(summary.basis==='assets'?L('等候行情','Awaiting market data'):summary.basis==='roles'?L('等待回执','Awaiting confirmation'):L('等待任务','Awaiting tasks')):L(...({active:['处理中','Processing'],partial:['部分完成','Partially complete'],done:['已完成','Complete']}[summary.state]));
   runtimeDetail.hidden=false;runtimeDetail.dataset.view=runtimeExpanded?'list':'preview';runtimeDetail.dataset.phase=phase.key;
   runtimeDetail.style.setProperty('--runtime-color',runtimeButton.style.getPropertyValue('--runtime-color'));
@@ -890,8 +889,6 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
   const markup=phase.summary?photonicRuntimeReadings(phase,index,runtimeExpanded):`<div class="pw-runtime-assets" aria-label="${esc(summary.assets.map(a=>a.symbol).join(', '))}">${summary.assets.slice(0,8).map(asset=>`<span data-state="${asset.state}" title="${esc(asset.symbol)}">${tokenIcon(asset.symbol,{size:27})}</span>`).join('')}${summary.assets.length>8?`<span class="pw-runtime-more">+${summary.assets.length-8}</span>`:''}</div><div class="pw-runtime-progress"><i style="width:${summary.progress}%"></i></div><dl><div><dt>${L('处理中','Processing')}</dt><dd>${summary.active}</dd></div><div><dt>${L('已完成','Complete')}</dt><dd>${summary.done}<small> / ${summary.assets.length}</small></dd></div></dl>`;
   if(markup!==runtimeMarkup){runtimeBody.innerHTML=markup;runtimeMarkup=markup;}
   if(runtimeExpanded){
-   if(runtimeSymbol&&index>=0)runtimeButton.setAttribute('aria-describedby','pw-runtime-current-reading');
-   else runtimeButton.removeAttribute('aria-describedby');
    const columns=getComputedStyle(runtimeTrack).gridTemplateColumns.split(' ').length;
    runtimeDetail.style.gridRow=String(Math.floor(runtimePhases.indexOf(phase)/columns)+2);
   }else{
@@ -905,29 +902,15 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
   if(!runtimeButton)return;
   if(restoreFocus)runtimeButton.focus({preventScroll:true});
   runtimeButton.setAttribute('aria-expanded','false');runtimeButton.removeAttribute('aria-describedby');
-  runtimeAnchor?.removeAttribute('data-current-reading');
-  runtimeDetail.hidden=true;runtimeButton=null;runtimeAnchor=null;runtimeSymbol=null;runtimeExpanded=false;
+  runtimeDetail.hidden=true;runtimeButton=null;runtimeAnchor=null;runtimeExpanded=false;
  }
  function showRuntime(button,anchor=button,expanded=false){
-  const symbol=expanded?anchor.dataset.symbol||null:null;
-  if(runtimeButton===button&&runtimeAnchor===anchor&&runtimeExpanded===expanded&&runtimeSymbol===symbol){
-   if(symbol)revealRuntimeReading();
-   return;
-  }
-  const sameList=runtimeExpanded&&expanded&&button===runtimeButton;
-  if(sameList)runtimeAnchor?.removeAttribute('data-current-reading');
-  else hideRuntime();
+  if(runtimeButton===button&&runtimeAnchor===anchor&&runtimeExpanded===expanded)return;
+  hideRuntime();
   runtimeButton=button;runtimeAnchor=anchor;runtimeExpanded=expanded;
-  runtimeSymbol=symbol;
-  if(runtimeSymbol)anchor.setAttribute('data-current-reading','');
   button.setAttribute('aria-expanded','true');
   if(!expanded)button.setAttribute('aria-describedby',runtimeDetail.id);
-  refreshRuntimeDetail();
-  if(!sameList)runtimeBody.scrollTop=0;
-  if(runtimeSymbol)revealRuntimeReading();
- }
- function revealRuntimeReading(){
-  runtimeBody.querySelector('[aria-current="true"]')?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
+  refreshRuntimeDetail();runtimeBody.scrollTop=0;
  }
  function renderUI(context){
    const {research,focus,tasks,trade,marketRows}=context;projection=photonicProjection(research,focus,tasks,trade,marketRows);
@@ -988,6 +971,8 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
   root.querySelectorAll('[data-pw-call]').forEach(text=>{const values=callouts[text.dataset.pwCall],key=values.join('|');if(text.dataset.content!==key){text.dataset.content=key;const x=text.getAttribute('x');text.innerHTML=`<tspan x="${x}">${esc(values[0])}</tspan><tspan class="pw-call-value" x="${x}" dy="17">${esc(values[1])}</tspan>`;}text.closest('g').dataset.monitor=monitorSource[0];});
   const laneControls=root.querySelector('.pw-lane-controls'),tracked=document.querySelector('[data-terminal-filter="tracked"][aria-pressed="true"]'),auto=patrol&&!tracked&&tasks.length>1;
   root.dataset.patrol=String(auto);document.body.dataset.researchPatrol=String(auto);
+  const brainEntry=laneControls.querySelector('.pw-runtime-heading .brain-entry');
+  brainEntry.textContent=L(...BRAIN_PAGE_NAME)+' ↗';
   laneControls.querySelector('.pw-runtime-heading b').textContent=L('运行光谱','LensWave runtime');laneControls.querySelector('.pw-runtime-heading span').textContent=job?.heading||(live?L('行情观察','Market observation'):`18 ${L('角色','roles')} × 6 ${L('阶段','stages')}`);
   const patrolButton=root.querySelector('[data-pw-patrol]');patrolButton.textContent=auto&&holdUntil?L('阅读中 · 继续轮巡','Reading · Resume patrol'):auto?`${L('轮巡中','Patrol')} · ${task?.symbol||'—'} · ${L('持续研究','Researching')}`:L('固定标的 · 开启轮巡','Pinned · Start patrol');patrolButton.setAttribute('aria-pressed',String(auto));
   document.querySelectorAll('[data-insight-patrol]').forEach(button=>{button.textContent=auto&&holdUntil?L('继续轮巡','Resume patrol'):auto?L('自动轮巡','Auto patrol'):L('固定标的','Pinned asset');button.setAttribute('aria-pressed',String(auto));});
@@ -1083,13 +1068,12 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
   const button=event.target.closest('button');if(!button)return;
   if(button===runtimeClose){hideRuntime(true);return;}
   if(button.dataset.runPhase){
-   const assetSlot=event.target.closest('[data-run-slot][data-symbol]');
-   if(runtimeExpanded&&runtimeButton===button&&!assetSlot){hideRuntime(true);return;}
-   const anchor=assetSlot||(event.detail===0&&runtimeButton===button&&runtimeAnchor?.dataset.symbol?runtimeAnchor:button);
-   showRuntime(button,anchor,true);
-   if(event.detail===0)runtimeClose.focus({preventScroll:true});
-   else button.focus({preventScroll:true});
-   if(!runtimeSymbol&&(!finePointer||innerWidth<=600))runtimeDetail.querySelector('header').scrollIntoView({block:'nearest',behavior:'instant'});
+   if(runtimeExpanded&&runtimeButton===button)hideRuntime();
+   else{
+    showRuntime(button,button,true);
+    if(event.detail===0)runtimeClose.focus({preventScroll:true});
+    if(!finePointer||innerWidth<=600)runtimeDetail.querySelector('header').scrollIntoView({block:'nearest',behavior:'instant'});
+   }
    return;
   }
    if(button.hasAttribute('data-pw-patrol'))togglePatrol();
@@ -1131,7 +1115,7 @@ export function createPhotonicWorkbench(container,labelContainer,{getContext,onS
   event.preventDefault();
   const direction=event.key==='ArrowRight'?1:-1,slot=runtimeButton===button?runtimeAnchor?.dataset.runSlot:undefined;
   const index=slot===undefined?(direction===1?0:slots.length-1):(Number(slot)+direction+slots.length)%slots.length;
-  showRuntime(button,slots[index],runtimeButton===button&&runtimeExpanded&&Boolean(slots[index].dataset.symbol));
+  showRuntime(button,slots[index]);
  });
  const focusSource=event=>{const index=SOURCES.findIndex(item=>item[0]===event.detail);if(index<0)return;source=event.detail;lastUI='';redraw=true;};
  document.addEventListener('hive:photonic-source',focusSource);

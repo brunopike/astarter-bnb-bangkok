@@ -7,7 +7,7 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 export const statementNumber=(value,{signed=false,price=false}={})=>value===null||value===undefined||value===''||!Number.isFinite(Number(value))?'—':(signed&&Number(value)>0?'+':'')+Number(value).toLocaleString('en-US',{minimumFractionDigits:price?0:2,maximumFractionDigits:price?8:Math.abs(Number(value))>0&&Math.abs(Number(value))<.01?6:2});
 const tone=value=>Number(value)>0?'profit':Number(value)<0?'loss':'neutral';
 const coveragePending=(model,scope)=>Boolean(model?.classificationPending||model?.unclassifiedUndated&&(scope.from||scope.to||scope.day));
-export const statementOwnerName=value=>value==='STRATEGY_AGENT'?L('策略 Agent','Strategy Agents'):value==='AI_SPECTRUM'?L('AI 星谱','LensWave'):L('归属待核对','Unclassified');
+export const statementOwnerName=value=>value==='STRATEGY_AGENT'?L('策略 Agent','Strategy Agents'):value==='AI_SPECTRUM'?L('AI 交易','LensWave'):L('归属待核对','Unclassified');
 const timestamp=(value,zone)=>value===null?L('时间未记录','Time not recorded'):new Intl.DateTimeFormat(L('zh-CN','en-GB'),{timeZone:zone,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(value);
 const button=(label,action,extra='')=>`<button type="button" class="st-button" data-st-action="${action}" ${extra}>${label}</button>`;
 const select=(name,label,items,value)=>`<label class="st-select"><span>${label}</span><select data-st-filter="${name}" aria-label="${label}">${items.map(([id,text])=>`<option value="${esc(id)}" ${id===value?'selected':''}>${esc(text)}</option>`).join('')}</select></label>`;

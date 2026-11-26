@@ -322,10 +322,7 @@ test('wallet balance, exchange equity, plans and trade performance belong to the
 });
 test('bot asset heading links directly to account assets and history without mutating its allocation',()=>{
  const trade={botBook:{runs:[run('active','running',{allocated:500,equity:503,realizedPnl:1,unrealizedPnl:2})]}},before=JSON.stringify(trade);
- const html=renderBotAssets({w:{s:{drafts:[]}},trade,renderInstances:()=>'<article>active</article>'});
- assert.match(html,/<h1[^>]*>(?:我的 Agent|My Agents)<\/h1>/);
- assert.match(html,/data-go="assets"[^>]*>(?:账户资产|Account assets)</);
- assert.match(html,/data-statements="STRATEGY_AGENT"/);assert.doesNotMatch(html,/data-go="logs"/);assert.match(html,/503 <small>USDT/);assert.match(html,/已分配金额|Allocated funds/);assert.equal(JSON.stringify(trade),before);
+ const html=renderBotAssets({w:{s:{drafts:[]}},trade,renderInstances:()=>'<article>active</article>'});assert.match(html,/data-go="assets"[^>]*>(?:查看模拟盘|View paper account)</);assert.match(html,/data-statements="STRATEGY_AGENT"/);assert.doesNotMatch(html,/data-go="logs"/);assert.match(html,/503 <small>USDT/);assert.match(html,/已分配金额|Allocated funds/);assert.equal(JSON.stringify(trade),before);
 });
 test('strategy overview and My Agents expose one current-account Agent statement entry without unscoped navigation',()=>{
  const w={s:{drafts:[]}},trade={botBook:{runs:[]}},before=JSON.stringify({w,trade});

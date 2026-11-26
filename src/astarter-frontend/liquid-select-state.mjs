@@ -17,14 +17,6 @@ export function chooseOption(select,index) {
  return true;
 }
 
-// A filter change may replace its entire page section inside its native change event.
-export function replacementSelect(original,scope) {
- const identity=[...original.attributes].filter(({name})=>name==='id'||name==='name'||name==='aria-label'||name==='aria-labelledby'||name.startsWith('data-'));
- if(!identity.length)return null;
- const matches=[...scope.querySelectorAll('select')].filter(field=>identity.every(({name,value})=>field.getAttribute(name)===value));
- return matches.length===1?matches[0]:null;
-}
-
 export function selectLabel(select) {
  if(select.getAttribute('aria-label'))return select.getAttribute('aria-label');
  return [...(select.labels||[])].map(label=>{

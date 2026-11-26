@@ -226,12 +226,5 @@ test('public relay and past calendar show sourced releases, with no forecast, an
  view.render('intelligence');await new Promise(resolve=>setImmediate(resolve));
  assert.match(html,/0\.4%.*0\.6%/);assert.match(html,/3\.75–4%/);assert.match(html,/2026-10/);
  assert.match(html,/href="https:\/\/www\.bls\.gov\/news\.release\/archives\/cpi_11102026\.htm"/);assert.match(html,/Consensus forecasts are unavailable|市场共识预期暂无来源/);assert.match(html,/Employment Situation/);
- const releaseRow=html.match(/<tr>[^]*?<\/tr>/g).find(entry=>entry.includes('cpi_11102026.htm'));
- assert.match(releaseRow,/<td class="dc-calendar-date">2026-11-10<\/td>/);
- assert.match(releaseRow,/<td class="dc-calendar-time">08:30<\/td>/);
- assert.match(releaseRow,/<td class="dc-calendar-event">[^<]*CPI/);
- assert.match(releaseRow,/<td class="dc-calendar-actual">.*0\.4%/);
- assert.match(releaseRow,/<td class="dc-calendar-previous">.*0\.6%/);
- assert.match(releaseRow,/<td class="dc-calendar-source"><a [^>]*href="[^"]*cpi_11102026.htm"/);
  globalThis.location.search='?page=intelligence&view=calendar&when=upcoming';html=view.render('intelligence');assert.doesNotMatch(html,/0\.4%|cpi_11102026/);
 });

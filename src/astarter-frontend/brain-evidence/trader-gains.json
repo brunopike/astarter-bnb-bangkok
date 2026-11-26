@@ -1,0 +1,1209 @@
+[
+  {
+    "id": "punk-7804-first-resale",
+    "outcomeTags": {
+      "action": ["转售藏品", "NFT resale"],
+      "size": ["Punk #7804", "Punk #7804"],
+      "pnl": ["毛价差 +4,188 ETH", "Gross spread +4,188 ETH"]
+    },
+    "actor": "0x03911fecab…",
+    "date": "2021-03-11",
+    "knownAt": "2021-03-11T00:48:39Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "nft:cryptopunks-7804",
+      "coin:ethereum",
+      "ca:ethereum:0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb"
+    ],
+    "outcome": "gain",
+    "basis": "gross",
+    "amount": [
+      "+4,188 ETH 毛价差",
+      "+4,188 ETH gross spread"
+    ],
+    "title": [
+      "12 ETH 买入的 7804 号藏品以 4,200 ETH 转手",
+      "Punk 7804 traded from 12 ETH to 4,200 ETH"
+    ],
+    "summary": [
+      "同一地址在 2018 年买入、2021 年卖出；两笔成交均可追溯到以太坊。",
+      "The same address bought in 2018 and sold in 2021. Both sales have Ethereum receipts."
+    ],
+    "logic": [
+      "持有约三年，几次调整挂牌价，最终由买家按报价购买。",
+      "The holder kept the asset for roughly three years and revised the ask before a buyer took it."
+    ],
+    "lesson": [
+      "挂牌记录给出卖方报价；还原收入要找到成交事件。",
+      "Listings reveal asking prices. A sale event establishes the proceeds."
+    ],
+    "limits": [
+      "价差以 ETH 计，未扣网络费、税费和链外成本；单件收藏品的价格只代表这一笔成交。",
+      "The ETH spread excludes gas, tax and off-chain costs. This sale prices one unique item."
+    ],
+    "steps": [
+      {
+        "label": [
+          "买入",
+          "Entry"
+        ],
+        "detail": [
+          "2018-01-10，卖方接受该地址的 12 ETH 出价。",
+          "On 10 Jan 2018 the seller accepted the address’s 12 ETH bid."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "调整挂牌",
+          "Ask revisions"
+        ],
+        "detail": [
+          "2021-02-17 挂出 12,000 ETH，02-26 改挂 4,200 ETH。",
+          "The 17 Feb ask was 12,000 ETH. The 26 Feb listing set it at 4,200 ETH."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "撮合与差额",
+          "Sale and spread"
+        ],
+        "detail": [
+          "03-11 以 4,200 ETH 转给 peruggia-v.eth，减去 12 ETH 原始对价得到 4,188 ETH。",
+          "On 11 Mar peruggia-v.eth paid 4,200 ETH. Subtracting the 12 ETH purchase leaves 4,188 ETH."
+        ],
+        "source": 2
+      }
+    ],
+    "sources": [
+      {
+        "label": "Larva Labs · 7804",
+        "url": "https://www.larvalabs.com/catalog/cryptopunks/7804"
+      },
+      {
+        "label": "Etherscan · 12 ETH",
+        "url": "https://etherscan.io/tx/0x65bb2f319132010b4dc8e11ece7d70a7d5c7cc829caf1e87e7ed5e1adfa984e1"
+      },
+      {
+        "label": "Etherscan · 4,200 ETH",
+        "url": "https://etherscan.io/tx/0xe387b6978f19029efb175bf594467c031c792fe99a4b76ccc242f1f7bd6638f4"
+      }
+    ]
+  },
+  {
+    "id": "punk-7804-second-resale",
+    "outcomeTags": {
+      "action": ["转售藏品", "NFT resale"],
+      "size": ["Punk #7804", "Punk #7804"],
+      "pnl": ["毛价差 +650 ETH", "Gross spread +650 ETH"]
+    },
+    "actor": "peruggia-v.eth",
+    "date": "2024-03-20",
+    "knownAt": "2024-03-20T20:03:47Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "nft:cryptopunks-7804",
+      "coin:ethereum",
+      "ca:ethereum:0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb"
+    ],
+    "outcome": "gain",
+    "basis": "gross",
+    "amount": [
+      "+650 ETH 毛价差",
+      "+650 ETH gross spread"
+    ],
+    "title": [
+      "同一件 7804，下一任持有者赚了多少",
+      "The next holder’s return on Punk 7804"
+    ],
+    "summary": [
+      "peruggia-v.eth 支付 4,200 ETH，约三年后以 4,850 ETH 卖出；这段持仓的 ETH 毛回报约 15.5%。",
+      "peruggia-v.eth paid 4,200 ETH and sold about three years later for 4,850 ETH, a gross return of about 15.5% in ETH terms."
+    ],
+    "logic": [
+      "先向市场挂牌，最终在限定买家的报价中完成转手。",
+      "The holder listed publicly and later completed a sale offered to a specific buyer."
+    ],
+    "lesson": [
+      "同一资产相邻两任的买入成本相差很大；下一任不能继承上一任的收益率。",
+      "Consecutive owners paid very different prices. A new buyer starts with a new cost basis."
+    ],
+    "limits": [
+      "仅覆盖这件藏品的两个端点。ETH 对美元的变化会让美元收益率偏离 ETH 收益率。",
+      "This covers one item and two sales. Changes in ETH/USD affect the dollar return."
+    ],
+    "steps": [
+      {
+        "label": [
+          "取得所有权",
+          "Acquisition"
+        ],
+        "detail": [
+          "2021-03-11 按 4,200 ETH 买入 7804。",
+          "On 11 Mar 2021 the account acquired 7804 for 4,200 ETH."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "试探报价",
+          "Listed ask"
+        ],
+        "detail": [
+          "2023-11-02 挂出 7,804 ETH，这份报价未产生对应收入。",
+          "The 2 Nov 2023 ask was 7,804 ETH. The listing produced no proceeds at that price."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "定向成交",
+          "Targeted sale"
+        ],
+        "detail": [
+          "2024-03-20 向 0x9bc2d56633… 报价 4,850 ETH，当日按此价格成交。",
+          "On 20 Mar 2024 the holder offered the item to 0x9bc2d56633… for 4,850 ETH and the sale cleared at that amount."
+        ],
+        "source": 2
+      }
+    ],
+    "sources": [
+      {
+        "label": "Larva Labs · 7804",
+        "url": "https://www.larvalabs.com/catalog/cryptopunks/7804"
+      },
+      {
+        "label": "Etherscan · 4,200 ETH",
+        "url": "https://etherscan.io/tx/0xe387b6978f19029efb175bf594467c031c792fe99a4b76ccc242f1f7bd6638f4"
+      },
+      {
+        "label": "Etherscan · 4,850 ETH",
+        "url": "https://etherscan.io/tx/0xd2de4291740ff18f89c685f6e635e20ddd9a41ef6a2bc2cac11cfcb008d41a09"
+      }
+    ]
+  },
+  {
+    "id": "punk-4156-repriced",
+    "outcomeTags": {
+      "action": ["降价转售", "Repriced resale"],
+      "size": ["Punk #4156", "Punk #4156"],
+      "pnl": ["毛价差 +1,850 ETH", "Gross spread +1,850 ETH"]
+    },
+    "actor": "0xf476cd75be…",
+    "date": "2021-12-09",
+    "knownAt": "2021-12-09T20:38:17Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "nft:cryptopunks-4156",
+      "coin:ethereum",
+      "ca:ethereum:0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb"
+    ],
+    "outcome": "gain",
+    "basis": "gross",
+    "amount": [
+      "+1,850 ETH 毛价差",
+      "+1,850 ETH gross spread"
+    ],
+    "title": [
+      "4156 号藏品连续降价后成交",
+      "Punk 4156 cleared after successive asking-price cuts"
+    ],
+    "summary": [
+      "650 ETH 买入，最终成交 2,500 ETH。当天曾经挂过的 4,156 ETH 比成交价高 1,656 ETH。",
+      "The owner bought for 650 ETH and sold for 2,500 ETH. An earlier ask that day was 1,656 ETH above the clearing price."
+    ],
+    "logic": [
+      "卖家多次调整要价，逐步向实际买方愿付的价格靠近。",
+      "The seller revised the ask several times before a buyer executed at 2,500 ETH."
+    ],
+    "lesson": [
+      "用同日的多次报价还原退出难度；这些挂牌不能当成多次成交。",
+      "Several asks on one day reveal the difficulty of exiting. They represent one eventual sale."
+    ],
+    "limits": [
+      "按链上对价计算，未扣费用。出价调整的私人原因没有写在交易中。",
+      "The spread uses on-chain consideration before costs. The reason behind the repricing is unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "建仓",
+          "Entry"
+        ],
+        "detail": [
+          "2021-02-18 支付 650 ETH 从 0x9e199d… 买入。",
+          "On 18 Feb 2021 the account paid 650 ETH to acquire the item from 0x9e199d…."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "阶梯降价",
+          "Ask sequence"
+        ],
+        "detail": [
+          "12-09 的成交前依次出现 4,156、3,500、3,000 和 2,500 ETH 的挂牌。",
+          "On 9 Dec the pre-sale listing sequence was 4,156, 3,500, 3,000 and 2,500 ETH."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "售出",
+          "Sale"
+        ],
+        "detail": [
+          "买方以 2,500 ETH 买入，卖方相对入场价多收 1,850 ETH。",
+          "The buyer paid 2,500 ETH, leaving the seller 1,850 ETH above the entry price."
+        ],
+        "source": 2
+      }
+    ],
+    "sources": [
+      {
+        "label": "Larva Labs · 4156",
+        "url": "https://www.larvalabs.com/catalog/cryptopunks/4156"
+      },
+      {
+        "label": "Etherscan · 650 ETH",
+        "url": "https://etherscan.io/tx/0x3e60ff8e75fc14ed0d6569f75dd0d8e046e644163617db2452d50af1f86d62b3"
+      },
+      {
+        "label": "Etherscan · 2,500 ETH",
+        "url": "https://etherscan.io/tx/0x37a48f42ee14519516818c87f0f3dc2c5667f770c0901427f27399fccb383dfd"
+      }
+    ]
+  },
+  {
+    "id": "sol-gvhyqq-partial-sale",
+    "outcomeTags": {
+      "action": ["部分卖出", "Partial sale"],
+      "size": ["191,789 SOL", "191,789 SOL"],
+      "pnl": ["已售部分估算盈利逾 2,000 万美元", "Estimated gain on sold units >$20M"]
+    },
+    "actor": "GvHYQQ…gUce",
+    "date": "2026-08-18",
+    "knownAt": "2026-08-18T23:59:59Z",
+    "chains": [
+      "solana"
+    ],
+    "assets": [
+      "coin:solana"
+    ],
+    "outcome": "gain",
+    "basis": "estimated",
+    "amount": [
+      "卖出部分估算盈利超 2,000 万美元",
+      "Over $20M estimated on the sold units"
+    ],
+    "title": [
+      "两次建仓 SOL，出售约三分之二",
+      "Two SOL entry periods and a partial exit"
+    ],
+    "summary": [
+      "Lookonchain 重建了 2023 年的买入和后续减仓：买入均价 23.37 美元，已卖部分均价 128.36 美元。",
+      "Lookonchain reconstructed a $23.37 average entry in 2023 and a $128.36 average exit on the units sold."
+    ],
+    "logic": [
+      "分两个月份建仓，随后只卖出部分持仓。后来买回的 SOL 是新的成本批次。",
+      "The account accumulated in two separate months and exited only part of the inventory. The later buy starts a new cost lot."
+    ],
+    "lesson": [
+      "先用已卖数量匹配成本；把未卖部分也按退出均价计价会高估已实现收益。",
+      "Match cost to units sold. Applying the exit price to unsold inventory overstates realized gains."
+    ],
+    "limits": [
+      "数据来自分析方的地址归集和平均成本估算，未核实该主体在其他地址或交易所的仓位。",
+      "The address history and average cost use the analyst’s reconstruction. Other wallets and exchange positions are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "分批买入",
+          "Accumulation"
+        ],
+        "detail": [
+          "2023 年 8 月和 10 月合计买入 291,790 SOL，成本约 682 万美元。",
+          "August and October 2023 purchases totalled 291,790 SOL for about $6.82M."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "减仓",
+          "Partial exit"
+        ],
+        "detail": [
+          "后来卖出 191,789 SOL，约占买入量 65.7%，合计回收约 2,462 万美元。",
+          "Later sales totalled 191,789 SOL, about 65.7% of units purchased, for roughly $24.62M."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "匹配成本",
+          "Cost matching"
+        ],
+        "detail": [
+          "按已卖数量乘以两个均价的差额，得到约 2,014 万美元的估算价差。",
+          "Applying the difference between the two reported average prices to units sold gives a spread of roughly $20.14M."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "重新入场",
+          "New lot"
+        ],
+        "detail": [
+          "监测方在 2026-08-18 报告一笔新的 47,535 SOL 买入，约 360 万美元。此批成本独立记录。",
+          "The 18 Aug 2026 update identifies a fresh purchase of 47,535 SOL for about $3.6M. It has its own entry basis."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · GvHYQQ",
+        "url": "https://lookonchain.com/feeds/68760"
+      },
+      {
+        "label": "Solscan · GvHYQQ",
+        "url": "https://solscan.io/account/GvHYQQLUwnb6cJpJuxBtAPPC2uWp84WxVEjC1idXgUce"
+      }
+    ]
+  },
+  {
+    "id": "sol-lebron-trump",
+    "outcomeTags": {
+      "action": ["部分卖出 TRUMP", "Partial TRUMP sale"],
+      "proceeds": ["回收 249 万 USDC", "Proceeds 2.49M USDC"],
+      "context": ["余仓估值约 56 万美元", "Residual mark ≈$560K"]
+    },
+    "actor": "LeBron · G5nxEX…7w5E",
+    "date": "2025-01-18",
+    "knownAt": "2025-01-18T23:59:59Z",
+    "chains": [
+      "solana"
+    ],
+    "assets": [
+      "coin:official-trump",
+      "ticker:trump",
+      "ca:solana:6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"
+    ],
+    "outcome": "gain",
+    "basis": "mixed",
+    "amount": [
+      "收回 249 万 USDC，余仓估值 56 万美元",
+      "2.49M USDC recovered; $560K residual mark"
+    ],
+    "title": [
+      "LeBron 标签钱包卖出大部分 TRUMP",
+      "The LeBron-labelled wallet scaled out of TRUMP"
+    ],
+    "summary": [
+      "100 万 USDC 买入后，大部分换回稳定币。包含余仓估值的账面盈利约 205 万美元。",
+      "After spending 1M USDC the wallet converted most of the position back into stablecoins. Including the marked remainder, the reported gain was about $2.05M."
+    ],
+    "logic": [
+      "钱包在公开消息后快速成交，先变现主要仓位，再保留较小的方向敞口。",
+      "The wallet traded soon after a public announcement, converted the bulk to cash and retained a smaller directional position."
+    ],
+    "lesson": [
+      "链上可分别核对稳定币收入和剩余代币；剩余部分的标价仍会变化。",
+      "Reconcile stablecoin receipts separately from token inventory. The remaining mark changes with the market."
+    ],
+    "limits": [
+      "LeBron 是观察方给钱包的标签，未证实与同名公众人物有关。美元折算及余仓采用报告当时价格，未计费用。",
+      "LeBron is an analyst label with no verified link to a public figure. The residual mark and USD conversion are from the report, before costs."
+    ],
+    "steps": [
+      {
+        "label": [
+          "消息后买入",
+          "Entry timing"
+        ],
+        "detail": [
+          "据监测，公告后约两分钟用 100 万 USDC 取得 452 万枚 TRUMP。",
+          "The analyst observed a 1M USDC purchase of 4.52M TRUMP around two minutes after the announcement."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "兑现主体仓位",
+          "Main exit"
+        ],
+        "detail": [
+          "卖出 412 万枚，换回 249 万 USDC，卖出量约为最初买入量的 91%。",
+          "The wallet sold 4.12M tokens for 2.49M USDC, about 91% of its original units."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "持仓估值",
+          "Residual mark"
+        ],
+        "detail": [
+          "余下 40 万枚当时估值约 56 万美元；249 万加 56 万再减 100 万，得到约 205 万美元。",
+          "The 400,000 remaining tokens were marked at about $560K. Proceeds plus that mark minus entry cost equal roughly $2.05M."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · TRUMP",
+        "url": "https://www.lookonchain.com/feeds/detail_1374.html"
+      },
+      {
+        "label": "Solscan · G5nxEX",
+        "url": "https://solscan.io/account/G5nxEXuFMfV74DSnsrSatqCW32F34XUnBeq3PfDS7w5E"
+      },
+      {
+        "label": "TRUMP · official mint",
+        "url": "https://gettrumpmemes.com/%24trump-home"
+      }
+    ]
+  },
+  {
+    "id": "sol-melania-knvr",
+    "outcomeTags": {
+      "action": ["卖出 MELANIA", "MELANIA sale"],
+      "pnl": ["毛价差 +44,353 SOL", "Gross spread +44,353 SOL"]
+    },
+    "actor": "7AudWz…KnVR",
+    "date": "2025-01-20",
+    "knownAt": "2025-01-20T23:59:59Z",
+    "chains": [
+      "solana"
+    ],
+    "assets": [
+      "coin:melania-meme",
+      "ticker:melania",
+      "coin:solana",
+      "ca:solana:FUAfBo2jgks6gB4Z4LfZkqSZgzNucisEHqnNebaRxM1P"
+    ],
+    "outcome": "gain",
+    "basis": "gross",
+    "amount": [
+      "+44,353 SOL 毛价差",
+      "+44,353 SOL gross spread"
+    ],
+    "title": [
+      "全仓换回 SOL，保留 SOL 本位账本",
+      "A full MELANIA exit measured in SOL"
+    ],
+    "summary": [
+      "这个地址买入后将该批 MELANIA 全部卖出，按买卖对价相减得到 44,353 SOL。",
+      "This address sold its entire observed MELANIA lot. Sale receipts minus purchase consideration yield 44,353 SOL."
+    ],
+    "logic": [
+      "以 SOL 入场，再回到 SOL，使这批交易可以直接用同一资产核算。",
+      "Both legs settled in SOL, allowing the spread to be computed in the same unit."
+    ],
+    "lesson": [
+      "SOL 本位盈利和美元换算是两种读数；换回 SOL 后仍然承担 SOL 的美元价格风险。",
+      "SOL proceeds and USD translation measure different things. Returning to SOL leaves USD price exposure."
+    ],
+    "limits": [
+      "报告还列出另一共同来资地址的余仓；两个钱包的私人控制关系未证实，此记录只计 7Aud。",
+      "The report identifies another wallet with the same funding source. Common control is unverified, so this record covers only 7Aud."
+    ],
+    "steps": [
+      {
+        "label": [
+          "支付 SOL",
+          "SOL outflow"
+        ],
+        "detail": [
+          "付出 2,100 SOL，约 56 万美元，取得 152 万枚 MELANIA。",
+          "The address spent 2,100 SOL, about $560K at the time, on 1.52M MELANIA."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "全部卖出",
+          "Full sale"
+        ],
+        "detail": [
+          "报告将该批的全部卖出对价汇总为 46,453 SOL。",
+          "The analyst aggregated the full-lot disposal proceeds at 46,453 SOL."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "对账",
+          "Reconciliation"
+        ],
+        "detail": [
+          "46,453 减 2,100 等于 44,353 SOL；报告折算约 1,100 万美元。",
+          "46,453 less 2,100 gives 44,353 SOL, translated by the analyst to roughly $11M."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · MELANIA",
+        "url": "https://www.lookonchain.com/feeds/1440"
+      },
+      {
+        "label": "Solscan · 7Aud",
+        "url": "https://solscan.io/account/7AudWzV3jYnMRqfu1pikfEc9PrTrM3j48fEKmTxuKnVR"
+      },
+      {
+        "label": "MELANIA · official mint",
+        "url": "https://melaniameme.com/"
+      }
+    ]
+  },
+  {
+    "id": "bsc-f380-partial",
+    "outcomeTags": {
+      "action": ["部分卖出", "Partial sale"],
+      "proceeds": ["报道回收 34.88 BNB", "Reported proceeds 34.88 BNB"],
+      "context": ["余仓估值待核", "Residual mark unverified"]
+    },
+    "actor": "0xf3801f…5270",
+    "date": "2026-01-12",
+    "knownAt": "2026-01-12T23:59:59Z",
+    "chains": [
+      "bsc"
+    ],
+    "assets": [
+      "ticker:我踏马来了",
+      "coin:binancecoin",
+      "ca:bsc:0xc51a9250795c0186a6fb4a7d20a90330651e4444"
+    ],
+    "outcome": "gain",
+    "basis": "mixed",
+    "amount": [
+      "报道回收 34.88 BNB，余仓估值口径待核",
+      "Reported proceeds of 34.88 BNB; remaining inventory unreconciled"
+    ],
+    "title": [
+      "0.1 BNB 入场，拆开卖出与转出记录",
+      "A 0.1 BNB entry followed by sales and transfers"
+    ],
+    "summary": [
+      "成功交易回执确认该地址用 0.1 BNB 换入约 625.41 万枚。报道将已卖部分和余仓合计为约 14.66 万美元收益，原地址余额与报道采用的余仓数量存在差异。",
+      "A successful receipt confirms that 0.1 BNB bought roughly 6.2541M tokens. The report estimated a $146.6K gain including inventory, but its remaining units do not reconcile to the original address."
+    ],
+    "logic": [
+      "先用小额 BNB 建仓，随后部分变现并转币到其他地址。后续归属要从每一笔转出的接收方继续核对。",
+      "The wallet opened with a small BNB purchase, then partially sold and transferred tokens out. Subsequent ownership must be traced through the recipients."
+    ],
+    "lesson": [
+      "以剩余数量乘报价可以估值；要评估整仓变现还需要可成交深度。",
+      "A quote can value the unsold units. Estimating full liquidation proceeds also requires executable depth."
+    ],
+    "limits": [
+      "34.88 BNB 是分析方汇总的卖出收入；11.5 万美元是其对 472 万枚余仓的估值。未确认转出后各接收地址是否由同一主体控制。",
+      "The analyst reports 34.88 BNB of sales and a $115K mark on 4.72M remaining units. Control of the recipient wallets after outbound transfers is unverified."
+    ],
+    "steps": [
+      {
+        "label": [
+          "入场",
+          "Entry"
+        ],
+        "detail": [
+          "BSC 区块 73,348,410，钱包支付 0.1 BNB，合约转入 6,254,067.78 枚代币。",
+          "In BSC block 73,348,410, the wallet spent 0.1 BNB and the token contract transferred 6,254,067.78 units into it."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "部分卖出",
+          "Sale"
+        ],
+        "detail": [
+          "卖出 153 万枚，回收 34.88 BNB，当时约 3.15 万美元。",
+          "Selling 1.53M units returned 34.88 BNB, about $31.5K at the time."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "核对余仓",
+          "Inventory check"
+        ],
+        "detail": [
+          "报道采用 472 万枚。1 月 10 日的一笔回执显示 200 万枚转出；1 月 12 日 08:27 UTC 在区块 74,938,767 对原地址调用 balanceOf，则为 720,000.78 枚。",
+          "The report used 4.72M units. A 10 Jan receipt records a 2M-token transfer out. On 12 Jan at 08:27 UTC, balanceOf for the original address at block 74,938,767 returned 720,000.78 units."
+        ],
+        "source": 3
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · 0xf380",
+        "url": "https://lookonchain.com/feeds/43336"
+      },
+      {
+        "label": "BscScan · 0xf380",
+        "url": "https://bscscan.com/address/0xf3801f41366505e8207a0c692f6b6d003d005270"
+      },
+      {
+        "label": "BscScan · 0.1 BNB entry",
+        "url": "https://bscscan.com/tx/0xa7132ed89eac8484b5541746de13d7d1ea4e52aef88121a80825ab768219d8c9"
+      },
+      {
+        "label": "BscScan · 2M token transfer",
+        "url": "https://bscscan.com/tx/0x18174c163ef87eb73f0b4a8c82cd0b1e469cc96697222611662445dec468e2ee"
+      },
+      {
+        "label": "BscScan · block 74,938,767",
+        "url": "https://bscscan.com/block/74938767"
+      },
+      {
+        "label": "Gate · BEP-20 contract",
+        "url": "https://www.gate.com/zh-tw/announcements/article/49124"
+      }
+    ]
+  },
+  {
+    "id": "polygon-theo-election",
+    "outcomeTags": {
+      "action": ["大选合约", "Election contracts"],
+      "context": ["10 个关联账户估算", "10 attributed accounts"],
+      "pnl": ["估算盈利约 8,350 万美元", "Estimated gain ≈$83.5M"]
+    },
+    "actor": "Théo / Fredi9999",
+    "date": "2024-11-06",
+    "knownAt": "2025-12-01T00:30:00Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "market:us-election-2024"
+    ],
+    "outcome": "gain",
+    "basis": "estimated",
+    "amount": [
+      "约 8,350 万美元，10 个关联账户估算",
+      "About $83.5M across 10 attributed accounts"
+    ],
+    "title": [
+      "把民调分歧交易成大选合约收益",
+      "Trading a polling discrepancy through election contracts"
+    ],
+    "summary": [
+      "Chainalysis 最初按 9 个疑似关联账户估算约 7,870 万美元，随后加入第 10 个账户。数额对应整个归集范围。",
+      "Chainalysis initially estimated $78.7M across nine likely linked accounts, then identified a tenth account. The total applies to the whole cluster."
+    ],
+    "logic": [
+      "据当事项目负责人和调查方的采访，交易者委托民调，同时询问受访者本人和社交圈的投票倾向，随后持有以特朗普胜选为主的结果合约。",
+      "Interviews with the venue and polling provider describe polling both personal voting plans and social-circle preferences. The portfolio mainly backed a Trump victory."
+    ],
+    "lesson": [
+      "重建这类交易要同时核对结算结果、市场定价和钱包归属；合并账户会改变计算分母。",
+      "Outcome settlement, market prices and account attribution all affect reconciliation. Changing the wallet cluster changes the total."
+    ],
+    "limits": [
+      "Chainalysis 通过资金来源、时间和出金路径归集地址；另一个疑似账户未计入。民调动机来自后续访谈。",
+      "Chainalysis used funding, timing and exchange-deposit patterns for attribution. Another suspected account is excluded. The polling rationale comes from later interviews."
+    ],
+    "steps": [
+      {
+        "label": [
+          "形成假设",
+          "Research premise"
+        ],
+        "detail": [
+          "交易者委托 YouGov 在宾夕法尼亚、密歇根和威斯康星州开展调查，比较传统问题与社交圈问题的结果。",
+          "The trader commissioned YouGov polling in Pennsylvania, Michigan and Wisconsin, comparing conventional questions with social-circle questions."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "建立头寸",
+          "Positions"
+        ],
+        "detail": [
+          "公开账户 Fredi9999 是观察入口。Chainalysis 的跨账户分析显示主要敞口押注特朗普获胜。",
+          "Fredi9999 is a public account that can be inspected. Chainalysis identified the main exposure across its attributed wallets as a Trump win."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "核对归属",
+          "Attribution"
+        ],
+        "detail": [
+          "初始 9 个账户的估算收益为 7,870 万美元。再识别的第 10 个账户贡献约 480 万美元。",
+          "The first nine accounts produced an estimated $78.7M. The tenth contributed an estimated $4.8M."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "确认边界",
+          "Scope of total"
+        ],
+        "detail": [
+          "分析方还提及一个约有 210 万美元收益的疑似账户，因控制关系未确认而未计入 8,350 万美元。",
+          "An eleventh candidate had an estimated $2.1M gain. Its unconfirmed attribution keeps it outside the $83.5M total."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Chainalysis · wallet attribution",
+        "url": "https://www.linkedin.com/posts/chainalysis_its-been-widely-reported-that-one-whale-activity-7260062695922499585-AKnN"
+      },
+      {
+        "label": "Polymarket · Fredi9999",
+        "url": "https://polymarket.com/@fredi9999"
+      },
+      {
+        "label": "CBS 60 Minutes · interviews",
+        "url": "https://www.cbsnews.com/news/french-whale-made-over-80-million-on-polymarket-betting-on-trump-election-win-60-minutes/"
+      }
+    ]
+  },
+  {
+    "id": "hl-btc-6c2c-short",
+    "outcomeTags": {
+      "action": ["买入平空", "Buy to close short"],
+      "size": ["370 BTC", "370 BTC"],
+      "pnl": ["扣成交费后 +131,697.40 USDC", "After fill fees +131,697.40 USDC"],
+      "context": ["未计资金费", "Excludes funding"]
+    },
+    "actor": "0x6c2c8c…4a201",
+    "date": "2026-11-04",
+    "knownAt": "2026-11-04T00:16:01.144Z",
+    "chains": [
+      "hyperliquid"
+    ],
+    "assets": [
+      "coin:bitcoin"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+131,697.40 USDC，已扣成交费、未计资金费",
+      "+131,697.40 USDC after fill fees, before funding"
+    ],
+    "title": [
+      "370 BTC 空单分两批买回",
+      "Two exits on a 370 BTC short"
+    ],
+    "summary": [
+      "从零仓位回到零仓位，1,035 条 BTC 成交记录合计价差 153,248.97 USDC，成交费用合计 21,551.58 USDC。",
+      "Across a flat-to-flat cycle, 1,035 BTC fills produced 153,248.97 USDC in trading P&L and incurred 21,551.58 USDC in fill fees."
+    ],
+    "logic": [
+      "地址卖出开空后在更低价分两笔委托买回，第二笔清掉余仓。",
+      "The account sold to open, then bought back at lower prices through two closing orders. The second order cleared the remainder."
+    ],
+    "lesson": [
+      "大额仓位即使只捕捉较小价格波动也能产生显著价差，盘口拆单与成交费同样会放大。",
+      "A large position can turn a small price move into substantial gross P&L. The same size also produces many partial fills and significant fees."
+    ],
+    "limits": [
+      "仅计该 BTC 仓位的交易价差和开平仓成交费。资金费独立结算，未把其他币种、其他周期或追加保证金计入。",
+      "Only BTC trading P&L and opening and closing fill fees are counted. Funding settles separately. Other instruments, cycles and margin transfers are excluded."
+    ],
+    "steps": [
+      {
+        "label": [
+          "空单入场",
+          "Short entry"
+        ],
+        "detail": [
+          "11-03 21:14 UTC 开始，卖出合计 370.13873 BTC，成交量加权均价 77,827.48 USDC。",
+          "Starting at 21:14 UTC on 3 Nov, the first order sold 370.13873 BTC at a volume-weighted 77,827.48 USDC."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首次减仓",
+          "First reduction"
+        ],
+        "detail": [
+          "11-04 00:11 UTC，买回 281.30543 BTC，均价 77,409.26，平仓价差约 117,623.82 USDC。",
+          "At 00:11 UTC on 4 Nov the wallet bought back 281.30543 BTC at an average 77,409.26, booking a gross 117,623.82 USDC."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "最后平仓",
+          "Final reduction"
+        ],
+        "detail": [
+          "00:16 UTC 买回最后 88.83330 BTC，均价 77,426.37，平仓价差约 35,625.16 USDC。",
+          "At 00:16 UTC the remaining 88.83330 BTC was bought back at 77,426.37 on average, booking another 35,625.16 USDC before fees."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "归集费用",
+          "Fee reconciliation"
+        ],
+        "detail": [
+          "按时间、账户、BTC 合约筛选官方逐笔记录，对 closedPnl 和 fee 分列汇总。每一笔费用的计价单位均为 USDC。",
+          "Filter official fills by account, BTC contract and time. Sum closedPnl and fee separately. Fees on these fills are denominated in USDC."
+        ],
+        "source": 3
+      }
+    ],
+    "sources": [
+      {
+        "label": "Hyperliquid · wallet",
+        "url": "https://app.hyperliquid.xyz/explorer/address/0x6c2c8c6e60dfaf81145ffad13736a4847ad4a201"
+      },
+      {
+        "label": "Hyperliquid · entry",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0xf3198d9a96b52ffaf49304480142730201fc008031b84ecd96e238ed55b909e5"
+      },
+      {
+        "label": "Hyperliquid · last exit",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0xc524f97758955d12c69e04480396960203db005cf3987be468eda4ca179936fd"
+      },
+      {
+        "label": "Hyperliquid · userFillsByTime",
+        "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint"
+      },
+      {
+        "label": "Hyperliquid · first exit",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0x790b81a39ecd02157a8504480388e802041c008939c020e71cd42cf65dc0dc00"
+      }
+    ]
+  },
+  {
+    "id": "hl-hype-01e2-scale-out",
+    "outcomeTags": {
+      "action": ["分批平多", "Scaled long exit"],
+      "size": ["45,862.45 HYPE", "45,862.45 HYPE"],
+      "pnl": ["扣成交费后 +21,362.63 USDC", "After fill fees +21,362.63 USDC"],
+      "context": ["未计资金费", "Excludes funding"]
+    },
+    "actor": "0x01e273…ee977",
+    "date": "2026-11-09",
+    "knownAt": "2026-11-09T14:50:57.598Z",
+    "chains": [
+      "hyperliquid"
+    ],
+    "assets": [
+      "coin:hyperliquid"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+21,362.63 USDC，已扣成交费、未计资金费",
+      "+21,362.63 USDC after fill fees, before funding"
+    ],
+    "title": [
+      "三次加仓 HYPE，七组卖单退出",
+      "Three entries and seven exits in HYPE perps"
+    ],
+    "summary": [
+      "这段多单合计 45,862.45 HYPE，退出均价仅比买入均价高约 0.51 USDC。",
+      "The long totalled 45,862.45 HYPE. The average exit was only about 0.51 USDC above the average entry."
+    ],
+    "logic": [
+      "从零仓位分批买入，随后七组平仓成交逐步释放敞口，最后归零。",
+      "The account opened in batches from flat. Seven closing groups reduced exposure until the position returned to zero."
+    ],
+    "lesson": [
+      "核算分批退出要对每次价格按成交量加权，不能只取最高的卖价。",
+      "Volume-weight the exit fills when reconstructing a scaled sale. The highest exit price applies only to its own size."
+    ],
+    "limits": [
+      "金额仅代表这段 HYPE 永续交易，资金费与其他头寸另算。合并口径是官方接口按时间聚合的成交组。",
+      "The amount covers this HYPE perpetual cycle only, before funding. Counts follow the venue’s time-aggregated fills."
+    ],
+    "steps": [
+      {
+        "label": [
+          "分批建仓",
+          "Entry groups"
+        ],
+        "detail": [
+          "11-08 起三组买入量分别为 5,584.66、17,278.31 和 22,999.48 HYPE，均价约 75.4225。",
+          "From 8 Nov the three opening groups bought 5,584.66, 17,278.31 and 22,999.48 HYPE, averaging about 75.4225."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "分七组退出",
+          "Seven exits"
+        ],
+        "detail": [
+          "卖出均价约 75.9337；第一组卖出 8,255.24，最后一组卖出 5,765.22 HYPE。",
+          "The weighted exit averaged 75.9337. The first closing group sold 8,255.24 units and the final group sold 5,765.22."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "盈亏与费用",
+          "P&L and fees"
+        ],
+        "detail": [
+          "平仓价差合计 23,445.10 USDC，开平仓费用合计 2,082.47 USDC。",
+          "The summed closed P&L was 23,445.10 USDC. Opening and closing fills charged 2,082.47 USDC in total."
+        ],
+        "source": 3
+      }
+    ],
+    "sources": [
+      {
+        "label": "Hyperliquid · wallet",
+        "url": "https://app.hyperliquid.xyz/explorer/address/0x01e273fc08012db1b75e8ca93f8139bfac2ee977"
+      },
+      {
+        "label": "Hyperliquid · entry",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0xefe7159f0754abf9f16004485f14170204620084a257cacc93afc0f1c65885e4"
+      },
+      {
+        "label": "Hyperliquid · last exit",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0xe408d7ccc96c5926e58204486c47c502054500b2646f77f887d1831f88603311"
+      },
+      {
+        "label": "Hyperliquid · userFillsByTime",
+        "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint"
+      }
+    ]
+  },
+  {
+    "id": "gmx-arb-20ead-eth-long",
+    "outcomeTags": {
+      "action": ["ETH 多头平仓", "ETH long close"],
+      "pnl": ["基础平仓盈亏 +$370,263.20", "Base closed P&L +$370,263.20"]
+    },
+    "actor": "0x20EADf…1576A4",
+    "date": "2025-12-19",
+    "knownAt": "2025-12-19T17:58:38.000Z",
+    "chains": [
+      "arbitrum"
+    ],
+    "assets": [
+      "coin:ethereum"
+    ],
+    "outcome": "gain",
+    "basis": "gross",
+    "amount": [
+      "+370,263.20 美元基础平仓盈亏",
+      "+$370,263.20 in base closed P&L"
+    ],
+    "title": [
+      "四笔加仓 ETH，单笔全部退出",
+      "Four increases, one full ETH exit"
+    ],
+    "summary": [
+      "GMX 在 Arbitrum 上记录了这笔 ETH/USD 多单的四次加仓和一次清仓。最终的基础盈亏为正，成交执行字段另列。",
+      "GMX on Arbitrum indexed four increases and one full close in this ETH/USD long. Its base P&L and execution P&L are separately reported."
+    ],
+    "logic": [
+      "头三次建仓集中在八分钟内，次日加大敞口，随后一次性平掉全部名义仓位。",
+      "Three increases arrived within eight minutes, with one more the next day before a single full exit."
+    ],
+    "lesson": [
+      "逐笔名义仓位可以还原加仓节奏；收益率的分母则要看实际抵押品和资金进出。",
+      "Notional position changes reconstruct the scaling sequence. Return on capital requires collateral and cash-flow history."
+    ],
+    "limits": [
+      "基础盈亏取 GMX 的 basePnlUsd，30 位美元精度。它与协议执行盈亏、全部费用扣除后的净收益有不同口径。",
+      "The headline uses GMX basePnlUsd, denominated in USD with 30 decimals. Execution P&L and all-in account returns use different fields."
+    ],
+    "steps": [
+      {
+        "label": [
+          "三次建仓",
+          "First three orders"
+        ],
+        "detail": [
+          "12-18 23:28 至 23:36 UTC，名义仓位从零依次增至约 235 万、471 万、704 万美元。",
+          "Between 23:28 and 23:36 UTC on 18 Dec, the notional increased from zero to about $2.35M, $4.71M and $7.04M."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "第四次加仓",
+          "Final increase"
+        ],
+        "detail": [
+          "12-19 09:59 UTC 再加约 430 万美元，仓位达到约 1,134 万美元。",
+          "At 09:59 UTC on 19 Dec a further $4.30M increase brought the position to roughly $11.34M."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "全部平仓",
+          "Full close"
+        ],
+        "detail": [
+          "17:58 UTC 执行清仓，协议记录剩余名义仓位为零。",
+          "At 17:58 UTC the close executed, leaving zero remaining position notional in the protocol record."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "两种读数",
+          "Execution fields"
+        ],
+        "detail": [
+          "基础平仓盈亏约 370,263 美元。同一笔执行的 pnlUsd 为约 352,314 美元，不能将两项相加。",
+          "Base closed P&L was about $370,263; the same execution’s pnlUsd was about $352,314. Adding these would double count."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "GMX · executed close",
+        "url": "https://gmx.squids.live/gmx-synthetics-arbitrum:prod/api/graphql?query=%7B+tradeActions%28limit%3A2%2Cwhere%3A%7BtransactionHash_eq%3A%220xf07c0a234de53c8098dd855c05dcd06874ad2a82e4da557d45a38e6782d6c2d3%22%2Caccount_eq%3A%220x20EADfcaf91BD98674FF8fc341D148E1731576A4%22%2CeventName_eq%3A%22OrderExecuted%22%7D%29%7BtransactionHash+positionLifecycleId+positionSizeInUsd+sizeDeltaUsd+basePnlUsd+pnlUsd+timestamp%7D+%7D"
+      },
+      {
+        "label": "Block explorer · opening order",
+        "url": "https://arbiscan.io/tx/0x451fc208e498fbd3cee9ce226def9b9b4d70feefad71d23bf0e0f78baf5167f4"
+      },
+      {
+        "label": "Block explorer · final close",
+        "url": "https://arbiscan.io/tx/0xf07c0a234de53c8098dd855c05dcd06874ad2a82e4da557d45a38e6782d6c2d3"
+      },
+      {
+        "label": "GMX · GraphQL fields",
+        "url": "https://docs.gmx.io/docs/api/graphql/"
+      },
+      {
+        "label": "Arbiscan · fourth increase",
+        "url": "https://arbiscan.io/tx/0x707b88f7dcd9cbfef6dcbe1a1e5ccfd1fbdb7b4ce106688298c34ad9d8fee657"
+      }
+    ]
+  },
+  {
+    "id": "gmx-avax-4cd8-short",
+    "outcomeTags": {
+      "action": ["AVAX 空头平仓", "AVAX short close"],
+      "pnl": ["末笔基础盈亏 +$794,186.22", "Final close · base P&L +$794,186.22"]
+    },
+    "actor": "0x4Cd80a…E0F7F",
+    "date": "2025-10-10",
+    "knownAt": "2025-10-10T23:56:23.000Z",
+    "chains": [
+      "avalanche"
+    ],
+    "assets": [
+      "coin:avalanche-2"
+    ],
+    "outcome": "gain",
+    "basis": "gross",
+    "amount": [
+      "最后一笔平仓基础盈亏 +794,186.22 美元",
+      "+$794,186.22 base P&L on the final close"
+    ],
+    "title": [
+      "AVAX 空单清仓，单笔记录接近 80 万美元价差",
+      "One AVAX short exit recorded nearly $800K of base P&L"
+    ],
+    "summary": [
+      "GMX 的 AVAX/USD 市场记录了该钱包的空单。最后一笔清仓对应约 290 万美元名义额度。",
+      "GMX’s AVAX/USD market records a short with a final closing order of roughly $2.90M notional."
+    ],
+    "logic": [
+      "开仓以来多次调整头寸，最终以一笔减仓操作把剩余仓位归零。",
+      "The position was adjusted repeatedly before the final reduction took the remainder to zero."
+    ],
+    "lesson": [
+      "最后一笔清仓的盈亏只覆盖这次减少的仓位。核对整个交易周期时，还须计入此前所有增减仓。",
+      "The final receipt covers only the units reduced in that action. For a full-cycle return, include all earlier position changes."
+    ],
+    "limits": [
+      "展示最终一笔的 basePnlUsd，以美元计，未扣全周期费用。仓位名义金额不能当作实缴保证金。",
+      "The amount is the final action’s basePnlUsd before full-cycle fees. Notional size and posted margin are different quantities."
+    ],
+    "steps": [
+      {
+        "label": [
+          "开始建仓",
+          "Opening sequence"
+        ],
+        "detail": [
+          "10-07 05:41 UTC 前三次开空各约 20 万美元，名义仓位累加至约 60 万美元。",
+          "At 05:41 UTC on 7 Oct the first three short increases were about $200K each, bringing notional to about $600K."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "合约范围",
+          "Instrument"
+        ],
+        "detail": [
+          "平台将此市场标记为 AVAX/USD，池资产为 AVAX 与 USDC。指数标的是 AVAX。",
+          "The protocol lists this as the AVAX/USD market backed by AVAX and USDC; the price exposure was AVAX."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "清掉余仓",
+          "Final closing action"
+        ],
+        "detail": [
+          "10-10 23:56 UTC，区块 70,106,244 的执行移除了约 289.64 万美元名义仓位，余仓为零。",
+          "At 23:56 UTC on 10 Oct the execution in block 70,106,244 removed about $2.8964M in notional, leaving zero."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "对照字段",
+          "P&L comparison"
+        ],
+        "detail": [
+          "该次的基础平仓盈亏约 794,186 美元，协议的 pnlUsd 字段为约 793,150 美元。",
+          "The close recorded about $794,186 of base P&L. The protocol’s pnlUsd field for the same exit was about $793,150."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "GMX · executed close",
+        "url": "https://gmx.squids.live/gmx-synthetics-avalanche:prod/api/graphql?query=%7B+tradeActions%28limit%3A2%2Cwhere%3A%7BtransactionHash_eq%3A%220xb3a6e78a81c778338fdc147422dc5c0f42341541a285b7119a99363a86202d1a%22%2Caccount_eq%3A%220x4Cd80aa0CE4881Eb8679EdA1f6fbe3d89AEc0F7F%22%2CeventName_eq%3A%22OrderExecuted%22%7D%29%7BtransactionHash+positionLifecycleId+positionSizeInUsd+sizeDeltaUsd+basePnlUsd+pnlUsd+timestamp%7D+%7D"
+      },
+      {
+        "label": "Block explorer · opening order",
+        "url": "https://subnets.avax.network/c-chain/tx/0xd8a313b28a82001458733e2ba2c5da4208e4b780c0b2c9bfd8b86d850de741d4"
+      },
+      {
+        "label": "Block explorer · final close",
+        "url": "https://subnets.avax.network/c-chain/tx/0xb3a6e78a81c778338fdc147422dc5c0f42341541a285b7119a99363a86202d1a"
+      },
+      {
+        "label": "GMX · GraphQL fields",
+        "url": "https://docs.gmx.io/docs/api/graphql/"
+      },
+      {
+        "label": "GMX · Avalanche markets",
+        "url": "https://avalanche-api.gmxinfra.io/markets/info"
+      }
+    ]
+  }
+]

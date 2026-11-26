@@ -60,7 +60,7 @@ test('only the wordmark sweeps every eight seconds; pause, reduced motion and of
  const replace=(key,value)=>{saved.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{configurable:true,value,writable:true});};
  const context=()=>({gradients:0,fillStyle:'',setTransform(){},clearRect(){},beginPath(){},arc(){},fill(){},fillText(){},fillRect(){},drawImage(){},save(){},restore(){},measureText(word){return {width:word.length*(Number(this.font?.match(/([\d.]+)px/)?.[1])||10)*.6,actualBoundingBoxAscent:8};},getImageData(x,y,w,h){return {data:new Uint8ClampedArray(w*h*4).fill(255)};},createLinearGradient(...args){this.gradients++;this.gradientArgs=args;this.stops=[];return {addColorStop:(...stop)=>this.stops.push(stop)};}});
  const makeCanvas=()=>{const ctx=context();return {dataset:{},ctx,getContext(){return ctx;}};};
- const faces=Array.from({length:4},(_,i)=>{const canvas=makeCanvas(),label={textContent:i?'—':'LENSWAVE'},events=new Map();return {canvas,label,events,dataset:{},closest:()=>null,querySelector:q=>q==='canvas'?canvas:label,getBoundingClientRect:()=>({width:40,height:12,left:0,top:0}),addEventListener(type,fn){events.set(type,fn);},removeEventListener(type){events.delete(type);}};});
+ const faces=Array.from({length:4},(_,i)=>{const canvas=makeCanvas(),label={textContent:i?'—':'THINKING LAYER'},events=new Map();return {canvas,label,events,dataset:{},closest:()=>null,querySelector:q=>q==='canvas'?canvas:label,getBoundingClientRect:()=>({width:40,height:12,left:0,top:0}),addEventListener(type,fn){events.set(type,fn);},removeEventListener(type){events.delete(type);}};});
  const fields=Array.from({length:3},()=>({firstElementChild:{},lastElementChild:{},setAttribute(key,value){this[key]=value;}}));
  const root={innerHTML:'',querySelector:()=>({children:fields}),querySelectorAll:()=>faces};
  const doc={hidden:false,documentElement:{dataset:{theme:'dark'},lang:'zh'},createElement:makeCanvas,addEventListener(){},removeEventListener(){}};
@@ -92,7 +92,7 @@ test('only the wordmark sweeps every eight seconds; pause, reduced motion and of
   faces[1].events.get('blur')();flush();assert.equal(faces[1].canvas.dataset.neon,'false');
   const wallet=workbenchWalletMetric({status:'ready',usdt:25,updatedAt:Date.UTC(2026,10,25,9,8,7)});
   header.update([],wallet,false,[{state:'ready',bars:2500,signal:'balanced'}]);flush();
-  assert.deepEqual(faces.map(face=>face.label.textContent),['LENSWAVE','25.00','2,500','0']);
+  assert.deepEqual(faces.map(face=>face.label.textContent),['THINKING LAYER','25.00','2,500','0']);
   assert.match(fields[0].firstElementChild.textContent,/^(钱包余额|Wallet balance) · USDT · BSC/);
   assert.equal(fields[0].title,wallet.description);assert.equal(fields[0]['aria-label'],wallet.description);
   assert.match(root.innerHTML,/data-terminal-action="wallet"/);assert.doesNotMatch(root.innerHTML,/data-terminal-route="assets"/);

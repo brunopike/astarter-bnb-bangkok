@@ -8,7 +8,6 @@ export const RESEARCH_GROUPS=[
  {label:'避险轮动',color:'#ecb427',glyph:'diamond',name:'避险研究组',roles:[5,9,14],assets:['XAU'],source:'macro'},
  {label:'宏观事件',color:'#f5866a',glyph:'calendar',name:'宏观研究组',roles:[12,13,15],assets:['DXY','US10Y'],source:'macro'}
 ];
-export function researchRoleColor(id){return RESEARCH_GROUPS.find(group=>group.roles.includes(id))?.color||RESEARCH_GROUPS[0].color;}
 const FIXTURES={
  BTC:{name:'比特币',outcome:'watch',title:'等待结构确认',thesis:'结构修复，但流动性尚未同步；保留观察。',next:'等待价格结构与盘口同时确认。',evidence:['区间上沿尚未形成有效确认','盘口支撑存在，但厚度未持续增加','利率事件临近，降低方向性权重','讨论升温，独立来源不足','大额转账仅作旁证，不等同于卖出','等待结构确认；限制组合相关性敞口']},
  ETH:{name:'以太坊',outcome:'candidate',title:'进入策略候选',thesis:'结构与流动性证据一致，链上流入提供旁证。',next:'可交给操作台，核对额度与保护条件后模拟。',evidence:['回踩结构与中周期方向一致','双边深度恢复，价差处于示例阈值内','利率背景纳入压力情景','生态讨论有多来源交叉印证','资金流入获另一数据切片旁证','示例风险条件齐备，仍需执行侧额度检查']},

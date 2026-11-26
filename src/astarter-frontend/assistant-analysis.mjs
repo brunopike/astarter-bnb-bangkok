@@ -25,20 +25,21 @@ export const ASSISTANT_TOOLSETS=[
   material:{label:['投研报告','Research report'],icon:'file'},
   technical:{label:['解读行情','Read a chart'],icon:'chart'}
  }},
- ...[['binance-agent-os','Binance','binance',BINANCE_AGENT_OS.docs],['okx-agent-trade-kit','OKX','okx','https://github.com/okx/agent-trade-kit']].map(([id,name,brand,docs])=>({id,label:[name,name],available:true,exchange:true,brand,docs,tasks:{
+ {id:BINANCE_AGENT_OS.id,label:['Binance','Binance'],available:true,exchange:true,brand:'binance',docs:BINANCE_AGENT_OS.docs,tasks:{
   market:{label:['行情研究','Market research'],icon:'chart'},
   account:{label:['账户与持仓','Account & positions'],icon:'shield'},
   trades:{label:['成交记录','Trade history'],icon:'file'},
   plan:{label:['行情分析','Market analysis'],icon:'strategy'}
- }}))
+ }}
 ];
 const providerTask=value=>typeof value==='string'&&Object.hasOwn(BINANCE_AGENT_OS.tasks,value)?value:null;
 export const clipText=(value,n=CHAT_LIMITS.sourceLength)=>String(value??'').replace(/\u0000/g,'').slice(0,n).trim();
 export function cleanSource(source={}){
  if(!source||typeof source!=='object'||typeof source.text!=='string')return null;
  const text=clipText(source.text);if(!text)return null;
- const href=typeof source.href==='string'&&/^\?page=[a-z-]+(?:&[a-z]+=[\w.%+:-]+)*$/.test(source.href)?source.href:'';
- return {id:clipText(source.id||source.title||'source',100),title:clipText(source.title||'资料',100),text,href,kind:['market','news','chain','excerpt','file'].includes(source.kind)?source.kind:'excerpt'};
+ const href=typeof source.href==='string'&&/^\?page=[a-z-]+(?:&[a-z][a-z_]*=[\w.%+:-]+)*$/.test(source.href)?source.href:'';
+ return {id:clipText(source.id||source.title||'source',100),title:clipText(source.title||'资料',100),text,href,kind:['market','news','chain','excerpt','file'].includes(source.kind)?source.kind:'excerpt',
+  ...(source.private===true||source.scope==='private'?{scope:'private'}:{})};
 }
 export function addSource(sources,source){
  const item=cleanSource(source);if(!item)return {sources,error:'empty'};
@@ -97,6 +98,12 @@ const marketNames=quoteSymbols.map(symbol=>{
  const pattern=names.map(name=>/^[\x20-\x7e]+$/.test(name)?'\\b'+name.replace(/[.*+?^{}$()|[\]\\]/g,'\\$&')+'\\b':name).join('|');
  return [symbol,new RegExp(pattern,'i')];
 });
+export function isAssetOnlyReply(question){
+ if(!questionQuoteSymbols(question).length)return false;
+ let rest=question.replace(/\b([A-Z0-9]+?)(?:[/-]?(?:USDT|USDC|USD))\b/gi,'$1');
+ for(const [,pattern] of marketNames)rest=rest.replace(pattern,' ');
+ return !rest.replace(/我说的是|我指的是|指的是|看一下|看看|就是|请看|那|是|和|与|及|呢|吧|\b(?:and|the|please|I mean|I meant)\b|[\s,，、。.!?！？&+]/gi,'');
+}
 export function questionQuoteSymbols(question,topic='market'){
  if(orderRuleQuestion(question)||/样例|示例|示範|示范|历史|歷史|昨天|昨日|上周|去年|20\d\d[-年/]|historical|example|yesterday|last week|OKX|Bybit|Coinbase|Kraken|合约|永续|期货|futures|perpetual|资金费率|持仓量|盘口|funding rate|open interest|order ?book/i.test(question))return [];
  if(topic!=='market'&&(!/价格|现价|市价|走势|行情|报价|price|quote|how much.*cost/i.test(question)||/积分|费用|收费|credits?|fees?/i.test(question)))return [];
@@ -193,7 +200,7 @@ export function cleanSharedOutput(value){
   if(!['markets','intelligence','signals','strategies'].includes(params.get('page'))||new Set(keys).size!==keys.length||keys.some(key=>!['page','asset','story'].includes(key))||params.has('asset')&&!MARKET.some(a=>a.symbol===params.get('asset'))||params.has('story')&&!NEWS.some(n=>n.id===params.get('story')))return null;
   return {title:clipText(source?.title,100),href};
  }).filter(source=>source?.title&&source.href);
- return {version:1,sample:true,title:clipText(value.title,120),text:clipText(value.text,16000),mode:['ask','material','technical'].includes(value.mode)?value.mode:'ask',asOf:value.timeKind==='unknown'?null:Number.isFinite(value.asOf)?value.asOf:RESEARCH_AS_OF,...(['answer','source','unknown'].includes(value.timeKind)?{timeKind:value.timeKind}:{}),sources};
+ return {version:1,sample:true,title:clipText(value.title,120),text:clipText(value.text,16000),mode:['ask','material','technical'].includes(value.mode)?value.mode:'ask',asOf:Number.isFinite(value.asOf)?value.asOf:RESEARCH_AS_OF,sources};
 }
 export async function encodeSharedOutput(value){
  const output=cleanSharedOutput(value);if(!output)throw new Error('share-content');
@@ -215,12 +222,71 @@ export function sharedOutputURL(origin,token,invite){
  if(typeof token!=='string'||token.length>12000||!/^v1z?\.[A-Za-z0-9_-]+$/.test(token))throw new Error('share-link');
  if(typeof invite!=='string'||!/^[A-Za-z0-9_-]{4,32}$/.test(invite))throw new Error('share-invite');
  const url=new URL(origin);if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw new Error('share-origin');
- url.pathname='/';url.search=new URLSearchParams({page:'assistant',ref:invite}).toString();url.hash='astarter-share='+token;return url.href;
+ url.pathname='/chat';url.search=new URLSearchParams({ref:invite}).toString();url.hash='astarter-share='+token;return url.href;
 }
 export function socialDraft(output,url,channel){
  // shortcut: conservative draft weights; use twitter-text when public X posting is enabled.
  const fit=(text,limit)=>{let result='',weight=0;for(const char of text){const next=char.codePointAt(0)<128?1:2;if(weight+next>limit-2)return result+'…';result+=char;weight+=next;}return result;};
- return (channel==='x'?fit(output.title,60)+'\n'+fit(output.text,150):output.title+'\n'+output.text)+'\n\nASTARTER · '+(output.timeKind?'PREVIEW':'DEMO')+'\n'+url;
+ return (channel==='x'?fit(output.title,60)+'\n'+fit(output.text,150):output.title+'\n'+output.text)+'\n\nASTARTER · DEMO\n'+url;
+}
+const recallFields={
+ code:/代号|代號|暗号|暗號|标记|標記|口令|\b(?:codename|codeword|code word|code name|code|marker)\b/i,
+ name:/名字|姓名|称呼|稱呼|\bname\b/i,
+ preference:/偏好|喜好|\bpreferences?\b/i,
+ budget:/预算(?:上限)?|預算(?:上限)?|\bbudget(?: limit)?\b/i
+};
+const wrappedRecallValue=[['「','」'],['『','』'],['“','”'],['"','"'],['‘','’'],["'","'"],['`','`']];
+const repeatLast=/^(?:(?:请(?:你)?|原样|逐字)*(?:复述|重复)(?:一下)?我(?:的)?上(?:一)?(?:条(?:消息)?|句话?)(?:的原文|的原话)?|(?:请(?:你)?|原样|逐字)?(?:重复|复述|告诉我)?(?:我(?:的)?(?:上(?:一)?(?:条(?:消息)?|句)|刚才)(?:说|发|写)(?:的)?(?:了)?(?:什么|什么内容)|我(?:的)?上(?:一)?(?:条(?:消息)?|句)(?:说的)?(?:是)?什么|我(?:的)?上(?:一)?(?:条消息|句话)(?:的)?原话)|(?:what (?:did i (?:just |last )?(?:say|write|send)(?: in my (?:last|previous) message)?|was my (?:last|previous) message)|(?:please )?(?:repeat|quote) my (?:last|previous) message(?: verbatim)?))$/i;
+const recallRequest=/什么|多少|啥|还记得|复述|重复|告诉我|说出|^what\b|\b(?:recall|remind|repeat|tell me|remember)\b/i;
+const recallFiller=/上(?:一)?条(?:消息)?|上一轮|本(?:轮|次|次对话)|这(?:一轮|轮|次|段)(?:对话)?|曾经|之前|刚才|临时|对话|消息|请问|请你|麻烦|请|还记得|记得|记住|记下|我|你|给|让|刚|说过|说|提到|留|发|设定|设置|告诉|能否|是否|帮|再|的|是|为|叫|什么|多少|啥|吗|呢|复述|重复|说出|\b(?:what|was|is|did|do|you|i|my|the|a|our|this|that|temporary|session|conversation|last|previous|message|just|earlier|have|had|to|of|as|me|tell|ask|asked|say|said|give|gave|set|assigned|choose|chose|mention|mentioned|remember|remind|recall|repeat|please)\b|[\s'’?,.，。？！：:]/gi;
+
+function recallDeclaration(message,field){
+ const lead=/^(?:(?:请(?:你)?|麻烦(?:你)?)?(?:帮我)?(?:记住|记下|记一下|记着)|(?:please\s+)?remember\b)\s*[,，:：]?\s*/i.exec(message);
+ if(!lead)return undefined;
+ const declaration=message.slice(lead[0].length).replace(/^(?:(?:这(?:一轮|轮|次|段)|本(?:轮|次|次的))(?:对话)?(?:的)?|对话的|临时|我的|我(?:的)?(?:新的)?(?=代号|标记|预算|名字|偏好)|(?:that|my|the|temporary)\b|\s)+/i,'');
+ const alternate=field==='name'?/^(?:我叫|叫我|call me\b)/i:field==='preference'?/^(?:我(?:更)?喜欢|我(?:更)?喜歡|I prefer\b)/i:null;
+ const start=alternate?.exec(declaration)||recallFields[field].exec(declaration);
+ if(!start||start.index!==0)return undefined;
+ const rest=declaration.slice(start[0].length).replace(/^\s*(?:是|为|為|叫|设为|改为|改成|设置为|(?:is|was|to)\b|[：:=])?\s*/i,'');
+ const wrapper=wrappedRecallValue.find(([open])=>rest.startsWith(open));
+ let value;
+ if(wrapper){
+  const end=rest.indexOf(wrapper[1],1);
+  if(end<1||/^\s*(?:或|还是|or\b)/i.test(rest.slice(end+1)))return null;
+  value=rest.slice(1,end);
+ }else{
+  value=rest.split(/[。！？!?；;\n]|\.(?=\s|$)|[,，]\s*(?:然后|再|请|then\b|and (?:tell|explain|answer)\b)/i)[0].trim();
+  if(/或(?:者)?|还没决定|未定|\b(?:or|undecided|maybe)\b|(?:[,，]|\band\b)\s*(?:我的|my\b)/i.test(value))return null;
+ }
+ return value&&value.length<=200?value:null;
+}
+
+// Read only user-authored messages in the selected thread; model replies and source material are never evidence here.
+export function explicitThreadRecall(question,turns){
+ const q=String(question).trim().replace(/(?:[？?。.!，,]\s*|\s+)(?:(?:请)?只(?:需|要|用)?(?:回复|写|输出|回答).{0,20}|(?:please )?(?:only (?:the|reply|answer|return|write)|(?:reply|answer) (?:only|with just)).{0,28})[。.!？?\s]*$/i,'').replace(/[。.!？?\s]+$/,'').replace(/[’']s\b/gi,' is');
+ const prior=turns.filter(t=>t?.mode==='ask'&&!t.generatedQuestion&&!t.providerTask&&!t.billingJob&&typeof t.question==='string');
+ if(repeatLast.test(q))return prior.at(-1)?.question||null;
+ if(!recallRequest.test(q)||!/(?:我|你还记得|之前|刚才|\b(?:i|my|our|gave|did i|previous)\b)/i.test(q))return null;
+ const probe=q.replace(/\bcode name\b/gi,'codename');
+ const fields=Object.keys(recallFields).filter(k=>recallFields[k].test(probe));
+ if(fields.length!==1||probe.replace(recallFields[fields[0]],'').replace(recallFiller,''))return null;
+ const field=fields[0],values=new Set();
+ for(const turn of prior.slice().reverse()){
+  const line=turn.question.trim();
+  if(recallFields[field].test(line)&&/^(?:请)?(?:忘掉|忘记|清除|删除)|^(?:please )?forget\b/i.test(line))break;
+  const value=recallDeclaration(line,field);
+  if(value===null)break;
+  if(value!==undefined)values.add(value);
+ }
+ return values.size===1?[...values][0]:null;
+}
+
+function restoredMarketContext(turn){
+ const context=turn.marketContext;
+ // Earlier saves wrote these empty arrays even when a chat had no market context.
+ if(turn.mode==='ask'&&(context==null || (Array.isArray(context.news)&&context.news.length===0 &&
+   Array.isArray(context.signals)&&context.signals.length===0&&Object.keys(context).length===2)))return null;
+ return cleanContext(context);
 }
 export function normalizeChatStore(value){
  if(value?.schema!==1||!Array.isArray(value.threads))return {schema:1,threads:[],active:''};
@@ -235,9 +301,41 @@ export function normalizeChatStore(value){
    sources:(Array.isArray(x.sources)?x.sources:[]).map(cleanSource).filter(Boolean).slice(0,CHAT_LIMITS.sources),
    ...(Number.isSafeInteger(x.answeredAt)&&x.answeredAt>0&&x.answeredAt<8_640_000_000_000_000-28_800_000?{answeredAt:x.answeredAt}:{}),
    ...(Array.isArray(x.quotes)?{quotes:x.quotes.slice(0,MAX_ASSISTANT_QUOTES).map(cleanAssistantQuote).filter(Boolean)}:{}),
-   technical:cleanTechnical(x.technical),marketContext:cleanContext(x.marketContext),report:normalizeResearchReport(x.report),followup:x.followup===true,
+   ...(x.mode==='ask'&&!x.billingJob&&x.localRecall===true?{localRecall:true}:{}),
+   ...(x.mode==='ask'&&!x.billingJob&&x.needsMarketAsset===true?{needsMarketAsset:true}:{}),
+   ...(x.mode==='ask'&&!x.billingJob&&x.modelReply?{modelReply:restoreModelReply(x.modelReply)}:{}),
+   ...(x.mode==='ask'&&Array.isArray(x.evidence)?{evidence:cleanAnswerEvidence(x.evidence),evidenceReply:x.evidenceReply===true}:{}),
+   technical:cleanTechnical(x.technical),marketContext:restoredMarketContext(x),report:normalizeResearchReport(x.report),followup:x.followup===true,
    context:x.context&&typeof x.context==='object'?{available:Number(x.context.available)||0,reserved:Number(x.context.reserved)||0,spent:Number(x.context.spent)||0,researchCost:Number(x.context.researchCost)||0}:null
   }))
  }));
  return {schema:1,threads,active:threads.some(t=>t.id===value.active)?value.active:(threads[0]?.id||'')};
+}
+
+export function assistantModelReceipt(receipt){
+ if(receipt?.provider!=='openai'||typeof receipt.model!=='string'||
+    !/^gpt-6\.2-sol(?:-\d{4}-\d{2}-\d{2})?$/.test(receipt.model))return null;
+ return {provider:'openai',model:receipt.model,...(receipt.effort==='high'?{effort:'high'}:{})};
+}
+
+function restoreModelReply(reply){
+ if(reply.state==='complete'&&typeof reply.text==='string'&&reply.text.trim()){
+  const receipt=assistantModelReceipt(reply.receipt);
+  return {state:'complete',text:clipText(reply.text,16000),...(reply.truncated===true?{truncated:true}:{}),...(receipt?{receipt}:{})};
+ }
+ const code=reply.state==='pending'?'INTERRUPTED':reply.code;
+ return {state:'error',code:['INTERRUPTED','UNCONFIGURED','MODEL_TIMEOUT','RATE_LIMITED','REQUEST_INVALID'].includes(code)?code:'MODEL_UNAVAILABLE'};
+}
+
+export function cleanAnswerEvidence(items){
+ return items.slice(0,8).flatMap(item=>{
+  if(typeof item?.title!=='string'||typeof item?.text!=='string'||!item.text.trim())return [];
+  const href=cleanSource({text:item.text,href:item.href})?.href||'';
+  let sourceUrl='';
+  try{const url=new URL(item.sourceUrl);if(url.protocol==='https:'&&!url.username&&!url.password)sourceUrl=url.href;}catch{}
+  return [{title:clipText(item.title,140),text:clipText(item.text,2400),href,sourceUrl,
+   kind:clipText(item.kind,24),symbol:clipText(item.symbol||item.asset,24),turnId:clipText(item.turnId,100),
+   status:['empty','unavailable'].includes(item.status)?item.status:'observed',
+   asOf:Number.isSafeInteger(item.asOf)&&item.asOf>0&&item.asOf<8.64e15?item.asOf:null}];
+ });
 }

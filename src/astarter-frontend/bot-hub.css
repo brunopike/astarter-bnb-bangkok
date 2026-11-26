@@ -336,8 +336,9 @@ body[data-page="execution"] #product-page:has(.bh-root){padding:0;background:var
 /* Bitget overview hierarchy; application controls remain owned by the shared VI. */
 #product-page .bh-root .bh-button{min-height:var(--b-touch-height,44px)}
 #product-page .bh-overview .bh-overview-hero{display:flex;align-items:center;gap:12px;min-height:0;padding:24px 0;margin:0;flex-wrap:wrap}
-.bh-hero-copy{min-width:0;margin-right:auto}
-#product-page .bh-overview .bh-overview-hero h1{font-size:var(--b-title,28px);line-height:1.35;font-weight:500;letter-spacing:0;margin:0}
+.bh-hero-copy.lw-halftone-brand{width:min(100%,355px);grid-template-columns:minmax(0,1fr);min-width:0;margin-right:auto;border:0;padding:0}
+#product-page .bh-overview .bh-overview-hero h1{min-width:0;margin:0;color:inherit}
+.bh-hero-copy .lw-dot-face .dot-text{font-size:clamp(20px,6vw,34px);overflow:hidden}
 #product-page .bh-overview .bh-overview-hero p{font-size:14px;line-height:1.7;color:var(--bh-muted);max-width:52ch;margin:0;text-wrap:pretty}
 .bh-root .bh-advisor-banner{display:inline-flex;align-items:center;gap:8px;flex:none;width:auto;min-height:44px;padding:8px 12px;text-align:left;border:1px solid var(--bh-line);border-radius:var(--b-control-radius,8px);background:var(--surface);font-size:14px;line-height:20px}
 .bh-guide-symbol{display:grid;place-items:center;width:18px;height:18px;flex:none;color:var(--text)}

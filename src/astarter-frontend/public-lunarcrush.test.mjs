@@ -10,12 +10,12 @@ function reply(url){
  return Response.json({config:{id:topic},data:{topic,num_posts:0,num_contributors:3,interactions_24h:64,types_sentiment:{tweet:0,'reddit-post':100}}});
 }
 
-test('ten fixed authorized endpoints preserve source identities, metrics, clocks and independent KOL evidence',async()=>{
+test('nine fixed authorized endpoints preserve source identities, metrics, clocks and independent KOL evidence',async()=>{
  const paths=[];const result=await fetchLunarCrush(async(url,opts)=>{
   assert.equal(opts.headers.Authorization,'Bearer test-key');assert.equal(opts.redirect,'error');assert.equal(opts.credentials,'omit');
   paths.push(url);return reply(url);
  },'test-key');
- assert.equal(new Set(paths).size,10);assert(paths.every(url=>/^https:\/\/lunarcrush\.com\/api4\/public\/(?:topic\/(bitcoin|ethereum|solana)\/((posts|creators)\/)?|category\/cryptocurrencies\/posts\/)v1$/.test(url)));
+ assert.equal(new Set(paths).size,9);assert(paths.every(url=>/^https:\/\/lunarcrush\.com\/api4\/public\/topic\/(bitcoin|ethereum|solana)\/((posts|creators)\/)?v1$/.test(url)));
  assert.deepEqual(result.topics.map(topic=>topic.symbol),['BTC','ETH','SOL']);assert.equal(result.topics[0].asOf,null);
  assert.equal(result.topics[0].posts24h,0);assert.deepEqual(result.topics[0].sentimentByNetwork,{X:0,Reddit:100});
  assert.equal(result.posts.length,1);const [post]=result.posts;
@@ -25,7 +25,7 @@ test('ten fixed authorized endpoints preserve source identities, metrics, clocks
 });
 test('failure of one family does not zero or substitute the other; errors never expose a token',async()=>{
  const result=await fetchLunarCrush(async url=>url.endsWith('/posts/v1')?new Response('private',{status:403}):reply(url),'test-key');
- assert.equal(result.topics.length,3);assert.deepEqual(result.posts,[]);assert.equal(result.errors.length,4);assert(result.errors.every(issue=>['posts','category-posts'].includes(issue.resource)&&issue.code==='FORBIDDEN'));assert.equal(result.discovery.status,'UNAVAILABLE');
+ assert.equal(result.topics.length,3);assert.deepEqual(result.posts,[]);assert(result.errors.length===3&&result.errors.every(issue=>issue.resource==='posts'&&issue.code==='FORBIDDEN'));
  await assert.rejects(fetchLunarCrush(()=>assert.fail('missing credential must not fetch'),''),/^Error: AUTH_REQUIRED$/);
  await assert.rejects(fetchLunarCrush(async()=>new Response('private',{status:401}),'test-key'),/^Error: AUTH_REQUIRED$/);
  await assert.rejects(fetchLunarCrush(async()=>{throw Error('private');},'test-key'),/^Error: UNAVAILABLE$/);
@@ -81,33 +81,4 @@ test('known publisher, project and automatic accounts remain excluded even after
 test('missing creator-list access yields explicitly incomplete coverage with no unqualified fallback',async()=>{
  const result=await fetchLunarCrush(async url=>url.includes('/creators/')?new Response(null,{status:403}):reply(url),'test-key');
  assert.equal(result.topics.length,3);assert.equal(result.posts.length,0);assert.deepEqual(result.curation.checkedTopics,[]);assert.deepEqual(result.curation.failedTopics,['BTC','ETH','SOL']);assert(result.errors.every(issue=>issue.resource==='creators'&&issue.code==='FORBIDDEN'));
-});
-
-test('recent discovery includes single fresh posts and wider crypto topics without granting KOL evidence',async()=>{
- const paths=[];
- const result=await fetchLunarCrush(async url=>{
-  paths.push(url);
-  if(url.includes('/category/'))return Response.json({config:{id:'cryptocurrencies'},data:[
-   {id:'new-xrp',post_type:'tweet',post_created:stamp+100,post_title:'XRP settlement fees fall after the protocol upgrade',post_link:'https://x.com/analyst/status/987',creator_id:'twitter::987',creator_name:'analyst',interactions_24h:0},
-   {id:'promo',post_type:'tweet',post_created:stamp+110,post_title:'XRP protocol upgrade: claim your free airdrop',post_link:'https://x.com/analyst/status/988',creator_id:'twitter::987',creator_name:'analyst',interactions_24h:12}
-  ]});
-  const body=await reply(url).json();
-  if(url.endsWith('/posts/v1'))body.data=body.data.slice(0,1);
-  return Response.json(body);
- },'test-key');
- assert.ok(paths.includes('https://lunarcrush.com/api4/public/category/cryptocurrencies/posts/v1'));
- assert.deepEqual(result.posts,[],'the featured threshold still requires two independent posts');
- assert.deepEqual(result.recentPosts.map(post=>post.id),['new-xrp','1']);
- assert.deepEqual(result.recentPosts[0].symbols,[],'a wider crypto post must not acquire a fabricated BTC tag');
- assert.equal(result.recentPosts[0].interactions24h,0);
- assert.deepEqual(result.recentPosts[1].symbols,['BTC','ETH','SOL']);
- assert.equal(result.discovery.status,'OK');
-});
-
-test('a denied crypto category retains topic posts and category-only access does not invent topic coverage',async()=>{
- const partial=await fetchLunarCrush(async url=>url.includes('/category/')?new Response(null,{status:403}):reply(url),'test-key');
- assert.equal(partial.discovery.status,'UNAVAILABLE');assert.equal(partial.posts.length,1);assert(partial.recentPosts.length>0);
- assert.deepEqual(partial.errors,[{symbol:'CRYPTO',resource:'category-posts',code:'FORBIDDEN'}]);
- const categoryOnly=await fetchLunarCrush(async url=>url.includes('/category/')?Response.json({config:{id:'cryptocurrencies'},data:[{id:'987',post_type:'tweet',post_created:stamp,post_title:'XRP settlement fees fall after a protocol upgrade',post_link:'https://x.com/analyst/status/987',creator_id:'twitter::987',creator_name:'analyst',interactions_24h:2}]}):new Response(null,{status:403}),'test-key');
- assert.deepEqual(categoryOnly.topics,[]);assert.deepEqual(categoryOnly.posts,[]);assert.deepEqual(categoryOnly.recentPosts[0].symbols,[]);assert.equal(categoryOnly.discovery.status,'OK');assert.equal(categoryOnly.errors.length,9);
 });

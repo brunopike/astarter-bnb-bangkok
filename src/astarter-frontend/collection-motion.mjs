@@ -1,5 +1,4 @@
 import {RESEARCH_GROUPS} from './multi-research.mjs';
-import {DATA_PAGES} from './data-center-fixtures.mjs';
 
 // ThreeUI Pro Cross Beam / Frame Beam: equal-speed perimeter, soft wash,
 // sharp core and a travelling highlight. Adapted to one shared SVG/timebase.
@@ -66,10 +65,7 @@ function courierWindow(root, pocket) {
     bottom:Math.min(view.bottom,win.innerHeight,dock?.height?dock.top:Infinity)};
   const bounds={left:Math.min(home.x,viewport.left+px),right:Math.max(home.x,viewport.right-px),
     top:Math.min(home.y,viewport.top+py),bottom:Math.max(home.y,viewport.bottom-py)};
-  const boxes=new WeakMap(),styles=new WeakMap();
-  function box(el){let r=boxes.get(el);if(!r){r=el.getBoundingClientRect();boxes.set(el,r);}return r;}
-  function style(el){let s=styles.get(el);if(!s){s=win.getComputedStyle(el);styles.set(el,s);}return s;}
-  return {doc,win,viewport,home,anchor:h,compact,px,py,bounds,box,style};
+  return {doc,win,viewport,home,anchor:h,compact,px,py,bounds};
 }
 
 const signalSolid=[controls,'.as-search','.liquid-native-host','.sig-filter-body','.sig-preferences-panel','.pw-trackbar','.layout-navigation-row','.sig-stats-chart-panel',
@@ -82,16 +78,8 @@ function clippedBox(rect,clip) {
   return right>left&&bottom>top?{left,right,top,bottom,width:right-left,height:bottom-top}:null;
 }
 
-// These containers bound their own scrolling rows/cards. Sticky cells stay inside
-// their table and floating menus render in a separate layer. A zero-size or
-// display:contents wrapper can still have visible children, so keep traversing it.
-const boundedBranches='section,article,aside,nav,table,thead,tbody,tr,ul,ol,li,dl,.dc-table-wrap,.hub-table-wrap,.hub-overview-charts,.hub-two,.hub-three,.hub-asset-cards,.hub-heatmap,.pd-news-list,.pd-market-table,.pd-social-layout,.df-timeline';
-function outsideView(rect,clip){
-  return rect.width>0&&rect.height>0&&(rect.bottom<=clip.top||rect.top>=clip.bottom||rect.right<=clip.left||rect.left>=clip.right);
-}
-
 function measuredFloor(root,frame,stops,solid) {
-  const {doc,home,anchor,compact,px,py,bounds,viewport,box}=frame;
+  const {doc,win,home,anchor,compact,px,py,bounds,viewport}=frame;
   const ink=[],obstacles=[],range=doc.createRange(),seen=new Set();
   function protect(rect,clip) {
     const b=clippedBox(rect,clip);
@@ -105,12 +93,12 @@ function measuredFloor(root,frame,stops,solid) {
   // scroll containers as well as the page so hidden copies cannot close an aisle.
   function read(el,clip) {
     if(el.matches(signalHidden))return;
-    if(el.matches(boundedBranches)&&outsideView(box(el),clip))return;
-    const style=frame.style(el);
+    const style=win.getComputedStyle(el);
     if(style.display==='none'||style.visibility==='hidden'||style.opacity==='0')return;
-    if(el.matches(solid)){protect(box(el),clip);return;}
+    const r=el.getBoundingClientRect();
+    if(el.matches('article,aside')&&!clippedBox(r,clip))return;
+    if(el.matches(solid)){protect(r,clip);return;}
     if(style.overflowX!=='visible'||style.overflowY!=='visible'){
-      const r=box(el);
       const content={left:style.overflowX==='visible'?clip.left:r.left,right:style.overflowX==='visible'?clip.right:r.right,
         top:style.overflowY==='visible'?clip.top:r.top,bottom:style.overflowY==='visible'?clip.bottom:r.bottom};
       clip=clippedBox(content,clip);if(!clip)return;
@@ -145,7 +133,7 @@ export function measureSignalFloor(root,pocket) {
 }
 
 
-const dataSolid=[signalSolid,'.chart-canvas','[data-hub-plot]','.hub-overview-charts .hub-empty','.hub-breadth','iframe','video','object','embed'].join(',');
+const dataSolid=[signalSolid,'.chart-canvas','[data-hub-plot]','.hub-breadth'].join(',');
 const annotatedSources=new WeakMap();
 const elementText=(el,selector)=>el.querySelector(selector)?.textContent.trim()||'';
 const containsValue=text=>/\d/.test(text??'');
@@ -171,10 +159,6 @@ const dataStationTypes=[
   ['a.pd-market-tr','spot',el=>containsValue(elementText(el,'.pd-price'))&&el.getAttribute('href')],
   ['.pd-quote>div,.hub-detail-price','quote-detail',el=>containsValue(elementText(el,'strong,b,[data-hub-price]'))&&String(siblingIndex(el))],
   ['[data-hub-card],tr[data-hub-row]','quote',marketQuote],
-  ['.hub-kpis>.hub-stat','asset-metric',el=>containsValue(elementText(el,'strong'))&&String(siblingIndex(el))],
-  ['.hub-facts>div','change-period',el=>el.querySelector('dd .hub-up,dd .hub-down,dd .hub-flat')&&containsValue(elementText(el,'dd'))&&String(siblingIndex(el))],
-  ['[data-trading-chart][data-chart-source="market"]','candles',el=>Number(el.dataset.candleCount)>0&&el.querySelector('canvas')&&el.dataset.tradingChart],
-  ['.dc-section>p:has(>strong)','balance',el=>officialLink(el.parentElement)&&containsValue(elementText(el,'strong'))&&String(siblingIndex(el))],
   ['[data-hub-tile]','change',el=>containsValue(elementText(el,'[data-hub-change],strong'))&&el.dataset.hubTile],
   ['.hub-overview-charts>.hub-panel','overview',el=>{
     const plot=el.querySelector('[data-hub-plot][data-chart-ready="true"]');
@@ -186,7 +170,7 @@ const dataStationTypes=[
   ['.hub-sector,.hub-rank-row,.hub-venue,.hub-venue-list>li','ranking',el=>namedValue(el,'b','strong')],
   ['[data-chart]','series',el=>Number(el.dataset.visibleCount)>0&&containsValue(elementText(el,'.chart-readout dd'))&&el.dataset.chart],
   ['.dc-stat','stat',el=>containsValue(elementText(el,'strong'))&&String(siblingIndex(el))],
-  ['.dc-table tbody>tr:not([data-hub-row]),.dc-section table tbody>tr','row',(el,row,scope)=>{
+  ['.dc-table tbody>tr:not([data-hub-row])','row',(el,row,scope)=>{
     const cells=Array.from(el.cells),identity=cells[0]?.textContent.trim();
     if(!identity||cells.length<2)return null;
     // A dated row with empty value cells is an unreported observation.
@@ -209,21 +193,17 @@ function sourceContext(root) {
   return {area,scope,live:area.hasAttribute('data-public-data')&&query.get('data')!=='demo'};
 }
 
-function contentClipping(root,frame) {
-  const {viewport,box}=frame;
-  const clips=new WeakMap();
+function visibleStops(root,frame,{area,scope,live}) {
+  const {win,viewport}=frame,clips=new WeakMap(),byId=new Map(),panels=[...area.querySelectorAll('.dc-panel')];
+  const tables=[...area.querySelectorAll('.dc-table')];
   // Tables, media strips and dropdowns scroll independently of the main page.
   function contentClip(el) {
     if(!el||el===root.parentElement)return viewport;
     if(clips.has(el))return clips.get(el);
-    const parent=el.parentElement;
-    let clip=el.hidden||parent?.tagName==='DETAILS'&&!parent.open&&el.tagName!=='SUMMARY'?null:contentClip(parent);
-    if(clip&&el.matches(boundedBranches)&&outsideView(box(el),clip))clip=null;
-    if(!clip){clips.set(el,null);return null;}
-    const s=frame.style(el);
-    if(s.display==='none'||s.visibility==='hidden'||s.opacity==='0')clip=null;
+    const parent=el.parentElement,s=win.getComputedStyle(el);
+    let clip=el.hidden||s.display==='none'||s.visibility==='hidden'||s.opacity==='0'||parent?.tagName==='DETAILS'&&!parent.open&&el.tagName!=='SUMMARY'?null:contentClip(parent);
     if(clip&&(s.overflowX!=='visible'||s.overflowY!=='visible')){
-      const r=box(el);
+      const r=el.getBoundingClientRect();
       const inner={left:r.left+(el.clientLeft||0),top:r.top+(el.clientTop||0)};
       inner.right=inner.left+(el.clientWidth||r.width);inner.bottom=inner.top+(el.clientHeight||r.height);
       clip=clippedBox({left:s.overflowX==='visible'?clip.left:inner.left,right:s.overflowX==='visible'?clip.right:inner.right,
@@ -231,40 +211,35 @@ function contentClipping(root,frame) {
     }
     clips.set(el,clip);return clip;
   }
-  return contentClip;
-}
-
-function visibleStops(root,{area,scope,live},contentClip,box) {
-  const byId=new Map(),panels=[...area.querySelectorAll('.dc-panel')],tables=[...area.querySelectorAll('.dc-table,.dc-section table')];
   const range=root.ownerDocument.createRange();
   for(const el of live?area.querySelectorAll(dataStations):[]){
     const row=el.hasAttribute('data-news-copy')?el.parentElement:el,clip=contentClip(row);
     if(!clip)continue;
-    const rect=clippedBox(box(row),clip);
+    const rect=clippedBox(row.getBoundingClientRect(),clip);
     if(!rect||rect.height<16||rect.width<24)continue;
     const [,kind,identify]=dataStationTypes.find(([selector])=>el.matches(selector));
     const key=identify(el,row,scope);
     if(!key)continue;
-    const table=kind==='row'?tables.indexOf(el.closest('table')):null;
+    const table=kind==='row'?tables.indexOf(el.closest('.dc-table')):null;
     if(kind==='row'){
       // Scrolling a published observation out of view can expose only dashes.
       // The sticky date or rank alone is insufficient to make that a station.
       const cells=Array.from(el.cells).slice(1);
       const schedule=scope.startsWith('intelligence:')&&officialLink(el);
       if(!cells.some(cell=>{
-        if(!clippedBox(box(cell),rect)||!tableObservation(cell.textContent)&&!(schedule&&(cell===cells[1]||cell===cells[0]&&/\d\d:\d\d/.test(cell.textContent))))return false;
+        if(!clippedBox(cell.getBoundingClientRect(),rect)||!tableObservation(cell.textContent)&&!(schedule&&cell===cells[1]))return false;
         range.selectNodeContents(cell);return [...range.getClientRects()].some(r=>clippedBox(r,rect));
       }))continue;
     }
     const section=kind==='stat'?panels.indexOf(el.closest('.dc-panel')):table;
     const id=kind==='news'?key:[scope,kind,...(section==null?[]:[section]),key].join(':');
-    const time=row.querySelector('time'),stamp=time&&clippedBox(box(time),rect);
+    const time=row.querySelector('time'),stamp=time&&clippedBox(time.getBoundingClientRect(),rect);
     const previous=byId.get(id);
     // Prefer the full article when its timestamp is readable. A visible side
     // copy still works when the primary article is outside the viewport.
     if(!previous||kind==='news'&&(Number(Boolean(stamp))*2+Number(el.hasAttribute('data-news-record'))>
       Number(Boolean(previous.stamp))*2+Number(previous.row.hasAttribute('data-news-record'))))
-      byId.set(id,{id,row,rect,stamp,kind,edge:row.matches('a[href],button')});
+      byId.set(id,{id,row,rect,stamp,kind});
   }
   const stops=[...byId.values()],old=annotatedSources.get(root),active=new Set();
   for(const stop of stops){active.add(stop.row);if(stop.row.dataset.courierSource!==stop.id)stop.row.dataset.courierSource=stop.id;}
@@ -275,24 +250,16 @@ function visibleStops(root,{area,scope,live},contentClip,box) {
 
 export function dataPatrolStops(root,pocket) {
   const context=sourceContext(root);
-  if(!context)return [];
-  const frame=courierWindow(root,pocket);
-  return visibleStops(root,context,contentClipping(root,frame),frame.box);
+  return context?visibleStops(root,courierWindow(root,pocket),context):[];
 }
 
-const dataModules='.dc-panel,.dc-section,.pd-market-panel,.pd-social-stream,.pd-social-context,.df-timeline,.hub-market-summary,.hub-kpis,.hub-detail-price,.trading-chart,.pd-quote,.pd-sentiment,.pd-notice';
 export function measureDataFloor(root,pocket) {
   const context=sourceContext(root);
-  if(!context&&!DATA_PAGES.includes(root.dataset?.renderedPage))return null;
-  const frame=courierWindow(root,pocket),clip=contentClipping(root,frame),area=context?.area||root;
-  const stops=context?visibleStops(root,context,clip,frame.box):[],floor=measuredFloor(root,frame,stops,dataSolid);
-  floor.walkAreas=[];
-  for(const module of area.querySelectorAll(dataModules)){
-    const visible=clip(module),rect=visible&&clippedBox(frame.box(module),visible);
-    if(rect&&rect.width>=32&&rect.height>=28)floor.walkAreas.push(rect);
-  }
-  return floor;
+  if(!context)return null;
+  const frame=courierWindow(root,pocket);
+  return measuredFloor(root,frame,visibleStops(root,frame,context),dataSolid);
 }
+
 
 const floorGraphs=new WeakMap();
 const inside=(p,r)=>p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom;
@@ -560,12 +527,12 @@ function bubblePlace(floor,graph,p,first='above') {
 }
 
 function readingArea(graph,stop) {
-  const {bounds}=graph,r=stop.rect,rx=stop.edge?30:stop.kind==='signal'?10:stop.kind?20:12,ry=stop.edge?32:stop.kind==='signal'?10:stop.kind?22:13;
+  const {bounds}=graph,r=stop.rect,rx=stop.kind==='signal'?10:stop.kind?20:12,ry=stop.kind==='signal'?10:stop.kind?22:13;
   return {l:Math.max(bounds.left,r.left-rx),e:Math.min(bounds.right,r.right+rx),
     top:Math.max(bounds.top,r.top-ry),bottom:Math.min(bounds.bottom,r.bottom+ry)};
 }
 
-function sourcePort(graph,stop,used,variation,spacing,canStand=null) {
+function sourcePort(graph,stop,used,variation,spacing) {
   const {home,xs,ys,w,connected}=graph,t=stop.stamp,{l,e,top,bottom}=readingArea(graph,stop);
   if(e<=l||bottom<=top)return null;
   const level=t?Math.max(top,Math.min(bottom,t.top+t.height/2)):top+(bottom-top)*.43;
@@ -577,7 +544,7 @@ function sourcePort(graph,stop,used,variation,spacing,canStand=null) {
   for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
     const i=y*w+x;if(connected[i]<0)continue;
     const p={x:xs[x],y:ys[y]},cost=Math.abs(p.x-preferred.x)+1.6*Math.abs(p.y-preferred.y);
-    if(cost>=score||distance(p,home)<42||used.some(q=>distance(p,q)<spacing)||canStand&&!canStand(p))continue;
+    if(cost>=score||distance(p,home)<42||used.some(q=>distance(p,q)<spacing))continue;
     best=p;score=cost;
   }
   return best;
@@ -736,61 +703,6 @@ export function planDataCrew(floor,limit,turn=0,recordId=null) {
   return planPairedCrew(floor,limit,turn,ordered);
 }
 
-// Waiting paths use only measured whitespace in the current modules. Corner
-// positions and conversation pockets never become records or pickup targets.
-export function planDataWalk(floor,limit,turn=0) {
-  if(!floor?.bounds||limit<1)return [];
-  const areas=floor.walkAreas||[],start=areas.length?turn%areas.length:0;
-  const ordered=areas.slice(start).concat(areas.slice(0,start));
-  let jobs=[];
-  for(const regions of [ordered,[floor.bounds]]){
-    if(!regions.length)continue;
-    const candidates=planPairedCrew(floor,limit,turn,regions.map(rect=>({rect,kind:'space'})));
-    if(candidates.length>jobs.length||candidates.some(job=>job.meeting)&&!jobs.some(job=>job.meeting))jobs=candidates;
-    if(jobs.some(job=>job.meeting))break;
-  }
-  return jobs.map(({outbound,homeward,meeting})=>({mode:'walk',stop:null,inspectBubble:null,outbound,homeward,meeting}));
-}
-
-// A pair that has returned can read another visible source immediately. Keep its
-// reserved conversation seats and the standing room of every pair still out.
-export function nextDataPair(floor,jobs,indexes,turn) {
-  const previous=indexes.map(i=>jobs[i]);
-  const walking=previous[0].mode==='walk';
-  const stops=walking?(floor.walkAreas?.length?floor.walkAreas:[floor.bounds]).map(rect=>({rect,kind:'space'})):floor.stops;
-  if(!stops.length)return previous;
-  const graph=floorGraph(floor),used=jobs.map(j=>j.outbound.at(-1)),speech=[];
-  const assigned=new Map();
-  for(const [i,job] of jobs.entries()){
-    if(job.meeting){
-      const seat=job.homeward[0];used.push(seat);
-      speech.push(bubbleBox(floor,seat,job.meeting.bubble));
-    }
-    if(!indexes.includes(i)&&job.stop)assigned.set(job.stop.id,(assigned.get(job.stop.id)||0)+1);
-  }
-  const start=turn%stops.length,ordered=stops.slice(start).concat(stops.slice(0,start));
-  const dx=floor.compact?10:13,dy=floor.compact?15:17;
-  const clearOfSpeakers=p=>!speech.some(b=>p.x+dx>b.left&&p.x-dx<b.right&&p.y+dy>b.top&&p.y-dy<b.bottom);
-  return previous.map((job,slot)=>{
-    const seat=job.homeward[0];
-    const rank=s=>(assigned.get(s.id)||0)+(job.stop?.id===s.id?2:0);
-    const candidates=[...ordered].sort((a,b)=>rank(a)-rank(b));
-    for(const stop of candidates){
-      const at=sourcePort(graph,stop,used,turn+slot*3,29,clearOfSpeakers);
-      if(!at)continue;
-      // Routing toward the recurring dock and seats reuses their path trees.
-      const back=graph.route(at,floor.home),approach=graph.route(at,seat);
-      if(!back||!approach)continue;
-      used.push(at);
-      if(!walking)assigned.set(stop.id,(assigned.get(stop.id)||0)+1);
-      return {...job,stop:walking?null:stop,outbound:[...back].reverse(),
-        inspectBubble:walking?null:bubblePlace(floor,graph,at),meeting:{...job.meeting,approach}};
-    }
-    if(job.stop)assigned.set(job.stop.id,(assigned.get(job.stop.id)||0)+1);
-    return job;
-  });
-}
-
 function planPairedCrew(floor,limit,turn,ordered) {
   const graph=floorGraph(floor),jobs=[],readers=[],zones=[],occupied=[];
   for(const spacing of [38,32,27]){
@@ -835,13 +747,12 @@ function planPairedCrew(floor,limit,turn,ordered) {
 }
 
 // Stagger people who will share an aisle, even when their routes enter it at different corners.
-export function newsDepartureDelays(jobs,pace,traffic=[],dock=null) {
+export function newsDepartureDelays(jobs,pace) {
   const tick=150,reserved=[];
-  function samples(path,startsIn=50){
-    const start=Math.max(0,Math.ceil((startsIn-50-tick/2)/tick)),trace=[];
-    let length=0,next=(50+(start+.5)*tick-startsIn)/pace;
-    for(let i=1;i<path.length;i++){
-      const a=path[i-1],b=path[i],span=distance(a,b);
+  return jobs.map(({outbound},index)=>{
+    const trace=[];let length=0,next=tick/(2*pace);
+    for(let i=1;i<outbound.length;i++){
+      const a=outbound[i-1],b=outbound[i],span=distance(a,b);
       if(!span)continue;
       const dx=(b.x-a.x)/span,dy=(b.y-a.y)/span;
       while(next<=length+span){
@@ -849,20 +760,11 @@ export function newsDepartureDelays(jobs,pace,traffic=[],dock=null) {
       }
       length+=span;
     }
-    return {start,trace};
-  }
-  function reserve(start,trace){trace.forEach((p,t)=>(reserved[start+t]??=[]).push(p));}
-  for(const active of traffic){
-    const {start,trace}=samples(active.path,active.startsIn);
-    reserve(start,trace);
-  }
-  return jobs.map(({outbound},index)=>{
-    const {trace}=samples(outbound);
     const first=Math.floor(index*.7);let best=first,least=Infinity;
     for(let slot=first;slot<=first+12;slot++){
       let score=0;
       for(const [t,p] of trace.entries()){
-        if(distance(p,dock||outbound[0])<40)continue;
+        if(distance(p,outbound[0])<40)continue;
         for(const q of reserved[slot+t]||[]){
           if(p.dx*q.dx+p.dy*q.dy<.65)continue;
           score+=Math.max(0,36-distance(p,q));
@@ -871,7 +773,7 @@ export function newsDepartureDelays(jobs,pace,traffic=[],dock=null) {
       if(score<least){least=score;best=slot;}
       if(!score)break;
     }
-    reserve(best,trace);
+    trace.forEach((p,t)=>(reserved[best+t]??=[]).push(p));
     return 50+best*tick;
   });
 }
@@ -926,7 +828,6 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   const signals=scene==='signals',measureFloor=signals?measureSignalFloor:measureDataFloor;
   const options={signal:events.signal,passive:true,capture:true},motion=win.matchMedia('(prefers-reduced-motion: reduce)');
   const prompts=[['🤔','💡'],['🧐','🧩'],['👀','👍']];
-  const sourceReactions={news:'📰',post:'💬',topic:'💬',calendar:'🗓️',release:'🗓️',candles:'📊',overview:'📊',series:'📊'};
   let wave=null,pending=null,turn=0,roleIndex=0,pressed=false,scrolling=false,away=false,recallRequested=false;
   let startTimer=0,scrollTimer=0,retryTimer=0,welcomeTimer=0,layoutFrame=0,lastWelcome=-Infinity;
   let observedFeed=null,typing=false,typingTimer=0;
@@ -934,9 +835,8 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   const openControls=signals?'.sig-controls details[open]':'.dc-info[open],.pd-info[open],[data-info-open],.dc-column-picker';
   const reduced=()=>motion.matches||doc.documentElement.dataset.reducedMotion==='true'||!win.Element.prototype.animate;
   const overlayOpen=()=>pocket.classList.contains('open')||pocket.querySelector('.mascot-menu:not([hidden])')||
-    doc.querySelector('dialog[open],.liquid-native-host [aria-expanded=true]')||root.querySelector(openControls)||
-    win.innerWidth<=900&&root.querySelector('.layout-data-menu[open],.layout-actions-menu[open]');
-  const busy=()=>doc.hidden||(signals&&(away||pressed))||scrolling||typing||pocket.inert||overlayOpen();
+    doc.querySelector('dialog[open],.liquid-native-host [aria-expanded=true]')||root.querySelector(openControls);
+  const busy=()=>doc.hidden||away||pressed||scrolling||typing||pocket.inert||overlayOpen();
   const story=id=>root.querySelector('[data-news-record="'+win.CSS.escape(id)+'"]');
   const transform=p=>'translate3d('+p.x+'px,'+p.y+'px,0)';
   const live=(crew,version)=>wave===crew&&crew.version===version;
@@ -976,9 +876,6 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     const hide=pause&&(scrolling||pocket.inert||Boolean(overlayOpen()));
     for(const m of crew.members)m.el.style.visibility=hide?'hidden':'';
     if(crew.paused===pause)return;
-    const now=win.performance.now();
-    if(pause)crew.pausedAt=now;
-    else for(const m of crew.members)if(m.travel)m.travel.started+=now-crew.pausedAt;
     crew.paused=pause;
     for(const m of crew.members){
       m.el.toggleAttribute('data-paused',pause);
@@ -1023,7 +920,6 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   const hold=(crew,version,m,ms)=>playPath(crew,version,m,[m.position,m.position],ms);
   async function walk(crew,version,m,points,phase) {
     m.el.dataset.phase=phase;
-    if(!signals&&points.length)m.travel={path:same(m.position,points[0])?points:[m.position,...points],started:win.performance.now()};
     let leg=[m.position],facing=0;
     for(const p of points){
       const prev=leg.at(-1),dx=p.x-prev.x;
@@ -1073,23 +969,21 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     }
     return meeting.done;
   }
-  function acknowledge(received=false) {
-    const now=win.performance.now();if(!received&&now-lastWelcome<1300)return;
-    lastWelcome=now;pocket.toggleAttribute('data-news-handoff',received);pocket.setAttribute('data-news-welcome','');
-    win.clearTimeout(welcomeTimer);welcomeTimer=win.setTimeout(()=>{
-      pocket.removeAttribute('data-news-welcome');pocket.removeAttribute('data-news-handoff');
-    },received?560:330);
+  function acknowledge() {
+    const now=win.performance.now();if(now-lastWelcome<1300)return;
+    lastWelcome=now;pocket.setAttribute('data-news-welcome','');
+    win.clearTimeout(welcomeTimer);welcomeTimer=win.setTimeout(()=>pocket.removeAttribute('data-news-welcome'),330);
   }
   async function dock(crew,version,m) {
     let target=home();
     if(distance(m.position,target)>3){recallRequested=true;queueLayout();return;}
     if(!await walk(crew,version,m,[target],'return'))return;
-    m.el.dataset.phase='dock';if(!m.carrying)acknowledge();
+    m.el.dataset.phase='dock';acknowledge();
     if(!await hold(crew,version,m,360))return;
     target=home();
     if(distance(m.position,target)>3){recallRequested=true;queueLayout();return;}
     if(m.carrying&&m.item&&story(m.item.record_id)){
-      m.carrying=false;delete m.el.dataset.carrying;onReceived(m.item);acknowledge(true);
+      m.carrying=false;delete m.el.dataset.carrying;onReceived(m.item);
     }
     m.el.remove();crew.members.delete(m);crew.waiting.delete(m);
     if(m.job.meeting&&!crew.recalling){
@@ -1102,8 +996,10 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     }
     if(!crew.members.size){wave=null;recallRequested=false;win.clearTimeout(retryTimer);retryTimer=0;schedule();}
   }
-  async function readSource(crew,version,m) {
-    const {job}=m;
+  async function trip(crew,m) {
+    const version=crew.version,{job}=m;
+    if(!await hold(crew,version,m,m.departure))return;
+    if(!await walk(crew,version,m,job.outbound,'out'))return;
     const sourceAttr=signals?'data-track-record':'data-courier-source';
     const original=job.stop.row;
     const row=original.isConnected&&original.getAttribute(sourceAttr)===job.stop.id?original:
@@ -1112,7 +1008,7 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     const area=r?.width&&r.height&&readingArea(crew,{kind:job.stop.kind,rect:r});
     const slack=signals?6:1;
     if(!area||p.x<area.l-slack||p.x>area.e+slack||p.y<area.top-slack||p.y>area.bottom+slack){
-      recallRequested=true;queueLayout();return false;
+      recallRequested=true;queueLayout();return;
     }
     if(!m.item&&job.stop.kind==='news'&&pending?.record_id===job.stop.id){
       m.item=pending;pending=null;m.el.dataset.job='delivery';
@@ -1120,37 +1016,25 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     m.el.dataset.phase=m.item?'pickup':'inspect';
     if(m.item){
       if(!story(m.item.record_id)){
-        recallRequested=true;queueLayout();return false;
+        recallRequested=true;queueLayout();return;
       }
       m.carrying=true;m.el.dataset.carrying='true';m.pickup=row;m.pickup.setAttribute('data-news-pickup','');
     }
     if(job.inspectBubble&&(m.item||(m.index+crew.round+m.pass)%3===1)){
-      const emoji=m.item?'🔎':sourceReactions[job.stop.kind]||(row.closest('.dc-release-schedule')?'🗓️':'👀');
+      const emoji=m.item?'🔎':row.closest('.df-economic-calendar')?'🌍':'👀';
       reaction(m,emoji,job.inspectBubble);
     }
     const readMs=m.bubble.hidden?340:550;
-    if(!await hold(crew,version,m,readMs))return false;
-    reaction(m);unmark(m);return true;
-  }
-  async function trip(crew,m) {
-    const version=crew.version,{job}=m;
-    if(!signals)m.travel={path:job.outbound,started:win.performance.now()+m.departure};
-    if(m.departure&&!await hold(crew,version,m,m.departure))return;
-    if(!await walk(crew,version,m,job.outbound,'out'))return;
-    if(job.stop){
-      if(!await readSource(crew,version,m))return;
-    }else{
-      m.el.dataset.phase='standby';
-      if(!await hold(crew,version,m,220))return;
-    }
+    if(!await hold(crew,version,m,readMs))return;
+    reaction(m);unmark(m);
     if(job.meeting){
       const pair=Math.min(m.index,job.meeting.partner);
       if(!await crew.rooms.arrive(pair,job.meeting.zone??pair)||!live(crew,version))return;
-      if(!await walkInTurn(crew,version,m,job.meeting.approach,'to-meeting'))return;
+      if(!await walk(crew,version,m,job.meeting.approach,'to-meeting'))return;
       if(!await meet(crew,version,m)||!live(crew,version))return;
       if(m.index>job.meeting.partner&&!await hold(crew,version,m,240))return;
     }
-    await returnToDock(crew,version,m,job.homeward);
+    if(await walk(crew,version,m,job.homeward,'return'))await dock(crew,version,m);
   }
   function monitor(crew,version,work) {
     work.catch(error=>{
@@ -1161,8 +1045,8 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   function newMember(crew,role,index,job,item,departure,pass=0) {
     const el=doc.createElement('div');
     el.className='news-courier';el.inert=true;el.setAttribute('aria-hidden','true');
-    el.dataset.courierRole=String(role.id);el.dataset.phase='out';
-    el.dataset.courierPage=scene;setJob(el,job,item);
+    el.dataset.courierRole=String(role.id);el.dataset.job=item?'delivery':'patrol';el.dataset.phase='out';
+    el.dataset.courierPage=scene;el.dataset.courierTarget=job.stop.id;el.dataset.courierKind=job.stop.kind;
     if(signals)el.dataset.signalRecord=job.stop.id;
     el.dataset.courierRound=pass?crew.round+'.'+pass:String(crew.round);
     el.dataset.courierPair=String(Math.min(index,job.meeting?.partner??index));
@@ -1172,43 +1056,8 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     doc.body.append(el);
     return {el,index,pass,role,job,item,departure,position:crew.home,animation:null,carrying:false,pickup:null,bubble:el.lastElementChild};
   }
-  function setJob(el,job,item) {
-    el.dataset.job=item?'delivery':job.stop?'patrol':'walk';
-    if(job.stop){el.dataset.courierTarget=job.stop.id;el.dataset.courierKind=job.stop.kind;}
-    else{delete el.dataset.courierTarget;delete el.dataset.courierKind;}
-  }
-  function movingTraffic(crew,now,except=null) {
-    const traffic=[];
-    for(const m of crew.members){
-      if(m!==except&&m.travel&&['out','to-meeting','return','yield'].includes(m.el.dataset.phase))
-        traffic.push({path:m.travel.path,startsIn:m.travel.started-now});
-    }
-    return traffic;
-  }
-  async function walkInTurn(crew,version,m,path,phase,canWait=true) {
-    if(!signals&&canWait){
-      const now=win.performance.now(),traffic=movingTraffic(crew,now,m);
-      if(traffic.length){
-        const [start]=newsDepartureDelays([{outbound:path}],crew.pace,traffic,crew.home);
-        if(start>50){
-          m.travel={path,started:now+start};m.el.dataset.phase='yield';
-          if(!await hold(crew,version,m,start))return false;
-        }
-      }
-    }
-    return walk(crew,version,m,path,phase);
-  }
-  async function returnToDock(crew,version,m,path,canWait=true) {
-    if(await walkInTurn(crew,version,m,path,'return',canWait))await dock(crew,version,m);
-  }
   function sendPair(crew,indexes,pass) {
-    const assignedStory=pending&&crew.jobs.some(job=>job.stop?.id===pending.record_id);
-    if(!signals&&!assignedStory){
-      const next=nextDataPair(crew.floor,crew.jobs,indexes,crew.round+pass+indexes[0]);
-      indexes.forEach((index,i)=>{crew.jobs[index]=next[i];});
-    }
-    const traffic=signals?[]:movingTraffic(crew,win.performance.now());
-    const delays=newsDepartureDelays(indexes.map(i=>crew.jobs[i]),crew.pace,traffic);
+    const delays=newsDepartureDelays(indexes.map(i=>crew.jobs[i]),crew.pace);
     const occupied=new Set([...crew.members].map(m=>m.role.id));
     for(const [slot,index] of indexes.entries()){
       let role=newsRoster[roleIndex++%newsRoster.length];
@@ -1221,114 +1070,33 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
   function start() {
     startTimer=0;
     if(wave||events.signal.aborted||busy())return;
-    if(signals?doc.getElementById('app-preload'):doc.body.classList.contains('app-loading')){schedule(100);return;}
+    if(doc.getElementById('app-preload')){schedule(270);return;}
     if(reduced()){
       if(pending&&story(pending.record_id)){const item=pending;pending=null;onReceived(item);}
       return;
     }
-    const floor=measureFloor(root,pocket);
-    if(!floor){if(!signals)schedule(300);return;}
+    const floor=measureFloor(root,pocket);if(!floor)return;
     const item=pending&&story(pending.record_id)?pending:null,width=win.innerWidth;
     const limit=width<600?6:width<1200?8:12;
-    const jobs=plan(floor,limit,item);
-    if(!jobs.length){if(!signals)schedule(1000);return;}
+    const jobs=signals?planSignalCrew(floor,limit,turn):planDataCrew(floor,limit,turn,item?.record_id);
+    if(!jobs.length)return;
     const pace=width<=900?3.45:2.65,departures=newsDepartureDelays(jobs,pace);
-    const crew={round:turn++,version:0,pace,jobs,floor,home:floor.home,bounds:floor.bounds,stamp:layoutStamp(floor.stops),members:new Set(),waiting:new Set(),atMeeting:new Map(),meetings:new Map(),rooms:signalMeetingRooms(),recalling:false,paused:false};
+    const crew={round:turn++,version:0,pace,jobs,home:floor.home,bounds:floor.bounds,stamp:layoutStamp(floor.stops),members:new Set(),waiting:new Set(),atMeeting:new Map(),meetings:new Map(),rooms:signalMeetingRooms(),recalling:false,paused:false};
     wave=crew;
     const roles=jobs.map(()=>newsRoster[roleIndex++%newsRoster.length]);
     jobs.forEach((job,i)=>{
-      const article=i===0&&item&&job.stop?.id===item.record_id?item:null;
+      const article=i===0&&item&&job.stop.id===item.record_id?item:null;
       if(article)pending=null;
       crew.members.add(newMember(crew,roles[(crew.round+i)%roles.length],i,job,article,departures[i]));
     });
     for(const m of crew.members)monitor(crew,crew.version,trip(crew,m));
   }
-  function plan(floor,limit,item){
-    if(signals)return planSignalCrew(floor,limit,turn);
-    const jobs=planDataCrew(floor,limit,turn,item?.record_id);
-    return jobs.length?jobs:planDataWalk(floor,limit,turn);
-  }
-  function resetMeetings(crew) {
-    crew.version++;crew.rooms.clear();
-    for(const meeting of crew.meetings.values())meeting.finish(false);
-    crew.meetings.clear();crew.atMeeting.clear();crew.waiting.clear();
-    win.clearTimeout(retryTimer);retryTimer=0;
-  }
-  function routesStillFit(crew,floor) {
-    if(distance(crew.home,floor.home)>3)return false;
-    const byId=new Map(floor.stops.map(stop=>[stop.id,stop]));
-    for(const job of crew.jobs){
-      if(job.stop){
-        const stop=byId.get(job.stop.id),at=job.outbound.at(-1);
-        if(!stop)return false;
-        const area=readingArea(floor,stop);
-        if(at.x<area.l-1||at.x>area.e+1||at.y<area.top-1||at.y>area.bottom+1)return false;
-      }else if(byId.size)return false;
-      for(const path of [job.outbound,job.meeting?.approach,job.homeward]){
-        if(path?.some((point,i)=>i>0&&!clearSegment(path[i-1],point,floor.ink)))return false;
-      }
-    }
-    return true;
-  }
-  function approachFrom(floor,from,to) {
-    const graph=floorGraph(floor),direct=graph.route(from,to);
-    if(direct)return direct;
-    // A chart may have appeared around a runner. Leave its new bounds through
-    // the nearest clear edge, then continue to the assigned card from there.
-    const escape=newsReturnPath(floor,from);
-    for(let i=1;i<(escape?.length||0);i++){
-      const rest=graph.route(escape[i],to);
-      if(rest)return escape.slice(0,i).concat(rest);
-    }
-    return null;
-  }
-  function continueOnReflow(crew,floor,stamp,force) {
-    if(!floor)return false;
-    if(crew.recalling){
-      if(distance(crew.home,floor.home)>3||crew.waiting.size)return false;
-      const safe=[...crew.members].every(m=>m.returnPath?.every((point,i,path)=>!i||clearSegment(path[i-1],point,floor.ink)));
-      if(safe)crew.stamp=stamp;
-      return safe;
-    }
-    if(!force&&routesStillFit(crew,floor)){crew.floor=floor;crew.stamp=stamp;return true;}
-    const people=[...crew.members].sort((a,b)=>a.index-b.index);
-    if(people.length!==crew.jobs.length||people.some(m=>m.carrying||m.job.stop&&m.el.dataset.phase!=='out'))return false;
-    const item=pending||people.find(m=>m.item)?.item;
-    const jobs=plan(floor,people.length,item);
-    if(jobs.length!==people.length)return false;
-    const starts=[],paths=[];
-    for(const m of people){
-      const rect=m.el.getBoundingClientRect(),at={x:rect.left,y:rect.top};
-      // People still inside the white companion travel with it when it moves.
-      const insideDock=m.el.dataset.phase==='out'&&distance(at,crew.home)<18;
-      const start=insideDock?floor.home:at;
-      const path=insideDock?jobs[m.index].outbound:approachFrom(floor,start,jobs[m.index].outbound.at(-1));
-      if(!path)return false;
-      starts.push(start);paths.push(path);
-    }
-    resetMeetings(crew);
-    crew.home=floor.home;crew.bounds=floor.bounds;crew.floor=floor;crew.jobs=jobs;crew.stamp=stamp;
-    const delays=newsDepartureDelays(jobs,crew.pace);pending=item||null;
-    for(const m of people){
-      const job=jobs[m.index],start=starts[m.index];
-      interruptMotion(m);reaction(m);unmark(m);delete m.el.dataset.speaking;
-      m.job={...job,outbound:paths[m.index]};m.position=start;m.el.style.transform=transform(start);
-      m.departure=start===floor.home?delays[m.index]:0;
-      m.item=pending&&job.stop?.id===pending.record_id?pending:null;if(m.item)pending=null;
-      setJob(m.el,job,m.item);m.el.dataset.courierPair=String(Math.min(m.index,job.meeting?.partner??m.index));
-      m.el.dataset.phase='out';monitor(crew,crew.version,trip(crew,m));
-    }
-    return true;
-  }
   function sendHome(crew,floor,m) {
     const path=floor&&newsReturnPath(floor,m.position);
-    m.returnPath=path;
     if(!path?.length){crew.waiting.add(m);m.el.dataset.phase='wait-route';return;}
     crew.waiting.delete(m);
     const version=crew.version;
-    // Leave immediately if a scroll has placed a control or label underfoot.
-    const canWait=inside(m.position,floor.bounds)&&!floor.obstacles.some(r=>inside(m.position,r));
-    monitor(crew,version,returnToDock(crew,version,m,path,canWait));
+    monitor(crew,version,(async()=>{if(await walk(crew,version,m,path,'return'))await dock(crew,version,m);})());
   }
   function retryWaiting(crew) {
     if(!crew.waiting.size||retryTimer||crew.paused)return;
@@ -1339,14 +1107,17 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
       retryWaiting(crew);
     },850);
   }
-  function recall(crew,stamp,floor) {
-    resetMeetings(crew);crew.recalling=true;crew.stamp=stamp;
-    if(floor)crew.home=floor.home;
+  function recall(crew,stamp) {
+    crew.version++;crew.recalling=true;crew.rooms.clear();
+    for(const meeting of crew.meetings.values())meeting.finish(false);
+    crew.meetings.clear();crew.stamp=stamp;crew.atMeeting.clear();crew.waiting.clear();
+    win.clearTimeout(retryTimer);retryTimer=0;
+    const floor=measureFloor(root,pocket);
     for(const m of crew.members){
-      interruptMotion(m);m.travel=null;reaction(m);unmark(m);delete m.el.dataset.speaking;
+      interruptMotion(m);reaction(m);unmark(m);delete m.el.dataset.speaking;
       if(m.item&&!m.carrying){pending??=m.item;m.item=null;m.el.dataset.job='patrol';}
+      sendHome(crew,floor,m);
     }
-    for(const m of crew.members)sendHome(crew,floor,m);
     retryWaiting(crew);
   }
   function layout() {
@@ -1371,16 +1142,7 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     if(pause)return;
     const stamp=layoutStamp(),moved=stamp.length!==wave.stamp.length||stamp.some((n,i)=>
       typeof n==='number'?Math.abs(n-wave.stamp[i])>4:n!==wave.stamp[i]);
-    if(recallRequested||moved){
-      const force=recallRequested;recallRequested=false;
-      // A fresh price or another loaded panel is the same page. Preserve a
-      // safe route, or bend the outbound leg from its current on-screen pixel.
-      // Scrolling, changing view and resizing still bring the old patrol home.
-      const sameView=!signals&&stamp.slice(2,6).every((value,i)=>value===wave.stamp[i+2]);
-      const floor=measureFloor(root,pocket);
-      if(sameView&&continueOnReflow(wave,floor,stamp,force))return;
-      recall(wave,stamp,floor);
-    }
+    if(recallRequested||moved){recallRequested=false;recall(wave,stamp);}
     else retryWaiting(wave);
   }
   function afterScroll() {
@@ -1388,7 +1150,7 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     scrollTimer=win.setTimeout(()=>{scrolling=false;queueLayout();},140);
   }
   doc.addEventListener('scroll',afterScroll,options);
-  doc.addEventListener('pointerdown',()=>{if(signals){pressed=true;if(wave)freeze(wave,true);}},options);
+  doc.addEventListener('pointerdown',()=>{pressed=true;if(wave)freeze(wave,true);},options);
   for(const type of ['pointerup','pointercancel'])win.addEventListener(type,()=>{pressed=false;queueLayout();},options);
   for(const type of ['focusin','focusout','beforetoggle','toggle','close','visibilitychange'])doc.addEventListener(type,queueLayout,options);
   doc.addEventListener('visibilitychange',()=>{if(doc.hidden&&wave)freeze(wave,true);},options);
@@ -1397,25 +1159,23 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     typing=true;if(wave)freeze(wave,true);win.clearTimeout(typingTimer);
     typingTimer=win.setTimeout(()=>{typing=false;queueLayout();},400);
   },options);
-  win.addEventListener('blur',()=>{pressed=false;if(signals){away=true;if(wave)freeze(wave,true);}},options);
+  win.addEventListener('blur',()=>{away=true;pressed=false;if(wave)freeze(wave,true);},options);
   win.addEventListener('focus',()=>{away=false;queueLayout();},options);
   win.addEventListener('resize',afterScroll,options);
   win.visualViewport?.addEventListener('resize',afterScroll,options);
   motion.addEventListener('change',queueLayout,options);
   const observer=new win.MutationObserver(records=>{
-    if(!wave||signals||records.some(r=>r.type==='attributes'||r.target===root||!root.contains(r.target)||
-      r.target.closest?.('[data-hub-feed]')||wave.jobs[0]?.mode==='walk'&&r.target.matches?.('[data-hub-price],.dc-stat strong,.chart-readout dd')||
-      r.target.nodeName!=='svg'&&[...r.addedNodes,...r.removedNodes].some(n=>n.nodeType===1&&n.namespaceURI!=='http://www.w3.org/2000/svg')))queueLayout();
+    if(!wave||signals||records.some(r=>r.target===root||!root.contains(r.target)||r.target.closest?.('[data-hub-feed]')))queueLayout();
   });
   observer.observe(pocket,{attributes:true,attributeFilter:['style','data-avoidance','class','inert']});
   observer.observe(doc.documentElement,{attributes:true,attributeFilter:['data-reduced-motion']});
-  observer.observe(root,signals?{childList:true}:{childList:true,subtree:true,attributes:true,attributeFilter:['data-chart-ready','data-visible-count','data-public-data']});
+  observer.observe(root,{childList:true,subtree:!signals});
   layout();
   return {
     offer(item){
       if(!item||pending?.record_id===item.record_id)return;
       pending=item;
-      if(wave&&!wave.jobs.some(job=>job.stop?.id===item.record_id)&&dataPatrolStops(root,pocket).some(stop=>stop.id===item.record_id)){
+      if(wave&&!wave.jobs.some(job=>job.stop.id===item.record_id)&&dataPatrolStops(root,pocket).some(stop=>stop.id===item.record_id)){
         recallRequested=true;queueLayout();
       }else schedule(90);
     },
@@ -1432,7 +1192,7 @@ function mountCourierCrew(root,pocket,scene,onReceived) {
     layout:queueLayout,
     dispose(){
       events.abort();observer.disconnect();feedSize?.disconnect();win.cancelAnimationFrame(layoutFrame);win.clearTimeout(scrollTimer);win.clearTimeout(typingTimer);
-      win.clearTimeout(welcomeTimer);pocket.removeAttribute('data-news-welcome');pocket.removeAttribute('data-news-handoff');pending=null;clearWave();
+      win.clearTimeout(welcomeTimer);pocket.removeAttribute('data-news-welcome');pending=null;clearWave();
     }
   };
 }

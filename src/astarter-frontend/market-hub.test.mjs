@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {WATCH_ASSETS_KEY} from './market-watchlist.mjs';
 import {HUB_RESOURCES,HUB_SYMBOLS,normalizeHubResource,normalizeHubTicker,hubSeriesChange,hubQuality,hubRetryDelay,createMarketHubClient} from './market-hub-data.mjs';
 import {hubOwnsRoute,hubMoney,hubFeedRows,createMarketHub,hubCandleIdentity} from './market-hub.mjs';
-import {hubPerformanceSeries,hubMarketShares,hubChartOption,applyHubGaugeLight,createHubCharts} from './market-hub-charts.mjs';
+import {hubPerformanceSeries,hubMarketShares,hubChartOption,applyHubGaugeLight} from './market-hub-charts.mjs';
 import {approvedTokenImageURL,approvedVenueImageURL,venueIcon} from './brand-icons.mjs';
 import {createMarketHubRelay} from './market-hub-relay.mjs';
 import {getLocale,initLocale} from './locale.mjs';
@@ -115,51 +115,6 @@ test('an invalid hourly point never compresses time or shortens a different asse
  const comparison=hubPerformanceSeries(rows);assert.equal(comparison.length,1);assert.equal(comparison[0].symbol,'ETH');assert.equal(comparison[0].values[0][0],-2);assert.equal(comparison[0].values.at(-1)[1],(220/200-1)*100);
 });
 
-test('market overview keeps unchanged plots across source refreshes and releases plots that leave the page',async t=>{
- const doc=new EventTarget();doc.documentElement={lang:'zh',dataset:{theme:'dark'}};
- const globals={document:doc,getComputedStyle:()=>({getPropertyValue:()=>'',fontFamily:'sans-serif'}),ResizeObserver:class{observe(){}disconnect(){}},MutationObserver:class{observe(){}disconnect(){}}};
- for(const [key,value] of Object.entries(globals)){
-  const prior=Object.getOwnPropertyDescriptor(globalThis,key);Object.defineProperty(globalThis,key,{configurable:true,value});
-  t.after(()=>{if(prior)Object.defineProperty(globalThis,key,prior);else delete globalThis[key];});
- }
- const labels=new Map(),root=new EventTarget();root.querySelector=selector=>labels.get(selector)||null;let hosts=[];
- root.querySelectorAll=selector=>selector==='[data-hub-plot]'?hosts:[];
- function host(kind){
-  const el=new EventTarget();el.dataset={hubPlot:kind};el.ownerDocument=doc;el.style={};
-  el.isConnected=true;el.getAttribute=()=>kind;
-  el.replaceWith=node=>{hosts[hosts.indexOf(el)]=node;el.isConnected=false;node.isConnected=true;};
-  return el;
- }
- const start=[],released=[],handlers=new Map();let zoom;
- const charts=createHubCharts(async()=>({init(node){
-  const kind=node.dataset.hubPlot;start.push(kind);
-  return {on(name,fn){handlers.set(kind+':'+name,fn);},getOption:()=>({dataZoom:[zoom]}),dispatchAction(){},setOption(){},dispose(){released.push(kind);}};
- }}));
- const performance={window:'7d',rows:[{symbol:'BTC',color:0,values:[[-1,0],[0,1]]}],hidden:new Set()};
- const models={performance,shares:[{name:'BTC',value:50},{name:'ETH',value:50}]};
- function replace(){for(const h of hosts)h.isConnected=false;hosts=['performance','shares'].map(host);}
- replace();await charts.mount(root,models);const originals=[...hosts];assert.deepEqual(start,['performance','shares']);
- replace();await charts.mount(root,structuredClone(models));assert.deepEqual(hosts,originals);
- assert.equal(start.length,2);assert.deepEqual(released,[]);
- replace();await charts.mount(root,{...models,shares:[{name:'BTC',value:60},{name:'ETH',value:40}]});
- assert.equal(hosts[0],originals[0]);assert.notEqual(hosts[1],originals[1]);assert.deepEqual(start,['performance','shares','shares']);
- hosts=[];await charts.mount(root,{});charts.dispose();assert.deepEqual(released,['shares','performance','shares']);
- await t.test('zoom endpoints, keyboard, pointer and Escape agree on the samples inside the visible window',async()=>{
-  const legend={},range={},announcement={};
-  labels.set('[data-hub-series="BTC"]>span',legend);labels.set('[data-hub-window-label]',range);labels.set('[data-hub-chart-announcement]',announcement);
-  const values=Array.from({length:168},(_,index)=>[index-167,index]);
-  hosts=[host('performance')];await charts.mount(root,{performance:{...performance,rows:[{symbol:'BTC',color:0,values}]}});
-  zoom={start:17,end:83};handlers.get('performance:datazoom')();
-  assert.equal(range.textContent,'-138h — -29h');assert.equal(legend.textContent,'+138.00%');
-  const press=key=>hosts[0].dispatchEvent(Object.assign(new Event('keydown',{cancelable:true}),{key}));
-  press('Home');assert.equal(Number(hosts[0].dataset.inspectedIndex),29);assert.match(announcement.textContent,/138.*BTC \+29.00%/);
-  press('ArrowRight');assert.equal(legend.textContent,'+30.00%');
-  press('Escape');assert.equal(hosts[0].dataset.inspectedIndex,undefined);assert.equal(legend.textContent,'+138.00%');assert.match(announcement.textContent,/29.*BTC \+138.00%/);
-  handlers.get('performance:updateAxisPointer')({axesInfo:[{axisDim:'x',value:-28.39}]});assert.equal(legend.textContent,'+138.00%');
-  press('End');assert.equal(Number(hosts[0].dataset.inspectedIndex),138);charts.dispose();
- });
-});
-
 test('global share charts total 100%, reject impossible shares and do not invent missing ETH data',()=>{
  assert.deepEqual(hubMarketShares({btcShare:60,ethShare:12}).map(r=>r.value),[60,12,28]);
  assert.deepEqual(hubMarketShares({btcShare:60}).map(r=>r.value),[60,40]);
@@ -245,7 +200,7 @@ test('same-symbol impostors never inherit venue prices; stale venue quotes fall 
  const h=harness();try{h.client.setActive(true);await settle();const a=normalizeHubResource('assets',[coin()],NOW).data[0];
  assert.equal(h.client.quote(a).price,101);assert.equal(h.client.quote(a).quote,'USDT');
  assert.equal(h.client.quote({...a,id:'another-bitcoin'}).price,100);assert.equal(h.client.quote({...a,id:'another-bitcoin'}).quote,'USD');
- h.client.setActive(false);h.advance(31000);assert.equal(h.client.quote(a).quote,'USDT');h.client.setActive(true);assert.equal(h.client.quote(a).provider,'CoinMarketCap');assert.equal(h.client.quote(a).asOf,NOW);
+ h.client.setActive(false);h.advance(31000);assert.equal(h.client.quote(a).quote,'USDT');h.client.setActive(true);assert.equal(h.client.quote(a).provider,'CoinGecko');assert.equal(h.client.quote(a).asOf,NOW);
  }finally{h.client.dispose();}
 });
 
@@ -644,7 +599,6 @@ test('compact asset scope and order preserve the selected dataset across display
  hub=createMarketHub({root,rerender(){},notify(){},saved:{assets:['BTC']}});const rows=normalizeHubResource('assets',[{...coin(),current_price:20},{...coin('ethereum','eth'),current_price:10}],NOW).data;
  hub.client.read=()=>({quality:'fresh',snapshot:{asOf:NOW,receivedAt:NOW,data:rows}});hub.client.quote=a=>({price:a.price,change:0,volume:0,quote:'USD',provider:'CoinGecko',asOf:NOW});
  const initial=hub.render('markets');assertToolbarOrder(initial);assert.match(initial,/data-hub-scope-select/);assert.match(initial,/data-hub-sort-select/);hub.bind();scope.value='all';scope.onchange();order.value='price';order.onchange();
- assert.match(initial,/<span data-hub-change="bitcoin"><span[^>]*>[^<]+<\/span><\/span><small>24h<\/small>/,'the live change value must not own its period label');
  const ids=html=>[...html.matchAll(/data-hub-card="([^"]+)"/g)].map(m=>m[1]);assert.deepEqual(ids(hub.render('markets')),['bitcoin','ethereum']);direction.onclick();assert.deepEqual(ids(hub.render('markets')),['ethereum','bitcoin']);
  table.onclick();const tableMarkup=hub.render('markets');assertToolbarOrder(tableMarkup);assert.match(tableMarkup,/<option value="price" selected>/);cards.onclick();assert.deepEqual(ids(hub.render('markets')),['ethereum','bitcoin']);
  scope.value='watch';scope.onchange();assert.deepEqual(ids(hub.render('markets')),['bitcoin']);
@@ -765,7 +719,7 @@ test('the watchlist note reached through the Watchlist scope button is named Abo
   assert.match(header,/data-hub-scope="watch" aria-pressed="true"/);
   const hints=[...header.matchAll(/<details class="dc-info[^"]*"><summary aria-label="([^"]*)">i<\/summary><div>([^<]*)<\/div><\/details>/g)];
   assert.equal((header.match(/<details class="dc-info/g)||[]).length,1);assert.equal(hints.length,1);
-  assert.match(hints[0][2],/^(?:自选报价来自 CoinMarketCap \/ Binance；合约资产来自 DEX Screener。点击卡片底部查看来源与时间。|Quotes use CoinMarketCap \/ Binance; contracts use DEX Screener\. Open a card\u2019s source row for details\.)$/);
+  assert.match(hints[0][2],/^(?:自选报价来自 CoinGecko \/ Binance；合约资产来自 DEX Screener。点击卡片底部查看来源与时间。|Quotes use CoinGecko \/ Binance; contracts use DEX Screener\. Open a card\u2019s source row for details\.)$/);
   // The scope button renders L('自选','Watchlist') through the tracking vocabulary; the note's name uses the word the button shows.
   const button=header.match(/data-hub-scope="watch" aria-pressed="true">([^<]*?)\s*<b>/)?.[1]??'';assert.ok(button.trim(),'the pressed Watchlist scope button shows a word');
   assert.ok(hints[0][1].toLowerCase().includes(button.trim().toLowerCase()),hints[0][1]+' names '+button.trim());

@@ -1,9 +1,10 @@
-import {RESEARCH_GROUPS,researchRoleColor} from './multi-research.mjs';
+import {RESEARCH_GROUPS} from './multi-research.mjs';
 import {ASSETS,observationSnapshot,observationPrice} from './product-data.mjs';
 import { evidenceRoleState } from './evidence-process.mjs';
 import { createResearchJournal } from './research-journal.js';
 import { sourceValue, seriesValue } from './research-state.mjs';
 import { ROLES } from './simulation.mjs';
+import { reactorRoleColor } from './reactor.js';
 import { L } from './execution-views.mjs';
 
 // Deterministic synthetic series. They are presentation data, not market quotes.
@@ -54,7 +55,7 @@ export function createReactorPanels({onSelect,onOpen,onRole,onSource}){
     bottom.dataset.evidenceRevision=report.process.revision;bottom.dataset.evidenceReady=String(report.complete);$('research-evidence-counts').textContent=`保留 ${report.process.counts.retain} · 旁证 ${report.process.counts.context} · 分歧 ${report.process.counts.conflict} · 待补 ${report.process.counts.missing}`;
     bottom.querySelector('.reactor-flow-card .reactor-card-head h3').textContent='聚焦研究 · '+market.split('/')[0];
     $('research-result-label').textContent=report.interrupted?'已中止':report.complete?'当前核验 · SIM':'核验处理中 · SIM';$('research-result-title').textContent=report.result;$('research-result-detail').textContent=report.detail;
-    if(lastActors!==model.key+actors.join()){lastActors=model.key+actors.join();ribbon.replaceChildren();for(const id of actors){const b=document.createElement('button');b.type='button';b.dataset.role=String(id);b.innerHTML=`<span class="reactor-mini-avatar" style="--agent-color:${researchRoleColor(id)}">${ROLES[id].id.slice(1)}</span><span><strong>${roleNames[id]}</strong><small>待命</small></span><i></i>`;b.setAttribute('aria-label',`聚焦 ${ROLES[id].id} ${ROLES[id].name}`);b.onclick=()=>onSelect(id);ribbon.append(b);}}
+    if(lastActors!==model.key+actors.join()){lastActors=model.key+actors.join();ribbon.replaceChildren();for(const id of actors){const b=document.createElement('button');b.type='button';b.dataset.role=String(id);b.innerHTML=`<span class="reactor-mini-avatar" style="--agent-color:${reactorRoleColor(id)}">${ROLES[id].id.slice(1)}</span><span><strong>${roleNames[id]}</strong><small>待命</small></span><i></i>`;b.setAttribute('aria-label',`聚焦 ${ROLES[id].id} ${ROLES[id].name}`);b.onclick=()=>onSelect(id);ribbon.append(b);}}
     for(const b of ribbon.children){const id=Number(b.dataset.role),raw=evidenceRoleState(model,id),status=stopped&&['queued','running'].includes(raw)?'cancelled':raw;b.dataset.status=status;b.setAttribute('aria-pressed',String(id===selected));b.querySelector('small').textContent=stopped?'本轮结束':document.querySelector(`.agent-courier[data-agent-role="${id}"] small`)?.textContent||stateName[status];}
     $('reactor-transfers').textContent=String(model.handoffs).padStart(2,'0');$('reactor-progress').textContent=`${report.complete?100:Math.min(99,Math.floor(report.process.items.reduce((n,i)=>n+(i.stage+i.progress)/6,0)/report.process.expected*100))}%`;
     const signature=`${tick}:${market}:${chartSubject}:${model.key}:${model.epoch}:${chartWidth}:${chartHeight}`;

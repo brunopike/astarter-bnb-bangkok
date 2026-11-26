@@ -1,3 +1,4 @@
+import {routeSearch} from './site-routes.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
@@ -5,7 +6,7 @@ import {DOMAINS} from './business-pages.js';
 import {interceptNavigation} from './product-layout.mjs';
 import {Simulation} from './simulation.mjs';import {evidenceProcess} from './evidence-process.mjs';import {TradingDemo,DEFAULT_CONNECTIONS} from './trading-demo.mjs';
 import {armSources,tickSources,deliverSource,queueSource,INTELLIGENCE,portfolio,routePage,validateSetup,STRATEGIES} from './product-data.mjs';
-import {MOBILE_DOCK,MOBILE_NAV,TRADING_TABS,tradingSection,mobileNavSection,createNavigationMemory,restoreNavigationSearch,wealthRoute} from './product-data.mjs';
+import {MOBILE_DOCK,MOBILE_NAV,TRADING_TABS,tradingSection,mobileNavSection,createNavigationMemory,restoreNavigationSearch} from './product-data.mjs';
 test('changing a mobile destination retains motion and appearance preferences without leaking the prior asset',()=>{
  assert.equal(restoreNavigationSearch('?page=signals','?page=markets&asset=SOL&motion=reduced&look=classic'),'?page=signals&motion=reduced&look=classic');
  assert.equal(restoreNavigationSearch('?page=markets&asset=SOL&view=spot','?page=signals'),'?page=markets&asset=SOL&view=spot');
@@ -13,13 +14,10 @@ test('changing a mobile destination retains motion and appearance preferences wi
  assert.equal(restoreNavigationSearch('?page=markets&view=two%20words','?page=signals'),'?page=markets&view=two%20words');
 });
 test('the mobile dock and header cover the desktop sections without consuming account routes',()=>{
- assert.deepEqual(MOBILE_NAV.map(item=>item.id),['workbench','execution','signals','data','assistant']);
- assert.deepEqual(MOBILE_DOCK.map(item=>item.id),['workbench','execution','signals','data']);
+ assert.deepEqual(MOBILE_NAV.map(item=>item.id),['brain','workbench','execution','signals','data','assistant']);
+ assert.deepEqual(MOBILE_DOCK.map(item=>item.id),['brain','workbench','execution','signals','data']);
  for(const page of ['signals','opportunities'])assert.equal(mobileNavSection(page),'signals');
- assert.equal(mobileNavSection('wealth'),null);assert.equal(routePage('?page=wealth'),'workbench');
- assert.equal(wealthRoute('?page=wealth&strategy=growth&asset=weth&motion=reduced'),'?page=workbench&motion=reduced');
- assert.equal(wealthRoute('?page=markets'),null);
- assert.equal(DOMAINS.some(item=>item.home==='wealth'||item.pages.includes('wealth')),false);
+ assert.equal(mobileNavSection('brain'),'brain');assert.equal(mobileNavSection('wealth'),null);assert.equal(routePage('?page=wealth'),'workbench');
  for(const page of ['markets','tracking','intelligence','social','derivatives','etf'])assert.equal(mobileNavSection(page),'data');
  for(const page of ['execution','assets','inbox'])assert.equal(mobileNavSection(page),'execution');
  for(const page of ['advisor','validation','my-strategies'])assert.equal(mobileNavSection(page),'execution');
@@ -45,6 +43,12 @@ const finish=m=>{for(let i=0;i<450;i++){m.advance(.1);tickSources(m);}};
 test('multi-source evidence closes with macro social and chain provenance',()=>{const m=new Simulation();m.reset('liquidity',1);armSources(m);finish(m);const p=evidenceProcess(m);assert.equal(p.ready,true);for(const key of ['macro','social','chain'])assert.ok(p.items.some(i=>i.event.source===key));assert.equal(p.counts.conflict,0);assert.equal(p.counts.missing,0);});
 test('high-impact macro blocks new simulation and unverified social remains missing',()=>{for(const [id,decision]of [['macro-01','conflict'],['social-01','missing']]){const m=new Simulation();m.reset('liquidity',1);armSources(m);deliverSource(m,INTELLIGENCE.find(i=>i.id===id));finish(m);const p=evidenceProcess(m);assert.equal(p.ready,true);assert.ok(p.counts[decision]>0);const d=new TradingDemo();assert.ok(d.start({market:'BTC/USDT',strategy:'S03',mode:'confirm',amount:100,cap:500},DEFAULT_CONNECTIONS,{ready:p.ready,market:'BTC/USDT',conflict:p.counts.conflict,missing:p.counts.missing}));}});
 test('asset report reconciles partial fill, cancellation and fees',()=>{const d=new TradingDemo();d.start({market:'BTC/USDT',strategy:'S03',mode:'confirm',amount:100,cap:500},DEFAULT_CONNECTIONS,{ready:true,market:'BTC/USDT'});for(let i=0;i<45;i++)d.tick(.1);d.submit();for(let i=0;i<14;i++)d.tick(.1);d.pause();const p=portfolio(d);assert.equal(p.filled,1);assert.ok(Math.abs(p.equity-(10000-d.totalFees))<1e-8);assert.ok(Math.abs(p.cash+p.held-p.equity)<1e-8);assert.equal(d.orders[0].status,'partial-cancelled');});
+test('the homepage opens Deep Brain and existing LensWave links retain their destination',()=>{
+ for(const search of ['', '?lang=en', '?motion=reduced', '?page=brain'])assert.equal(routePage(search),'brain',search);
+ for(const search of ['?page=workbench','?scene=bricks','?research=1','?localSim=1','?asset=ETH','?task=1'])assert.equal(routePage(search),'workbench',search);
+ assert.equal(routePage('?page=signals&asset=BTC'),'signals');
+});
+
 test('routes and setup reject unsupported execution scopes',()=>{assert.equal(routePage('?scene=bricks'),'workbench');assert.equal(routePage('?page=assets'),'assets');assert.equal(routePage('?page=inbox'),'inbox');assert.equal(routePage('?page=mandate'),'mandate');assert.ok(validateSetup({market:'XAU/USD',mode:'auto',amount:100,cap:500}));assert.ok(validateSetup({market:'BTC/USDT',mode:'auto',amount:500,cap:100}));assert.equal(validateSetup({market:'BTC/USDT',mode:'confirm',amount:100,cap:500}),null);assert.equal(new Set(STRATEGIES.map(s=>s[0])).size,10);});
 
 test('selected source replaces background task and remains in final conclusion',()=>{const m=new Simulation();m.reset('liquidity',1);armSources(m);queueSource(m,INTELLIGENCE[0]);finish(m);const p=evidenceProcess(m);assert.equal(p.ready,true);assert.equal(p.counts.conflict,1);assert.ok(p.items.some(i=>i.event.sourceId==='macro-01'));assert.ok(!p.items.some(i=>i.event.sourceId==='macro-02'));});
@@ -81,14 +85,15 @@ test('two bot pages share setup, saved plans and execution while legacy links st
 test('header links respect the current route and open the last assistant view',()=>{
  const source=readFileSync(new URL('./product.js',import.meta.url),'utf8');
  const brand={},assistantLink={dataset:{page:'assistant'}},nav={children:[{dataset:{page:'markets'}},assistantLink]};
- const routes=[],opened=[],location={search:'?page=workbench'};
+ const routes=[],opened=[],location={pathname:'/',search:''};
  const bindLinks=source.slice(source.indexOf('for(const a of nav.children)a.onclick='),source.indexOf('const readingDetails='));
- runInNewContext(source.split('\n').find(line=>line.includes('brand.onclick='))+'\n'+bindLinks,{interceptNavigation,document:{querySelector:()=>brand},nav,assistantLink,location,go:id=>routes.push(id),openNavigation:id=>opened.push(id)});
+ runInNewContext(source.split('\n').find(line=>line.includes('brand.onclick='))+'\n'+bindLinks,{interceptNavigation,URLSearchParams,routeSearch:()=>routeSearch(location),document:{querySelector:()=>brand},nav,assistantLink,location,go:id=>routes.push(id),openNavigation:id=>opened.push(id)});
  const event={button:0,preventDefault(){}};
  assistantLink.onclick({...event,metaKey:true});assert.deepEqual(opened,[]);
  assistantLink.onclick(event);assert.deepEqual(opened,['assistant']);
  brand.onclick(event);assert.deepEqual(routes,[]);
- location.search='?page=workbench&asset=BTC';brand.onclick(event);assert.deepEqual(routes,['workbench']);routes.length=0;
+ location.search='?page=brain';brand.onclick(event);assert.deepEqual(routes,[]);
+ location.search='?page=workbench&asset=BTC';brand.onclick(event);assert.deepEqual(routes,['brain']);routes.length=0;
  location.search='?page=markets';nav.children[0].onclick(event);assert.deepEqual(routes,[]);
  location.search='?page=markets&asset=BTC';nav.children[0].onclick(event);assert.deepEqual(routes,['markets']);routes.length=0;
  location.search='?page=derivatives';nav.children[0].onclick(event);assert.deepEqual(routes,['markets']);
@@ -131,17 +136,6 @@ test('app navigation checks the active editor before changing the page, while a 
  go('watchlist');assert.equal(overlays,1);assert.equal(checks,1);
  context.business.beforeLeave=()=>{checks++;return null;};assert.throws(()=>go('signals'),/allowed navigation/);assert.equal(reads,1);
  context.returningHistory={key:'editor'};assert.equal(go('markets'),false);assert.equal(reads,1);
-});
-
-test('reselecting the active data overview closes an open mobile channel picker without pushing another entry',()=>{
- const source=readFileSync(new URL('./product.js',import.meta.url),'utf8');
- let focused=0,leaveChecks=0;
- const menu={open:true,querySelector:()=>({focus(){focused++;}})};
- const context={page:'markets',DATA_PAGES:['markets'],returningHistory:null,isolated:false,location:{search:'?page=markets'},root:{querySelector:()=>menu},matchMedia:()=>({matches:true}),business:{beforeLeave(){leaveChecks++;return 'editing';}},notify(){}};
- const go=runInNewContext(source.slice(source.indexOf(' function go('),source.indexOf(' function focusView('))+'\ngo;',context);
- go('markets');assert.equal(menu.open,false);assert.equal(focused,1);assert.equal(leaveChecks,0);
- go('markets');assert.equal(focused,1);assert.equal(leaveChecks,0);
- context.location.search='?page=markets&view=exchanges';assert.equal(go('markets'),false);assert.equal(leaveChecks,1);
 });
 
 function historyGuardFixture({native=true,reject=false}={}){
@@ -188,7 +182,7 @@ test('page changes dismiss the old detail and help once while background repaint
   closeHelp(){helpDialog.open=false;},CustomEvent,document:{dispatchEvent(event){events.push([event.type,event.detail]);}}};
  runInNewContext('{'+leave+'}',context);
  assert.ok(dialog.open&&helpDialog.open);assert.equal(typeof context.dialogReturn,'function');assert.deepEqual(events,[]);
- context.page='markets';runInNewContext('{'+leave+'}',context);
+ context.page='wealth';runInNewContext('{'+leave+'}',context);
  assert.equal(dialog.open,false);assert.equal(helpDialog.open,false);assert.equal(context.dialogReturn,null);assert.equal(context.dialogOrigin,null);assert.equal(context.helpOrigin,null);
  assert.deepEqual(events,[['hive:page-leave','signals']]);
 });
@@ -197,5 +191,5 @@ test('desktop and mobile English navigation both use LensWave with unchanged wor
  const source=readFileSync(new URL('./product.js',import.meta.url),'utf8'),expression=source.match(/const desktopLabel=([^\n]+);/)[1];
  const label=runInNewContext(expression,{getLocale:()=> 'en',L:(_zh,en)=>en});
  const desktop=DOMAINS.find(item=>item.home==='workbench'),mobile=MOBILE_NAV.find(item=>item.id==='workbench');
- assert.equal(label(desktop),'LensWave');assert.equal(mobile.en,'LensWave');assert.equal(mobile.zh,'AI 星谱');assert.equal(mobile.home,'workbench');assert.deepEqual(mobile.pages,['workbench']);assert.equal(mobileNavSection('workbench'),'workbench');
+ assert.equal(label(desktop),'LensWave');assert.equal(mobile.en,'LensWave');assert.equal(mobile.zh,'AI 交易');assert.equal(mobile.home,'workbench');assert.deepEqual(mobile.pages,['workbench']);assert.equal(mobileNavSection('workbench'),'workbench');
 });

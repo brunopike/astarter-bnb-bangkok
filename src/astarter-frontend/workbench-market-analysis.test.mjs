@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {marketAnalysisPlan,exponentialAverage,wilderSeries,computeMarketStudy,marketScatterSample,createMarketScanner} from './workbench-market-analysis.mjs';
 import {regressionChannel,anchoredVolumeAverage,anchoredVolumeEnvelope,confirmedStructureBreaks,unfilledPriceGaps,confirmedPriceZones} from './workbench-market-analysis.mjs';
-import {marketResearchObservation} from './live-research.mjs';
 
 const bars=(n=300,seconds=3600)=>Array.from({length:n},(_,i)=>({time:i*seconds,open:100+i*.1,close:100+i*.1,high:101+i*.1,low:99+i*.1,volume:100}));
 test('regression fits observed closes with residual deviation and no projected future prices',()=>{
@@ -197,38 +196,6 @@ test('scanner connects all eight markets concurrently, keeps failure states, and
  calls[1].callbacks.onStatus({state:'error'});assert.equal(scanner.rows().find(r=>r.symbol==='ETH').state,'error');
  scanner.update(assets.slice(1),false);assert.ok(calls.every(c=>c.stopped));calls[1].callbacks.onStatus({state:'snapshot'});assert.equal(scanner.rows().find(r=>r.symbol==='ETH').state,'error');
  now+=86401;assert.equal(scanner.rows().find(r=>r.symbol==='SOL').state,'stale');scanner.dispose();assert.deepEqual(scanner.rows(),[]);
-});
-test('an in-flight cross-market poll preserves only its own still-valid receipt',()=>{
- const day=86400,feeds=new Map();
- let now=300*day;
- const scanner=createMarketScanner(()=>{},{now:()=>now,subscribe:(request,callbacks)=>{feeds.set(request.symbol,callbacks);return ()=>{};}});
- scanner.update(['DXY','SPX','XAU'].map(symbol=>({symbol,domain:'TradFi'})),true);
- const feed=feeds.get('DXY'),row=symbol=>scanner.rows().find(entry=>entry.symbol===symbol);
- const read=symbol=>marketResearchObservation(row(symbol),now);
- const barsForDay=bars(300,day).map(bar=>({...bar,volume:null,closedAt:bar.time+day,validUntil:bar.time+2*day}));
- const snapshot={state:'snapshot',asOf:now*1000};
- feed.onSnapshot(barsForDay);feed.onStatus(snapshot);
- feeds.get('XAU').onStatus({state:'error'});
- const original=row('DXY');assert.equal(read('DXY').state,'ready');
-
- now+=60;
- for(const callbacks of feeds.values())callbacks.onStatus({state:'refreshing'});
- assert.deepEqual(row('DXY'),original);
- assert.equal(read('DXY').state,'ready');
- assert.equal(read('SPX').state,'loading');
- assert.equal(read('XAU').state,'error');
-
- feed.onStatus({state:'stale'});feed.onStatus({state:'refreshing'});
- assert.equal(read('DXY').state,'stale');
- feed.onSnapshot([{...barsForDay[0],high:0}]);feed.onStatus(snapshot);feed.onStatus({state:'refreshing'});
- assert.equal(read('DXY').state,'invalid');
- feed.onSnapshot(barsForDay);feed.onStatus({...snapshot,source:'Wrong source'});feed.onStatus({state:'refreshing'});
- assert.equal(read('DXY').state,'invalid');
- feed.onStatus({...snapshot,source:original.source});
- assert.equal(read('DXY').state,'ready');
- now=original.validUntil+1;feed.onStatus({state:'refreshing'});
- assert.equal(read('DXY').state,'stale');
- scanner.dispose();
 });
 test('scanner isolates depth by market and stops hidden, paused and removed subscriptions',()=>{
  let clock=100;const calls=[],candles=[],changes=[];

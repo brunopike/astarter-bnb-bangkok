@@ -1799,7 +1799,7 @@ body[data-workbench-view=photonic] .trading-chart-tools [data-tc-action=analysis
 .pw-runtime-detail [data-runtime-close] svg{width:18px;height:18px}
 .pw-runtime-detail header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;color:var(--tip-muted);font:12px var(--sans)}
 .pw-runtime-detail header>span{display:flex;align-items:center;gap:7px}.pw-runtime-detail header i{width:5px;height:5px;border-radius:50%;background:var(--runtime-color);box-shadow:0 0 7px var(--runtime-color)}
-.pw-runtime-detail header b{font:400 12px var(--sans);color:color-mix(in srgb,var(--runtime-color) 84%,var(--tip-ink));padding:0;border:0;background:none}
+.pw-runtime-detail header b{font:400 12px var(--sans);color:var(--runtime-color);padding:0;border:0;background:none}
 .pw-runtime-assets{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:16px 0 17px}
 .pw-runtime-assets>span{display:grid;place-items:center;width:27px;height:27px;filter:drop-shadow(0 0 5px #0004)}
 .pw-runtime-assets>[data-state=waiting]{opacity:.35;filter:saturate(.4)}
@@ -1817,12 +1817,8 @@ body[data-workbench-view=photonic] .trading-chart-tools [data-tc-action=analysis
 .pw-runtime-detail .pw-runtime-readings>div{display:grid;grid-template-columns:minmax(3.4em,auto) minmax(0,1fr);gap:12px;align-items:baseline;padding:7px 0;border-top:1px solid color-mix(in srgb,var(--tip-muted) 22%,transparent)}
 .pw-runtime-detail .pw-runtime-readings dt{color:var(--tip-ink);font:500 12px/1.5 var(--sans)}
 .pw-runtime-detail .pw-runtime-readings dd{color:var(--tip-ink);font:12px/1.5 var(--mono);text-align:end;overflow-wrap:anywhere}
-.pw-runtime-detail .pw-runtime-readings>[aria-current=true]{scroll-margin-block:6px;background:color-mix(in srgb,var(--runtime-color) 12%,transparent);box-shadow:inset 2px 0 var(--runtime-color);border-radius:3px}
-.pw-runtime-detail .pw-runtime-readings>[aria-current=true] dt{padding-inline-start:8px;font-weight:650}
-.pw-runtime-bars[data-graphic]>i[data-current-reading]::after{color:var(--b-ink);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .pw-runtime-detail .pw-runtime-readings>[data-state=waiting] dd,.pw-runtime-detail .pw-runtime-readings>[data-state=active] dd{color:var(--tip-muted)}
 :root[data-theme=light] .pw-runtime-detail{--tip-ink:#17222d;--tip-muted:#576878;--tip-panel:#fffffff5;box-shadow:0 14px 40px #1232}
-:root[data-theme=light] .pw-runtime-detail header b{color:color-mix(in srgb,var(--runtime-color) 38%,var(--tip-ink))}
 :root[data-theme=light] :is(.pw-stages svg,.pw-runtime-bars){filter:brightness(.68) saturate(.9)}
 @media(min-width:1201px){
  :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-optics{height:660px!important;min-height:660px}
@@ -1841,6 +1837,11 @@ body[data-workbench-view=photonic] .trading-chart-tools [data-tc-action=analysis
 .lw-halftone-brand .lw-dot-face{height:42px;font:900 42px/1 'Arial Black','Helvetica Neue',Arial,sans-serif;letter-spacing:-.04em}
 .lw-dot-face .dot-text{display:block;white-space:nowrap;font:inherit;color:inherit;letter-spacing:inherit}
 .lw-dot-face[data-rendered=true] .dot-text{opacity:0}
+/* Keep selectable text above the canvas; only the selection supplies its ink. */
+:is(.lw-halftone-brand,.lw-header-metrics) .lw-dot-face[data-rendered=true] .dot-text{
+ position:relative;z-index:1;opacity:1;color:transparent;letter-spacing:normal;
+ font-size:var(--lw-fitted-size,1em);line-height:1;height:100%;align-content:center;
+}
 .lw-dot-face canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .lw-header-metrics{display:grid;grid-template-columns:1.35fr 1fr .9fr;gap:28px;min-width:0}
 .lw-header-metrics>button,.lw-header-metrics>div{display:grid!important;align-content:end;gap:6px;min-width:0;padding:0!important;border:0!important;border-radius:0!important;text-align:left;color:var(--b-ink);background:transparent!important;box-shadow:none!important}

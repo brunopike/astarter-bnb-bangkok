@@ -1,3 +1,4 @@
+import {routeSearch} from './site-routes.mjs';
 import {createBotHub} from './bot-hub.mjs?v=20261125a';
 import {createWatchlist} from './watchlist-view.mjs';
 import {workbenchAttention} from './workbench-console.mjs';
@@ -17,7 +18,7 @@ import {mountCharts} from './product-chart-ui.mjs';
 import {CATALOG,strategyById} from './strategy-catalog.mjs';
 import {strategyFlowAvailable} from './strategy-execution-data.mjs';
 import {pageHead} from './product-views.mjs';
-import {TRADING_PAGES,portfolio,accountOrders} from './product-data.mjs';
+import {BRAIN_PAGE_NAME,TRADING_PAGES,portfolio,accountOrders} from './product-data.mjs';
 import {t,pair} from './locale.mjs';
 import {PHASE_NAMES,RESEARCH_GROUPS} from './multi-research.mjs';
 import {tokenIcon} from './brand-icons.mjs';
@@ -31,6 +32,7 @@ export function resumeReviewedResearch(desk,research,expectedRevision){
 }
 export const BUSINESS_PAGES=['watchlist','advisor','copy-trading','contributions','signals','inbox','mandate','opportunities','strategies','my-strategies','validation','execution','risk','usage','plans','topup','staking','billing','settings','setup'];
 export const DOMAINS=[
+ {name:BRAIN_PAGE_NAME[0],en:BRAIN_PAGE_NAME[1],home:'brain',pages:['brain']},
  {name:'AI 战队',en:'AI team',home:'workbench',pages:['workbench']},
  {name:'策略交易',en:'Strategy Agents',home:'strategies',navPages:['strategies','execution'],pages:TRADING_PAGES},
  {name:'AI 信号',en:'AI signals',home:'signals',navPages:['signals','opportunities'],pages:['signals','opportunities']},
@@ -70,7 +72,7 @@ export function createBusinessPages({workspace:w,desk,research,onHandoff,onResea
  let editorOpen=false,riskScenario='crowded',riskMode='normal';
  let step=w.s.setupStep||1,filter='all',search='',validationScenario='normal',lastRenderClock=-1,selectedFinding='',selectedCatalog='S03';
  const privateRoute=()=>{const q=new URLSearchParams(globalThis.location?.search||'');return q.get('page')==='strategies'&&q.has('privateDraft')?{draftId:q.get('privateDraft'),sourceRequestId:q.get('sourceRequestId'),symbol:q.get('researchSymbol')}:null;};
- const center=createStrategyCenter({w,desk,root,go,refresh:()=>refresh(),notify,onResearchStart,onRecommendationSource:openRecommendationSource,openPage:(id,editor)=>{const params=new URLSearchParams(globalThis.location?.search||'');if(params.get('page')!=='strategies'||params.get('create')!==id||params.get('editor')!==editor)go('strategies',{create:id,editor});}});
+ const center=createStrategyCenter({w,desk,root,go,refresh:()=>refresh(),notify,onResearchStart,onRecommendationSource:openRecommendationSource,openPage:(id,editor)=>{const params=new URLSearchParams(routeSearch());if(params.get('page')!=='strategies'||params.get('create')!==id||params.get('editor')!==editor)go('strategies',{create:id,editor});}});
  const botHub=createBotHub({w,desk,root,go,refresh:()=>refresh(),choose:(id,onReturn)=>center.openTemplate(id,onReturn,null,{fresh:true}),recommendations:()=>center.recommendations(),chooseRecommendation:(id,onReturn,options)=>center.chooseRecommendation(id,onReturn,options),show,renderInstances:(data,history)=>center.instancesView(data,history),renderSaved:()=>center.savedPlans(),renderLegacy:active=>active?execution(true):''});
  const watchlist=createWatchlist({workspace:w,research,root,go,refresh:()=>refresh(),notify});
  const aiSignals=createAISignals({w,desk,research,root,refresh:()=>refresh(),go,notify,onResearchStart,onStrategy:(id,onReturn,source)=>center.openTemplate(id,onReturn,signalStrategySource(source))});
@@ -267,7 +269,7 @@ export function createBusinessPages({workspace:w,desk,research,onHandoff,onResea
   }
   if(managed&&a==='manage-run'){const parent=management;parent.returnFocus={...b.dataset};openRun(id,{onReturn:()=>{management=parent;paintManagement(true);}});return;}
   if(runTarget&&['trade','stop-confirm','close-position-confirm','approval-accept','approval-skip'].includes(a)&&runActionError(runTarget,desk.snapshot(),desk.syncStatus())){notify(localized('运行或账户已变化，请重新打开运行后再操作。','Run or account changed. Reopen the run before acting.'),{tone:'error'});refresh();return;}
-  if(a==='op-plan'||a==='choose-op'){const search=location.search,origin=document.body.dataset.page||'opportunities',error=openResearchStrategy(research.handoff(id),()=>{go(origin,{search,restore:true});opDetail(id);});if(error)notify(error);else close();return;}
+  if(a==='op-plan'||a==='choose-op'){const search=routeSearch(),origin=document.body.dataset.page||'opportunities',error=openResearchStrategy(research.handoff(id),()=>{go(origin,{search,restore:true});opDetail(id);});if(error)notify(error);else close();return;}
   if(a==='signal-filter'){filter=id;refresh();return;}
   if(a==='signal-record'){const s=w.s.signals.find(x=>x.id===id);if(!s)return;go('logs',{orderId:s.runId});return;}
   if(a==='configure-preset'){let d=w.s.drafts.find(x=>x.strategy===id);if(!d){await w.createManagedDraft(id);d=w.draft();}if(!d)return;w.s.selectedDraftId=d.id;w.touch();close();center.openDraft(d.id);return;}

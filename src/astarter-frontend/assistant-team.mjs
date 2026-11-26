@@ -4,7 +4,7 @@ import {uiGlyph} from './product-composition.mjs';
 // The team reads the existing research clock; opening it never starts research or trading.
 export function createAssistantTeam({getContext,loadScene=()=>import('./reactor.js')}){
  let dialog=null,scope=null,canvas=null,labels=null,scene=null,origin=null,theme=null;
- let frame=0,previous=0,generation=0,createScene=null,sceneModule=null,lastReduced=false,lastElapsed=null,paintNeeded=true;
+ let frame=0,previous=0,generation=0,createScene=null,lastReduced=false,lastElapsed=null,paintNeeded=true;
  function stopFrames(){cancelAnimationFrame(frame);frame=0;previous=0;}
  function close(restoreFocus=true){
   generation++;stopFrames();scene?.dispose();scene=null;
@@ -61,24 +61,13 @@ export function createAssistantTeam({getContext,loadScene=()=>import('./reactor.
   stopFrames();
   if(dialog?.open&&scene&&!document.hidden){paintNeeded=true;frame=requestAnimationFrame(tick);}
  }
- function requestSceneModule(){
-  if(!sceneModule){
-   const requested=loadScene();sceneModule=requested;
-   Promise.resolve(requested).catch(()=>{if(sceneModule===requested)sceneModule=null;});
-  }
-  return sceneModule;
- }
- async function preload(){
-  if(globalThis.navigator?.connection?.saveData)return;
-  try{await requestSceneModule();}catch{/* Opening the dialog can retry a failed preload. */}
- }
  async function load(){
   const ticket=++generation;
   dialog.querySelector('[data-team-loading]').hidden=false;
   dialog.querySelector('[data-team-message]').textContent=L('正在载入小队…','Loading the squad…');
   dialog.querySelector('[data-team-retry]').hidden=true;
   try{
-   const module=await requestSceneModule();
+   const module=await loadScene();
    if(ticket!==generation||!dialog?.open)return;
    const context=getContext();if(!context?.model){unavailable();return;}
    createScene=module.createReactor;mount(context);
@@ -106,5 +95,5 @@ export function createAssistantTeam({getContext,loadScene=()=>import('./reactor.
   theme.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   load();
  }
- return {open,close,preload};
+ return {open,close};
 }

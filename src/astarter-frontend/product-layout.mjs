@@ -1,3 +1,4 @@
+import {routeHref} from './site-routes.mjs';
 import {L} from './execution-views.mjs';
 import {uiGlyph} from './product-composition.mjs';
 
@@ -7,7 +8,9 @@ export function interceptNavigation(event){
 }
 
 function includesRoute(target,current){
- if(target.origin!==current.origin||target.pathname!==current.pathname||target.hash!==current.hash)return false;
+ if(target.origin!==current.origin)return false;
+ target=new URL(routeHref(target,target),target);current=new URL(routeHref(current,current),current);
+ if(target.pathname!==current.pathname||target.hash!==current.hash)return false;
  return [...current.searchParams].every(([key,value])=>target.searchParams.getAll(key).includes(value));
 }
 export function isCurrentDataLink(link,current){

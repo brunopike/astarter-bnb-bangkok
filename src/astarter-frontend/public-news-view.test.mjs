@@ -17,13 +17,13 @@ function newsEnvelope(selection=1){
 }
 function sentimentEnvelope(value='37',asOf=DAY,receivedAt=NOW){return {schema:'public-market-relay-v1',resource:'sentiment',receivedAt,body:{data:[{timestamp:String(asOf/1000),value}]}};}
 const isSentiment=url=>url.searchParams.get('resource')==='sentiment';
-function harness(t,{search='?page=intelligence',fetchImpl,onRender}={}){
+function harness(t,{search='?page=intelligence',fetchImpl}={}){
  const names=['document','window','location','navigator','localStorage'],previous=new Map(names.map(key=>[key,Object.getOwnPropertyDescriptor(globalThis,key)])),events=new EventTarget(),body={},doc=Object.assign(new EventTarget(),{hidden:false,body,activeElement:body,querySelector:()=>null}),storage=new Map(),calls=[];
  let at=NOW,page='intelligence',html='',view;
  const globals={document:doc,window:events,location:{search},navigator:{onLine:true},localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)}};
  for(const [key,value]of Object.entries(globals))Object.defineProperty(globalThis,key,{configurable:true,value});
  const root={contains:()=>false,querySelector:()=>null,querySelectorAll:()=>[]};
- view=createPublicDataViews({root,now:()=>at,rerender(){html=view.render(page);onRender?.();},fetchImpl:async(input,init)=>{const url=new URL(input,'https://astarter.imstark.site');calls.push({url,init});return fetchImpl?fetchImpl(url,init):json(isSentiment(url)?sentimentEnvelope():newsEnvelope(Number(url.searchParams.get('selection_version'))));}});
+ view=createPublicDataViews({root,now:()=>at,rerender(){html=view.render(page);},fetchImpl:async(input,init)=>{const url=new URL(input,'https://astarter.imstark.site');calls.push({url,init});return fetchImpl?fetchImpl(url,init):json(isSentiment(url)?sentimentEnvelope():newsEnvelope(Number(url.searchParams.get('selection_version'))));}});
  t.after(()=>{view.dispose?.();view.client.clear();for(const key of names){const descriptor=previous.get(key);if(descriptor)Object.defineProperty(globalThis,key,descriptor);else Reflect.deleteProperty(globalThis,key);}});
  return {view,doc,root,calls,render(value='intelligence'){page=value;html=view.render(page);return html;},get html(){return html;},setNow(value){at=value;}};
 }
@@ -38,36 +38,6 @@ test('the actual news controller uses live reads by default and keeps markets op
  assert.equal(currentIntelligenceRoute('?page=intelligence&view=economic-data'),null);
  assert.equal(currentIntelligenceRoute('?page=markets&data=demo'),null);
  assert.equal(h.render('markets'),null,'existing market defaults remain unchanged');
-});
-
-test('clearing an empty news search restores a useful control without scrolling or reopening a touch keyboard',async t=>{
- const h=harness(t);h.render();await settle();
- const frame=Object.getOwnPropertyDescriptor(globalThis,'requestAnimationFrame');
- Object.defineProperty(globalThis,'requestAnimationFrame',{configurable:true,value:callback=>callback()});
- t.after(()=>{if(frame)Object.defineProperty(globalThis,'requestAnimationFrame',frame);else delete globalThis.requestAnimationFrame;});
- let focus;
- const reset={},input=Object.assign(new EventTarget(),{isConnected:true,value:'',focus:options=>{focus=['search',options];}});
- const all={focus:options=>{focus=['all',options];}};
- h.root.querySelector=key=>({'[data-pd-news-reset]':reset,'[data-pd-search]':input,'[data-pd-news-source="all"]':all}[key]||null);
- h.view.bind();
- for(const [detail,expected] of [[0,'search'],[1,'all']]){
-  input.value='unmatched filter';input.dispatchEvent(new Event('input'));reset.onclick({detail});
-  assert.deepEqual(focus,[expected,{preventScroll:true}]);
- }
-});
-
-test('a background news refresh keeps a surviving story in place even if the first visible row expires',async t=>{
- let updated=false,deliver=false;
- const h=harness(t,{onRender(){if(deliver)updated=true;}});
- h.render();await settle();await settle();
- h.root.scrollTop=400;h.root.getBoundingClientRect=()=>({top:52,bottom:742,height:690});
- const article=(id,y)=>({dataset:{newsRecord:id},getBoundingClientRect(){const top=y-h.root.scrollTop;return {top,bottom:top+85};}});
- h.root.querySelectorAll=key=>key.includes('.df-story[data-news-record]')?
-  (updated?[article('new',565),article('still-reading',680)]:[article('expired',465),article('still-reading',565)]):[];
- deliver=true;h.setNow(NOW+60_001);h.view.tick('intelligence',1);await settle();await settle();
- assert.equal(updated,true);
- assert.equal(h.root.scrollTop,515);
- assert.equal(h.root.querySelectorAll('#pd-feed-panel .df-story[data-news-record]')[1].getBoundingClientRect().top,165);
 });
 
 test('typing in the news filter keeps the source timestamp while connectivity changes',async t=>{

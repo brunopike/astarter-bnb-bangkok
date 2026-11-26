@@ -22,7 +22,6 @@
   --field-fiber:#a09bb2;--field-fiber-alt:#b7acc8;--field-lead:#9c95fe;--field-hot:#e7dcff;--field-muted:#70677c;
 }
 body{background:var(--bg);color:var(--text);font:var(--text-sm)/1.5 var(--sans);font-variant-numeric:tabular-nums}
-::selection{background:var(--accent-tint);color:var(--text)}
 button,input,select,textarea{font-family:var(--sans)}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--accent-ink)}
 button:disabled{opacity:1;color:var(--muted);background:var(--surface-2);border-color:var(--line)}

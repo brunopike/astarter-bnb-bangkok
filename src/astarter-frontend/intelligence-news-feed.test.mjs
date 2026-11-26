@@ -58,10 +58,6 @@ test('uses source timestamps, Shanghai publication dates and declared assets for
   assert.equal((feed.match(/class="df-day-separator"/g)||[]).length, 1);
   assert.match(feed, /asset=BTC/);
   assert.doesNotMatch(feed, /asset=DXY|Original ETH headline/);
-  const single = renderIntelligenceNewsFeed(rows, {date:'2026-11-18',source:blockbeats});
-  assert.match(single, /1 (story|条消息) · UTC\+8/);
-  assert.equal((single.match(/data-pd-news-reset/g)||[]).length, 1);
-  assert.doesNotMatch(renderIntelligenceNewsFeed(rows), /data-pd-news-reset/);
 });
 
 test('keeps source links, escapes all external text and omits proprietary bodies and synthetic insights', () => {

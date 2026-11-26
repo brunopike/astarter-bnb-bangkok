@@ -54,10 +54,3 @@ body .product-page .dc-root .df-search input{border:0!important;background:trans
  body #product-page[data-layout=unified] .df-economic-calendar .df-calendar{grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
  body[data-page="intelligence"] #product-page .df-economic-calendar .df-calendar button{min-width:0;padding-inline:1px}
 }
-#product-page #pd-feed-panel .df-result-count{
- display:inline-flex;align-items:center;flex-wrap:wrap;gap:2px 12px;
-}
-#product-page #pd-feed-panel [data-pd-news-reset]{
- min-height:44px;padding-inline:2px;color:var(--text);font:inherit;
- text-decoration:underline;text-underline-offset:3px;
-}

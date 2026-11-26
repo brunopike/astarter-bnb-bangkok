@@ -13,6 +13,17 @@
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
+:root {--selection-bg:#111;--selection-ink:#fff}
+:root[data-theme=dark] {--selection-bg:#fff;--selection-ink:#111}
+::selection {
+  background-color:var(--selection-bg);
+  color:var(--selection-ink);
+  -webkit-text-fill-color:currentColor;
+  text-shadow:none;
+}
+@media (forced-colors:active) {
+  ::selection {background-color:Highlight;color:HighlightText}
+}
 :root:lang(ja) {--font-cjk:'Noto Sans JP'}
 :root:lang(ko) {--font-cjk:'Noto Sans KR'}
 body,button,input,select,textarea {font-family:var(--sans)}

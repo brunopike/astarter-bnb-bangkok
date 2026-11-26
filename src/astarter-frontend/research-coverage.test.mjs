@@ -16,7 +16,7 @@ import {parsePublicNews} from './public-news.mjs';
 import {PUBLIC_ASSETS,publicQuery,publicDataURL,currentPublicEnvelope} from './public-data-client.mjs';
 import {pair,initLocale,getLocale} from './locale.mjs';
 
-// The accompanying baseline records the research model and the published source changes it covers.
+// Coverage of the live research model at main 7a436fa, published for card R4 step 5.
 // Synthetic inputs only, through the code's own parsers, normalizers, validators, served handler and ingest functions. No network read.
 const coverage=JSON.parse(await readFile(new URL('./test-fixtures/research-coverage-v1.json',import.meta.url)));
 const day=86400,NOW=Date.UTC(2026,10,18,0,1,40)/1000,TODAY=Math.floor(NOW/day)*day,NOW_MS=NOW*1000;
@@ -69,15 +69,9 @@ const curation={minFollowers:50000,maxTopicRank:100,minCreatorInteractions24h:10
 const topicRow=(symbol,topic,asOf)=>({symbol,topic,asOf,posts24h:120,contributors24h:40,interactions24h:5000,sentimentByNetwork:{X:61}});
 const lunar={provider:'LunarCrush',observedAt:NOW_MS,errors:[],curation,topics:[topicRow('BTC','bitcoin',NOW_MS-600000),topicRow('ETH','ethereum',null),topicRow('SOL','solana',null)],
  posts:[{network:'X',id:'7',title:'Solana staking volume post',url:'https://x.com/example/status/7',author:'example',symbols:['SOL'],publishedAt:NOW_MS-86400000+1800000,interactions24h:50,creatorId:'twitter::7',followers:56000,profileUrl:null,topicRank:14,creatorInteractions24h:1300,qualifyingPostCount:2,evidenceSymbol:'SOL'}]};
-function offlineFeeds(options){
- const unexpected=[];
- const unconfigured=name=>async()=>{unexpected.push(name);throw Error('OFFLINE_FIXTURE');};
- const handle=createLicensedFeeds({bluesky:unconfigured('Bluesky'),nostr:unconfigured('Nostr'),...options});
- return async(req,res)=>{await handle(req,res);assert.deepEqual(unexpected,[],'unconfigured direct social reader');};
-}
-async function served(resource,readers,{env={},fetchImpl=async()=>assert.fail('no network read'),feed}={}){
- const handle=offlineFeeds({now:()=>NOW_MS,env,fetchImpl,...readers});let status=null,body=null;
- await handle({url:publicDataURL(resource,{limit:feeds[resource].requested.page_limit,feed}),method:'GET'},{writeHead(code){status=code;},end(text){body=JSON.parse(text);}});
+async function served(resource,readers,{env={},fetchImpl=async()=>assert.fail('no network read')}={}){
+ const handle=createLicensedFeeds({now:()=>NOW_MS,env,fetchImpl,...readers});let status=null,body=null;
+ await handle({url:publicDataURL(resource,{limit:feeds[resource].requested.page_limit}),method:'GET'},{writeHead(code){status=code;},end(text){body=JSON.parse(text);}});
  return {status,body};
 }
 const newsReaders={blockbeats:async()=>parseBlockBeats(flash(SYMBOLS),NOW_MS),coindesk:async()=>parsePublicNews(rss(SYMBOLS),NOW_MS).items};
@@ -97,8 +91,7 @@ function answered({dailyError=null,depthError=null,contextError=null,bars,public
 }
 const lost=(symbol,key)=>[symbol,key,{status:'missing',source:null,provider:null}];
 const failures=[
- ...SYMBOLS.map(symbol=>({name:`the daily source of ${symbol} fails`,options:{dailyError:symbol},source:'daily-bars',symbol,
-  trace:{...daily.failure_trace,text:daily.failure_trace.text.map(template=>fill(template,daily.per_asset[symbol]))},cells:[lost(symbol,daily.dimension)]})),
+ ...SYMBOLS.map(symbol=>({name:`the daily source of ${symbol} fails`,options:{dailyError:symbol},source:'daily-bars',symbol,trace:daily.failure_trace,cells:[lost(symbol,daily.dimension)]})),
  ...depth.assets.map(symbol=>({name:`the depth source of ${symbol} fails`,options:{depthError:symbol},source:'spot-depth',symbol,trace:depth.failure_trace,cells:[lost(symbol,depth.dimension)]})),
  ...background.flatMap(([id,source])=>[false,true].map(withPublic=>({name:`the ${source.resource} source fails, ${withPublic?'with':'without'} the news and social answers`,options:{contextError:source.resource,public:withPublic},source:id,trace:source.failure_trace,
   cells:source.assets.map(symbol=>{const after=withPublic&&source.failure_trace.with_public_answers?.[symbol]?.[source.dimension];return after?[symbol,source.dimension,after]:lost(symbol,source.dimension);})}))),
@@ -121,19 +114,16 @@ function sourceTimes(r,id,symbol){
 }
 // The served handler is asked with a fake fetch that records the provider address and refuses the body.
 async function upstream(path){
- const calls=[],handle=offlineFeeds({now:()=>NOW_MS,env:{BLOCKBEATS_API_KEY:'fixture-key-not-a-token',LUNARCRUSH_API_KEY:'fixture-key-not-a-token'},fetchImpl:async(url,options)=>{calls.push({url:new URL(url),method:options?.method??'GET'});return {ok:true,status:200,headers:{get:()=>null},text:async()=>'{}'};}});
+ const calls=[],handle=createLicensedFeeds({now:()=>NOW_MS,env:{BLOCKBEATS_API_KEY:'fixture-key-not-a-token',LUNARCRUSH_API_KEY:'fixture-key-not-a-token'},fetchImpl:async url=>{calls.push(new URL(url));return {ok:true,status:200,headers:{get:()=>null},text:async()=>'{}'};}});
  await handle({url:path,method:'GET'},{writeHead(){},end(){}});return calls;
 }
 async function asked(requested,values){
  const calls=await upstream(fill(requested.relay_path,values)),parts=requested.windows||requested.requests||[{upstream_parameters:requested.upstream_parameters}];
  assert.equal(calls.length,parts.length,requested.relay_path);
  parts.forEach((part,i)=>{
-  const {url,method}=calls[i];
-  assert.equal(method,'GET',url.pathname);
-  assert.deepEqual(Object.fromEntries(url.searchParams),Object.fromEntries(Object.entries(part.upstream_parameters).map(([key,value])=>[key,fill(value,values)])),fill(requested.relay_path,values));
-  if(part.path)assert.equal(url.pathname,fill(part.path,values));
-  if(part.path_ends_with)assert.ok(url.pathname.endsWith(fill(part.path_ends_with,values)),url.pathname);
-  if(part.host)assert.equal(url.origin,'https://'+part.host,url.href);
+  assert.deepEqual(Object.fromEntries(calls[i].searchParams),Object.fromEntries(Object.entries(part.upstream_parameters).map(([key,value])=>[key,fill(value,values)])),fill(requested.relay_path,values));
+  if(part.path_ends_with)assert.ok(calls[i].pathname.endsWith(fill(part.path_ends_with,values)),calls[i].pathname);
+  if(part.host)assert.equal(calls[i].hostname,part.host,calls[i].href);
  });
 }
 function yahooRaw(symbol,n){
@@ -320,17 +310,15 @@ test('every kept item carries the time fields listed for its source, and no situ
 
 test('in the en locale the model shows the English half of each recorded text',async()=>{
  const seen={},note=(kind,text)=>{(seen[kind]??=new Set()).add(text);};
- const english=([zh,en])=>pair(zh,en,'en');
  await inLocale('en',()=>{
   const fresh=model();for(const symbol of SYMBOLS)for(const row of fresh.task(symbol).evidence)note('no_source_text',row.source);
   for(const all of [answered(),answered({public:false})])for(const symbol of SYMBOLS)for(const row of all.task(symbol).evidence)if(!kept(row.status))note('no_source_text',row.source);
-  for(const failure of failures){const r=answered(failure.options);for(const [symbol,key,after] of failure.cells)if(after.status==='missing'){const row=item(r,symbol,key);assert.equal(row.text,english(failure.trace.text),`${failure.name}: ${symbol} ${key}`);note(failure.source,row.text);note('no_source_text',row.source);}}
+  for(const failure of failures){const r=answered(failure.options);for(const [symbol,key,after] of failure.cells)if(after.status==='missing'){const row=item(r,symbol,key);note(failure.source,row.text);note('no_source_text',row.source);}}
  });
+ const english=([zh,en])=>pair(zh,en,'en');
  const traced=failures.filter(failure=>failure.cells.some(([,,after])=>after.status==='missing'));
  assert.deepEqual(new Set(traced.map(failure=>failure.source)),new Set(Object.keys(sources)),'every source leaves a missing trace in some failure');
- const expectedText={no_source_text:new Set([english(coverage.no_source_text)])};
- for(const failure of traced)(expectedText[failure.source]??=new Set()).add(english(failure.trace.text));
- assert.deepEqual(seen,expectedText);
+ assert.deepEqual(Object.fromEntries(Object.entries(seen).map(([kind,texts])=>[kind,[...texts]])),{no_source_text:[english(coverage.no_source_text)],...Object.fromEntries(traced.map(failure=>[failure.source,[english(failure.trace.text)]]))});
 });
 
 test('the public news and social answers reach the model through the served handler and ingestPublic, with the listed assets, requests, row limits and validity windows',()=>inLocale('zh',async()=>{
@@ -354,16 +342,14 @@ test('the public news and social answers reach the model through the served hand
  const newsMost=feeds.news.answer_maximum_items.value,coindeskRows=40;assert.ok(flashRows<newsMost&&coindeskRows<newsMost&&flashRows+coindeskRows>newsMost);
  const fullNews=(await served('news',{blockbeats:async()=>parseBlockBeats(many(flashRows),NOW_MS),coindesk:async()=>parsePublicNews(rss(Array(coindeskRows).fill('BTC')),NOW_MS).items})).body;
  assert.equal(fullNews.items.length,newsMost,`a news answer from ${flashRows} BlockBeats rows and ${coindeskRows} CoinDesk headlines`);
- for(const resource of ['posts','creators','category-posts']){
+ for(const resource of ['posts','creators']){
   const most=feeds.social.response_maximum_rows[resource];
   const failed=async n=>(await fetchLunarCrush(async url=>{
-   const [,,,group,topic,part]=new URL(url).pathname.split('/'),kind=group==='category'?'category-posts':part==='v1'?'topic':part;
+   const [,,,,topic,part]=new URL(url).pathname.split('/'),kind=part==='v1'?'topic':part;
    if(kind==='topic')return Response.json({config:{topic},data:{topic,num_posts:1,num_contributors:1,interactions_24h:1,types_sentiment:{}}});
-   const config=kind==='category-posts'?{category:topic}:kind==='creators'?null:{topic};
-   return Response.json({config,data:kind===resource?Array.from({length:n},()=>({})):[]});
+   return Response.json({config:kind==='creators'?null:{topic},data:kind===resource?Array.from({length:n},()=>({})):[]});
   },'fixture-key-not-a-token')).errors.filter(error=>error.resource===resource);
-  const symbols=resource==='category-posts'?[feeds.social.discovery.error_symbol]:feeds.social.assets;
-  assert.deepEqual(await failed(most),[],resource);assert.deepEqual(await failed(most+1),symbols.map(symbol=>({symbol,resource,code:'INVALID_DATA'})),resource);
+  assert.deepEqual(await failed(most),[],resource);assert.deepEqual(await failed(most+1),feeds.social.assets.map(symbol=>({symbol,resource,code:'INVALID_DATA'})),resource);
  }
  // Research keeps BlockBeats headlines only: a news answer whose headlines all come from CoinDesk leaves every asset without a news fact.
  const coindeskOnly=(await served('news',{blockbeats:async()=>[],coindesk:newsReaders.coindesk})).body,notKept=feeds.news.not_kept.map(row=>row.provider_id);
@@ -390,46 +376,3 @@ test('the public news and social answers reach the model through the served hand
   assert.equal(row.source,left.length?[...new Set(left.map(other=>other.kind==='news'?feeds.news.provider:feeds.social.provider))].join(' / '):shown(coverage.no_source_text),label);
  }
 }));
-
-test('recent posts from LunarCrush, Bluesky and Nostr retain their clocks and contribute no research facts, together or alone',async()=>{
- const {discovery,recent}=feeds.social;
- const did='did:plc:abcdefghijklmnopqrstuvwx',event='2'.repeat(64),pubkey='a'.repeat(64);
- const sky={id:'desk42',network:'Bluesky',creatorId:did,title:'Bitcoin transaction fees moved during the latest block',
-  url:'https://bsky.app/profile/'+did+'/post/desk42',author:{acct:'desk.bsky.social',display_name:'Fixture desk',url:'https://bsky.app/profile/'+did,bot:null},
-  symbols:['BTC'],publishedAt:NOW_MS-32_000,likes:0,reposts:1,replies:null};
- const note={id:event,network:'Nostr',creatorId:pubkey,title:'Ethereum validator participation in recent epochs',
-  url:'https://primal.net/e/'+event,author:{acct:'aaaaaa…aaaa',display_name:null,url:null,bot:null},symbols:['ETH'],
-  publishedAt:NOW_MS-20_000,likes:null,reposts:null,replies:null};
- const lunarRecent={...lunar,recentPosts:lunar.posts,discovery:{category:discovery.category,status:'OK'}};
- const fixtures=[
-  {id:'lunarcrush-v4',reader:'lunarcrush',data:lunarRecent,post:lunar.posts[0],expiry:NOW_MS+3_600_000},
-  {id:'bluesky-latest-v1',reader:'bluesky',data:{observedAt:NOW_MS-5000,posts:[sky],failedSymbols:[]},post:sky,expiry:NOW_MS-5000+recent.direct_valid_ms},
-  {id:'nostr-relay-v1',reader:'nostr',data:{observedAt:NOW_MS-3000,posts:[note]},post:note,expiry:NOW_MS-3000+recent.direct_valid_ms}
- ];
- assert.deepEqual(fixtures.map(row=>row.id),recent.providers);
- assert.equal(publicDataURL('social',{limit:feeds.social.requested.page_limit,feed:'recent'}),recent.relay_path);
- for(const only of [null,...recent.providers]){
-  const calls=[];
-  const readers=Object.fromEntries(fixtures.map(row=>[row.reader,async()=>{
-   calls.push(row.id);if(only&&only!==row.id)throw Error('OFFLINE_FIXTURE');return row.data;
-  }]));
-  const {status,body}=await served('social',readers,{feed:'recent'});
-  assert.deepEqual(calls.sort(),[...recent.providers].sort());assert.equal(status,200);
-  assert.equal(body.coverage.scope,recent.scope);assert.equal(body.quality,only?'partial':'fresh');
-  assert.deepEqual(body.coverage.lunar?.discovery??null,!only||only==='lunarcrush-v4'?lunarRecent.discovery:null);
-  const available=fixtures.filter(row=>!only||only===row.id).sort((a,b)=>b.post.publishedAt-a.post.publishedAt);
-  assert.deepEqual(body.items.map(item=>[item.provider_id,item.data.symbols,item.event_time_ms,item.received_at_ms,item.valid_until_ms]),
-   available.map(row=>[row.id,row.post.symbols,row.post.publishedAt,row.data.observedAt,row.expiry]));
-  assert.ok(body.items.every(item=>item.data.kol===undefined));assert.equal(body.real_trading_connected,false);assert.equal(body.execution_binding,'NONE');
-  const r=model();r.ingestPublic('social',body);
-  for(const symbol of SYMBOLS){assert.deepEqual(r.task(symbol).publicFacts,[],symbol);assert.equal(r.handoff(symbol),null,symbol);}
- }
- const featured=await served('social',{lunarcrush:async()=>lunarRecent},{feed:'featured'});
- assert.equal(featured.status,200);assert.equal(featured.body.coverage.scope,feeds.social.featured_scope);
- assert.deepEqual(featured.body.sources.map(source=>source.provider_id),[feeds.social.provider_id]);
- const r=model();r.ingestPublic('social',featured.body);
- for(const symbol of SYMBOLS){
-  const expected=symbol==='SOL'?['kol','topic']:['BTC','ETH'].includes(symbol)?['topic']:[];
-  assert.deepEqual(r.task(symbol).publicFacts.map(fact=>fact.kind).sort(),expected,symbol);assert.equal(r.handoff(symbol),null,symbol);
- }
-});

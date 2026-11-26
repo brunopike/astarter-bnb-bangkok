@@ -1,3 +1,4 @@
+import {routeSearch} from './site-routes.mjs';
 import {createMarketHubClient,HUB_ASSET_IDS,HUB_RESOURCES,HUB_CATEGORIES,hubSeriesChange,hubSourceTime,HUB_REFRESH_SECONDS,parseHubRefreshSeconds} from './market-hub-data.mjs';
 import {atlasFeedFor} from './atlas-feed-master.mjs';
 import {loadWatchAssets,WATCH_ASSETS_KEY,watchAssetKey,isWatchAsset,watchAssetIcon,watchChain,fetchWatchAssets} from './market-watchlist.mjs';
@@ -300,7 +301,7 @@ export function createMarketHub({root,account,rerender,notify,onAskSource=()=>{}
  function sourceSnapshot(){
   const a=selectedAsset(),rows=a?[a]:param('asset')?[]:tableRows().slice(0,8);
   const stamp=at=>Number.isFinite(at)?new Date(at).toISOString():'—',times=(asOf,receivedAt)=>`${L('数据时间','Data time')}: ${stamp(asOf)}; ${L('获取时间','Retrieved at')}: ${stamp(receivedAt)}`;
-  return {id:'public-market:'+location.search,title:a?a.symbol+' · '+L('公开行情','Public markets'):L('市场总览','Market overview'),text:rows.map(a=>{const q=getQuote(a),receivedAt=a.receivedAt??(a.address?null:read('assets').snapshot?.receivedAt);return `${a.symbol}: ${q.price??'—'} ${q.quote}; ${a.address?'chain='+a.chain+'; contract='+a.address+'; venue='+(a.venue||'—'):'assetId='+a.id+'; '+(q.provider==='Binance Spot'?'market='+a.symbol+'/USDT; venue=binance; type=SPOT':'market=aggregate; quote=USD')}; 24h ${q.change??'—'}%; ${q.provider}; ${times(q.asOf,q.receivedAt??receivedAt)}\n${L('市值','Market cap')}: ${a.cap??'—'} USD; ${a.address?'DEX Screener':'CoinMarketCap'}; ${times(a.asOf,receivedAt)}`;}).join('\n\n'),href:location.search,kind:'excerpt'};
+  return {id:'public-market:'+location.search,title:a?a.symbol+' · '+L('公开行情','Public markets'):L('市场总览','Market overview'),text:rows.map(a=>{const q=getQuote(a),receivedAt=a.receivedAt??(a.address?null:read('assets').snapshot?.receivedAt);return `${a.symbol}: ${q.price??'—'} ${q.quote}; ${a.address?'chain='+a.chain+'; contract='+a.address+'; venue='+(a.venue||'—'):'assetId='+a.id+'; '+(q.provider==='Binance Spot'?'market='+a.symbol+'/USDT; venue=binance; type=SPOT':'market=aggregate; quote=USD')}; 24h ${q.change??'—'}%; ${q.provider}; ${times(q.asOf,q.receivedAt??receivedAt)}\n${L('市值','Market cap')}: ${a.cap??'—'} USD; ${a.address?'DEX Screener':'CoinMarketCap'}; ${times(a.asOf,receivedAt)}`;}).join('\n\n'),href:routeSearch(),kind:'excerpt'};
  }
  function bind(){
   if(!root.querySelector('.market-hub'))return;

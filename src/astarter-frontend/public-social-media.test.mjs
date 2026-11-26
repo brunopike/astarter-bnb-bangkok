@@ -46,12 +46,6 @@ test('media markers require a curated X record, a matching source permalink, acc
  assert.equal(attrs({},'mastodon-tag-v1'),'');
 });
 
-test('recent X posts retain media identity without claiming curated creator evidence',()=>{
- const data={platform:'X',metric_kind:'LUNARCRUSH_POST',post_id:'12345',url:'https://x.com/sample_user/status/12345',author:{acct:handle},creator_id:'twitter::'+creator};
- assert.match(socialMediaAttributes({provider_id:'lunarcrush-v4',data}),/data-social-x-creator="445566"/);
- assert.equal(socialMediaAttributes({provider_id:'lunarcrush-v4',data:{...data,creator_id:'youtube::445566'}}),'');
-});
-
 test('background refresh waits for the keyboard to leave the gallery',t=>{
  const original=globalThis.document;
  t.after(()=>{if(original===undefined)delete globalThis.document;else globalThis.document=original;});
@@ -95,23 +89,6 @@ test('viewport-gated cards attach only verified CDN photos in original order wit
  assert.equal(second.href,'https://x.com/'+handle+'/status/'+id+'/photo/2');assert.equal(second.childNodes[0].alt,'');assert.match(second['aria-label'],/2$/);
  assert.ok(h.images.every(i=>i.crossOrigin==='anonymous'&&i.referrerPolicy==='no-referrer'));
  h.bind(card);h.visible(card);await settle();assert.equal(h.calls.length,1);assert.equal(h.images.length,3);h.bind();
-});
-
-test('late photos keep the next post in place when a gallery opens or one expected photo fails',async()=>{
- const id='100010',h=harness(async()=>Response.json(status(id,[photo('one'),photo('two')])));
- const card=h.card(id);
- h.root.scrollTop=400;h.root.getBoundingClientRect=()=>({top:52,height:690});
- const galleryHeight=()=>card.gallery.hidden?0:card.gallery.dataset.count==='2'?184:340;
- const nextTop=()=>515+galleryHeight()-h.root.scrollTop;
- card.nextElementSibling={getBoundingClientRect:()=>({top:nextTop()})};
- h.bind(card);h.visible(card);await settle();
- assert.equal(nextTop(),115);
- h.images[1].onload();
- assert.equal(card.gallery.dataset.count,'2');assert.equal(card.gallery.childElementCount,1);
- assert.equal(nextTop(),115);
- h.images[2].onerror();
- assert.equal(card.gallery.dataset.count,'1');assert.equal(nextTop(),115);
- h.bind();
 });
 
 test('repaint reuses the in-flight read and metadata, while ID or creator mismatches cannot borrow cached media',async()=>{

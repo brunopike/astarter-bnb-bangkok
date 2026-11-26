@@ -44,6 +44,7 @@ body #hive-mascot.mascot-pocket .mascot-speech{overflow:hidden}
 html[data-reduced-motion=true] body #hive-mascot.mascot-pocket *,html[data-reduced-motion=true] body #hive-mascot.mascot-pocket *::after{animation:none!important;transition:none!important}
 
 html body[data-page]>#hive-mascot.mascot-pocket[data-placement=corner]{inset:auto 24px calc(24px + env(safe-area-inset-bottom)) auto!important;transform:none!important}
+body[data-page=assistant]>#hive-mascot.mascot-pocket{translate:0 var(--companion-panel-shift-y,0px)}
 html body[data-page]>#hive-mascot.mascot-pocket[data-avoidance=blocked],html body[data-page]>#hive-mascot.mascot-pocket[data-avoidance=blocked] *{visibility:hidden!important;pointer-events:none!important}
 body[data-page=signals]:has(.sig-track-dialog[open],.sig-controls details[open],.liquid-native-host [aria-expanded=true])>#hive-mascot{visibility:hidden;pointer-events:none}
 @media(min-width:901px) and (max-width:1359px){
@@ -65,8 +66,7 @@ body[data-page=signals]:has(.sig-track-dialog[open],.sig-controls details[open],
 }
 
 /* Collection crews share the research-room runner. The white companion receives input. */
-body>.news-courier[data-courier-page]{position:fixed;inset:0 auto auto 0;z-index:78;width:0;height:0;pointer-events:none;user-select:none}
-body>.news-courier[data-courier-page][data-speaking=true]{z-index:79}
+body>.news-courier[data-courier-page]{position:fixed;inset:0 auto auto 0;z-index:79;width:0;height:0;pointer-events:none;user-select:none}
 .news-courier *{pointer-events:none!important}
 .news-courier-figure{display:block;position:absolute;left:-18px;top:-23px;width:36px;height:46px;transform:scale(.78);transform-origin:center;--bob:0px;--lean:0deg;--blink:1;--step:0deg;--arm:-14deg}
 .news-courier[data-facing=left] .news-courier-figure{transform:scale(-.78,.78)}
@@ -121,12 +121,6 @@ body #hive-mascot.mascot-pocket[data-news-received] .mascot-hand-left{transform:
 body #hive-mascot.mascot-pocket[data-news-received] .mascot-hand-right{transform:translate(-3px,-2px)}
 @media(prefers-reduced-motion:no-preference){
  html:not([data-reduced-motion=true]) #hive-mascot[data-news-welcome]:not(.responding) .mascot-hand-left{animation:news-welcome-hand .3s ease-out both}
- html:not([data-reduced-motion=true]) #hive-mascot[data-news-handoff][data-news-received] .mascot-paper{animation:news-handoff-paper .52s cubic-bezier(.2,.7,.25,1) both}
-}
-@keyframes news-handoff-paper{
- from{transform:translate(-3px,4px) rotate(-18deg) scale(.84)}
- 58%{transform:translateY(-2px) rotate(-4deg)}
- to{transform:rotate(-6deg)}
 }
 @keyframes news-welcome-hand{
  0%,100%{translate:0 0;rotate:0deg}

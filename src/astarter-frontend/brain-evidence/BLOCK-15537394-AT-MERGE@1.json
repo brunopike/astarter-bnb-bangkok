@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "brain.evidence.block-at-event.v1",
+  "ref": "BLOCK-15537394-AT-MERGE@1",
+  "chain": "ethereum",
+  "source": "Blockscout",
+  "originalRef": "BLOCK-15537394@1",
+  "originalSha256": "2e4712fb87ab853262783a01b65c774f7e697c416fa8f54a6c7b8f46d91fcc4f",
+  "timestampBasis": "block_time",
+  "availableAt": null,
+  "availabilityBasis": "historical_reconstruction",
+  "block": {
+    "height": 15537394,
+    "hash": "0x56a9bb0302da44b8c0b3df540781424684c3af04d0b7a38d72842b762076a664",
+    "timestamp": "2022-09-15T06:42:59.000000Z",
+    "parent_hash": "0x55b11b918355b1ef9c5db810302ebad0bf2544255b530cdce90674d5887bb286",
+    "difficulty": "0",
+    "transactions_count": 80,
+    "gas_used": "29983006",
+    "gas_limit": "30000000"
+  }
+}

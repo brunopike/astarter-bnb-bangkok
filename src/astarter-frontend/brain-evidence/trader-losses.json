@@ -1,0 +1,1315 @@
+[
+  {
+    "id": "eth-3crv-exit-20230311",
+    "outcomeTags": {
+      "action": ["兑换", "Swap"],
+      "size": ["支付约 203.17 万 3CRV", "Sent ≈2.032M 3CRV"],
+      "proceeds": ["收到 0.051451 USDT", "Received 0.051451 USDT"]
+    },
+    "actor": "0x8ff006…9ABb66",
+    "date": "2023-03-11",
+    "knownAt": "2023-03-11T03:32:47Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "ticker:3crv",
+      "coin:tether",
+      "ticker:usdt",
+      "ca:ethereum:0x6c3f90f043a72fa612cbac8115ee7e52bde6e490",
+      "ca:ethereum:0xdac17f958d2ee523a2206206994597c13d831ec7"
+    ],
+    "outcome": "loss",
+    "basis": "gross",
+    "amount": [
+      "203.17 万枚 3CRV 仅换回 0.051451 USDT",
+      "2.032M 3CRV returned only 0.051451 USDT"
+    ],
+    "title": [
+      "稳定币脱锚期间，一笔几乎收不到 USDT 的兑换",
+      "A stablecoin exit returned five cents"
+    ],
+    "summary": [
+      "以太坊区块 16,802,196 的成功回执记下了这笔兑换。交出的资产是 Curve 3pool 份额，最终归还给同一个地址的是 USDT。",
+      "Ethereum block 16,802,196 records the successful swap of Curve 3pool LP shares into USDT by the same wallet."
+    ],
+    "logic": [
+      "用户选择一次性卖出全部这笔 LP 份额。路由把 3CRV 先换成 USDC，再换 USDT；第一段已损失绝大部分相对价值。",
+      "The wallet sold this lot in a single swap. Almost all the value difference arose on the 3CRV-to-USDC leg before the final USDT conversion."
+    ],
+    "lesson": [
+      "比较整单在不同规模下的可得数量，也核对 LP 份额能赎回什么。两端都与稳定币有关，实际可成交量仍取决于路径深度。",
+      "Check executable output for the whole order and the LP redemption alternative. A stablecoin-denominated route can still have very little depth."
+    ],
+    "limits": [
+      "链上证实两种代币的实际数量。美元亏损还取决于当时每份 LP 的净值和成本；钱包身份与退出动机未披露。",
+      "The receipt establishes token amounts. A USD loss would require the contemporaneous LP net asset value and cost basis. The owner and intent are undisclosed."
+    ],
+    "steps": [
+      {
+        "label": [
+          "交出 LP 份额",
+          "LP shares tendered"
+        ],
+        "detail": [
+          "地址向路由转入 2,031,707.860359 枚 3CRV。",
+          "The wallet sent 2,031,707.860359 3CRV to the router."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "核对中间成交",
+          "First-leg output"
+        ],
+        "detail": [
+          "整笔 3CRV 经池子只换得 0.054182 USDC。",
+          "The pool returned just 0.054182 USDC for the entire lot of shares."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "核对最终到账",
+          "Final receipt"
+        ],
+        "detail": [
+          "路由转回 0.051451 USDT，收款方与起始地址相同。",
+          "The router returned 0.051451 USDT to the originating wallet."
+        ],
+        "source": 1
+      }
+    ],
+    "sources": [
+      {
+        "label": "Etherscan · 3CRV swap",
+        "url": "https://etherscan.io/tx/0xde46a6bb1fc7834dde4d01428c88f84d65a607f4dc11b7f3dd710e86b7d226a8"
+      },
+      {
+        "label": "Blockscout · token transfers",
+        "url": "https://eth.blockscout.com/api/v2/transactions/0xde46a6bb1fc7834dde4d01428c88f84d65a607f4dc11b7f3dd710e86b7d226a8/token-transfers"
+      }
+    ]
+  },
+  {
+    "id": "eth-fickel-ethbtc-debt-20241228",
+    "outcomeTags": {
+      "action": ["归还 WBTC 借款", "WBTC debt repaid"],
+      "pnl": ["估算亏损约 25,000 ETH", "Estimated loss ≈25,000 ETH"],
+      "context": ["报告估值约 8,360 万美元", "Report valuation ≈$83.6M"]
+    },
+    "actor": "James Fickel · 0xd85351…defada",
+    "date": "2024-12-28",
+    "knownAt": "2024-12-28T03:21:48Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "coin:ethereum",
+      "coin:bitcoin",
+      "coin:wrapped-bitcoin",
+      "ticker:wbtc",
+      "coin:usd-coin",
+      "ca:ethereum:0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+    ],
+    "outcome": "loss",
+    "basis": "estimated",
+    "amount": [
+      "约亏 2.5 万 ETH，报告估值 8,360 万美元",
+      "Estimated loss of 25,000 ETH, valued at $83.6M"
+    ],
+    "title": [
+      "借 WBTC 买 ETH，以更多 ETH 买回债务",
+      "Repaying a WBTC loan after ETH weakened"
+    ],
+    "summary": [
+      "Lookonchain 对 Fickel 标签地址的 Aave 借款与兑换作了回溯。方向取决于 ETH 相对 BTC 的表现。",
+      "Lookonchain reconstructed the Aave borrowing and swaps for the wallet it attributes to Fickel. The exposure was ETH relative to BTC."
+    ],
+    "logic": [
+      "借入 WBTC 并兑换 ETH，相当于持有 ETH、欠下以 BTC 单位计价的债务。偿还时，每枚 ETH 换到的 WBTC 已经更少。",
+      "Borrowing WBTC to acquire ETH left a BTC-denominated liability. Each ETH bought less WBTC when the debt was unwound."
+    ],
+    "lesson": [
+      "借贷头寸的成本和负债应以同一计价单位重算。ETH 的美元表现不能单独解释这笔交易。",
+      "Reprice assets and liabilities in one unit. The ETH/USD chart alone cannot explain this trade."
+    ],
+    "limits": [
+      "2.5 万 ETH 与美元金额为研究方的整段估算；多次换币使用了 USDC，不能用两个 ETH 数量简单相减来替代完整核算。",
+      "Both loss figures are the analyst’s estimate for the sequence. USDC paid for part of the unwind, so subtracting the two ETH quantities alone would miss cash flows."
+    ],
+    "steps": [
+      {
+        "label": [
+          "建立价差头寸",
+          "Build the spread"
+        ],
+        "detail": [
+          "1 月 10 日至 7 月 1 日，累计借入 3,061 WBTC，换成 56,445 ETH；当时约 0.054 WBTC/ETH。",
+          "From Jan 10 to Jul 1 the wallet borrowed 3,061 WBTC and swapped it for 56,445 ETH at roughly 0.054 WBTC per ETH."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "补进还款资产",
+          "Buy debt currency"
+        ],
+        "detail": [
+          "8 月 7 日起的平仓期内，另用 1,200 万 USDC 买入 211 WBTC。",
+          "During the unwind from Aug 7, $12M in USDC bought 211 WBTC."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "降低 ETH 敞口",
+          "Reduce ETH exposure"
+        ],
+        "detail": [
+          "另将 76,405 ETH 换成 2,904 WBTC，约 0.038 WBTC/ETH。",
+          "Another 76,405 ETH bought 2,904 WBTC at about 0.038 WBTC per ETH."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "还清借款",
+          "Debt repayment"
+        ],
+        "detail": [
+          "12 月 28 日的原始跟踪更新确认 Aave 债务结清，研究方给出整段损失估值。",
+          "The Dec 28 update reports the Aave debt repaid and estimates the loss for the whole sequence."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · 2024-12-28",
+        "url": "https://www.lookonchain.com/feeds/detail_1191.html"
+      },
+      {
+        "label": "Etherscan · 0xd85351",
+        "url": "https://etherscan.io/address/0xd85351181b3f264ee0fdfa94518464d7c3defada"
+      },
+      {
+        "label": "DeBank · Ethereum history",
+        "url": "https://debank.com/profile/0xd85351181b3f264ee0fdfa94518464d7c3defada/history?chain=eth"
+      },
+      {
+        "label": "Etherscan · WBTC swap",
+        "url": "https://etherscan.io/tx/0x16a4aef2990613c423385d4050d0b58124c53367cf643e2d81e8350caabb0c00"
+      }
+    ]
+  },
+  {
+    "id": "eth-three-wallets-dai-20250113",
+    "outcomeTags": {
+      "action": ["三个地址卖出", "Three-wallet sale"],
+      "size": ["10,070 ETH", "10,070 ETH"],
+      "pnl": ["已售部分估算亏损约 100 万美元", "Estimated loss on sold units ≈$1M"]
+    },
+    "actor": "0xa7c882…109bb4 / 0xf2500B…191A15",
+    "date": "2025-01-13",
+    "knownAt": "2025-01-13T02:16:01Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "coin:ethereum",
+      "coin:dai",
+      "ca:ethereum:0x6b175474e89094c44da98b954eedeac495271d0f"
+    ],
+    "outcome": "loss",
+    "basis": "estimated",
+    "amount": [
+      "售出部分估计亏损 100 万美元",
+      "Estimated $1M loss on the portion sold"
+    ],
+    "title": [
+      "十个地址接收 ETH，三个地址卖成 DAI",
+      "A ten-wallet ETH cluster pares exposure into DAI"
+    ],
+    "summary": [
+      "研究方根据提现时的估值与部分出售的成交价推算损失。这是一个公开地址组的交易路径。",
+      "Lookonchain estimated a loss by comparing withdrawal valuations with later sales from a subset of the cluster."
+    ],
+    "logic": [
+      "先将大额 ETH 分散到多个地址，随后只在三个地址换成 DAI；余下部分仍有 ETH 价格风险。",
+      "ETH arrived across several addresses. Only three sold into DAI, leaving the rest of the exposure open."
+    ],
+    "lesson": [
+      "部分止损要把已卖的代币与剩余持仓分开。交易所提现只能作为估值时点，真实买入成本可能不同。",
+      "Separate the sold tranche from the remaining inventory. An exchange withdrawal gives a valuation timestamp, while the purchase price may differ."
+    ],
+    "limits": [
+      "三个卖出地址属于同一人是研究方推断。约 100 万美元基于提现价代理，不足以证明实际账户净亏损。",
+      "Common ownership is the researcher’s inference. The $1M estimate uses a withdrawal-price proxy and does not establish net account P&L."
+    ],
+    "steps": [
+      {
+        "label": [
+          "分散提现",
+          "Distributed withdrawals"
+        ],
+        "detail": [
+          "报告前三周，十个新地址从 Binance 收到合计 24,029 ETH，当时估值 8,130 万美元。",
+          "Ten fresh addresses received 24,029 ETH from Binance about three weeks earlier, valued then at $81.3M."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "三个地址出售",
+          "Sales by three wallets"
+        ],
+        "detail": [
+          "报告发布前九小时，三个地址共卖 10,070 ETH，换得约 3,300 万 DAI，均价约 3,280 美元。",
+          "Three wallets sold 10,070 ETH for about 33M DAI roughly nine hours before the report, averaging $3,280."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "保留敞口",
+          "Inventory retained"
+        ],
+        "detail": [
+          "跟踪时仍有 13,959 ETH，约值 4,548 万美元；剩余部分没有纳入这笔估算卖出损失。",
+          "The monitored set retained 13,959 ETH valued at $45.48M; the estimated sale loss concerns only the sold tranche."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · address cluster",
+        "url": "https://lookonchain.com/feeds/detail_1318.html"
+      },
+      {
+        "label": "Etherscan · 0xa7c882",
+        "url": "https://etherscan.io/address/0xa7c8823c2d8CAF8C86F1F572Ac6902964c109bb4"
+      },
+      {
+        "label": "Etherscan · 0xf2500B",
+        "url": "https://etherscan.io/address/0xf2500B6014dfe916B8e7706434e21B5FB2191A15"
+      },
+      {
+        "label": "Etherscan · DAI to 0x863a33",
+        "url": "https://etherscan.io/tx/0x726fec4a61594f7b50169bd09c335d841cfd3d61960922645c018b3c8c1c268d"
+      },
+      {
+        "label": "Etherscan · DAI to 0x9b7374",
+        "url": "https://etherscan.io/tx/0x9d76d5b1d469fe2e386a1d926342b06e0caafbbb5f3e3e881f032817053d900f"
+      },
+      {
+        "label": "Etherscan · DAI to 0xf2500b",
+        "url": "https://etherscan.io/tx/0x51078363e4bc841fb043797663cd490d585fde586eab92355ecb543a13cf443a"
+      }
+    ]
+  },
+  {
+    "id": "sol-libra-reimbursement-20250217",
+    "outcomeTags": {
+      "action": ["卖出 LIBRA", "LIBRA sale"],
+      "pnl": ["交易亏损约 534 万美元", "Trading loss ≈$5.34M"],
+      "proceeds": ["另收 500 万 USDC", "Separate inflow 5M USDC"]
+    },
+    "actor": "3apupK…Z1LF",
+    "date": "2025-02-17",
+    "knownAt": "2025-02-17T04:26:03Z",
+    "chains": [
+      "solana"
+    ],
+    "assets": [
+      "ticker:libra",
+      "coin:solana",
+      "coin:usd-coin",
+      "ca:solana:Bo9jh3wsmcC2AjakLWzNmKJ3SgtZmXEcSaW7L2FAvUsU"
+    ],
+    "outcome": "loss",
+    "basis": "mixed",
+    "amount": [
+      "交易损失约 534 万美元，另收 500 万 USDC",
+      "About $5.34M trading loss; separate 5M USDC inflow"
+    ],
+    "title": [
+      "用 SOL 买入 LIBRA，售后另有补偿转账",
+      "A LIBRA trade loss and two distinct USDC transfers"
+    ],
+    "summary": [
+      "Lookonchain 跟踪的地址在 LIBRA 上线后买入，再把仓位卖回 SOL。两笔 USDC 转入单独记账。",
+      "The wallet bought LIBRA after launch and subsequently sold back into SOL. Two USDC inflows are accounted for separately."
+    ],
+    "logic": [
+      "买入发生在币价已上涨后，退出时能换回的 SOL 大幅减少。两条现金流分别记录，才能看清交易本身和账户净影响。",
+      "Entry came after the initial rise. Fewer SOL came back on exit; separating the other cash flows isolates the trade result."
+    ],
+    "lesson": [
+      "复盘同一地址时，分别标记成交、非交易转账与补偿。大额入账会改变余额，却不能抬高原交易的卖出价。",
+      "Tag trades, external transfers and reimbursements separately. A later deposit changes the account balance but does not improve the sale price."
+    ],
+    "limits": [
+      "金额按研究方当时折算。地址与 Dave Portnoy 的关系是公开归因，本节点以地址作主体；账户其他头寸和税费未知。",
+      "Dollar values use the researcher’s contemporaneous marks. The personal attribution to Dave Portnoy was reported, so the wallet is the subject here. Other positions and taxes are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "入金",
+          "Funding"
+        ],
+        "detail": [
+          "上线前一天建立的地址收到 29,000 SOL，跟踪时估值约 576 万美元。",
+          "A wallet created the day before launch received 29,000 SOL valued at approximately $5.76M."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "买入",
+          "Entry"
+        ],
+        "detail": [
+          "花费 28,740 SOL 买入约 230 万 LIBRA，折算支出约 577 万美元。",
+          "It spent 28,740 SOL on roughly 2.3M LIBRA, valued near $5.77M at purchase."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "换回 SOL",
+          "Exit into SOL"
+        ],
+        "detail": [
+          "卖出这批 LIBRA 仅收回 2,163 SOL，约 43 万美元；进出差额为 26,577 SOL。",
+          "The sale returned 2,163 SOL, about $430K. The round-trip difference is 26,577 SOL."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "独立现金流",
+          "Separate cash flows"
+        ],
+        "detail": [
+          "卖出前收到 450 万 USDC，卖出后又收 50 万 USDC；另外收到的 65 万 LIBRA 已退回。",
+          "The wallet received 4.5M USDC before the sale and 500K after it. A separate transfer of 650K LIBRA was returned."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · wallet reconstruction",
+        "url": "https://lookonchain.com/feeds/4006"
+      },
+      {
+        "label": "LBank · launch listing and LIBRA mint",
+        "url": "https://www.lbank.com/support/articles/43534085320089"
+      }
+    ]
+  },
+  {
+    "id": "eth-punk-3100-roundtrip-20250410",
+    "outcomeTags": {
+      "action": ["转售藏品", "NFT resale"],
+      "size": ["Punk #3100", "Punk #3100"],
+      "pnl": ["毛价差 −500 ETH（−11.11%）", "Gross spread −500 ETH (−11.11%)"]
+    },
+    "actor": "0x705876…984017",
+    "date": "2025-04-10",
+    "knownAt": "2025-04-10T19:49:47Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "coin:ethereum",
+      "ticker:cryptopunks",
+      "ca:ethereum:0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb"
+    ],
+    "outcome": "loss",
+    "basis": "gross",
+    "amount": [
+      "成交价差 −500 ETH（−11.11%）",
+      "Sale-price difference −500 ETH (−11.11%)"
+    ],
+    "title": [
+      "CryptoPunk #3100 从 4,500 ETH 买到 4,000 ETH 卖",
+      "CryptoPunk #3100 resells 500 ETH below its entry"
+    ],
+    "summary": [
+      "同一个地址在官方交易账本里先做买家再做卖家。期间数次挂单提供了出价、要价与最终成交的对照。",
+      "The project ledger records the same wallet as buyer and later seller. The intervening listings show how asking prices differed from execution."
+    ],
+    "logic": [
+      "先提高出价取得藏品，持有期间分次调低要价，最终接受更低的成交金额。",
+      "The address raised its bid to acquire the item, relisted at progressively lower prices, and ultimately sold below entry."
+    ],
+    "lesson": [
+      "低频资产看真实成交和实际可执行报价。未被接受的挂单不会产生利润。",
+      "For infrequently traded assets, separate firm executions from unused listings when reconstructing returns."
+    ],
+    "limits": [
+      "500 ETH 为同一藏品买卖对价的差额，未扣 gas。美元损益还需分别折算两个成交时点，无法由 ETH 跌幅直接推出。",
+      "The 500 ETH difference excludes gas. USD P&L requires converting each trade at its own timestamp."
+    ],
+    "steps": [
+      {
+        "label": [
+          "提高出价",
+          "Raise the bid"
+        ],
+        "detail": [
+          "2024 年 2 月 29 日出价 4,250 ETH；3 月 4 日提高到 4,500 ETH 并被接受。",
+          "A 4,250 ETH bid on Feb 29, 2024 was followed by an accepted 4,500 ETH bid on Mar 4."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "收下藏品",
+          "Purchase settles"
+        ],
+        "detail": [
+          "区块 19,362,668 记录该 NFT 转入 0x705876…984017。",
+          "Block 19,362,668 records the purchase and transfer into 0x705876…984017."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "逐次调低挂价",
+          "Relist lower"
+        ],
+        "detail": [
+          "2024 年 11 月挂价 5,000 ETH，12 月为 4,750 ETH，2025 年 3 月又挂 4,600 ETH。",
+          "Listings moved from 5,000 ETH in Nov 2024 to 4,750 in Dec and 4,600 in Mar 2025."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "成交退出",
+          "Sale settles"
+        ],
+        "detail": [
+          "4 月 10 日以 4,000 ETH 转给新买家，较买入少收 500 ETH。",
+          "The Apr 10 sale to the new buyer returned 4,000 ETH, or 500 ETH below entry."
+        ],
+        "source": 2
+      }
+    ],
+    "sources": [
+      {
+        "label": "Larva Labs · #3100 ledger",
+        "url": "https://www.larvalabs.com/catalog/cryptopunks/3100"
+      },
+      {
+        "label": "Etherscan · purchase",
+        "url": "https://etherscan.io/tx/0x169f8c38e42cbfd26fc3f3bc08e591ddf644f2b8a166f39b3e4c95fed028fbbb"
+      },
+      {
+        "label": "Etherscan · sale",
+        "url": "https://etherscan.io/tx/0xa12a67e436f0a5695b6fb84266ccfcd708d7980949d3008f7e2381afa2830621"
+      }
+    ]
+  },
+  {
+    "id": "eth-cow-ausdt-aaave-20260312",
+    "outcomeTags": {
+      "action": ["限价兑换", "Limit swap"],
+      "size": ["支付约 5,043.27 万 aEthUSDT", "Sent ≈50.43M aEthUSDT"],
+      "proceeds": ["收到 327.2413 aEthAAVE", "Received 327.2413 aEthAAVE"]
+    },
+    "actor": "0x98b9d9…f97ac8",
+    "date": "2026-03-12",
+    "knownAt": "2026-03-12T18:23:23Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "coin:aave",
+      "coin:tether",
+      "ticker:ausdt",
+      "ticker:aaave",
+      "ca:ethereum:0x23878914efe38d27c4d67ab83ed1b93a74d4086a",
+      "ca:ethereum:0xa700b4eb416be35b2911fd5dee80678ff64ff6c9",
+      "ca:ethereum:0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "ca:ethereum:0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"
+    ],
+    "outcome": "loss",
+    "basis": "gross",
+    "amount": [
+      "5,043.27 万 aEthUSDT 换得 327.2413 aEthAAVE",
+      "50.43M aEthUSDT exchanged for 327.2413 aEthAAVE"
+    ],
+    "title": [
+      "极端价格影响下，订单仍高于签名的最低收款量",
+      "A large swap cleared just above its signed minimum"
+    ],
+    "summary": [
+      "CoW 官方订单记录给出了签名条件、卖出量、实际收款量与收款地址。区块回执可独立核对哪一笔转账到了用户。",
+      "The CoW order records the signed amounts, execution and recipient. The settlement receipt independently identifies the tokens that reached the user."
+    ],
+    "logic": [
+      "订单以固定卖出量交换 Aave 存款凭证。最低可得量设在约 325 枚，因此最终到账约 327 枚满足了链上执行条件。",
+      "The user signed a fixed-size sale of Aave deposit tokens. A fill near 327 satisfied the signed minimum of about 325 output tokens."
+    ],
+    "lesson": [
+      "大额兑换要同时比较交易对价、独立参考估值和最差可接受到账量。链上执行成功只说明约束满足。",
+      "Compare total consideration, an independent valuation and the minimum received for large swaps. Successful settlement establishes that the signed terms were met."
+    ],
+    "limits": [
+      "采用收款地址的实际到账数量。331.3053 AAVE 是归集路径中的中间数量。此处没有把未来退款或链外补偿计入，也没有断言用户意图。",
+      "The amount is measured at the order receiver. The 331.3053 AAVE within the settlement is an intermediate amount. Later refunds, external compensation and the user’s intent are outside this record."
+    ],
+    "steps": [
+      {
+        "label": [
+          "签名限价",
+          "Signed limit"
+        ],
+        "detail": [
+          "18:21:38 UTC 创建订单，卖出 50,432,688.416180 aEthUSDT，最低收取 324.949261 aEthAAVE。",
+          "The order was created at 18:21:38 UTC for 50,432,688.416180 aEthUSDT with a 324.949261 aEthAAVE minimum."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "区块结算",
+          "Block settlement"
+        ],
+        "detail": [
+          "18:23:23 UTC 在以太坊区块 24,643,151 结算。交易提交人是求解器，不能用其地址代替下单人。",
+          "The order settled at 18:23:23 UTC in block 24,643,151. A solver submitted the transaction; the order owner is recorded separately."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "核对到账",
+          "Receiver output"
+        ],
+        "detail": [
+          "结算合约向订单接收方 0x98b9d9…f97ac8 划转 327.2413355 aEthAAVE，和订单 API 一致。",
+          "The settlement paid 327.2413355 aEthAAVE to 0x98b9d9…f97ac8, matching the order API."
+        ],
+        "source": 2
+      }
+    ],
+    "sources": [
+      {
+        "label": "CoW Protocol · signed order",
+        "url": "https://api.cow.fi/mainnet/api/v1/orders/0xe5dd1404371169f895328998adac54de62fdcec7780c9821fac5721bfd880d8498b9d979c33dd7284c854909bcc09b51fbf97ac869b30640"
+      },
+      {
+        "label": "Etherscan · settlement",
+        "url": "https://etherscan.io/tx/0x9fa9feab3c1989a33424728c23e6de07a40a26a98ff7ff5139f3492ce430801f"
+      },
+      {
+        "label": "Blockscout · receipt transfers",
+        "url": "https://eth.blockscout.com/api/v2/transactions/0x9fa9feab3c1989a33424728c23e6de07a40a26a98ff7ff5139f3492ce430801f/token-transfers"
+      },
+      {
+        "label": "CoW Explorer",
+        "url": "https://explorer.cow.fi/orders/0xe5dd1404371169f895328998adac54de62fdcec7780c9821fac5721bfd880d8498b9d979c33dd7284c854909bcc09b51fbf97ac869b30640"
+      }
+    ]
+  },
+  {
+    "id": "sol-trump-markdown-20261118",
+    "outcomeTags": {
+      "action": ["持仓估值", "Position marked"],
+      "size": ["267,272 TRUMP", "267,272 TRUMP"],
+      "pnl": ["账面减值约 293 万美元", "Unrealized decline ≈$2.93M"],
+      "context": ["约 −92%", "≈−92%"]
+    },
+    "actor": "BjMq5B…nubz3q",
+    "date": "2026-11-18",
+    "knownAt": "2026-11-18T06:48:43Z",
+    "chains": [
+      "solana"
+    ],
+    "assets": [
+      "coin:official-trump",
+      "ticker:trump",
+      "ca:solana:6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"
+    ],
+    "outcome": "loss",
+    "basis": "unrealized",
+    "amount": [
+      "账面减值约 293 万美元（约 92%）",
+      "Marked down approximately $2.93M (about 92%)"
+    ],
+    "title": [
+      "持有 26.73 万枚 TRUMP 后的账面回撤",
+      "A 267,272 TRUMP lot marked down over its holding period"
+    ],
+    "summary": [
+      "Lookonchain 对这笔持仓的早期投入和报道时估值作了比较，没有给出同一数量的卖出成交。",
+      "The analyst compares the entry investment and the reported value of the holding. A matching sale of the lot was not documented."
+    ],
+    "logic": [
+      "以持有数量乘以观察时单价估值，再对比最初投入，得到这段持有期间的回撤。",
+      "Mark the held quantity at the observation-time price, then compare it to the published entry value."
+    ],
+    "lesson": [
+      "账面减值与卖出损失应各自记录。大额仓位按最后成交价估值，还要考虑全部退出时的深度。",
+      "Keep mark-to-market losses separate from sale losses. A liquidation of the full holding may clear at a different price."
+    ],
+    "limits": [
+      "买入约在报道前一年半。美元估值经过四舍五入，未观察到卖出的手数、手续费或其他地址的对冲。",
+      "Entry was reported about 1.5 years earlier. USD amounts are rounded, and the report provides no exit quantity, fees or other-wallet hedges."
+    ],
+    "steps": [
+      {
+        "label": [
+          "投入",
+          "Initial outlay"
+        ],
+        "detail": [
+          "公开跟踪记载投入约 319 万美元买入 267,272 枚 TRUMP。",
+          "The report attributes roughly $3.19M of entry value to 267,272 tokens."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "按观察日估值",
+          "Observation-date mark"
+        ],
+        "detail": [
+          "11 月 18 日，研究方对同一数量给出的估值只剩约 25.8 万美元。",
+          "On Nov 18 the same quantity was marked at about $258K."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "对账",
+          "Reconcile"
+        ],
+        "detail": [
+          "319 万减 25.8 万，约为 293.2 万美元，接近原始投入的 92%。",
+          "The $3.19M and $258K values imply a roughly $2.932M decline, close to 92% of the starting value."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · observed holding",
+        "url": "https://lookonchain.com/feeds/82849"
+      },
+      {
+        "label": "Solscan · wallet transfers",
+        "url": "https://solscan.io/account/BjMq5Bw2SyFbGDYgCMSsMGQqGbJ3Yt5NrBphgknubz3q#transfers"
+      },
+      {
+        "label": "Solscan · wallet TRUMP token account",
+        "url": "https://solscan.io/account/D1chxBsARAkTbWquNJgcbvZqBTZqh9LR6e3KzugaekS3"
+      }
+    ]
+  },
+  {
+    "id": "sol-trump-fullexit-20261119",
+    "outcomeTags": {
+      "action": ["全部卖出", "Full exit"],
+      "size": ["约 169 万 TRUMP", "≈1.69M TRUMP"],
+      "pnl": ["已售价差约 −125 万美元", "Sold-lot spread ≈−$1.25M"]
+    },
+    "actor": "DNLo13…CoEoY6",
+    "date": "2026-11-19",
+    "knownAt": "2026-11-19T09:16:47Z",
+    "chains": [
+      "solana"
+    ],
+    "assets": [
+      "coin:official-trump",
+      "ticker:trump",
+      "ca:solana:6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN"
+    ],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "卖出价差约 −125 万美元",
+      "About $1.25M lost on the sold lot"
+    ],
+    "title": [
+      "一笔 169 万枚 TRUMP 仓位的完整退出",
+      "A full exit from a 1.69M TRUMP position"
+    ],
+    "summary": [
+      "Lookonchain 记录了该地址一个月前的建仓均价及整笔卖出数量，可以把退出所得和原投入作同口径比较。",
+      "The original wallet report gives the entry price a month earlier and the size of the fully sold lot."
+    ],
+    "logic": [
+      "一次持仓跨越约一个月，退出覆盖了追踪数量的全部；已经可以按卖出回款计算这笔价差。",
+      "The wallet held the lot for about a month and then sold the full tracked quantity, giving an observable exit value."
+    ],
+    "lesson": [
+      "和其他地址的同币种账面跌幅分开看。决定这笔损失口径的是有无真实卖出和售出的数量。",
+      "For the same token, a sale and an open holding warrant different labels. Check the executed quantity before recording P&L."
+    ],
+    "limits": [
+      "169 万枚和美元金额来自研究方四舍五入值。未单列费用和其他平台头寸，损失限于这批现货。",
+      "Quantity and dollar amounts are rounded in the source. Fees and positions elsewhere are not itemized."
+    ],
+    "steps": [
+      {
+        "label": [
+          "建仓",
+          "Entry"
+        ],
+        "detail": [
+          "约一个月前以每枚 1.90 美元买入约 169 万枚，按披露数计算约 321.1 万美元。",
+          "The reported entry was 1.69M tokens at $1.90 each about one month earlier, implying about $3.211M."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "卖出",
+          "Exit"
+        ],
+        "detail": [
+          "研究方记录整批卖出，回款约 196 万美元，折合均价约 1.16 美元。",
+          "The entire lot reportedly sold for $1.96M, implying about $1.16 per token."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "已售批次差额",
+          "Sale reconciliation"
+        ],
+        "detail": [
+          "按披露的买卖金额相减约为 125 万美元，约占推算投入的 39%。",
+          "Rounded gross amounts imply a loss of $1.25M, about 39% of estimated entry spend."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Lookonchain · full sale",
+        "url": "https://www.lookonchain.com/feeds/83086"
+      },
+      {
+        "label": "Solscan · account",
+        "url": "https://solscan.io/account/DNLo13JDqjjW474tKkx5gBVWqMq8eWz3zkGHFzCoEoY6"
+      },
+      {
+        "label": "Solscan · TRUMP transfer, 100,000-token lot",
+        "url": "https://solscan.io/tx/3EG8B9comZJjYmaTFVBQBQ96q7EULjAjChJJqA6AtYKH77CkcRMNwxgUtCnYS3PrLUcMZwZ4pJr4e1cPUnPW5AbZ"
+      }
+    ]
+  },
+  {
+    "id": "hl-three-shorts-20250714",
+    "outcomeTags": {
+      "action": ["三笔空头清算", "Three short liquidations"],
+      "pnl": ["费前 −5,347,143.72 USDC", "Pre-fee −5,347,143.72 USDC"]
+    },
+    "actor": "0x916ea2…c54ed32",
+    "date": "2025-07-14",
+    "knownAt": "2025-07-14T03:42:31.500Z",
+    "chains": [
+      "hyperliquid"
+    ],
+    "assets": [
+      "coin:bitcoin",
+      "coin:ethereum",
+      "ticker:fartcoin",
+      "coin:fartcoin"
+    ],
+    "outcome": "loss",
+    "basis": "liquidation",
+    "amount": [
+      "三笔空头平仓合计亏 534.71 万 USDC（费前）",
+      "Three short closes lost 5.347M USDC before close fees"
+    ],
+    "title": [
+      "同一时刻被清算的 BTC、ETH 和 FARTCOIN 空单",
+      "Three shorts liquidated in one matching event"
+    ],
+    "summary": [
+      "Hyperliquid 在同一毫秒为该地址记下三个不同品种的清算平仓。直接加总 closedPnl 可以把损失与被买回的仓位规模区分开。",
+      "Hyperliquid records three liquidation closes for the same wallet in the same millisecond. Summing closedPnl separates the loss from repurchase notional."
+    ],
+    "logic": [
+      "三个品种同时持有空头。BTC 和 ETH 这两笔买回了全部期初仓位，FARTCOIN 只买回一部分。",
+      "All three positions were short. The BTC and ETH fills covered their full starting positions; the FARTCOIN fill covered only a portion."
+    ],
+    "lesson": [
+      "不同代币持有同一方向时，检查同一保证金账户可能出现的同时减仓敞口，并保留每个品种的费用。",
+      "For same-direction positions, examine simultaneous margin-driven exits across instruments and keep each asset’s fees."
+    ],
+    "limits": [
+      "只统计 03:42:31.500 UTC 同一哈希的三笔聚合成交；只报告平仓损益，未合并此前盈亏、开仓费或资金费。",
+      "Scope is the three aggregated fills at 03:42:31.500 UTC under this hash. Earlier gains or losses, entry fees and funding are outside this sum."
+    ],
+    "steps": [
+      {
+        "label": [
+          "BTC 空单",
+          "BTC short"
+        ],
+        "detail": [
+          "买回 652.07424 BTC，成交均价 121,538.00 USDC，平仓亏 2,418,674.67 USDC。",
+          "Covered 652.07424 BTC at a fill VWAP of 121,538.00 USDC. Closed P&L was −2,418,674.67 USDC."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "ETH 空单",
+          "ETH short"
+        ],
+        "detail": [
+          "买回 17,276.2857 ETH，均价 3,062.68 USDC，平仓亏 1,659,390.20 USDC。",
+          "Covered 17,276.2857 ETH at 3,062.68 USDC. Closed P&L was −1,659,390.20 USDC."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "FARTCOIN 空单",
+          "FARTCOIN short"
+        ],
+        "detail": [
+          "回补约 6,729,934 枚，均价 1.442892 USDC，平仓亏 1,269,078.85 USDC；成交前空仓为 768 万枚。",
+          "Covered about 6,729,934 units at 1.442892 USDC with −1,269,078.85 USDC closed P&L, against a starting short of 7.68M."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "加总费用",
+          "Aggregate fees"
+        ],
+        "detail": [
+          "三项 closedPnl 合计 −5,347,143.72 USDC；平仓费另外合计 39,724.75 USDC。",
+          "Combined closed P&L is −5,347,143.72 USDC. The three closing fees add another 39,724.75 USDC."
+        ],
+        "source": 1
+      }
+    ],
+    "sources": [
+      {
+        "label": "Hyperliquid · liquidation event",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0x733b56fd572f4bdd292d042774c0b0000056be5a539b33426bd8a20c2ab7617e"
+      },
+      {
+        "label": "Hyperliquid · account fills",
+        "url": "https://app.hyperliquid.xyz/explorer/address/0x916ea2a9f3ba1ddd006c52babd0216e2ac54ed32"
+      },
+      {
+        "label": "Hyperliquid · userFillsByTime",
+        "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint#retrieve-a-users-fills-by-time"
+      }
+    ]
+  },
+  {
+    "id": "hl-meme-partial-liquidation-20250722",
+    "outcomeTags": {
+      "action": ["多头部分清算", "Partial long liquidation"],
+      "size": ["DOGE / kPEPE", "DOGE / kPEPE"],
+      "pnl": ["费前约 −17.83 万 USDC", "Pre-fee ≈−178.33K USDC"]
+    },
+    "actor": "0x5078c2…6bedb6",
+    "date": "2025-07-22",
+    "knownAt": "2025-07-22T04:54:24.165Z",
+    "chains": [
+      "hyperliquid"
+    ],
+    "assets": [
+      "coin:dogecoin",
+      "coin:pepe",
+      "ticker:kpepe"
+    ],
+    "outcome": "loss",
+    "basis": "liquidation",
+    "amount": [
+      "两笔多头清算平仓亏 17.83 万 USDC（费前）",
+      "Two long liquidations lost 178.33K USDC before close fees"
+    ],
+    "title": [
+      "DOGE 与 kPEPE 多单同步部分清算",
+      "DOGE and kPEPE longs partially liquidated together"
+    ],
+    "summary": [
+      "同一地址在两个相关品种的多仓，各被强平约五分之一。347 笔撮合明细可归到同一次系统清算。",
+      "A single system liquidation reduced the wallet’s longs in two related markets by about one fifth each across 347 individual fills."
+    ],
+    "logic": [
+      "两笔 position 都是正数，卖出减少多仓。核对每个品种的起始持仓可识别部分清算。",
+      "Both positions had positive starting quantities. Sell fills reduced the longs, and comparison with the starting sizes establishes a partial liquidation."
+    ],
+    "lesson": [
+      "用实际成交量除以清算前仓位判断减仓比例。kPEPE 使用协议合约单位，两种代币的数量不能直接相加。",
+      "Use filled size divided by starting position for each leg. kPEPE is quoted in contract units; token counts across markets cannot be added."
+    ],
+    "limits": [
+      "17.83 万仅为该次两个品种的 closedPnl 合计，平仓费约 1,114.88 USDC 另计。剩余仓位之后的结果未知。",
+      "This $178.33K equivalent covers only these two closed-P&L fields. Closing fees add 1,114.88 USDC; subsequent P&L on the remainder is outside scope."
+    ],
+    "steps": [
+      {
+        "label": [
+          "辨认清算",
+          "Liquidation event"
+        ],
+        "detail": [
+          "04:54:24.165 UTC，两个品种均标记为该账户的 market liquidation。",
+          "Both instruments were flagged as market liquidations of this user at 04:54:24.165 UTC."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "DOGE 部分平仓",
+          "DOGE leg"
+        ],
+        "detail": [
+          "67 笔撮合共卖 4,446,893 DOGE，清算前约 2,223 万枚；平仓亏 51,732.26 USDC。",
+          "67 fills sold 4,446,893 DOGE out of about 22.23M, recording −51,732.26 USDC closed P&L."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "kPEPE 部分平仓",
+          "kPEPE leg"
+        ],
+        "detail": [
+          "280 笔撮合共卖 206,565,797 个 kPEPE 单位，均价 0.0137121；平仓亏 126,601.24 USDC。",
+          "280 fills sold 206,565,797 kPEPE units at 0.0137121 on average, with −126,601.24 USDC closed P&L."
+        ],
+        "source": 1
+      }
+    ],
+    "sources": [
+      {
+        "label": "Hyperliquid · liquidation event",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0x61d7b5ac0930fa7a34080427fce26600000acd476a4f42ed3223ef9fb2e64408"
+      },
+      {
+        "label": "Hyperliquid · account fills",
+        "url": "https://app.hyperliquid.xyz/explorer/address/0x5078c2fbea2b2ad61bc840bc023e35fce56bedb6"
+      },
+      {
+        "label": "Hyperliquid · userFillsByTime",
+        "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint#retrieve-a-users-fills-by-time"
+      }
+    ]
+  },
+  {
+    "id": "hl-eth-four-liquidations-20261015",
+    "outcomeTags": {
+      "action": ["四次多头清算", "Four long liquidations"],
+      "size": ["ETH", "ETH"],
+      "pnl": ["费前 −269,225.40 USDC", "Pre-fee −269,225.40 USDC"]
+    },
+    "actor": "0x020ca6…a35872",
+    "date": "2026-10-15",
+    "knownAt": "2026-10-15T02:24:32.720Z",
+    "chains": [
+      "hyperliquid"
+    ],
+    "assets": [
+      "coin:ethereum"
+    ],
+    "outcome": "loss",
+    "basis": "liquidation",
+    "amount": [
+      "四次清算平仓亏 269,225.40 USDC（费前）",
+      "Four liquidation closes lost 269,225.40 USDC before fees"
+    ],
+    "title": [
+      "ETH 多头在两分多钟内连续四次被清算",
+      "An ETH long liquidated four times in about two minutes"
+    ],
+    "summary": [
+      "该账户的成交明细同时包括普通减仓和强制减仓。这里只把清算对象是该账户的四组 ETH 成交相加。",
+      "The wallet has both regular and liquidation closes. Only the four ETH orders tagged as liquidations of this wallet are summed here."
+    ],
+    "logic": [
+      "减仓过程中，成交均价从约 2,380 USDC 下降到约 2,331 USDC。最后一次开始时持仓还有 800 ETH，清算数量正好为 800。",
+      "Fill prices declined from roughly 2,380 to 2,331 USDC through the sequence. The final liquidation began with and sold exactly 800 ETH."
+    ],
+    "lesson": [
+      "一段时间内多次强平、主动平仓可能交错。按清算标签、交易哈希与起始仓位逐次核对，可以避免把普通成交重复计入。",
+      "Regular closes can interleave with forced reductions. Reconcile liquidation flags, hashes and starting positions before summing."
+    ],
+    "limits": [
+      "四组共卖 1,650 ETH，包含 232 笔撮合，另付 1,086.92 USDC 平仓费。此处未统计同时段的普通减仓和全账户历史损益。",
+      "The four groups sold 1,650 ETH across 232 fills with 1,086.92 USDC closing fees. Other closes and lifetime account P&L are outside scope."
+    ],
+    "steps": [
+      {
+        "label": [
+          "第一次",
+          "First liquidation"
+        ],
+        "detail": [
+          "02:22:25 UTC，平掉 380 ETH，均价 2,379.95，亏 51,628.03 USDC。",
+          "At 02:22:25 UTC, 380 ETH closed at 2,379.95 on average for −51,628.03 USDC."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "第二次",
+          "Second liquidation"
+        ],
+        "detail": [
+          "02:23:14 UTC，平掉 270 ETH，均价 2,374.47，亏 38,163.10 USDC。",
+          "At 02:23:14 UTC, 270 ETH closed at 2,374.47 for −38,163.10 USDC."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "第三次",
+          "Third liquidation"
+        ],
+        "detail": [
+          "02:24:24 UTC，平掉 200 ETH，均价 2,355.90，亏 31,982.35 USDC。",
+          "At 02:24:24 UTC, 200 ETH closed at 2,355.90 for −31,982.35 USDC."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "最后一次",
+          "Final liquidation"
+        ],
+        "detail": [
+          "02:24:32 UTC，余下 800 ETH 以 2,331.50 的均价平掉，亏 147,451.93 USDC。",
+          "At 02:24:32 UTC, the remaining 800 ETH closed at 2,331.50 for −147,451.93 USDC."
+        ],
+        "source": 3
+      }
+    ],
+    "sources": [
+      {
+        "label": "Hyperliquid · 02:22:25",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0x1c91c4213d3ec11a1e0b0446956ec70000ccdc06d831dfecc05a6f73fc329b04"
+      },
+      {
+        "label": "Hyperliquid · 02:23:14",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0xc301aacfdab595fcc47b044695717f00003cc2b575b8b4ce66ca562299b96fe7"
+      },
+      {
+        "label": "Hyperliquid · 02:24:24",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0x9b92ff0775ab16a99d0c044695754e020d3c00ed10ae357b3f5baa5a34aef094"
+      },
+      {
+        "label": "Hyperliquid · 02:24:32",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0x50177ed4dc2ba1aa519104469575c801020096ba772ec07cf3e02a279b2f7b94"
+      },
+      {
+        "label": "Hyperliquid · account fills",
+        "url": "https://app.hyperliquid.xyz/explorer/address/0x020ca66c30bec2c4fe3861a94e4db4a498a35872"
+      }
+    ]
+  },
+  {
+    "id": "hl-btc-cover-1000-20261122",
+    "outcomeTags": {
+      "action": ["买入平空", "Buy to close short"],
+      "size": ["1,000 BTC", "1,000 BTC"],
+      "pnl": ["费前 −291,642.77 USDC", "Pre-fee −291,642.77 USDC"]
+    },
+    "actor": "0x1f250d…e4f925",
+    "date": "2026-11-22",
+    "knownAt": "2026-11-22T23:31:29.659Z",
+    "chains": [
+      "hyperliquid"
+    ],
+    "assets": [
+      "coin:bitcoin"
+    ],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "买回 1,000 BTC 空单，费前亏 291,642.77 USDC",
+      "Covering a 1,000 BTC short lost 291,642.77 USDC before fees"
+    ],
+    "title": [
+      "在约 68 秒内分批买回 BTC 空头",
+      "A BTC short covered in stages over about 68 seconds"
+    ],
+    "summary": [
+      "第一笔成交显示起始仓位 −1,000 BTC，最后一笔买回剩余 250 BTC。窗口内的 38 条按时间聚合的成交记录均为平空。",
+      "The first fill starts at −1,000 BTC and the last covers the remaining 250. All 38 time-aggregated fills in the window are short closes."
+    ],
+    "logic": [
+      "先买回一半，再分多笔买回余量。首尾成交均带来亏损，但未附清算标签。",
+      "The wallet bought back half first, then covered the remainder in multiple fills. Both endpoints realized losses and carry no liquidation tag."
+    ],
+    "lesson": [
+      "平空成交是买入，方向要结合起始仓位和成交方向字段判断；主动退出同样可能产生大额亏损。",
+      "A buy can close a short. Read starting position and fill direction together before interpreting it as a fresh long."
+    ],
+    "limits": [
+      "平仓费共 15,145.56 USDC，另计。该金额不含开仓手续费及资金费，不能代替账户整体净收益。",
+      "The 15,145.56 USDC closing fees are separate. Entry fees, funding and other account results are outside this window."
+    ],
+    "steps": [
+      {
+        "label": [
+          "先回补半仓",
+          "Cover half"
+        ],
+        "detail": [
+          "23:30:21 UTC 买回 500 BTC，均价 61,121.67 USDC，本笔亏 124,683.10 USDC。",
+          "At 23:30:21 UTC, 500 BTC were covered at 61,121.67 on average for −124,683.10 USDC."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "中间批次",
+          "Intermediate fills"
+        ],
+        "detail": [
+          "首尾两笔之间另有 36 条聚合成交，共买回 250 BTC；其中多笔在 61,200 USDC 成交。",
+          "The 36 intermediate records covered a total of 250 BTC, including multiple fills at 61,200 USDC."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "平至零仓位",
+          "Flat position"
+        ],
+        "detail": [
+          "23:31:29 UTC 以均价 61,225.33 USDC 再买回 250 BTC，末笔亏 88,256.61 USDC，BTC 空头归零。",
+          "At 23:31:29 UTC the final 250 BTC closed at 61,225.33 for −88,256.61 USDC, leaving the short flat."
+        ],
+        "source": 1
+      }
+    ],
+    "sources": [
+      {
+        "label": "Hyperliquid · first cover",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0x73515ed8695ecef474cb0449625b6802052d00be0451edc6171a0a2b2852a8df"
+      },
+      {
+        "label": "Hyperliquid · final cover",
+        "url": "https://app.hyperliquid.xyz/explorer/tx/0xc2ed6c1d3ce55ec8c4670449625f240206220002d7e87d9a66b6176ffbe938b3"
+      },
+      {
+        "label": "Hyperliquid · account fills",
+        "url": "https://app.hyperliquid.xyz/explorer/address/0x1f250df59a777d61cb8bd043c12970f3afe4f925"
+      },
+      {
+        "label": "Hyperliquid · userFillsByTime",
+        "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint#retrieve-a-users-fills-by-time"
+      }
+    ]
+  },
+  {
+    "id": "eth-punk-273-sale-20220508",
+    "outcomeTags": {
+      "action": ["转售藏品", "NFT resale"],
+      "size": ["Punk #273", "Punk #273"],
+      "pnl": ["毛价差 −210 ETH（−79.25%）", "Gross spread −210 ETH (−79.25%)"]
+    },
+    "actor": "0x86292f…b92b0a",
+    "date": "2022-05-08",
+    "knownAt": "2022-05-08T05:37:25Z",
+    "chains": [
+      "ethereum"
+    ],
+    "assets": [
+      "coin:ethereum",
+      "ticker:cryptopunks",
+      "ca:ethereum:0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb"
+    ],
+    "outcome": "loss",
+    "basis": "gross",
+    "amount": [
+      "成交价差 −210 ETH（−79.25%）",
+      "Sale-price difference −210 ETH (−79.25%)"
+    ],
+    "title": [
+      "CryptoPunk #273 从 265 ETH 降到 55 ETH 成交",
+      "CryptoPunk #273 resold for 55 ETH after a 265 ETH entry"
+    ],
+    "summary": [
+      "同一持有人在 2021 年买入、2022 年卖出。Larva Labs 账本可逐项区分标价、转移所有权和收到卖价。",
+      "The same holder bought in 2021 and sold in 2022. The Larva Labs ledger distinguishes the listing, transfer and paid sale."
+    ],
+    "logic": [
+      "持有人挂出 55 ETH 的公开卖价，买家在同一区块成交；订单与成交分属两个交易哈希。",
+      "The holder posted an open 55 ETH offer which a buyer filled in the same block under a separate transaction hash."
+    ],
+    "lesson": [
+      "核验 NFT 成交可同时检查出价条件、所有权转移及成交事件。日后再出售的损益属于新持有人。",
+      "Check the offer, ownership transfer and executed sale together. A later resale belongs to the next holder."
+    ],
+    "limits": [
+      "这两次公开成交给出 ETH 本位毛价差。无法从回执判断价格设置的原因；税费及链外收付未计入。",
+      "The two public sales establish a gross difference in ETH. The receipts do not explain why this price was chosen, and exclude taxes, fees and off-chain payments."
+    ],
+    "steps": [
+      {
+        "label": [
+          "建仓",
+          "Purchase"
+        ],
+        "detail": [
+          "2021 年 10 月 19 日 23:20:02 UTC，0x86292f…b92b0a 花费 265 ETH 接收 #273。",
+          "On Oct 19, 2021 at 23:20:02 UTC, the wallet purchased #273 for 265 ETH."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "公开挂单",
+          "Open offer"
+        ],
+        "detail": [
+          "2022 年 5 月 8 日，持有人以 55 ETH 公开挂售，订单没有指定买家地址。",
+          "On May 8, 2022 the holder listed the punk for 55 ETH with no specific buyer restriction."
+        ],
+        "source": 2
+      },
+      {
+        "label": [
+          "实际成交",
+          "Executed sale"
+        ],
+        "detail": [
+          "05:37:25 UTC 成交；新持有人为 0x1919db…63e685。按成交价计算，原持有人少收 210 ETH。",
+          "The sale at 05:37:25 UTC transferred it to 0x1919db…63e685. The seller received 210 ETH less than entry."
+        ],
+        "source": 3
+      }
+    ],
+    "sources": [
+      {
+        "label": "Larva Labs · #273 ledger",
+        "url": "https://archive.larvalabs.com/cryptopunks/details/273"
+      },
+      {
+        "label": "Etherscan · entry",
+        "url": "https://etherscan.io/tx/0x3a5aedf0ed739d5ee15b577dc204b02982bdb0679fb322dd018275013019bec9"
+      },
+      {
+        "label": "Etherscan · listing",
+        "url": "https://etherscan.io/tx/0x280647ef2128e15eb6691b817b66e9b64a2746f72871163befc107f2e5db774f"
+      },
+      {
+        "label": "Etherscan · sale",
+        "url": "https://etherscan.io/tx/0xb0f94bc48c9da9297dbc2e1ce703c7c3861297df181f009804b651701c5fbbfd"
+      }
+    ]
+  }
+]

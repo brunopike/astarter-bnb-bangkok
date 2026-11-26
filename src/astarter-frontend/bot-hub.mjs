@@ -1,4 +1,5 @@
 import {pair as L} from './locale.mjs';
+import {opticalFace} from './workbench-optical-header.mjs';
 import {readWorkbenchTargets,matchesWorkbenchTarget,renderWorkbenchTargets,bindWorkbenchTargets} from './workbench-targets.mjs';
 import {CATALOG,BOT_PRODUCT_CAPABILITIES} from './strategy-catalog.mjs';
 import {strategyPlan,defaultBotVariant,strategyScope,strategyVariants} from './strategy-execution-data.mjs';
@@ -296,7 +297,7 @@ export function renderBotOverview({w,trade,accountId='SIM-01',environment='DEMO'
  const products=BOT_PRODUCT_CAPABILITIES.filter(p=>futuresProduct(p)&&!readyOnly&&(group==='all'||library.some(c=>c.id===p.family&&c.group===group))&&(!query||[...p.name,...p.scope,p.id,p.family||''].join(' ').toLowerCase().includes(query.toLowerCase()))&&(!trackedOnly||(w.s.botTrackedTypes||[]).includes(p.family)));
  const tiles=products.map(p=>typeTile(p.id,p.name,p.scope,p.id.includes('grid')?'grid':p.id.includes('dca')?'layers':'strategy',false,p.id)).join('');
  return `<div class="bh-root bh-overview" data-bot-page="overview" data-localized-ui>
- <header class="bh-overview-hero page-head"><div class="bh-hero-copy"><h1>${L("策略总览","Strategy overview")}</h1></div></header>
+ <header class="bh-overview-hero page-head"><div class="bh-hero-copy lw-halftone-brand" data-no-translate><h1>${opticalFace('EXECUTION LAYER','span')}</h1></div></header>
  ${renderWorkbenchTargets(w)}
  ${overviewMetrics(trade,accountId)}<section class="bh-library-area">
 

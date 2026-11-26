@@ -526,7 +526,7 @@ export async function loadLocale(value){
  if(!loading.has(locale))loading.set(locale,loaders[locale]().then(module=>{catalog.register(locale,module.default);return locale;}).catch(error=>{loading.delete(locale);throw error;}));
  return loading.get(locale);
 }
-let language='en',forcedLocale=null;try{language=normalizeLocale(globalThis.localStorage?.getItem('hive.locale')||'en');}catch{}
+let language='en',forcedLocale=null;try{const wanted=new URLSearchParams(globalThis.location?.search||'').get('lang')?.toLowerCase().split('-')[0];language=normalizeLocale((LOCALES.some(item=>item.id===wanted)?wanted:null)||globalThis.localStorage?.getItem('hive.locale')||'en');}catch{}
 export const getLocale=()=>language;
 let initialLoadFailed=false;
 export const localeReady=loadLocale(language).catch(()=>{language='en';initialLoadFailed=true;});
@@ -576,8 +576,14 @@ function trackingCopy(text,locale){
  const asset=value.match(/^(取消收藏|取消关注|取消追踪|收藏|关注|追踪) ([A-Za-z0-9._:/-]+)$/u);
  return asset?prefix+trackingLabels[asset[1].startsWith('取消')?'untrack':'track'][trackingLanguages[locale]]+' '+asset[2]+suffix:null;
 }
+const productLabelAliases=new Map([
+ ['AI 交易','AI 星谱'],['星谱','AI 星谱'],['AI 交易记录','星谱交易记录'],
+ ['AI 交易盈亏','星谱盈亏'],['返回 AI 交易','返回 AI 星谱']
+]);
 function translateMessage(text,locale='en'){
- locale=normalizeLocale(locale);const tracking=trackingCopy(text,locale);if(tracking!==null)return tracking;
+ locale=normalizeLocale(locale);
+ if(locale!=='zh'&&productLabelAliases.has(text))text=productLabelAliases.get(text);
+ const tracking=trackingCopy(text,locale);if(tracking!==null)return tracking;
  if(locale==='zh'||typeof text!=='string'||!text)return text;
  const dataLead=text.match(/^(.*?)(数据中心线索：)(.+)$/u);if(dataLead)return translate(dataLead[1],locale)+translate(dataLead[2],locale)+' '+translate(dataLead[3],locale);
  const decorated=text.match(/^(.*?)(\s+[↕↑↓])$/u);if(decorated){const label=catalog.resolve(decorated[1],locale);if(label!==null)return label+decorated[2];}
@@ -603,12 +609,15 @@ function pairMessage(zh,en,locale=language){
 }
 
 const productNames={
- zh:['AI 星谱','智选信号'],en:['LensWave','Smart Signals'],ja:['AI スペクトラム','スマートシグナル'],ko:['AI 스펙트럼','스마트 시그널'],vi:['Phổ AI','Tín hiệu thông minh'],es:['Espectro IA','Señales inteligentes'],fr:['Spectre IA','Signaux intelligents'],ru:['Спектр ИИ','Умные сигналы']
+ zh:['AI 交易','智选信号'],en:['LensWave','Smart Signals'],ja:['AI スペクトラム','スマートシグナル'],ko:['AI 스펙트럼','스마트 시그널'],vi:['Phổ AI','Tín hiệu thông minh'],es:['Espectro IA','Señales inteligentes'],fr:['Spectre IA','Signaux intelligents'],ru:['Спектр ИИ','Умные сигналы']
 };
-const priorProductNames=[['AI 战队','AI team','AI Spectrum','AI チーム','AI 팀','Đội AI','Equipo de IA','Équipe IA','Команда ИИ'],['AI 信号','AI信号','AI signals','AI Signals','AIシグナル','AI シグナル','AI 신호','Tín hiệu AI','AI Tín hiệu','Señales IA','AI Señales','Signaux IA','AI Signaux','Сигналы ИИ','AI Сигналы']];
-const productNamePatterns=priorProductNames.map((names,index)=>new RegExp([...new Set([...names,...Object.values(productNames).map(row=>row[index])])].sort((a,b)=>b.length-a.length).join('|'),'g'));
+const priorProductNames=[['AI 星谱','AI星谱','AI 战队','AI team','AI Spectrum','AI チーム','AI 팀','Đội AI','Equipo de IA','Équipe IA','Команда ИИ'],['AI 信号','AI信号','AI signals','AI Signals','AIシグナル','AI シグナル','AI 신호','Tín hiệu AI','AI Tín hiệu','Señales IA','AI Señales','Signaux IA','AI Signaux','Сигналы ИИ','AI Сигналы']];
+const productNamePatterns=priorProductNames.map((names,index)=>new RegExp([...new Set([...names,...Object.values(productNames).map(row=>row[index]).filter(name=>name!=='AI 交易')])].sort((a,b)=>b.length-a.length).join('|'),'g'));
 function productCopy(text,locale){
  if(typeof text!=='string')return text;
+ const target=normalizeLocale(locale);
+ // Localize only known labels. Keep ordinary phrases such as “AI 交易策略” intact.
+ if(target==='zh')text=text.replace(/(?:AI\s*)?星谱交易记录/g,'AI 交易记录').replace(/星谱盈亏/g,'AI 交易盈亏').replace(/^星谱$/,'AI 交易');
  const value=productNamePatterns.reduce((value,pattern,index)=>value.replace(pattern,productNames[normalizeLocale(locale)][index]),text);
  return presentationCopy(normalizeLocale(locale)==='en'?value.replace(/Spectrum trade history/g,'LensWave trade history').replace(/Spectrum P&L/g,'LensWave P&L').replace(/Runtime spectrum/g,'LensWave runtime'):value);
 }
@@ -659,6 +668,7 @@ export function initLocale(){
  async function set(value){
   const id=++request,next=normalizeLocale(value);picker?.setAttribute('aria-busy','true');
   try{await loadLocale(next);if(id!==request)return;language=next;try{localStorage.setItem('hive.locale',language);}catch{}
+   if(document.querySelector('.product-nav')){const url=new URL(location.href);if(language==='en')url.searchParams.delete('lang');else url.searchParams.set('lang',language);history.replaceState(history.state,'',url);}
    observer.disconnect();syncPicker();localize(document.body);observe();document.dispatchEvent(new CustomEvent('hive:locale',{detail:{locale:language}}));if(status)status.textContent='';if(picker)picker.open=false;
   }catch{if(status)status.textContent=pair('语言加载失败，请重试。','Could not load this language. Please try again.');}
   finally{if(id===request)picker?.removeAttribute('aria-busy');}

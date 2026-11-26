@@ -1,0 +1,1374 @@
+{
+  "schemaVersion": "brain.research-history.v1",
+  "records": [
+    {
+      "id": "eth-merge-transition",
+      "scopeKeys": [
+        "coin:ethereum",
+        "eth-merge"
+      ],
+      "nodes": [
+        0,
+        1,
+        5,
+        7
+      ],
+      "eventAt": "2022-09-15T06:42:59Z",
+      "knownAt": "2022-09-15T06:42:59Z",
+      "availableAt": null,
+      "kind": "research",
+      "title": [
+        "合并区块的链上指纹",
+        "The Merge block on Ethereum"
+      ],
+      "body": [
+        "首个权益证明执行区块为 15,537,394，时间 06:42:59 UTC。该区块包含 80 笔交易，难度为 0。",
+        "Execution block 15,537,394 arrived at 06:42:59 UTC with 80 transactions and zero difficulty. It anchors the transition to proof of stake."
+      ],
+      "source": "Blockscout · Ethereum",
+      "sourceUrl": "/brain-evidence/BLOCK-15537394-AT-MERGE@1.json",
+      "availabilityBasis": "historical_reconstruction",
+      "evidenceType": "chain_record",
+      "sourceRoles": [
+        "block"
+      ],
+      "archiveNodes": [
+        0,
+        1,
+        5
+      ]
+    },
+    {
+      "id": "eth-merge-spot",
+      "scopeKeys": [
+        "coin:ethereum",
+        "eth-merge"
+      ],
+      "nodes": [
+        2,
+        6,
+        9
+      ],
+      "eventAt": "2022-09-15T06:44:00Z",
+      "knownAt": "2022-09-15T06:44:00Z",
+      "availableAt": null,
+      "kind": "research",
+      "title": [
+        "合并时的两根 ETH 分钟线",
+        "Two ETH candles across the Merge"
+      ],
+      "body": [
+        "Coinbase ETH-USD 在 06:42 和 06:43 两根分钟线分别收于 1,589.44 和 1,616.76 美元。后一根最高 1,625 美元，收盘后才进入 06:44 快照。",
+        "The 06:42 and 06:43 Coinbase ETH-USD candles closed at $1,589.44 and $1,616.76. The second reached $1,625 and entered the 06:44 snapshot after it closed."
+      ],
+      "source": "Coinbase Exchange · ETH-USD",
+      "sourceUrl": "/brain-evidence/COINBASE-ETH-USD-0644@1.json",
+      "availabilityBasis": "historical_reconstruction",
+      "evidenceType": "closed_candles",
+      "upstreamUrl": "https://api.exchange.coinbase.com/products/ETH-USD/candles?granularity=60&start=2022-09-15T06:42:00Z&end=2022-09-15T06:43:00Z",
+      "references": [
+        {
+          "label": [
+            "上游原件",
+            "Upstream"
+          ],
+          "url": "https://api.exchange.coinbase.com/products/ETH-USD/candles?granularity=60&start=2022-09-15T06:42:00Z&end=2022-09-15T06:43:00Z"
+        }
+      ],
+      "archiveNodes": [
+        0,
+        2,
+        6,
+        7
+      ]
+    },
+    {
+      "id": "eth-merge-granularity",
+      "scopeKeys": [
+        "coin:ethereum",
+        "eth-merge"
+      ],
+      "nodes": [
+        3,
+        4,
+        7,
+        10
+      ],
+      "eventAt": "2022-09-15T06:44:00Z",
+      "knownAt": "2022-09-15T06:44:00Z",
+      "availableAt": null,
+      "kind": "research",
+      "title": [
+        "一分钟内，先后顺序仍待核实",
+        "What the one-minute candle leaves open"
+      ],
+      "body": [
+        "06:42 的 K 线跨过 06:42:59 的共识切换。单所 OHLC 缺少逐笔方向，无法把这分钟的价格变化归因于合并。",
+        "The 06:42 candle straddles the transition at 06:42:59. Single-venue OHLC lacks trade-side detail, so price changes within the minute cannot be attributed to the Merge."
+      ],
+      "source": "Coinbase Exchange · ETH-USD",
+      "sourceUrl": "/brain-evidence/COINBASE-ETH-USD-0644@1.json",
+      "availabilityBasis": "historical_reconstruction",
+      "evidenceType": "derived_limitation",
+      "relatedIds": [
+        "eth-merge-transition",
+        "eth-merge-spot"
+      ],
+      "archiveNodes": [
+        2,
+        6,
+        7
+      ]
+    },
+    {
+      "id": "eth-merge-strategy",
+      "scopeKeys": [
+        "coin:ethereum",
+        "eth-merge"
+      ],
+      "nodes": [
+        3,
+        4,
+        8,
+        10
+      ],
+      "eventAt": "2022-09-15T06:44:00Z",
+      "knownAt": "2022-09-15T06:44:00Z",
+      "availableAt": null,
+      "kind": "research",
+      "title": [
+        "观察策略的升级条件",
+        "What would have changed the watch decision"
+      ],
+      "body": [
+        "这次历史回放给出五分钟观察窗口。若另一交易场所也出现同向成交，且可核验盘口深度，才发布新版判断。",
+        "The historical replay opens a five-minute watch window. An updated view requires same-direction trades at a second venue and verifiable order-book depth."
+      ],
+      "source": "Astarter · ETH-MERGE-20220915",
+      "sourceUrl": "/brain-evidence/ETH-MERGE-STRATEGY@1.json",
+      "availabilityBasis": "historical_reconstruction",
+      "evidenceType": "reconstructed_strategy",
+      "strategyRef": "ETH-MERGE-STRATEGY@1",
+      "expiresAt": "2022-09-15T06:49:00Z",
+      "archiveNodes": [
+        3,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "id": "eth-merge-price-path",
+      "scopeKeys": [
+        "coin:ethereum",
+        "eth-merge"
+      ],
+      "nodes": [
+        2,
+        4,
+        6,
+        9,
+        13
+      ],
+      "eventAt": "2022-09-15T06:49:00Z",
+      "knownAt": "2022-09-15T06:49:00Z",
+      "availableAt": null,
+      "kind": "review",
+      "title": [
+        "窗口内先回落，再收高",
+        "ETH dipped before ending the window higher"
+      ],
+      "body": [
+        "以 1,616.76 美元为参照，下一分钟收于 1,606.47，窗口末收于 1,628.61 美元。端点相差 11.85 美元（+0.73%），期间曾跌破起点。",
+        "From $1,616.76 the next minute closed at $1,606.47. The last close was $1,628.61, up $11.85 (+0.73%) across the window despite the initial dip."
+      ],
+      "source": "Coinbase Exchange · ETH-USD",
+      "sourceUrl": "/brain-evidence/COINBASE-ETH-USD-0649@1.json",
+      "availabilityBasis": "historical_reconstruction",
+      "evidenceType": "closed_candles",
+      "relatedIds": [
+        "eth-merge-spot"
+      ],
+      "upstreamUrl": "https://api.exchange.coinbase.com/products/ETH-USD/candles?granularity=60&start=2022-09-15T06:44:00Z&end=2022-09-15T06:48:00Z",
+      "references": [
+        {
+          "label": [
+            "上游原件",
+            "Upstream"
+          ],
+          "url": "https://api.exchange.coinbase.com/products/ETH-USD/candles?granularity=60&start=2022-09-15T06:44:00Z&end=2022-09-15T06:48:00Z"
+        }
+      ],
+      "archiveNodes": [
+        4,
+        13
+      ]
+    },
+    {
+      "id": "eth-merge-expired",
+      "scopeKeys": [
+        "coin:ethereum",
+        "eth-merge"
+      ],
+      "nodes": [
+        3,
+        4,
+        8,
+        13
+      ],
+      "eventAt": "2022-09-15T06:49:00Z",
+      "knownAt": "2022-09-15T06:49:00Z",
+      "availableAt": null,
+      "kind": "review",
+      "title": [
+        "观察到期，深度证据仍缺失",
+        "The watch window expired with a depth gap"
+      ],
+      "body": [
+        "到 06:49 UTC，案例仍只有 Coinbase 成交。第二场所与盘口快照均未补入，观察策略到期；后续收涨留作行情结果。",
+        "At 06:49 UTC the case still had only Coinbase trades. The second venue and depth snapshot were missing. The watch expired, and the higher close was recorded as a market outcome."
+      ],
+      "source": "Astarter · ETH-MERGE-20220915",
+      "sourceUrl": "/brain-merge-case.json",
+      "availabilityBasis": "historical_reconstruction",
+      "evidenceType": "case_review",
+      "relatedIds": [
+        "eth-merge-strategy",
+        "eth-merge-price-path"
+      ],
+      "archiveNodes": [
+        4,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "id": "eth-merge-self-directed",
+      "scopeKeys": [
+        "coin:ethereum",
+        "eth-merge"
+      ],
+      "nodes": [
+        11
+      ],
+      "eventAt": "2022-09-15T06:49:00Z",
+      "knownAt": "2022-09-15T06:49:00Z",
+      "availableAt": null,
+      "kind": "review",
+      "title": [
+        "智选信号的成交状态未知",
+        "No self-directed fill could be verified"
+      ],
+      "body": [
+        "回放中保留了信号与后续行情，用户是否交易、成交价及费用均无回执可查。个人收益保持未知。",
+        "The replay preserves the signal and the subsequent market move. There is no receipt for a user trade, fill price or fee. The user’s return is unknown."
+      ],
+      "source": "Astarter · ETH-MERGE-20220915",
+      "sourceUrl": "/brain-merge-case.json",
+      "availabilityBasis": "historical_reconstruction",
+      "evidenceType": "receipt_audit",
+      "receiptStatus": "unknown",
+      "route": "self_directed",
+      "archiveNodes": [
+        11
+      ]
+    },
+    {
+      "id": "eth-merge-delegated",
+      "scopeKeys": [
+        "coin:ethereum",
+        "eth-merge"
+      ],
+      "nodes": [
+        12
+      ],
+      "eventAt": "2022-09-15T06:49:00Z",
+      "knownAt": "2022-09-15T06:49:00Z",
+      "availableAt": null,
+      "kind": "review",
+      "title": [
+        "星谱回放记录为未下单",
+        "No order was issued in this replay"
+      ],
+      "body": [
+        "该版策略仅观察。案例没有授权或发单指令，记录为 no_order。手续费为空，状态只适用于这次回放。",
+        "This watch-only case contains no authorization or order instruction. Its recorded status is no_order, with no fee supplied. The status applies only to this replay."
+      ],
+      "source": "Astarter · ETH-MERGE-20220915",
+      "sourceUrl": "/brain-merge-case.json",
+      "availabilityBasis": "historical_reconstruction",
+      "evidenceType": "receipt_audit",
+      "receiptStatus": "no_order_in_replay",
+      "route": "delegated",
+      "archiveNodes": [
+        12
+      ]
+    },
+    {
+      "id": "disclosure-cryptocom-20221111-btc",
+      "scopeKeys": [
+        "coin:bitcoin"
+      ],
+      "nodes": [
+        1,
+        5,
+        10
+      ],
+      "eventAt": "2022-11-11",
+      "knownAt": "2022-11-11T23:59:59Z",
+      "availableAt": null,
+      "kind": "research",
+      "title": [
+        "Crypto.com 披露的 6 个 BTC 冷钱包地址",
+        "6 BTC cold-wallet addresses disclosed by Crypto.com"
+      ],
+      "body": [
+        "Crypto.com 在 2022-11-11 公布了 6 个比特币冷钱包地址。此披露可用于识别当时的地址样本；后续控制权、全平台储备和客户归属需要另行核实。",
+        "On 11 Nov 2022, Crypto.com published 6 Bitcoin cold-wallet addresses. The disclosure identifies a historical sample. Later control, exchange-wide reserves and customer ownership require separate evidence."
+      ],
+      "source": "Crypto.com · Transparency First",
+      "sourceUrl": "https://crypto.com/en/company-news/transparency-first",
+      "evidenceType": "issuer_disclosure",
+      "availabilityBasis": "public_day_end_no_delivery_log",
+      "precision": "day"
+    },
+    {
+      "id": "disclosure-cryptocom-20221111-eth",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        1,
+        5,
+        10
+      ],
+      "eventAt": "2022-11-11",
+      "knownAt": "2022-11-11T23:59:59Z",
+      "availableAt": null,
+      "kind": "research",
+      "title": [
+        "Crypto.com 披露的 4 个 ETH 冷钱包地址",
+        "4 ETH cold-wallet addresses disclosed by Crypto.com"
+      ],
+      "body": [
+        "Crypto.com 在 2022-11-11 公布了 4 个以太坊主网冷钱包地址。此披露可用于识别当时的地址样本；后续控制权、全平台储备和客户归属需要另行核实。",
+        "On 11 Nov 2022, Crypto.com published 4 Ethereum mainnet cold-wallet addresses. The disclosure identifies a historical sample. Later control, exchange-wide reserves and customer ownership require separate evidence."
+      ],
+      "source": "Crypto.com · Transparency First",
+      "sourceUrl": "https://crypto.com/en/company-news/transparency-first",
+      "evidenceType": "issuer_disclosure",
+      "availabilityBasis": "public_day_end_no_delivery_log",
+      "precision": "day"
+    },
+    {
+      "id": "btc-sentiment-20261119",
+      "scopeKeys": [
+        "coin:bitcoin"
+      ],
+      "nodes": [
+        2,
+        4,
+        10
+      ],
+      "eventAt": "2026-11-19T00:00:00Z",
+      "knownAt": "2026-11-19T11:26:00Z",
+      "availableAt": "2026-11-19T11:26:00Z",
+      "kind": "research",
+      "title": [
+        "BTC 市场情绪连续三天走低",
+        "BTC sentiment fell for three days"
+      ],
+      "body": [
+        "11 月 17 至 19 日，Alternative.me 的 BTC 情绪指数从 12 降至 11，再降至 10（满分 100）。19 日 Astarter 页面核对值为 10。",
+        "Alternative.me’s BTC index fell from 12 to 11 to 10 out of 100 on 17–19 November. The Astarter reading verified on the 19th was 10."
+      ],
+      "source": "Alternative.me · Crypto Fear & Greed Index",
+      "sourceUrl": "https://api.alternative.me/fng/?limit=0",
+      "evidenceType": "published_index",
+      "upstreamUrl": "https://alternative.me/crypto/fear-and-greed-index/",
+      "evidence": {
+        "utcDays": [
+          "2026-11-17",
+          "2026-11-18",
+          "2026-11-19"
+        ],
+        "values": [
+          12,
+          11,
+          10
+        ],
+        "unit": "index / 100"
+      }
+    },
+    {
+      "id": "eth-etf-flow-20261117",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        2,
+        4,
+        10
+      ],
+      "eventAt": "2026-11-17",
+      "knownAt": "2026-11-18T15:05:00Z",
+      "availableAt": "2026-11-18T15:05:00Z",
+      "kind": "research",
+      "title": [
+        "美国现货 ETH ETF 净赎回 2,910 万美元",
+        "US spot ETH ETFs recorded $29.1m in net redemptions"
+      ],
+      "body": [
+        "11 月 17 日，CoinClass 统计的 11 只基金全部披露，合计净赎回 2,910 万美元。Astarter 于次日核对了这期数据。",
+        "For 17 November, CoinClass reported all 11 funds with combined net redemptions of $29.1m. Astarter checked the reading the following day."
+      ],
+      "source": "CoinClass · Ethereum ETF matrix",
+      "sourceUrl": "https://coinclass.com/eth-etf#matrix",
+      "evidenceType": "dated_fund_flow",
+      "evidence": {
+        "date": "2026-11-17",
+        "netFlowUsdMillions": -29.1,
+        "fundsReported": 11,
+        "fundsCovered": 11
+      }
+    },
+    {
+      "id": "pool-snapshot-aa70268e-4b52-42bf-a116-608b370f9501",
+      "scopeKeys": [
+        "ca:ethereum:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      ],
+      "nodes": [
+        5,
+        8,
+        10
+      ],
+      "eventAt": "2026-11-10T19:07:51.737Z",
+      "knownAt": "2026-11-10T19:07:51.737Z",
+      "availableAt": "2026-11-10T19:07:51.737Z",
+      "kind": "research",
+      "title": [
+        "Aave V3 的以太坊 USDC 池",
+        "Aave V3’s Ethereum USDC pool"
+      ],
+      "body": [
+        "11 月 10 日采样时，池内锁仓价值为 180,565,230 美元。记录的是该借贷池的锁仓价值，可执行的提现与交易深度需另查。",
+        "The 10 November snapshot reported $180,565,230 locked. This is the value locked in the lending pool. Withdrawable liquidity and trade depth require separate observations."
+      ],
+      "source": "DefiLlama · aave-v3",
+      "sourceUrl": "/brain-evidence/research-history.json",
+      "evidenceType": "archived_pool_observation",
+      "availabilityBasis": "collection_time",
+      "sourceObservedAt": null,
+      "evidence": {
+        "pool": "aa70268e-4b52-42bf-a116-608b370f9501",
+        "project": "aave-v3",
+        "chain": "Ethereum",
+        "symbol": "USDC",
+        "poolMeta": null,
+        "underlyingTokens": [
+          "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        ],
+        "tvlUsd": 180565230
+      },
+      "upstreamUrl": "https://yields.llama.fi/pools",
+      "references": [
+        {
+          "label": [
+            "上游池历史",
+            "Upstream pool history"
+          ],
+          "url": "https://yields.llama.fi/chart/aa70268e-4b52-42bf-a116-608b370f9501"
+        }
+      ]
+    },
+    {
+      "id": "pool-snapshot-e0672197-9f3e-4414-bca5-e6b4c90aa469",
+      "scopeKeys": [
+        "ca:base:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+      ],
+      "nodes": [
+        5,
+        8,
+        10
+      ],
+      "eventAt": "2026-11-10T19:07:51.737Z",
+      "knownAt": "2026-11-10T19:07:51.737Z",
+      "availableAt": "2026-11-10T19:07:51.737Z",
+      "kind": "research",
+      "title": [
+        "Base 上的 Morpho USDC 金库",
+        "Morpho’s USDC vault on Base"
+      ],
+      "body": [
+        "11 月 10 日采样时，池内锁仓价值为 400,261,842 美元。GTUSDCP 是金库份额标识，底层为 Base USDC。",
+        "The 10 November snapshot reported $400,261,842 locked. GTUSDCP denotes vault shares. The underlying asset is Base USDC."
+      ],
+      "source": "DefiLlama · morpho-blue",
+      "sourceUrl": "/brain-evidence/research-history.json",
+      "evidenceType": "archived_pool_observation",
+      "availabilityBasis": "collection_time",
+      "sourceObservedAt": null,
+      "evidence": {
+        "pool": "e0672197-9f3e-4414-bca5-e6b4c90aa469",
+        "project": "morpho-blue",
+        "chain": "Base",
+        "symbol": "GTUSDCP",
+        "poolMeta": null,
+        "underlyingTokens": [
+          "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        ],
+        "tvlUsd": 400261842
+      },
+      "upstreamUrl": "https://yields.llama.fi/pools",
+      "references": [
+        {
+          "label": [
+            "上游池历史",
+            "Upstream pool history"
+          ],
+          "url": "https://yields.llama.fi/chart/e0672197-9f3e-4414-bca5-e6b4c90aa469"
+        }
+      ]
+    },
+    {
+      "id": "pool-snapshot-d711af54-e736-470f-8a22-431a23de76df",
+      "scopeKeys": [
+        "ca:monad:0x754704bc059f8c67012fed69bc8a327a5aafb603"
+      ],
+      "nodes": [
+        5,
+        8,
+        10
+      ],
+      "eventAt": "2026-11-10T19:07:51.737Z",
+      "knownAt": "2026-11-10T19:07:51.737Z",
+      "availableAt": "2026-11-10T19:07:51.737Z",
+      "kind": "research",
+      "title": [
+        "Monad 上的 Euler USDC 池",
+        "Euler’s USDC pool on Monad"
+      ],
+      "body": [
+        "11 月 10 日采样时，池内锁仓价值为 3,372,176 美元。Clearstar Earn USDC 的底层币由 Monad 合约地址绑定。",
+        "The 10 November snapshot reported $3,372,176 locked. The underlying token for Clearstar Earn USDC is identified by its Monad contract."
+      ],
+      "source": "DefiLlama · euler-v2",
+      "sourceUrl": "/brain-evidence/research-history.json",
+      "evidenceType": "archived_pool_observation",
+      "availabilityBasis": "collection_time",
+      "sourceObservedAt": null,
+      "evidence": {
+        "pool": "d711af54-e736-470f-8a22-431a23de76df",
+        "project": "euler-v2",
+        "chain": "Monad",
+        "symbol": "USDC",
+        "poolMeta": "Clearstar Earn USDC",
+        "underlyingTokens": [
+          "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"
+        ],
+        "tvlUsd": 3372176
+      },
+      "upstreamUrl": "https://yields.llama.fi/pools",
+      "references": [
+        {
+          "label": [
+            "上游池历史",
+            "Upstream pool history"
+          ],
+          "url": "https://yields.llama.fi/chart/d711af54-e736-470f-8a22-431a23de76df"
+        }
+      ]
+    },
+    {
+      "id": "pool-snapshot-e91e23af-9099-45d9-8ba5-ea5b4638e453",
+      "scopeKeys": [
+        "ca:ethereum:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "ca:ethereum:0x8292bb45bf1ee4d140127049757c2e0ff06317ed"
+      ],
+      "nodes": [
+        5,
+        8,
+        10
+      ],
+      "eventAt": "2026-11-10T19:07:51.737Z",
+      "knownAt": "2026-11-10T19:07:51.737Z",
+      "availableAt": "2026-11-10T19:07:51.737Z",
+      "kind": "research",
+      "title": [
+        "Curve 的 USDC–RLUSD 双币池",
+        "Curve’s USDC–RLUSD pool"
+      ],
+      "body": [
+        "11 月 10 日采样时，池内锁仓价值为 39,804,952 美元。样本涵盖两种底层资产；单币余额与可成交深度需另查。",
+        "The 10 November snapshot reported $39,804,952 locked. The snapshot covers both underlying tokens. Individual balances and executable depth require separate data."
+      ],
+      "source": "DefiLlama · curve-dex",
+      "sourceUrl": "/brain-evidence/research-history.json",
+      "evidenceType": "archived_pool_observation",
+      "availabilityBasis": "collection_time",
+      "sourceObservedAt": null,
+      "evidence": {
+        "pool": "e91e23af-9099-45d9-8ba5-ea5b4638e453",
+        "project": "curve-dex",
+        "chain": "Ethereum",
+        "symbol": "USDC-RLUSD",
+        "poolMeta": null,
+        "underlyingTokens": [
+          "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "0x8292Bb45bf1Ee4d140127049757C2E0fF06317eD"
+        ],
+        "tvlUsd": 39804952
+      },
+      "upstreamUrl": "https://yields.llama.fi/pools",
+      "references": [
+        {
+          "label": [
+            "上游池历史",
+            "Upstream pool history"
+          ],
+          "url": "https://yields.llama.fi/chart/e91e23af-9099-45d9-8ba5-ea5b4638e453"
+        }
+      ]
+    },
+    {
+      "id": "pool-snapshot-d2141a59-c199-4be7-8d4b-c8223954836b",
+      "scopeKeys": [
+        "ca:solana:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+      ],
+      "nodes": [
+        5,
+        8,
+        10
+      ],
+      "eventAt": "2026-11-10T19:07:51.737Z",
+      "knownAt": "2026-11-10T19:07:51.737Z",
+      "availableAt": "2026-11-10T19:07:51.737Z",
+      "kind": "research",
+      "title": [
+        "Kamino 的 Solana USDC 借贷池",
+        "Kamino’s Solana USDC lending pool"
+      ],
+      "body": [
+        "11 月 10 日采样时，池内锁仓价值为 20,509,650 美元。样本来自 SOL/BTC 借贷市场中的 USDC 池。",
+        "The 10 November snapshot reported $20,509,650 locked. The sampled USDC pool belongs to Kamino’s SOL/BTC lending market."
+      ],
+      "source": "DefiLlama · kamino-lend",
+      "sourceUrl": "/brain-evidence/research-history.json",
+      "evidenceType": "archived_pool_observation",
+      "availabilityBasis": "collection_time",
+      "sourceObservedAt": null,
+      "evidence": {
+        "pool": "d2141a59-c199-4be7-8d4b-c8223954836b",
+        "project": "kamino-lend",
+        "chain": "Solana",
+        "symbol": "USDC",
+        "poolMeta": "SOL/BTC Market",
+        "underlyingTokens": [
+          "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        ],
+        "tvlUsd": 20509650
+      },
+      "upstreamUrl": "https://yields.llama.fi/pools",
+      "references": [
+        {
+          "label": [
+            "上游池历史",
+            "Upstream pool history"
+          ],
+          "url": "https://yields.llama.fi/chart/d2141a59-c199-4be7-8d4b-c8223954836b"
+        }
+      ]
+    },
+    {
+      "id": "pool-snapshot-d783c8df-e2ed-44b4-8317-161ccc1b5f06",
+      "scopeKeys": [
+        "ca:solana:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+      ],
+      "nodes": [
+        5,
+        8,
+        10
+      ],
+      "eventAt": "2026-11-10T19:07:51.737Z",
+      "knownAt": "2026-11-10T19:07:51.737Z",
+      "availableAt": "2026-11-10T19:07:51.737Z",
+      "kind": "research",
+      "title": [
+        "Jupiter Lend 的 Solana USDC 池",
+        "Jupiter Lend’s Solana USDC pool"
+      ],
+      "body": [
+        "11 月 10 日采样时，池内锁仓价值为 475,905,551 美元。该池与 Kamino 使用同一 USDC mint，各有独立池标识。",
+        "The 10 November snapshot reported $475,905,551 locked. It shares the USDC mint with Kamino’s sample, but has its own pool ID."
+      ],
+      "source": "DefiLlama · jupiter-lend",
+      "sourceUrl": "/brain-evidence/research-history.json",
+      "evidenceType": "archived_pool_observation",
+      "availabilityBasis": "collection_time",
+      "sourceObservedAt": null,
+      "evidence": {
+        "pool": "d783c8df-e2ed-44b4-8317-161ccc1b5f06",
+        "project": "jupiter-lend",
+        "chain": "Solana",
+        "symbol": "USDC",
+        "poolMeta": "Earn",
+        "underlyingTokens": [
+          "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        ],
+        "tvlUsd": 475905551
+      },
+      "upstreamUrl": "https://yields.llama.fi/pools",
+      "references": [
+        {
+          "label": [
+            "上游池历史",
+            "Upstream pool history"
+          ],
+          "url": "https://yields.llama.fi/chart/d783c8df-e2ed-44b4-8317-161ccc1b5f06"
+        }
+      ]
+    },
+    {
+      "id": "okx-funding-20261118-btc",
+      "scopeKeys": [
+        "coin:bitcoin"
+      ],
+      "nodes": [
+        2,
+        3
+      ],
+      "eventAt": "2026-11-18T16:00:00Z",
+      "knownAt": "2026-11-25T20:15:05Z",
+      "availableAt": "2026-11-25T20:15:05Z",
+      "kind": "research",
+      "title": [
+        "BTC 永续的三次资金费率结算",
+        "Three BTC perpetual funding settlements"
+      ],
+      "body": [
+        "11 月 18 日 00、08、16 时 UTC，OKX BTC-USDT-SWAP 资金费率依次结算为 -0.00109%、+0.00239%、+0.00635%。每个数值对应一次结算。",
+        "On 18 November, OKX settled BTC-USDT-SWAP funding at -0.00109%, +0.00239% and +0.00635% at 00:00, 08:00 and 16:00 UTC respectively. Rates are per settlement."
+      ],
+      "source": "OKX · BTC-USDT-SWAP",
+      "sourceUrl": "https://www.okx.com/api/v5/public/funding-rate-history?instId=BTC-USDT-SWAP&before=1794959999999&after=1795046400000&limit=10",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "funding_settlement",
+      "evidence": {
+        "instrument": "BTC-USDT-SWAP",
+        "rateBasis": "fraction_per_settlement",
+        "settlements": [
+          {
+            "at": "2026-11-18T00:00:00Z",
+            "rate": "-0.0000108871264091"
+          },
+          {
+            "at": "2026-11-18T08:00:00Z",
+            "rate": "0.0000239227616186"
+          },
+          {
+            "at": "2026-11-18T16:00:00Z",
+            "rate": "0.0000634843947535"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okx-funding-20261118-eth",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        2,
+        3
+      ],
+      "eventAt": "2026-11-18T16:00:00Z",
+      "knownAt": "2026-11-25T20:15:05Z",
+      "availableAt": "2026-11-25T20:15:05Z",
+      "kind": "research",
+      "title": [
+        "ETH 永续的三次资金费率结算",
+        "Three ETH perpetual funding settlements"
+      ],
+      "body": [
+        "11 月 18 日 00、08、16 时 UTC，OKX ETH-USDT-SWAP 资金费率依次结算为 +0.00188%、-0.00069%、-0.00348%。每个数值对应一次结算。",
+        "On 18 November, OKX settled ETH-USDT-SWAP funding at +0.00188%, -0.00069% and -0.00348% at 00:00, 08:00 and 16:00 UTC respectively. Rates are per settlement."
+      ],
+      "source": "OKX · ETH-USDT-SWAP",
+      "sourceUrl": "https://www.okx.com/api/v5/public/funding-rate-history?instId=ETH-USDT-SWAP&before=1794959999999&after=1795046400000&limit=10",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "funding_settlement",
+      "evidence": {
+        "instrument": "ETH-USDT-SWAP",
+        "rateBasis": "fraction_per_settlement",
+        "settlements": [
+          {
+            "at": "2026-11-18T00:00:00Z",
+            "rate": "0.0000187954839306"
+          },
+          {
+            "at": "2026-11-18T08:00:00Z",
+            "rate": "-0.0000068713789351"
+          },
+          {
+            "at": "2026-11-18T16:00:00Z",
+            "rate": "-0.0000348074717455"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okx-funding-20261118-sol",
+      "scopeKeys": [
+        "coin:solana"
+      ],
+      "nodes": [
+        2,
+        3
+      ],
+      "eventAt": "2026-11-18T16:00:00Z",
+      "knownAt": "2026-11-25T20:15:05Z",
+      "availableAt": "2026-11-25T20:15:05Z",
+      "kind": "research",
+      "title": [
+        "SOL 永续的三次资金费率结算",
+        "Three SOL perpetual funding settlements"
+      ],
+      "body": [
+        "11 月 18 日 00、08、16 时 UTC，OKX SOL-USDT-SWAP 资金费率依次结算为 -0.00168%、-0.01566%、+0.00376%。每个数值对应一次结算。",
+        "On 18 November, OKX settled SOL-USDT-SWAP funding at -0.00168%, -0.01566% and +0.00376% at 00:00, 08:00 and 16:00 UTC respectively. Rates are per settlement."
+      ],
+      "source": "OKX · SOL-USDT-SWAP",
+      "sourceUrl": "https://www.okx.com/api/v5/public/funding-rate-history?instId=SOL-USDT-SWAP&before=1794959999999&after=1795046400000&limit=10",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "funding_settlement",
+      "evidence": {
+        "instrument": "SOL-USDT-SWAP",
+        "rateBasis": "fraction_per_settlement",
+        "settlements": [
+          {
+            "at": "2026-11-18T00:00:00Z",
+            "rate": "-0.0000168100467879"
+          },
+          {
+            "at": "2026-11-18T08:00:00Z",
+            "rate": "-0.0001565865156484"
+          },
+          {
+            "at": "2026-11-18T16:00:00Z",
+            "rate": "0.0000375909433805"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okx-funding-20261118-bnb",
+      "scopeKeys": [
+        "coin:binancecoin"
+      ],
+      "nodes": [
+        2,
+        3
+      ],
+      "eventAt": "2026-11-18T16:00:00Z",
+      "knownAt": "2026-11-25T20:15:05Z",
+      "availableAt": "2026-11-25T20:15:05Z",
+      "kind": "research",
+      "title": [
+        "BNB 永续的三次资金费率结算",
+        "Three BNB perpetual funding settlements"
+      ],
+      "body": [
+        "11 月 18 日 00、08、16 时 UTC，OKX BNB-USDT-SWAP 资金费率依次结算为 +0.00596%、+0.00098%、-0.00438%。每个数值对应一次结算。",
+        "On 18 November, OKX settled BNB-USDT-SWAP funding at +0.00596%, +0.00098% and -0.00438% at 00:00, 08:00 and 16:00 UTC respectively. Rates are per settlement."
+      ],
+      "source": "OKX · BNB-USDT-SWAP",
+      "sourceUrl": "https://www.okx.com/api/v5/public/funding-rate-history?instId=BNB-USDT-SWAP&before=1794959999999&after=1795046400000&limit=10",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "funding_settlement",
+      "evidence": {
+        "instrument": "BNB-USDT-SWAP",
+        "rateBasis": "fraction_per_settlement",
+        "settlements": [
+          {
+            "at": "2026-11-18T00:00:00Z",
+            "rate": "0.000059637270643"
+          },
+          {
+            "at": "2026-11-18T08:00:00Z",
+            "rate": "0.0000097526392434"
+          },
+          {
+            "at": "2026-11-18T16:00:00Z",
+            "rate": "-0.0000437723458044"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okx-funding-20261118-ada",
+      "scopeKeys": [
+        "coin:cardano"
+      ],
+      "nodes": [
+        2,
+        3
+      ],
+      "eventAt": "2026-11-18T16:00:00Z",
+      "knownAt": "2026-11-25T20:15:05Z",
+      "availableAt": "2026-11-25T20:15:05Z",
+      "kind": "research",
+      "title": [
+        "ADA 永续的三次资金费率结算",
+        "Three ADA perpetual funding settlements"
+      ],
+      "body": [
+        "11 月 18 日 00、08、16 时 UTC，OKX ADA-USDT-SWAP 资金费率依次结算为 +0.00792%、+0.00768%、-0.00331%。每个数值对应一次结算。",
+        "On 18 November, OKX settled ADA-USDT-SWAP funding at +0.00792%, +0.00768% and -0.00331% at 00:00, 08:00 and 16:00 UTC respectively. Rates are per settlement."
+      ],
+      "source": "OKX · ADA-USDT-SWAP",
+      "sourceUrl": "https://www.okx.com/api/v5/public/funding-rate-history?instId=ADA-USDT-SWAP&before=1794959999999&after=1795046400000&limit=10",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "funding_settlement",
+      "evidence": {
+        "instrument": "ADA-USDT-SWAP",
+        "rateBasis": "fraction_per_settlement",
+        "settlements": [
+          {
+            "at": "2026-11-18T00:00:00Z",
+            "rate": "0.0000792329180001"
+          },
+          {
+            "at": "2026-11-18T08:00:00Z",
+            "rate": "0.0000768099757955"
+          },
+          {
+            "at": "2026-11-18T16:00:00Z",
+            "rate": "-0.0000330626456094"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okx-funding-20261118-sui",
+      "scopeKeys": [
+        "coin:sui"
+      ],
+      "nodes": [
+        2,
+        3
+      ],
+      "eventAt": "2026-11-18T16:00:00Z",
+      "knownAt": "2026-11-25T20:15:05Z",
+      "availableAt": "2026-11-25T20:15:05Z",
+      "kind": "research",
+      "title": [
+        "SUI 永续的三次资金费率结算",
+        "Three SUI perpetual funding settlements"
+      ],
+      "body": [
+        "11 月 18 日 00、08、16 时 UTC，OKX SUI-USDT-SWAP 资金费率依次结算为 +0.00470%、+0.00253%、-0.00629%。每个数值对应一次结算。",
+        "On 18 November, OKX settled SUI-USDT-SWAP funding at +0.00470%, +0.00253% and -0.00629% at 00:00, 08:00 and 16:00 UTC respectively. Rates are per settlement."
+      ],
+      "source": "OKX · SUI-USDT-SWAP",
+      "sourceUrl": "https://www.okx.com/api/v5/public/funding-rate-history?instId=SUI-USDT-SWAP&before=1794959999999&after=1795046400000&limit=10",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "funding_settlement",
+      "evidence": {
+        "instrument": "SUI-USDT-SWAP",
+        "rateBasis": "fraction_per_settlement",
+        "settlements": [
+          {
+            "at": "2026-11-18T00:00:00Z",
+            "rate": "0.0000470197452916"
+          },
+          {
+            "at": "2026-11-18T08:00:00Z",
+            "rate": "0.0000253486577785"
+          },
+          {
+            "at": "2026-11-18T16:00:00Z",
+            "rate": "-0.0000628538319016"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okx-funding-20261118-avax",
+      "scopeKeys": [
+        "coin:avalanche-2"
+      ],
+      "nodes": [
+        2,
+        3
+      ],
+      "eventAt": "2026-11-18T16:00:00Z",
+      "knownAt": "2026-11-25T20:15:05Z",
+      "availableAt": "2026-11-25T20:15:05Z",
+      "kind": "research",
+      "title": [
+        "AVAX 永续的三次资金费率结算",
+        "Three AVAX perpetual funding settlements"
+      ],
+      "body": [
+        "11 月 18 日 00、08、16 时 UTC，OKX AVAX-USDT-SWAP 资金费率依次结算为 +0.00532%、+0.00078%、-0.00556%。每个数值对应一次结算。",
+        "On 18 November, OKX settled AVAX-USDT-SWAP funding at +0.00532%, +0.00078% and -0.00556% at 00:00, 08:00 and 16:00 UTC respectively. Rates are per settlement."
+      ],
+      "source": "OKX · AVAX-USDT-SWAP",
+      "sourceUrl": "https://www.okx.com/api/v5/public/funding-rate-history?instId=AVAX-USDT-SWAP&before=1794959999999&after=1795046400000&limit=10",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "funding_settlement",
+      "evidence": {
+        "instrument": "AVAX-USDT-SWAP",
+        "rateBasis": "fraction_per_settlement",
+        "settlements": [
+          {
+            "at": "2026-11-18T00:00:00Z",
+            "rate": "0.0000532204342923"
+          },
+          {
+            "at": "2026-11-18T08:00:00Z",
+            "rate": "0.0000077881951305"
+          },
+          {
+            "at": "2026-11-18T16:00:00Z",
+            "rate": "-0.0000556375363554"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okx-funding-20261118-doge",
+      "scopeKeys": [
+        "coin:dogecoin"
+      ],
+      "nodes": [
+        2,
+        3
+      ],
+      "eventAt": "2026-11-18T16:00:00Z",
+      "knownAt": "2026-11-25T20:15:05Z",
+      "availableAt": "2026-11-25T20:15:05Z",
+      "kind": "research",
+      "title": [
+        "DOGE 永续的三次资金费率结算",
+        "Three DOGE perpetual funding settlements"
+      ],
+      "body": [
+        "11 月 18 日 00、08、16 时 UTC，OKX DOGE-USDT-SWAP 资金费率依次结算为 +0.00141%、+0.00181%、+0.00465%。每个数值对应一次结算。",
+        "On 18 November, OKX settled DOGE-USDT-SWAP funding at +0.00141%, +0.00181% and +0.00465% at 00:00, 08:00 and 16:00 UTC respectively. Rates are per settlement."
+      ],
+      "source": "OKX · DOGE-USDT-SWAP",
+      "sourceUrl": "https://www.okx.com/api/v5/public/funding-rate-history?instId=DOGE-USDT-SWAP&before=1794959999999&after=1795046400000&limit=10",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "funding_settlement",
+      "evidence": {
+        "instrument": "DOGE-USDT-SWAP",
+        "rateBasis": "fraction_per_settlement",
+        "settlements": [
+          {
+            "at": "2026-11-18T00:00:00Z",
+            "rate": "0.0000140841585638"
+          },
+          {
+            "at": "2026-11-18T08:00:00Z",
+            "rate": "0.0000180501925524"
+          },
+          {
+            "at": "2026-11-18T16:00:00Z",
+            "rate": "0.0000464957204558"
+          }
+        ]
+      }
+    },
+    {
+      "id": "eth-etf-launch-20240723",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        2,
+        4,
+        10
+      ],
+      "eventAt": "2024-07-23",
+      "knownAt": "2026-11-25T20:16:38Z",
+      "availableAt": "2026-11-25T20:16:38Z",
+      "kind": "research",
+      "title": [
+        "美国现货 ETH ETF 首日净流入",
+        "US spot ETH ETFs on their first trading day"
+      ],
+      "body": [
+        "7 月 23 日首个交易日合计净流入 1.066 亿美元，ETHA 净流入 2.665 亿，ETHE 净流出 4.841 亿。基金间方向相反。",
+        "On the first trading day, combined net inflows were $106.6m. ETHA took in $266.5m while ETHE saw $484.1m in net redemptions."
+      ],
+      "source": "GrowYourEthereum · Farside Investors",
+      "sourceUrl": "https://growyourethereum.com/datasets/eth-etf-flows.json",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "dated_fund_flow",
+      "references": [
+        {
+          "label": "Farside Investors",
+          "url": "https://farside.co.uk/ethereum-etf-flow-all-data/"
+        }
+      ],
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "evidence": {
+        "date": "2024-07-23",
+        "totalUsdMillions": 106.6,
+        "fundsUsdMillions": {
+          "ETHA": 266.5,
+          "ETHB": null,
+          "FETH": 71.3,
+          "ETHW": 204.0,
+          "TETH": 7.5,
+          "ETHV": 7.6,
+          "QETH": 5.5,
+          "EZET": 13.2,
+          "MSSE": null,
+          "ETHE": -484.1,
+          "ETH": 15.1
+        },
+        "edition": "2026-11-25"
+      }
+    },
+    {
+      "id": "eth-etf-funds-20261117",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        2,
+        4,
+        10
+      ],
+      "eventAt": "2026-11-17",
+      "knownAt": "2026-11-25T20:16:38Z",
+      "availableAt": "2026-11-25T20:16:38Z",
+      "kind": "research",
+      "title": [
+        "净赎回日仍有基金获净申购",
+        "Funds diverged on a net redemption day"
+      ],
+      "body": [
+        "11 月 17 日整体净赎回 2,910 万美元。逐基金看，ETHA 净流出 2,760 万，ETHW 净流入 130 万。该版历史表于 11 月 25 日生成。",
+        "Funds reported $29.1m in combined net redemptions on 17 November. ETHA saw $27.6m in net outflows and ETHW $1.3m in net inflows. This edition of the history was generated on 25 November."
+      ],
+      "source": "GrowYourEthereum · Farside Investors",
+      "sourceUrl": "https://growyourethereum.com/datasets/eth-etf-flows.json",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "dated_fund_flow",
+      "references": [
+        {
+          "label": "Farside Investors",
+          "url": "https://farside.co.uk/ethereum-etf-flow-all-data/"
+        }
+      ],
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "evidence": {
+        "date": "2026-11-17",
+        "totalUsdMillions": -29.1,
+        "fundsUsdMillions": {
+          "ETHA": -27.6,
+          "ETHB": -2.8,
+          "FETH": 0.0,
+          "ETHW": 1.3,
+          "TETH": 0.0,
+          "ETHV": 0.0,
+          "QETH": 0.0,
+          "EZET": 0.0,
+          "MSSE": 0.0,
+          "ETHE": 0.0,
+          "ETH": 0.0
+        },
+        "edition": "2026-11-25"
+      }
+    },
+    {
+      "id": "btc-etf-launch-20240111",
+      "scopeKeys": [
+        "coin:bitcoin"
+      ],
+      "nodes": [
+        2,
+        4,
+        10
+      ],
+      "eventAt": "2024-01-11",
+      "knownAt": "2026-11-25T20:16:39Z",
+      "availableAt": "2026-11-25T20:16:39Z",
+      "kind": "research",
+      "title": [
+        "美国现货 BTC ETF 首日净申购",
+        "US spot BTC ETFs on their first trading day"
+      ],
+      "body": [
+        "1 月 11 日，TFTC 汇总的美国现货 BTC ETF 首日净流入 6.553 亿美元。FBTC 净流入 2.270 亿，GBTC 净流出 9,510 万。",
+        "TFTC records $655.3m of combined net inflows on 11 January. FBTC drew $227m, while GBTC saw $95.1m in net outflows."
+      ],
+      "source": "The Commoner Bitcoin ETF Tracker by TFTC",
+      "sourceUrl": "https://www.tftc.io/bitcoin-etf-flows/data.json",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "dated_fund_flow",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "references": [
+        {
+          "label": [
+            "统计口径",
+            "Methodology"
+          ],
+          "url": "https://www.tftc.io/bitcoin-etf-flows/methodology"
+        }
+      ],
+      "evidence": {
+        "date": "2024-01-11",
+        "netFlowUsd": 655300000,
+        "selectedFundFlowsUsd": {
+          "GBTC": -95100000,
+          "FBTC": 227000000
+        },
+        "sourceEdition": "2026-11-24T22:00:00Z"
+      }
+    },
+    {
+      "id": "btc-etf-flow-20261117",
+      "scopeKeys": [
+        "coin:bitcoin"
+      ],
+      "nodes": [
+        2,
+        4,
+        10
+      ],
+      "eventAt": "2026-11-17",
+      "knownAt": "2026-11-25T20:16:39Z",
+      "availableAt": "2026-11-25T20:16:39Z",
+      "kind": "research",
+      "title": [
+        "BTC ETF 净赎回集中在 IBIT",
+        "IBIT led BTC ETF net redemptions"
+      ],
+      "body": [
+        "11 月 17 日合计净赎回约 2.399 亿美元，其中 IBIT 净赎回约 2.095 亿。这里跟踪的是基金资金流；交易所现货成交另查。",
+        "Combined net redemptions were approximately $239.9m on 17 November, including $209.5m from IBIT. These figures cover ETF cash flows."
+      ],
+      "source": "The Commoner Bitcoin ETF Tracker by TFTC",
+      "sourceUrl": "https://www.tftc.io/bitcoin-etf-flows/data.json",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "evidenceType": "dated_fund_flow",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "references": [
+        {
+          "label": [
+            "统计口径",
+            "Methodology"
+          ],
+          "url": "https://www.tftc.io/bitcoin-etf-flows/methodology"
+        }
+      ],
+      "evidence": {
+        "date": "2026-11-17",
+        "netFlowUsd": -239944866.82,
+        "selectedFundFlowsUsd": {
+          "IBIT": -209542400
+        },
+        "sourceEdition": "2026-11-24T22:00:00Z"
+      }
+    },
+    {
+      "id": "pool-day-review-aa70268e-4b52-42bf-a116-608b370f9501",
+      "scopeKeys": [
+        "ca:ethereum:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      ],
+      "nodes": [
+        4,
+        7,
+        8,
+        13
+      ],
+      "eventAt": "2026-11-10T23:01:29.711Z",
+      "knownAt": "2026-11-25T20:17:27Z",
+      "availableAt": "2026-11-25T20:17:27Z",
+      "kind": "review",
+      "evidenceType": "pool_observation_review",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "title": [
+        "Aave V3 的两次 USDC 池观测",
+        "Aave V3 USDC pool at two observation times"
+      ],
+      "body": [
+        "19:07 UTC 归档时为 180,565,230 美元。DefiLlama 同一池的 23:01 日级记录为 164,950,983 美元。两次读数的差额包含池内余额与估值变化。",
+        "The 19:07 UTC capture reported $180,565,230. DefiLlama’s 23:01 daily observation on the same pool reported $164,950,983. The difference reflects changes in locked value across the two readings."
+      ],
+      "source": "DefiLlama · Aave V3",
+      "sourceUrl": "https://yields.llama.fi/chart/aa70268e-4b52-42bf-a116-608b370f9501",
+      "relatedIds": [
+        "pool-snapshot-aa70268e-4b52-42bf-a116-608b370f9501"
+      ],
+      "references": [
+        {
+          "label": [
+            "早期快照存档",
+            "Earlier capture"
+          ],
+          "url": "/brain-evidence/research-history.json"
+        }
+      ],
+      "evidence": {
+        "pool": "aa70268e-4b52-42bf-a116-608b370f9501",
+        "earlierCaptureAt": "2026-11-10T19:07:51.737Z",
+        "earlierTvlUsd": 180565230,
+        "laterSourceAt": "2026-11-10T23:01:29.711Z",
+        "laterTvlUsd": 164950983
+      }
+    },
+    {
+      "id": "pool-day-review-d2141a59-c199-4be7-8d4b-c8223954836b",
+      "scopeKeys": [
+        "ca:solana:EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+      ],
+      "nodes": [
+        4,
+        7,
+        8,
+        13
+      ],
+      "eventAt": "2026-11-10T23:01:34.350Z",
+      "knownAt": "2026-11-25T20:17:27Z",
+      "availableAt": "2026-11-25T20:17:27Z",
+      "kind": "review",
+      "evidenceType": "pool_observation_review",
+      "availabilityBasis": "retrospective_api_retrieval",
+      "title": [
+        "Kamino Lend 的两次 USDC 池观测",
+        "Kamino Lend USDC pool at two observation times"
+      ],
+      "body": [
+        "19:07 UTC 归档时为 20,509,650 美元。DefiLlama 同一池的 23:01 日级记录为 21,355,632 美元。两次读数的差额包含池内余额与估值变化。",
+        "The 19:07 UTC capture reported $20,509,650. DefiLlama’s 23:01 daily observation on the same pool reported $21,355,632. The difference reflects changes in locked value across the two readings."
+      ],
+      "source": "DefiLlama · Kamino Lend",
+      "sourceUrl": "https://yields.llama.fi/chart/d2141a59-c199-4be7-8d4b-c8223954836b",
+      "relatedIds": [
+        "pool-snapshot-d2141a59-c199-4be7-8d4b-c8223954836b"
+      ],
+      "references": [
+        {
+          "label": [
+            "早期快照存档",
+            "Earlier capture"
+          ],
+          "url": "/brain-evidence/research-history.json"
+        }
+      ],
+      "evidence": {
+        "pool": "d2141a59-c199-4be7-8d4b-c8223954836b",
+        "earlierCaptureAt": "2026-11-10T19:07:51.737Z",
+        "earlierTvlUsd": 20509650,
+        "laterSourceAt": "2026-11-10T23:01:34.350Z",
+        "laterTvlUsd": 21355632
+      }
+    }
+  ]
+}

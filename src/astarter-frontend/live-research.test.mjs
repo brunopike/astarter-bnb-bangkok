@@ -101,15 +101,6 @@ test('TradFi observations retain exact provider units and session validity, and 
  }
 });
 
-test('a missing XAU daily source names the affected instrument and provider in the workspace',()=>{
- const research=new MarketResearch({now:()=>NOW});
- research.ingestMarket([{symbol:'XAU',state:'error'}]);
- const task=research.task('XAU');
- assert.match(task.title,/XAU · (日线暂不可用|Daily candles unavailable)/);
- assert.match(task.thesis,/Dukascopy · XAU\/USD BID · (日线暂不可用|Daily candles unavailable)/);
- assert.equal(trend(task).status,'missing');assert.equal(research.task('DXY').observation.state,'loading');
-});
-
 test('legacy intelligence injection and shared refresh cannot fabricate corroborating sources',()=>{
  const r=new MarketResearch({now:()=>NOW});r.ingestMarket([sourceRow()]);const before=r.snapshot();
  assert.equal(r.ingest('BTC',{source:'chain',decision:'retain',id:'fixture',title:'资金流已确认'}),false);assert.deepEqual(r.refreshShared('macro'),[]);assert.deepEqual(r.snapshot(),before);

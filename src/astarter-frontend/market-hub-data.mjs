@@ -30,7 +30,7 @@ function series(rows,value){
  valid(result.length>0&&result.every((row,i)=>!i||row.at>result[i-1].at));return result.slice(-366);
 }
 // A missing point must not turn a two-hour move into a one-hour move.
-const hourlySeries=values=>Array.isArray(values)&&values.every(v=>finite(v)&&v>0)?values.slice(-168):[];
+export const hourlySeries=values=>Array.isArray(values)&&values.every(v=>finite(v)&&v>0)?values.slice(-168):[];
 export function normalizeHubResource(key,body,receivedAt=Date.now()){
  let data,asOf=null;
  if(key==='global'){

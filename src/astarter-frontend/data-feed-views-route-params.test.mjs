@@ -16,7 +16,7 @@ const LIVE_KIND={rank:'traders','排行榜':'traders','发现交易员':'traders
 const LIVE_BODY={traders:/data-public-data="live-traders"/,social:/data-public-data="live-social"/};
 const LIVE_NAV=/<nav class="dc-section-nav" aria-label="社媒动态">([\s\S]*?)<\/nav>/,DEMO_NAV=/<aside class="df-social-nav"><nav>([\s\S]*?)<\/nav>/;
 // The trends request of the default live page.
-const SOCIAL_REQUEST={resource:'social',selection_version:'0',limit:'50',feed:'recent'};
+const SOCIAL_REQUEST={resource:'social',selection_version:'0',limit:'50'};
 
 const renderAt=search=>{
  const old=globalThis.location;

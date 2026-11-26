@@ -5,11 +5,20 @@ import {BRAND_FILES} from './brand-icon-data.mjs';
 
 const root=path.dirname(fileURLToPath(import.meta.url));
 export const allowed = new Set(['trading-assistant.mjs','assistant-analysis.mjs','trading-assistant.css','bento-system.mjs','bento-system.css','order-markets.mjs','strategy-center.css','strategy-art.mjs','strategy-protection.mjs','strategy-protection.mjs','strategy-art.mjs','data-asset-locale.mjs','data-feed-views.mjs','data-feed-views.css','data-asset-view.mjs','data-asset-view.css','data-center.mjs','data-center-fixtures.mjs','data-center.css','product-composition.mjs','product-composition.css','risk-strategy.mjs','product-help.mjs','strategy-advisor.mjs','strategy-journeys.mjs','intelligence-experience.mjs','market-observatory.mjs','product-experience.mjs','product-shell.mjs','product-experience.css','platform-context.mjs','setup-view.mjs','execution-records.mjs','execution-stream.mjs','execution-views.mjs','execution-views.css','index.html', 'business-motion.mjs','core-reports.mjs', 'locale.mjs','locale-en.mjs', 'strategy-catalog.mjs','workspace-sim.mjs','business-pages.js','business-pages.css', 'product-workflow.css', 'multi-research.mjs', 'research-board.js', 'research-board.css', 'reference-surfaces.mjs', 'vendor/mmdock/range-window.mjs', 'vendor/mmdock/report-visuals.mjs', 'vendor/valuescan/token-fixtures.mjs', 'core-reactions.mjs', 'connections.mjs','trading-access.mjs','trading-access-view.mjs', 'product-chart-ui.mjs', 'product-views.mjs', 'product-polish.css', 'product.js', 'product-charts.mjs', 'product-data.mjs', 'product.css', 'style.css', 'astarter-theme.css', 'app.js', 'reactor.js', 'couriers.js', 'reactor-panels.js', 'research-state.mjs', 'evidence-process.mjs', 'evidence-motion.js','motion-clock.mjs','coordination.mjs','trading-desk.js','trading-desk.css','trading-demo.mjs','research-desk.js','research-operations.mjs', 'research-journal.js', 'reactor.css', 'agent-cores.js', 'simulation.mjs', 'fonts/manrope-variable-latin.woff2', 'fonts/ibm-plex-mono-400-latin.woff2', 'fonts/ibm-plex-mono-500-latin.woff2', 'node_modules/three/build/three.module.js', 'node_modules/three/build/three.core.js', 'node_modules/three/examples/jsm/controls/OrbitControls.js']);
-for(const file of ['signal-tracking.mjs','signal-tracking-view.mjs','live-market-signals.mjs','live-signal-view.mjs','social-trading.mjs','signal-social.css'])allowed.add(file);
+for(const file of ['signal-tracking.mjs','signal-tracking-view.mjs','social-trading.mjs','signal-social.css'])allowed.add(file);
 for(const file of ['signal-ui/advanced-stats.js','signal-ui/advanced-stats.js.LEGAL.txt'])allowed.add(file);
 for(const file of ['mobile-navigation.mjs','navigation-ui/mobile-navigation.js','navigation-ui/mobile-navigation.js.LEGAL.txt'])allowed.add(file);
 for(const file of ['liquid-select-loader.mjs','liquid-select-ui/liquid-select.js','liquid-select-ui/liquid-select.css','liquid-select-ui/liquid-select.js.LEGAL.txt'])allowed.add(file);
 for(const file of ['product-number-input.mjs','product-number-input.css'])allowed.add(file);
+for(const file of ['brain-observatory.mjs','brain-case-notes.mjs','brain-memory.mjs','brain-memory.css','brain-thinking.mjs','brain-thinking.css','brain-observatory.css','brain-merge-case.json','brain-evidence/BLOCK-15537394@1.json','brain-evidence/COINBASE-ETH-USD-0644@1.json','brain-evidence/COINBASE-ETH-USD-0649@1.json'])allowed.add(file);
+for(const file of ['brain-cortexa.mjs','brain-cortexa.css','brain-cortexa-graph.mjs','brain-cortexa-graph.css'])allowed.add(file);
+for(const file of ['brain-asset-data.mjs','brain-asset-picker.mjs','brain-research-scope.mjs','brain-evidence/asset-catalog.json'])allowed.add(file);
+for(const file of ['brain-history.mjs','brain-history-reader.mjs','brain-evidence/chain-history.json','brain-evidence/ETH-MERGE-STRATEGY@1.json','brain-evidence/BLOCK-15537394-AT-MERGE@1.json','brain-evidence/research-history.json','brain-evidence/market-history.json','brain-evidence/chain-tvl-history.json'])allowed.add(file);
+for(const file of ['brain-evidence/ranked-price-history.json','brain-evidence/daily-markets.json'])allowed.add(file);
+for(const file of ['brain-reasoning-memory.mjs','brain-evidence/decision-cases.json','brain-evidence/market-reactions.json'])allowed.add(file);
+for(const file of ['brain-evidence-stars.mjs','brain-evidence-nodes.mjs','brain-trader-history.mjs','brain-evidence/trader-gains.json','brain-evidence/trader-losses.json','brain-evidence/trader-positions.json','brain-evidence/perp-exits.json','brain-evidence/market-cap-top20.json'])allowed.add(file);
+for(const file of ['assistant-chat-client.mjs','assistant-market-context.mjs','live-market-signals.mjs'])allowed.add(file);
+for(const file of ['site-languages.mjs','site-routes.mjs','site-seo-client.mjs','brand/astarter-share.png'])allowed.add(file);
 allowed.add('cross-market-data.mjs');
 allowed.add('public-btc-exchange-flows.mjs');
 allowed.add('public-marginpad-liquidations.mjs');
@@ -19,7 +28,7 @@ allowed.add('browser-exchange-flows.mjs');
 allowed.add('public-exchange-reserves.mjs');
 allowed.add('strategy-execution-data.mjs');
 allowed.add('strategy-state.mjs');
-for(const file of ['page-companion.mjs','page-companion.css'])allowed.add(file);
+for(const file of ['page-companion.mjs','page-companion.css','page-companion-market.mjs','page-companion-news.mjs'])allowed.add(file);
 for(const file of ['assistant-team.mjs','account-center.mjs','account-center.css','wallet-session.mjs'])allowed.add(file);
 for(const file of ['assistant-exchange-data.mjs','assistant-exchange-tools.mjs'])allowed.add(file);
 for(const file of ['local-sim-client.mjs','local-sim-desk.mjs'])allowed.add(file);
@@ -32,10 +41,10 @@ for(const file of ['ai-operator.mjs','ai-operator.css'])allowed.add(file);
 for(const file of ['trading-preview.mjs','trading-preview-view.mjs'])allowed.add(file);
 for(const file of ['market-hub-data.mjs','market-hub.mjs','market-hub.css','market-watchlist.mjs','atlas-feed-master.mjs'])allowed.add(file);
 for(const file of ['public-data-client.mjs','public-data-views.mjs','public-social-media.mjs','intelligence-calendar.mjs','intelligence-news-feed.mjs','intelligence-context.mjs','public-data.css'])allowed.add(file);
-allowed.add('public-social-scope.mjs');
 for(const file of ['data-live-views.mjs','public-market-extended.mjs','public-macro.mjs','public-btc-disclosed.mjs','public-exchange-flows.mjs','public-eth-consensus.mjs','public-eth-disclosed.mjs','public-eth-exits.mjs','public-lightning.mjs','public-accumulation-view.mjs','public-etf.mjs','public-eth-etf-holdings.mjs','public-traders.mjs'])allowed.add(file);
 for(const file of ['workbench-terminal.mjs','workbench-terminal.css','agent-models.mjs','connection-options.mjs','connections.css','brand-icons.mjs','brand-icon-data.mjs','brand-icons.css',...BRAND_FILES])allowed.add(file);
 for(const file of ['membership.mjs','membership-account.mjs','membership-entry.mjs','membership-state.mjs','membership.css','membership-product.css','membership.html'])allowed.add(file);
+allowed.add('brand/binance-wallet.svg');
 for(const file of ['brand/astarter-mark-ui.svg','brand/astarter-icon-gradient-primary.svg','brand/photonic-beam.webp'])allowed.add(file);
 for(const file of ['locale-registry.mjs','locale-messages.mjs',...['ja','ko','vi','es','fr','ru'].map(id=>`locales/${id}.mjs`)])allowed.add(file);
 for(const file of ['index.html','landing.css','landing.mjs','copy.mjs','data.mjs','template-primitives.mjs','workbench-scene.png','workbench-scene-light.png','LICENSES.txt'])allowed.add('landing/'+file);
@@ -66,3 +75,5 @@ export const walletAsset=file=>/^wallet-ui\/[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*\
 // The public marketing site has its own repository and deployment; this release is the 4188 application.
 for(const file of ['private-draft-data.mjs','private-draft-client.mjs','private-draft-editor.mjs','private-draft-editor.css'])allowed.add(file);
 export const releaseAssets=new Set([...allowed].filter(file=>!file.startsWith('landing/')&&!ACCOUNT_ACCESS_FILES.includes(file)));
+
+for(const file of ['assistant-chat-client.mjs','assistant-market-context.mjs','live-market-signals.mjs'])allowed.add(file);

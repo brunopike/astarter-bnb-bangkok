@@ -67,7 +67,7 @@ export function signalPreferences(value={}){
 export const signalStrategy=c=>c?.id==='BTC'&&c.source==='market'?'S00':c?.id==='ETH'&&c.source==='onchain'?'RX03-S':null;
 export function filterSignalPreferences(rows,value){
  const p=signalPreferences(value);
- return rows.filter(({track:c,live})=>(p.scope==='all'||(p.scope==='crypto')===(c.asset.domain==='Crypto'))&&(p.focus==='all'||c.source===p.focus)&&(p.strategy==='all'||(!live&&(c.record?c.record.strategy:signalStrategy(c))===p.strategy)));
+ return rows.filter(({track:c})=>(p.scope==='all'||(p.scope==='crypto')===(c.asset.domain==='Crypto'))&&(p.focus==='all'||c.source===p.focus)&&(p.strategy==='all'||(c.record?c.record.strategy:signalStrategy(c))===p.strategy));
 }
 export function trackingRows(cases=TRACKING_CASES,{source='all',stage='all',query='',watched=[],watchOnly=false,asset='all',latestOnly=false}={}){
  const q=query.trim().toLowerCase(),symbol=cases.find(c=>c.id.toLowerCase()===q)?.id;

@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "source": "DefiLlama",
+  "retrievedAt": "2026-11-25T20:11:17.090279+00:00",
+  "networks": {
+    "bitcoin": {
+      "name": "Bitcoin",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Bitcoin",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 105777346,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 99834250
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 124057712,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 137015896
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 413566451,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 426774358
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 6338129969,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 6725728091
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 6511343406,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 6572092703
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 3057509721,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 3256851243
+        }
+      ]
+    },
+    "ethereum": {
+      "name": "Ethereum",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Ethereum",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 29403870344,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 31466710199
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 25959863215,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 27847910468
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 49424200620,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 50441760888
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 64946790819,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 67976845265
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 65443504861,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 65650190868
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 36336078081,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 37498944775
+        }
+      ]
+    },
+    "bsc": {
+      "name": "BSC",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/BSC",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 5555248131,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 5760823600
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 4817535103,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 5075464067
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 5070219466,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 5522138835
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 5354714802,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 5568318575
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 6553771364,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 6384852705
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 4318062504,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 4507689623
+        }
+      ]
+    },
+    "solana": {
+      "name": "Solana",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Solana",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 1299255511,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 1385040270
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 231288175,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 255523930
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 3694097008,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 3830756623
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 8483248281,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 8588902939
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 8114001958,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 8290011441
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 4634693799,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 4708934090
+        }
+      ]
+    },
+    "dogecoin": {
+      "name": "Doge",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Doge",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 125746,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 126147
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 137319,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 159404
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 5338057,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 5924223
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 6558444,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 7498313
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 12836877,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 12687011
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 1274045,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 1322152
+        }
+      ]
+    },
+    "cardano": {
+      "name": "Cardano",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Cardano",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 85273768,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 85632518
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 107780522,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 112270501
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 276897279,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 292864774
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 434898746,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 479675766
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 169796578,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 170850018
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 44025042,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 46067091
+        }
+      ]
+    },
+    "avalanche": {
+      "name": "Avalanche",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Avalanche",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 1561614772,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 1741394468
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 820888713,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 962538587
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 870696066,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 921288156
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 1315135255,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 1417949773
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 1149845365,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 1155870422
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 438285292,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 448418918
+        }
+      ]
+    },
+    "sui": {
+      "name": "Sui",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Sui",
+      "points": [
+        {
+          "at": 1713571200,
+          "tvlUsd": 594661781,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 552811357
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 1639128335,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 1781792550
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 896133986,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 912536003
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 348653291,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 367941369
+        }
+      ]
+    },
+    "ton": {
+      "name": "TON",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/TON",
+      "points": [
+        {
+          "at": 1678492800,
+          "tvlUsd": 21039753,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 7045177
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 144230876,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 149555710
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 262962757,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 260868762
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 86434964,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 82956616
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 40450766,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 42139579
+        }
+      ]
+    },
+    "base": {
+      "name": "Base",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Base",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 0,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 0
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 0,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 0
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 1486230240,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 1398954456
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 3209933914,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 3243759937
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 4398764346,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 4325150485
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 5092499278,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 5193919366
+        }
+      ]
+    },
+    "arbitrum": {
+      "name": "Arbitrum",
+      "sourceUrl": "https://api.llama.fi/v2/historicalChainTvl/Arbitrum",
+      "points": [
+        {
+          "at": 1663200000,
+          "tvlUsd": 849596127,
+          "priorAt": 1662595200,
+          "priorTvlUsd": 889085293
+        },
+        {
+          "at": 1678492800,
+          "tvlUsd": 1630970083,
+          "priorAt": 1677888000,
+          "priorTvlUsd": 1874694112
+        },
+        {
+          "at": 1713571200,
+          "tvlUsd": 2477629453,
+          "priorAt": 1712966400,
+          "priorTvlUsd": 2543827325
+        },
+        {
+          "at": 1735689600,
+          "tvlUsd": 2919662510,
+          "priorAt": 1735084800,
+          "priorTvlUsd": 3072395892
+        },
+        {
+          "at": 1767225600,
+          "tvlUsd": 2892111981,
+          "priorAt": 1766620800,
+          "priorTvlUsd": 2837490505
+        },
+        {
+          "at": 1795478400,
+          "tvlUsd": 1250333323,
+          "priorAt": 1794873600,
+          "priorTvlUsd": 1289322442
+        }
+      ]
+    }
+  }
+}

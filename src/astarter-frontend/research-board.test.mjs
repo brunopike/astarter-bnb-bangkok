@@ -15,7 +15,7 @@ class Element extends EventTarget{
 }
 test('shared source detail shows finite context, provider and original source versus retrieval time; stale values disappear',()=>{
  const research=new MarketResearch({now:()=>NOW/1000});research.ingest(['sentiment','chains','stablecoins'].map(row));
- const social=researchSharedDetail(research.shared.find(source=>source.id==='social'),NOW);assert.match(social,/37\/100/);assert.match(social,/CoinMarketCap/);assert.match(social,/2026-11-17 00:00:00 UTC/);assert.match(social,/2026-11-17 12:00:00 UTC/);assert.match(social,/data-status="context"/);
+ const social=researchSharedDetail(research.shared.find(source=>source.id==='social'),NOW);assert.match(social,/37\/100/);assert.match(social,/Alternative.me/);assert.match(social,/2026-11-17 00:00:00 UTC/);assert.match(social,/2026-11-17 12:00:00 UTC/);assert.match(social,/data-status="context"/);
  const chain=researchSharedDetail(research.shared.find(source=>source.id==='chain'),NOW);assert.match(chain,/1,000/);assert.match(chain,/获取时间|Retrieved at/);assert.doesNotMatch(chain,/数据时间 · UTC|Source time · UTC/);
  assert.doesNotMatch(researchSharedDetail(research.shared.find(source=>source.id==='social'),DAY+129600000),/37\/100|data-status="context"/);
  const escaped=researchSharedDetail({...research.shared[0],summary:'<script>bad</script>',assets:['<img>']},NOW);assert.doesNotMatch(escaped,/<script>|<img>/);assert.match(escaped,/&lt;script&gt;/);

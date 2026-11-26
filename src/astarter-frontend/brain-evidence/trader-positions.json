@@ -1,0 +1,2979 @@
+[
+  {
+    "id": "pm-e734e7bf-6c8bc8cd9b2d-1",
+    "actor": "boyau · 0xe734e7…514f0c",
+    "date": "2026-11-22",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:bitcoin"
+    ],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "−$81,133.40",
+      "−$81,133.40"
+    ],
+    "title": [
+      "BTC 年内跌触六万美元的反向仓 · No",
+      "Will Bitcoin dip to $60,000 by December 31, 2026? · No"
+    ],
+    "summary": [
+      "boyau · 0xe734e7…514f0c 的 No 份额已平仓，该腿亏损 $81,133.40。",
+      "boyau · 0xe734e7…514f0c closed the No position with a realized loss of $81,133.40."
+    ],
+    "logic": [
+      "No 对应 BTC 在该年剩余有效期内不触及 60,000 美元或更低。 该钱包所持方向为 No，平均每份 $0.6539，最终该方向定价为 $0。",
+      "No required BTC to avoid a touch of $60,000 or lower during the remainder of the specified year. This wallet held No at an average of $0.6539 per share; this outcome ended at $0."
+    ],
+    "lesson": [
+      "二元门槛一经触发，后来反弹也无法恢复该腿的兑付；已卖部分应按实际成交单列。",
+      "A later rebound cannot restore this leg after a qualifying touch; any shares sold earlier have their own fills."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "No 对应 BTC 在该年剩余有效期内不触及 60,000 美元或更低。",
+          "No required BTC to avoid a touch of $60,000 or lower during the remainder of the specified year."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-10-01 14:33 UTC。持有 No，平台记录该腿的平均价为每份 $0.6539。",
+          "First entry at 2026-10-01 14:33 UTC. The reported average price for No was $0.6539 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-11-11 03:50 UTC，买入 19,224.31 份 No，成交价约 $0.78，该笔成交金额 $15,225.88。",
+          "At 2026-11-11 03:50 UTC, the wallet bought 19,224.31 No shares at about $0.78, for $15,225.88 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "一笔卖出",
+          "Observed sale"
+        ],
+        "detail": [
+          "2026-11-17 15:43 UTC，卖出 29,205.86 份 No，成交价约 $0.3921，该笔成交金额 $10,964.2。",
+          "At 2026-11-17 15:43 UTC, the wallet sold 29,205.86 No shares at about $0.3921, for $10,964.2 in recorded volume."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-11-22 09:20 UTC，钱包赎回 94,223.06 份，官方活动记录的兑付金额为 $0。",
+          "At 2026-11-22 09:20 UTC, the wallet redeemed 94,223.06 shares. The activity ledger records $0 in proceeds."
+        ],
+        "source": 5
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-11-20，该市场关闭，No 的最终价格为每份 $0。",
+          "On 2026-11-20 the market closed, with No priced at $0 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-11-22 09:20 UTC。平台剩余份额为 0，已实现盈亏 −$81,133.40。",
+          "The last position activity was at 2026-11-22 09:20 UTC. The remaining size was 0 shares and the position realized −$81,133.40."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 Yes 已平仓盈亏 +$98.18。两条已平仓记录合计 −$81,035.23。",
+          "The wallet’s closed Yes leg realized +$98.18. The two closed legs sum to −$81,035.23."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xe734e7…514f0c · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xe734e7bf7cfb9e464681f71822f6c2f6be514f0c&condition=0x6c8bc8cd9b2d64358ad995ccee8e998cf0f81a89c4be0b8e51eadf09c6be60ba&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Bitcoin dip to $60,000 by December 31, 2026?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-bitcoin-dip-to-60k-by-december-31-2026-from-july-21"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xe734e7bf7cfb9e464681f71822f6c2f6be514f0c&condition=0x6c8bc8cd9b2d64358ad995ccee8e998cf0f81a89c4be0b8e51eadf09c6be60ba&limit=100"
+      },
+      {
+        "label": "Polygon · #97,109,039 · 0xfc7544e7",
+        "url": "https://polygonscan.com/tx/0xfc7544e78db26123a8a1832a4e74b9b22a0b8b5f0fa643fdb5f6f4e3d59258ff"
+      },
+      {
+        "label": "Polygon · #97,483,168 · 0xea0242fe",
+        "url": "https://polygonscan.com/tx/0xea0242fe7c858b28460739ebbd8d30e9d66cc40d0762f0189ef2885bdfc09eb5"
+      },
+      {
+        "label": "Polygon · #97,755,838 · 0xeeb671e0",
+        "url": "https://polygonscan.com/tx/0xeeb671e067aa6fa91e176fc96d2a5d8eab477ad90360736db270d52a78e69663"
+      }
+    ]
+  },
+  {
+    "id": "pm-a19cbaba-99a1879635bc-0",
+    "actor": "Tokor · 0xa19cba…1ade6b",
+    "date": "2026-10-29",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:ethereum"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$454,858.41",
+      "+$454,858.41"
+    ],
+    "title": [
+      "ETH 跌触 2,250 美元 · Yes",
+      "Will Ethereum dip to $2,250 by December 31, 2026? · Yes"
+    ],
+    "summary": [
+      "Tokor · 0xa19cba…1ade6b 的 Yes 份额已平仓，该腿盈利 $454,858.41。",
+      "Tokor · 0xa19cba…1ade6b closed the Yes position with a realized gain of $454,858.41."
+    ],
+    "logic": [
+      "Yes 持有的是年内触价条件。币安 ETH/USDT 一分钟线的最低价一旦触及 2,250 美元或更低，条件即可兑现。 该钱包所持方向为 Yes，平均每份 $0.3434，最终该方向定价为 $1。",
+      "Yes required a Binance ETH/USDT one-minute candle to reach a low of $2,250 or below before year-end. This wallet held Yes at an average of $0.3434 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "触价可提前结算。用年末收盘价复盘这笔交易，会检验错条件。",
+      "A touch can resolve the market early. A year-end close tests a different proposition."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 持有的是年内触价条件。币安 ETH/USDT 一分钟线的最低价一旦触及 2,250 美元或更低，条件即可兑现。",
+          "Yes required a Binance ETH/USDT one-minute candle to reach a low of $2,250 or below before year-end."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-09-03 02:50 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.3434。",
+          "First entry at 2026-09-03 02:50 UTC. The reported average price for Yes was $0.3434 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-09-23 08:47 UTC，买入 45,401.65 份 Yes，成交价约 $0.26，该笔成交金额 $12,415.9。",
+          "At 2026-09-23 08:47 UTC, the wallet bought 45,401.65 Yes shares at about $0.26, for $12,415.9 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-10-29 22:45 UTC，钱包赎回 692,828.31 份，官方活动记录的兑付金额为 $692,828.31。",
+          "At 2026-10-29 22:45 UTC, the wallet redeemed 692,828.31 shares. The activity ledger records $692,828.31 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-10-29，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2026-10-29 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-10-29 22:45 UTC。平台剩余份额为 0，已实现盈亏 +$454,858.41。",
+          "The last position activity was at 2026-10-29 22:45 UTC. The remaining size was 0 shares and the position realized +$454,858.41."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xa19cba…1ade6b · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xa19cbababc312f9df185e49d7004c249ed1ade6b&condition=0x99a1879635bc8873891cc472d5e39ca0efaf2017c562ae244810747a7f8edbd5&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Ethereum dip to $2,250 by December 31, 2026?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-ethereum-dip-to-2250-by-december-31-2026"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xa19cbababc312f9df185e49d7004c249ed1ade6b&condition=0x99a1879635bc8873891cc472d5e39ca0efaf2017c562ae244810747a7f8edbd5&limit=100"
+      },
+      {
+        "label": "Polygon · #94,298,761 · 0x4397d632",
+        "url": "https://polygonscan.com/tx/0x4397d6323821f14cc01e70d4d87b04b9f0c882cab228597a9c12db910afccd73"
+      },
+      {
+        "label": "Polygon · #96,405,660 · 0xda0f0a6d",
+        "url": "https://polygonscan.com/tx/0xda0f0a6daa40955032c583d35f73acf4c3a8b03b3b87ac8bec289c20da431791"
+      }
+    ]
+  },
+  {
+    "id": "pm-3a8aa345-876506d8b2bd-0",
+    "actor": "TheReturnOfDarthMaul · 0x3a8aa3…be7699",
+    "date": "2026-09-16",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$2,052,668.52",
+      "+$2,052,668.52"
+    ],
+    "title": [
+      "美联储九月加息 25 个基点 · Yes",
+      "Will the Fed increase interest rates by 25 bps after the September 2026 meeting? · Yes"
+    ],
+    "summary": [
+      "TheReturnOfDarthMaul · 0x3a8aa3…be7699 的 Yes 份额已平仓，该腿盈利 $2,052,668.52。",
+      "TheReturnOfDarthMaul · 0x3a8aa3…be7699 closed the Yes position with a realized gain of $2,052,668.52."
+    ],
+    "logic": [
+      "Yes 押注九月 FOMC 会议调升联邦基金目标区间上限，幅度为该合约约定的 25 个基点。 该钱包所持方向为 Yes，平均每份 $0.655，最终该方向定价为 $1。",
+      "Yes took exposure to the 25-basis-point increase bucket for the September FOMC meeting, measured at the upper target bound. This wallet held Yes at an average of $0.655 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "会议月份和幅度各自限定合约，同一账户七月仓的结果不能套用到九月。",
+      "Meeting date and size define the contract. The same wallet’s July position is a separate exposure."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 押注九月 FOMC 会议调升联邦基金目标区间上限，幅度为该合约约定的 25 个基点。",
+          "Yes took exposure to the 25-basis-point increase bucket for the September FOMC meeting, measured at the upper target bound."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-06-03 14:23 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.655。",
+          "First entry at 2026-06-03 14:23 UTC. The reported average price for Yes was $0.655 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-09-16 16:40 UTC，买入 24,718.61 份 Yes，成交价约 $0.88，该笔成交金额 $21,752.38。",
+          "At 2026-09-16 16:40 UTC, the wallet bought 24,718.61 Yes shares at about $0.88, for $21,752.38 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-09-16 21:40 UTC，钱包赎回 5,951,005.77 份，官方活动记录的兑付金额为 $5,951,005.77。",
+          "At 2026-09-16 21:40 UTC, the wallet redeemed 5,951,005.77 shares. The activity ledger records $5,951,005.77 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-09-16，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2026-09-16 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-09-16 21:40 UTC。平台剩余份额为 0，已实现盈亏 +$2,052,668.52。",
+          "The last position activity was at 2026-09-16 21:40 UTC. The remaining size was 0 shares and the position realized +$2,052,668.52."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0x3a8aa3…be7699 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0x3a8aa345d5db7ec5138298c8c4f4540259be7699&condition=0x876506d8b2bd7a0d3fa4fe18c024eee6e1dd81ee24c26795dadd6cfe4a7b5d0d&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will the Fed increase interest rates by 25 bps after the September 2026 meeting?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-the-fed-increase-interest-rates-by-25-bps-after-the-september-2026-meeting-649"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0x3a8aa345d5db7ec5138298c8c4f4540259be7699&condition=0x876506d8b2bd7a0d3fa4fe18c024eee6e1dd81ee24c26795dadd6cfe4a7b5d0d&limit=100"
+      },
+      {
+        "label": "Polygon · #93,914,521 · 0x7a81ef43",
+        "url": "https://polygonscan.com/tx/0x7a81ef430ec44000e48221861c2479c63cf64d663b79ea4c1db3ba7c9ed47c65"
+      },
+      {
+        "label": "Polygon · #93,926,544 · 0xadf7304b",
+        "url": "https://polygonscan.com/tx/0xadf7304b3b0b68737bf066480b52f7b3e609b7a65e672964c5b80e5b0b35b6c9"
+      }
+    ]
+  },
+  {
+    "id": "pm-3a8aa345-8bf1c1536ecb-1",
+    "actor": "TheReturnOfDarthMaul · 0x3a8aa3…be7699",
+    "date": "2026-07-29",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "−$419,739.61",
+      "−$419,739.61"
+    ],
+    "title": [
+      "美联储七月维持利率的反向仓 · No",
+      "Will there be no change in Fed interest rates after the July 2026 meeting? · No"
+    ],
+    "summary": [
+      "TheReturnOfDarthMaul · 0x3a8aa3…be7699 的 No 份额已平仓，该腿亏损 $419,739.61。",
+      "TheReturnOfDarthMaul · 0x3a8aa3…be7699 closed the No position with a realized loss of $419,739.61."
+    ],
+    "logic": [
+      "No 持有的是对七月 FOMC 利率维持不变的反向敞口。 该钱包所持方向为 No，平均每份 $0.1577，最终该方向定价为 $0。",
+      "No took the opposite side of an unchanged upper target bound at the July FOMC meeting. This wallet held No at an average of $0.1577 per share; this outcome ended at $0."
+    ],
+    "lesson": [
+      "逆向仓的低买入价，也意味着大量份额可由少量单价积成大额总风险，应看实际持仓与损失。",
+      "A low per-share price can coexist with substantial dollar risk when accumulated across many shares."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "No 持有的是对七月 FOMC 利率维持不变的反向敞口。",
+          "No took the opposite side of an unchanged upper target bound at the July FOMC meeting."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-06-26 16:57 UTC。持有 No，平台记录该腿的平均价为每份 $0.1577。",
+          "First entry at 2026-06-26 16:57 UTC. The reported average price for No was $0.1577 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-07-27 20:24 UTC，买入 100,000 份 No，成交价约 $0.26909，该笔成交金额 $27,892.53。",
+          "At 2026-07-27 20:24 UTC, the wallet bought 100,000 No shares at about $0.26909, for $27,892.53 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-07-29 20:10 UTC，钱包赎回 2,448,012.85 份，官方活动记录的兑付金额为 $0。",
+          "At 2026-07-29 20:10 UTC, the wallet redeemed 2,448,012.85 shares. The activity ledger records $0 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-07-29，该市场关闭，No 的最终价格为每份 $0。",
+          "On 2026-07-29 the market closed, with No priced at $0 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-07-29 20:10 UTC。平台剩余份额为 0，已实现盈亏 −$419,739.61。",
+          "The last position activity was at 2026-07-29 20:10 UTC. The remaining size was 0 shares and the position realized −$419,739.61."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0x3a8aa3…be7699 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0x3a8aa345d5db7ec5138298c8c4f4540259be7699&condition=0x8bf1c1536ecb1c08fe13c6b71e8ab1f58bf3461c4cb79f5f1679f869a06aef86&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will there be no change in Fed interest rates after the July 2026 meeting?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-there-be-no-change-in-fed-interest-rates-after-the-july-2026-meeting"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0x3a8aa345d5db7ec5138298c8c4f4540259be7699&condition=0x8bf1c1536ecb1c08fe13c6b71e8ab1f58bf3461c4cb79f5f1679f869a06aef86&limit=100"
+      },
+      {
+        "label": "Polygon · #90,985,898 · 0xdd4a8f15",
+        "url": "https://polygonscan.com/tx/0xdd4a8f15a2ef6f71a4ca56893fcf2fbd6103f118759b9bfa8f37717ff9de52a3"
+      },
+      {
+        "label": "Polygon · #91,100,527 · 0x0afab5b2",
+        "url": "https://polygonscan.com/tx/0x0afab5b291863e64d609bdf638a9ec1fb66e22fabf720cc70b4a51e90fbea1e6"
+      }
+    ]
+  },
+  {
+    "id": "pm-75973c66-8fca6b7628b1-0",
+    "actor": "0x75973C667CeC880353450BE3A6F17C5da67B4421-1784278069335 · 0x75973c…7b4421",
+    "date": "2026-07-17",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:binancecoin"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$126,050.68",
+      "+$126,050.68"
+    ],
+    "title": [
+      "BNB 五分钟方向合约 · Up",
+      "BNB Up or Down - July 17, 7:50AM-7:55AM ET · Up"
+    ],
+    "summary": [
+      "0x75973C667CeC880353450BE3A6F17C5da67B4421-1784278069335 · 0x75973c…7b4421 的 Up 份额已平仓，该腿盈利 $126,050.68。",
+      "0x75973C667CeC880353450BE3A6F17C5da67B4421-1784278069335 · 0x75973c…7b4421 closed the Up position with a realized gain of $126,050.68."
+    ],
+    "logic": [
+      "该合约比较美东 07:50 和 07:55 两个端点的 BNB 参考价。 该钱包所持方向为 Up，平均每份 $0.1，最终该方向定价为 $1。",
+      "This market compared the reference BNB prices at 07:50 and 07:55 ET. This wallet held Up at an average of $0.1 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "一分钟的时间偏差就可能比较到另一份合约，先核对市场标识再分析同一钱包的多笔仓位。",
+      "Even a one-minute offset can reference a different contract. Match the market ID before comparing a wallet’s short-duration trades."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "该合约比较美东 07:50 和 07:55 两个端点的 BNB 参考价。",
+          "This market compared the reference BNB prices at 07:50 and 07:55 ET."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-07-17 11:42 UTC。持有 Up，平台记录该腿的平均价为每份 $0.1。",
+          "First entry at 2026-07-17 11:42 UTC. The reported average price for Up was $0.1 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-07-17 11:42 UTC，买入 118,815.48 份 Up，成交价约 $0.1，该笔成交金额 $11,881.55。",
+          "At 2026-07-17 11:42 UTC, the wallet bought 118,815.48 Up shares at about $0.1, for $11,881.55 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-07-17 11:55 UTC，钱包赎回 140,056.31 份，官方活动记录的兑付金额为 $140,056.31。",
+          "At 2026-07-17 11:55 UTC, the wallet redeemed 140,056.31 shares. The activity ledger records $140,056.31 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-07-17，该市场关闭，Up 的最终价格为每份 $1。",
+          "On 2026-07-17 the market closed, with Up priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-07-17 11:55 UTC。平台剩余份额为 0，已实现盈亏 +$126,050.68。",
+          "The last position activity was at 2026-07-17 11:55 UTC. The remaining size was 0 shares and the position realized +$126,050.68."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0x75973c…7b4421 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0x75973c667cec880353450be3a6f17c5da67b4421&condition=0x8fca6b7628b174867bffb49105e2d70e6c57e1caafbc58cfc54af4521cf9cf85&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · BNB Up or Down - July 17, 7:50AM-7:55AM ET",
+        "url": "https://gamma-api.polymarket.com/markets/slug/bnb-updown-5m-1784289000"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0x75973c667cec880353450be3a6f17c5da67b4421&condition=0x8fca6b7628b174867bffb49105e2d70e6c57e1caafbc58cfc54af4521cf9cf85&limit=100"
+      },
+      {
+        "label": "Polygon · #90,389,030 · 0xd5610833",
+        "url": "https://polygonscan.com/tx/0xd5610833d40f4e359057d1fd954d5b12760a01127ea9d349677006e8c7b6e681"
+      },
+      {
+        "label": "Polygon · #90,389,559 · 0xd85de2a9",
+        "url": "https://polygonscan.com/tx/0xd85de2a9dfe6d8609ffccf5ed1c51bcd037780ef46b46e96fe6574fed9ebfda4"
+      }
+    ]
+  },
+  {
+    "id": "pm-204f72f3-65c752289ab1-1",
+    "actor": "swisstony · 0x204f72…a95e14",
+    "date": "2026-06-22",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "−$1,004,361.98",
+      "−$1,004,361.98"
+    ],
+    "title": [
+      "阿根廷让 1.5 球：奥地利方向 · Austria",
+      "Spread: Argentina (-1.5) · Austria"
+    ],
+    "summary": [
+      "swisstony · 0x204f72…a95e14 的 Austria 份额已平仓，该腿亏损 $1,004,361.98。",
+      "swisstony · 0x204f72…a95e14 closed the Austria position with a realized loss of $1,004,361.98."
+    ],
+    "logic": [
+      "Austria 在这个让球盘中代表阿根廷未能在常规时间净胜至少两球；平局和一球差均由条款单列。 该钱包所持方向为 Austria，平均每份 $0.6268，最终该方向定价为 $0。",
+      "Austria covered this spread if Argentina failed to win by two or more goals in regulation. This wallet held Austria at an average of $0.6268 per share; this outcome ended at $0."
+    ],
+    "lesson": [
+      "让球盘的队名只是一个结果标签，必须同时看净胜门槛和比赛时段。",
+      "The team name alone is insufficient; review the required margin and the time included in settlement."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Austria 在这个让球盘中代表阿根廷未能在常规时间净胜至少两球；平局和一球差均由条款单列。",
+          "Austria covered this spread if Argentina failed to win by two or more goals in regulation."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-06-01 11:46 UTC。持有 Austria，平台记录该腿的平均价为每份 $0.6268。",
+          "First entry at 2026-06-01 11:46 UTC. The reported average price for Austria was $0.6268 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-06-22 03:29 UTC，买入 30,479 份 Austria，成交价约 $0.61，该笔成交金额 $18,809.72。",
+          "At 2026-06-22 03:29 UTC, the wallet bought 30,479 Austria shares at about $0.61, for $18,809.72 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-06-22 19:39 UTC，钱包赎回 1,580,622.81 份，官方活动记录的兑付金额为 $0。",
+          "At 2026-06-22 19:39 UTC, the wallet redeemed 1,580,622.81 shares. The activity ledger records $0 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-06-22，该市场关闭，Austria 的最终价格为每份 $0。",
+          "On 2026-06-22 the market closed, with Austria priced at $0 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-06-22 19:39 UTC。平台剩余份额为 0，已实现盈亏 −$1,004,361.98。",
+          "The last position activity was at 2026-06-22 19:39 UTC. The remaining size was 0 shares and the position realized −$1,004,361.98."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 Argentina 已平仓盈亏 +$18,319.07。两条已平仓记录合计 −$986,042.92。",
+          "The wallet’s closed Argentina leg realized +$18,319.07. The two closed legs sum to −$986,042.92."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0x204f72…a95e14 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0x204f72f35326db932158cba6adff0b9a1da95e14&condition=0x65c752289ab1e3b4fde40b3909d9c0fc2b35849ad950a38cab30d19a80457a9a&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Spread: Argentina (-1.5)",
+        "url": "https://gamma-api.polymarket.com/markets/slug/fifwc-arg-aut-2026-06-22-spread-home-1pt5"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0x204f72f35326db932158cba6adff0b9a1da95e14&condition=0x65c752289ab1e3b4fde40b3909d9c0fc2b35849ad950a38cab30d19a80457a9a&limit=100"
+      },
+      {
+        "label": "Polygon · #88,929,310 · 0x30857e17",
+        "url": "https://polygonscan.com/tx/0x30857e17882e0a4bf55adb610e727e15377add27ceb2032975b644da0bb47df8"
+      },
+      {
+        "label": "Polygon · #88,968,115 · 0x7277bf8a",
+        "url": "https://polygonscan.com/tx/0x7277bf8ae5cfb102591c10a6037b8990a1440b5e97e6dce70f7e9ffed6682bb5"
+      }
+    ]
+  },
+  {
+    "id": "pm-96cfcb0c-e70fd51f42e6-1",
+    "actor": "mintblade · 0x96cfcb…6b1acb",
+    "date": "2026-06-16",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$7,231,848.50",
+      "+$7,231,848.50"
+    ],
+    "title": [
+      "世界杯：伊朗是否获胜 · No",
+      "Will IR Iran win on 2026-06-15? · No"
+    ],
+    "summary": [
+      "mintblade · 0x96cfcb…6b1acb 的 No 份额已平仓，该腿盈利 $7,231,848.50。",
+      "mintblade · 0x96cfcb…6b1acb closed the No position with a realized gain of $7,231,848.50."
+    ],
+    "logic": [
+      "No 对应伊朗在该场比赛规定口径下未取得胜利。 该钱包所持方向为 No，平均每份 $0.4966，最终该方向定价为 $1。",
+      "No took exposure to Iran failing to win this match under the settlement rules. This wallet held No at an average of $0.4966 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "单个钱包可以兑换上千万美元的代币，核对是否盈利时仍要查买入均价与平台的仓位账。",
+      "A multimillion-dollar redemption still requires the entry price and the position ledger to measure the gain."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "No 对应伊朗在该场比赛规定口径下未取得胜利。",
+          "No took exposure to Iran failing to win this match under the settlement rules."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-06-16 00:17 UTC。持有 No，平台记录该腿的平均价为每份 $0.4966。",
+          "First entry at 2026-06-16 00:17 UTC. The reported average price for No was $0.4966 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-06-16 00:27 UTC，买入 1,041,667 份 No，成交价约 $0.48，该笔成交金额 $507,800.16。",
+          "At 2026-06-16 00:27 UTC, the wallet bought 1,041,667 No shares at about $0.48, for $507,800.16 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-06-16 03:22 UTC，钱包赎回 14,366,350.6 份，官方活动记录的兑付金额为 $14,366,350.6。",
+          "At 2026-06-16 03:22 UTC, the wallet redeemed 14,366,350.6 shares. The activity ledger records $14,366,350.6 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-06-16，该市场关闭，No 的最终价格为每份 $1。",
+          "On 2026-06-16 the market closed, with No priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-06-16 03:22 UTC。平台剩余份额为 0，已实现盈亏 +$7,231,848.50。",
+          "The last position activity was at 2026-06-16 03:22 UTC. The remaining size was 0 shares and the position realized +$7,231,848.50."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0x96cfcb…6b1acb · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0x96cfcb0c30942cfcd1cdf76c7d408794d66b1acb&condition=0xe70fd51f42e61fc309d8e57019a7b76c8dc7bd19b473351d56ff1e125ae0d9d4&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will IR Iran win on 2026-06-15?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/fifwc-irn-nzl-2026-06-15-irn"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0x96cfcb0c30942cfcd1cdf76c7d408794d66b1acb&condition=0xe70fd51f42e61fc309d8e57019a7b76c8dc7bd19b473351d56ff1e125ae0d9d4&limit=100"
+      },
+      {
+        "label": "Polygon · #88,576,423 · 0xe1e52688",
+        "url": "https://polygonscan.com/tx/0xe1e5268893e3c7a3d935c2348f6133be2a3285daaeabf927b2c88587e5da574d"
+      },
+      {
+        "label": "Polygon · #88,583,444 · 0x9ce3d84d",
+        "url": "https://polygonscan.com/tx/0x9ce3d84dfdbcffe4fe88beffcc487fdf21b67ab4179b63a635e630a950746aac"
+      }
+    ]
+  },
+  {
+    "id": "pm-f705fa04-8eaedbeb969f-0",
+    "actor": "0xf705fa…453ca7",
+    "date": "2026-06-05",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:ripple"
+    ],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "−$41,256.85",
+      "−$41,256.85"
+    ],
+    "title": [
+      "XRP 正午收盘价高于 1.10 美元 · Yes",
+      "Will the price of XRP be above $1.10 on June 5? · Yes"
+    ],
+    "summary": [
+      "0xf705fa…453ca7 的 Yes 份额已平仓，该腿亏损 $41,256.85。",
+      "0xf705fa…453ca7 closed the Yes position with a realized loss of $41,256.85."
+    ],
+    "logic": [
+      "Yes 要求 6 月 5 日美东正午指定的币安 XRP/USDT 一分钟 K 线收盘价严格高于 1.10 美元。 该钱包所持方向为 Yes，平均每份 $0.9663，最终该方向定价为 $0。",
+      "Yes required the specified noon ET Binance XRP/USDT one-minute candle on June 5 to close strictly above $1.10. This wallet held Yes at an average of $0.9663 per share; this outcome ended at $0."
+    ],
+    "lesson": [
+      "接近 1 美元一份的建仓价格仍可能遇到零兑付。盘中高点不能代替指定时刻的收盘价。",
+      "A near-dollar entry can still pay zero. An intraday high does not establish the specified closing price."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 要求 6 月 5 日美东正午指定的币安 XRP/USDT 一分钟 K 线收盘价严格高于 1.10 美元。",
+          "Yes required the specified noon ET Binance XRP/USDT one-minute candle on June 5 to close strictly above $1.10."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-06-02 16:15 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.9663。",
+          "First entry at 2026-06-02 16:15 UTC. The reported average price for Yes was $0.9663 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-06-02 16:15 UTC，买入 10,000 份 Yes，成交价约 $0.983，该笔成交金额 $9,841.7。",
+          "At 2026-06-02 16:15 UTC, the wallet bought 10,000 Yes shares at about $0.983, for $9,841.7 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "一笔卖出",
+          "Observed sale"
+        ],
+        "detail": [
+          "2026-06-05 15:08 UTC，卖出 7,537.72 份 Yes，成交价约 $0.73866，该笔成交金额 $5,465.94。",
+          "At 2026-06-05 15:08 UTC, the wallet sold 7,537.72 Yes shares at about $0.73866, for $5,465.94 in recorded volume."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-06-05 18:57 UTC，钱包赎回 30,916.24 份，官方活动记录的兑付金额为 $0。",
+          "At 2026-06-05 18:57 UTC, the wallet redeemed 30,916.24 shares. The activity ledger records $0 in proceeds."
+        ],
+        "source": 5
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-06-05，该市场关闭，Yes 的最终价格为每份 $0。",
+          "On 2026-06-05 the market closed, with Yes priced at $0 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-06-05 18:57 UTC。平台剩余份额为 0，已实现盈亏 −$41,256.85。",
+          "The last position activity was at 2026-06-05 18:57 UTC. The remaining size was 0 shares and the position realized −$41,256.85."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xf705fa…453ca7 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xf705fa045201391d9632b7f3cde06a5e24453ca7&condition=0x8eaedbeb969f9a791e4237a41e0ed8925b965550f976b4b5eb7241a42b08fbe1&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will the price of XRP be above $1.10 on June 5?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/xrp-above-1pt1-on-june-5-2026"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xf705fa045201391d9632b7f3cde06a5e24453ca7&condition=0x8eaedbeb969f9a791e4237a41e0ed8925b965550f976b4b5eb7241a42b08fbe1&limit=100"
+      },
+      {
+        "label": "Polygon · #87,815,535 · 0x69d823a8",
+        "url": "https://polygonscan.com/tx/0x69d823a8299029a2896b9816cdf3c50e04415870a88edb3671a9d666b1bddf57"
+      },
+      {
+        "label": "Polygon · #87,978,070 · 0xb82d588f",
+        "url": "https://polygonscan.com/tx/0xb82d588f44aae51eeacacaf34ffde5eba5d3ca22f28258dd9ddb731993b64398"
+      },
+      {
+        "label": "Polygon · #87,987,251 · 0x614112dc",
+        "url": "https://polygonscan.com/tx/0x614112dcd21ee16c56d98747b915a2b3a0a8d82e1e731dd7780244298ebba261"
+      }
+    ]
+  },
+  {
+    "id": "pm-e734e7bf-05ccbc3b7861-0",
+    "actor": "boyau · 0xe734e7…514f0c",
+    "date": "2026-04-18",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$191,032.06",
+      "+$191,032.06"
+    ],
+    "title": [
+      "WTI 四月跌触 80 美元 · Yes",
+      "Will WTI Crude Oil (WTI) hit (LOW) $80 in April? · Yes"
+    ],
+    "summary": [
+      "boyau · 0xe734e7…514f0c 的 Yes 份额已平仓，该腿盈利 $191,032.06。",
+      "boyau · 0xe734e7…514f0c closed the Yes position with a realized gain of $191,032.06."
+    ],
+    "logic": [
+      "Yes 对应 WTI 活跃月份期货在四月出现一分钟最低价小于或等于 80 美元。 该钱包所持方向为 Yes，平均每份 $0.3262，最终该方向定价为 $1。",
+      "Yes required a one-minute low of $80 or less in April in the active-month WTI futures contract. This wallet held Yes at an average of $0.3262 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "短线卖出的现金与到期赎回是两种来源。本例最后一笔赎回只有数十美元，单看它会遗漏卖出成交。",
+      "Trading proceeds and redemption are separate flows. Looking only at this small final redemption misses observed sales."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 对应 WTI 活跃月份期货在四月出现一分钟最低价小于或等于 80 美元。",
+          "Yes required a one-minute low of $80 or less in April in the active-month WTI futures contract."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-04-03 05:25 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.3262。",
+          "First entry at 2026-04-03 05:25 UTC. The reported average price for Yes was $0.3262 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-04-03 11:58 UTC，买入 3,333 份 Yes，成交价约 $0.16，该笔成交金额 $533.28。",
+          "At 2026-04-03 11:58 UTC, the wallet bought 3,333 Yes shares at about $0.16, for $533.28 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "一笔卖出",
+          "Observed sale"
+        ],
+        "detail": [
+          "2026-04-17 16:08 UTC，卖出 20,888.29 份 Yes，成交价约 $0.889，该笔成交金额 $18,569.69。",
+          "At 2026-04-17 16:08 UTC, the wallet sold 20,888.29 Yes shares at about $0.889, for $18,569.69 in recorded volume."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-04-18 01:29 UTC，钱包赎回 46.42 份，官方活动记录的兑付金额为 $46.42。",
+          "At 2026-04-18 01:29 UTC, the wallet redeemed 46.42 shares. The activity ledger records $46.42 in proceeds."
+        ],
+        "source": 5
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-04-17，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2026-04-17 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-04-18 01:29 UTC。平台剩余份额为 0，已实现盈亏 +$191,032.06。",
+          "The last position activity was at 2026-04-18 01:29 UTC. The remaining size was 0 shares and the position realized +$191,032.06."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 No 已平仓盈亏 −$19,852.17。两条已平仓记录合计 +$171,179.90。",
+          "The wallet’s closed No leg realized −$19,852.17. The two closed legs sum to +$171,179.90."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xe734e7…514f0c · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xe734e7bf7cfb9e464681f71822f6c2f6be514f0c&condition=0x05ccbc3b7861349dc2fc0ce2c2bca9fd9671675171d7070abdf087ba1d7f085b&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will WTI Crude Oil (WTI) hit (LOW) $80 in April?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-wti-crude-oil-wti-hit-low-80-in-april-167-519-314-426-955-262-749-894-518-898-344"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xe734e7bf7cfb9e464681f71822f6c2f6be514f0c&condition=0x05ccbc3b7861349dc2fc0ce2c2bca9fd9671675171d7070abdf087ba1d7f085b&limit=100"
+      },
+      {
+        "label": "Polygon · #85,048,736 · 0x41939a89",
+        "url": "https://polygonscan.com/tx/0x41939a89ed63544b200d107150a3a97a5bb2267048a3708b34d69bc21a59dba6"
+      },
+      {
+        "label": "Polygon · #85,661,043 · 0xed38c118",
+        "url": "https://polygonscan.com/tx/0xed38c118698996f8f3d6cd96ff23241c92a321f19e38e4ad031511a79f0a09c4"
+      },
+      {
+        "label": "Polygon · #85,677,868 · 0x6dd7eb8a",
+        "url": "https://polygonscan.com/tx/0x6dd7eb8a6507bc41b1599f445f443fed1ab6f8c7a67e8dc6261c0568b2cbdf72"
+      }
+    ]
+  },
+  {
+    "id": "pm-63ce3421-54deefad9e76-0",
+    "actor": "0x8dxd · 0x63ce34…f9ba9a",
+    "date": "2026-02-09",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:bitcoin"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$41,052.93",
+      "+$41,052.93"
+    ],
+    "title": [
+      "BTC 十五分钟方向合约 · Up",
+      "Bitcoin Up or Down - February 9, 9:00AM-9:15AM ET · Up"
+    ],
+    "summary": [
+      "0x8dxd · 0x63ce34…f9ba9a 的 Up 份额已平仓，该腿盈利 $41,052.93。",
+      "0x8dxd · 0x63ce34…f9ba9a closed the Up position with a realized gain of $41,052.93."
+    ],
+    "logic": [
+      "Up 对应美东 09:00 至 09:15 的 Chainlink BTC/USD 期末价大于或等于期初价。 该钱包所持方向为 Up，平均每份 $0.2787，最终该方向定价为 $1。",
+      "Up paid if Chainlink BTC/USD ended the 09:00–09:15 ET window at or above its opening price. This wallet held Up at an average of $0.2787 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "按预言机和起止时间复核；相邻分钟或其他交易所的成交不能代替结算读数。",
+      "Use the named oracle and both endpoints. An adjacent minute or a different exchange is not the settlement input."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Up 对应美东 09:00 至 09:15 的 Chainlink BTC/USD 期末价大于或等于期初价。",
+          "Up paid if Chainlink BTC/USD ended the 09:00–09:15 ET window at or above its opening price."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-02-09 14:00 UTC。持有 Up，平台记录该腿的平均价为每份 $0.2787。",
+          "First entry at 2026-02-09 14:00 UTC. The reported average price for Up was $0.2787 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-02-09 14:00 UTC，买入 1,242 份 Up，成交价约 $0.67，该笔成交金额 $832.14。",
+          "At 2026-02-09 14:00 UTC, the wallet bought 1,242 Up shares at about $0.67, for $832.14 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-02-09 14:18 UTC，钱包赎回 59,396.85 份，官方活动记录的兑付金额为 $59,396.85。",
+          "At 2026-02-09 14:18 UTC, the wallet redeemed 59,396.85 shares. The activity ledger records $59,396.85 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-02-09，该市场关闭，Up 的最终价格为每份 $1。",
+          "On 2026-02-09 the market closed, with Up priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-02-09 14:18 UTC。平台剩余份额为 0，已实现盈亏 +$41,052.93。",
+          "The last position activity was at 2026-02-09 14:18 UTC. The remaining size was 0 shares and the position realized +$41,052.93."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 Down 已平仓盈亏 −$14,730.82。两条已平仓记录合计 +$26,322.11。",
+          "The wallet’s closed Down leg realized −$14,730.82. The two closed legs sum to +$26,322.11."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0x63ce34…f9ba9a · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0x63ce342161250d705dc0b16df89036c8e5f9ba9a&condition=0x54deefad9e76ac1e4481fca4f95c472dea9c0f171b943235a9800c73a86adce7&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Bitcoin Up or Down - February 9, 9:00AM-9:15AM ET",
+        "url": "https://gamma-api.polymarket.com/markets/slug/btc-updown-15m-1770645600"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0x63ce342161250d705dc0b16df89036c8e5f9ba9a&condition=0x54deefad9e76ac1e4481fca4f95c472dea9c0f171b943235a9800c73a86adce7&limit=100"
+      },
+      {
+        "label": "Polygon · #82,762,800 · 0x4585f609",
+        "url": "https://polygonscan.com/tx/0x4585f609d5df79ae04aa649e438a1ce39b628c416e4a8b3271f86e3cce2553b6"
+      },
+      {
+        "label": "Polygon · #82,763,345 · 0xac26ad9d",
+        "url": "https://polygonscan.com/tx/0xac26ad9dd6722b9afb9c36f9a1e5ed08607d142e3667e713f5b45f529686eec2"
+      }
+    ]
+  },
+  {
+    "id": "pm-f705fa04-b0cece033366-1",
+    "actor": "0xf705fa…453ca7",
+    "date": "2026-01-31",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:solana"
+    ],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "−$30,650.71",
+      "−$30,650.71"
+    ],
+    "title": [
+      "SOL 一月跌触 100 美元 · No",
+      "Will Solana dip to $100 in January? · No"
+    ],
+    "summary": [
+      "0xf705fa…453ca7 的 No 份额已平仓，该腿亏损 $30,650.71。",
+      "0xf705fa…453ca7 closed the No position with a realized loss of $30,650.71."
+    ],
+    "logic": [
+      "交易的是 SOL 在指定一月的低点是否触及 100 美元的条件份额。 该钱包所持方向为 No，平均每份 $0.8985，最终该方向定价为 $0。",
+      "The two outcome tokens tracked whether SOL touched $100 on the downside during the specified January. This wallet held No at an average of $0.8985 per share; this outcome ended at $0."
+    ],
+    "lesson": [
+      "分清触价方向、持有份额与止盈止损动作，条件触发时间与代币赎回时间也可能不同。",
+      "Distinguish the price barrier, the held outcome, and any exits; a barrier touch and token redemption can occur at different times."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "交易的是 SOL 在指定一月的低点是否触及 100 美元的条件份额。",
+          "The two outcome tokens tracked whether SOL touched $100 on the downside during the specified January."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-01-04 19:33 UTC。持有 No，平台记录该腿的平均价为每份 $0.8985。",
+          "First entry at 2026-01-04 19:33 UTC. The reported average price for No was $0.8985 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-01-19 00:54 UTC，买入 8,669.99 份 No，成交价约 $0.961，该笔成交金额 $8,331.86。",
+          "At 2026-01-19 00:54 UTC, the wallet bought 8,669.99 No shares at about $0.961, for $8,331.86 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "一笔卖出",
+          "Observed sale"
+        ],
+        "detail": [
+          "2026-01-25 16:03 UTC，卖出 10,000 份 No，成交价约 $0.96205，该笔成交金额 $9,620.5。",
+          "At 2026-01-25 16:03 UTC, the wallet sold 10,000 No shares at about $0.96205, for $9,620.5 in recorded volume."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-01-31 21:36 UTC，钱包赎回 0.83 份，官方活动记录的兑付金额为 $0。",
+          "At 2026-01-31 21:36 UTC, the wallet redeemed 0.83 shares. The activity ledger records $0 in proceeds."
+        ],
+        "source": 5
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-01-31，该市场关闭，No 的最终价格为每份 $0。",
+          "On 2026-01-31 the market closed, with No priced at $0 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-01-31 21:36 UTC。平台剩余份额为 0，已实现盈亏 −$30,650.71。",
+          "The last position activity was at 2026-01-31 21:36 UTC. The remaining size was 0 shares and the position realized −$30,650.71."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 Yes 已平仓盈亏 +$426.35。两条已平仓记录合计 −$30,224.37。",
+          "The wallet’s closed Yes leg realized +$426.35. The two closed legs sum to −$30,224.37."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xf705fa…453ca7 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xf705fa045201391d9632b7f3cde06a5e24453ca7&condition=0xb0cece0333663d1f2a21c3c350ac8ebe3ef87198d6bef65247dd164ecf773400&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Solana dip to $100 in January?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-solana-dip-to-100-in-january-2026"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xf705fa045201391d9632b7f3cde06a5e24453ca7&condition=0xb0cece0333663d1f2a21c3c350ac8ebe3ef87198d6bef65247dd164ecf773400&limit=100"
+      },
+      {
+        "label": "Polygon · #81,832,037 · 0x73ca797b",
+        "url": "https://polygonscan.com/tx/0x73ca797baeef8cf9822bd9026af5eb2d27f47bbe147bc815b8a4f5a06c834316"
+      },
+      {
+        "label": "Polygon · #82,118,511 · 0x0ff11dfa",
+        "url": "https://polygonscan.com/tx/0x0ff11dfa85aafe9f6cb2f1ef7181d4f66b23ab4aca08a0c60f48c1326916e8ff"
+      },
+      {
+        "label": "Polygon · #82,387,703 · 0xa6195193",
+        "url": "https://polygonscan.com/tx/0xa6195193ce3ea0074003acf5a339e8c3358a441926bfb1acc80ed998fd3ceca2"
+      }
+    ]
+  },
+  {
+    "id": "pm-f705fa04-62f01109c53d-0",
+    "actor": "0xf705fa…453ca7",
+    "date": "2026-01-29",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:bitcoin"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$103,743.64",
+      "+$103,743.64"
+    ],
+    "title": [
+      "BTC 一月跌触 85,000 美元 · Yes",
+      "Will Bitcoin dip to $85,000 in January? · Yes"
+    ],
+    "summary": [
+      "0xf705fa…453ca7 的 Yes 份额已平仓，该腿盈利 $103,743.64。",
+      "0xf705fa…453ca7 closed the Yes position with a realized gain of $103,743.64."
+    ],
+    "logic": [
+      "Yes 持有的是币安 BTC/USDT 月内一分钟最低价触及 85,000 美元的条件。 该钱包所持方向为 Yes，平均每份 $0.3552，最终该方向定价为 $1。",
+      "Yes required a Binance BTC/USDT one-minute low to reach $85,000 or less during January. This wallet held Yes at an average of $0.3552 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "核对已卖出的份额和最后赎回的份额，可以还原分段退出，月末价格本身无法提供这些信息。",
+      "A trade fill and the final redemption reveal separate stages of exit that a month-end price alone cannot show."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 持有的是币安 BTC/USDT 月内一分钟最低价触及 85,000 美元的条件。",
+          "Yes required a Binance BTC/USDT one-minute low to reach $85,000 or less during January."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2026-01-02 22:30 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.3552。",
+          "First entry at 2026-01-02 22:30 UTC. The reported average price for Yes was $0.3552 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2026-01-03 11:21 UTC，买入 10,000 份 Yes，成交价约 $0.54，该笔成交金额 $5,400。",
+          "At 2026-01-03 11:21 UTC, the wallet bought 10,000 Yes shares at about $0.54, for $5,400 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "一笔卖出",
+          "Observed sale"
+        ],
+        "detail": [
+          "2026-01-13 14:43 UTC，卖出 8,600 份 Yes，成交价约 $0.25，该笔成交金额 $2,150。",
+          "At 2026-01-13 14:43 UTC, the wallet sold 8,600 Yes shares at about $0.25, for $2,150 in recorded volume."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2026-01-29 18:48 UTC，钱包赎回 158,598.91 份，官方活动记录的兑付金额为 $158,598.91。",
+          "At 2026-01-29 18:48 UTC, the wallet redeemed 158,598.91 shares. The activity ledger records $158,598.91 in proceeds."
+        ],
+        "source": 5
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2026-01-29，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2026-01-29 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2026-01-29 18:48 UTC。平台剩余份额为 0，已实现盈亏 +$103,743.64。",
+          "The last position activity was at 2026-01-29 18:48 UTC. The remaining size was 0 shares and the position realized +$103,743.64."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 No 已平仓盈亏 −$657.91。两条已平仓记录合计 +$103,085.74。",
+          "The wallet’s closed No leg realized −$657.91. The two closed legs sum to +$103,085.74."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xf705fa…453ca7 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xf705fa045201391d9632b7f3cde06a5e24453ca7&condition=0x62f01109c53d585406b4545e5538b52d76f2895affd933da75190be788afc6ab&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Bitcoin dip to $85,000 in January?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-bitcoin-dip-to-85k-in-january-2026"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xf705fa045201391d9632b7f3cde06a5e24453ca7&condition=0x62f01109c53d585406b4545e5538b52d76f2895affd933da75190be788afc6ab&limit=100"
+      },
+      {
+        "label": "Polygon · #81,160,017 · 0x9005a149",
+        "url": "https://polygonscan.com/tx/0x9005a149b05ef7127d97a2eb006541588363fce921a2a2d1dde7e3de977a1a31"
+      },
+      {
+        "label": "Polygon · #81,597,718 · 0x7f30300d",
+        "url": "https://polygonscan.com/tx/0x7f30300d64e5cf82cc6cef45fffc39ce422b7813957454edf39955150c733914"
+      },
+      {
+        "label": "Polygon · #82,296,246 · 0x5ba9ba68",
+        "url": "https://polygonscan.com/tx/0x5ba9ba68177b415e541f7595a3c050e4e26275c4cf4b112ac56016232cb7fac3"
+      }
+    ]
+  },
+  {
+    "id": "pm-44c1dfe4-20621b51a564-0",
+    "actor": "aenews2 · 0x44c1df…13ebc1",
+    "date": "2025-12-23",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$402,880.36",
+      "+$402,880.36"
+    ],
+    "title": [
+      "《阿凡达：火与烬》北美首周票房 · Yes",
+      "Will \"Avatar: Fire and Ash\" Opening Weekend Box Office be less than 90m? · Yes"
+    ],
+    "summary": [
+      "aenews2 · 0x44c1df…13ebc1 的 Yes 份额已平仓，该腿盈利 $402,880.36。",
+      "aenews2 · 0x44c1df…13ebc1 closed the Yes position with a realized gain of $402,880.36."
+    ],
+    "logic": [
+      "Yes 对应 The Numbers 最终记录的指定首周末北美票房低于 9,000 万美元。 该钱包所持方向为 Yes，平均每份 $0.2566，最终该方向定价为 $1。",
+      "Yes paid if the stipulated final domestic opening-weekend gross was below $90 million according to The Numbers. This wallet held Yes at an average of $0.2566 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "工作室预估与最终票房有发布时间差，只有合约指定的最终数字用于结算。",
+      "Studio estimates and final grosses arrive at different times. The contract required the latter."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 对应 The Numbers 最终记录的指定首周末北美票房低于 9,000 万美元。",
+          "Yes paid if the stipulated final domestic opening-weekend gross was below $90 million according to The Numbers."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2025-12-16 06:35 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.2566。",
+          "First entry at 2025-12-16 06:35 UTC. The reported average price for Yes was $0.2566 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2025-12-22 13:04 UTC，买入 10,595.97 份 Yes，成交价约 $0.69841，该笔成交金额 $7,400.37。",
+          "At 2025-12-22 13:04 UTC, the wallet bought 10,595.97 Yes shares at about $0.69841, for $7,400.37 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2025-12-23 02:31 UTC，钱包赎回 536,632.3 份，官方活动记录的兑付金额为 $536,632.3。",
+          "At 2025-12-23 02:31 UTC, the wallet redeemed 536,632.3 shares. The activity ledger records $536,632.3 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2025-12-23，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2025-12-23 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2025-12-23 02:31 UTC。平台剩余份额为 0，已实现盈亏 +$402,880.36。",
+          "The last position activity was at 2025-12-23 02:31 UTC. The remaining size was 0 shares and the position realized +$402,880.36."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 No 已平仓盈亏 +$21,803.79。两条已平仓记录合计 +$424,684.15。",
+          "The wallet’s closed No leg realized +$21,803.79. The two closed legs sum to +$424,684.15."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0x44c1df…13ebc1 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0x44c1dfe43260c94ed4f1d00de2e1f80fb113ebc1&condition=0x20621b51a564adece53d83897997dcc236e2a59689f93f84a57a167efa952d97&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will \"Avatar: Fire and Ash\" Opening Weekend Box Office be less than 90m?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-avatar-fire-and-ash-opening-weekend-box-office-be-less-than-90m"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0x44c1dfe43260c94ed4f1d00de2e1f80fb113ebc1&condition=0x20621b51a564adece53d83897997dcc236e2a59689f93f84a57a167efa952d97&limit=100"
+      },
+      {
+        "label": "Polygon · #80,644,719 · 0x863b1b0b",
+        "url": "https://polygonscan.com/tx/0x863b1b0bde6f9cfa09a70701ea4a7f9285783ef041caacf9925905cfbd6562b7"
+      },
+      {
+        "label": "Polygon · #80,668,946 · 0xf7b915d3",
+        "url": "https://polygonscan.com/tx/0xf7b915d3c20e456f09ea7c06b57c1f453e63a49cccae1d1e294b4138737266bd"
+      }
+    ]
+  },
+  {
+    "id": "pm-f705fa04-4024907e4a1c-0",
+    "actor": "0xf705fa…453ca7",
+    "date": "2025-10-11",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:solana"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$60,271.22",
+      "+$60,271.22"
+    ],
+    "title": [
+      "SOL 十月跌触 175 美元 · Yes",
+      "Will Solana dip to $175 in October? · Yes"
+    ],
+    "summary": [
+      "0xf705fa…453ca7 的 Yes 份额已平仓，该腿盈利 $60,271.22。",
+      "0xf705fa…453ca7 closed the Yes position with a realized gain of $60,271.22."
+    ],
+    "logic": [
+      "交易的是 SOL 在指定十月是否向下触及 175 美元的条件份额。 该钱包所持方向为 Yes，平均每份 $0.1481，最终该方向定价为 $1。",
+      "The outcome depended on SOL touching $175 on the downside during the specified October. This wallet held Yes at an average of $0.1481 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "持有触价合约与持有 SOL 有不同的收益结构，复盘应使用份额价格、兑付与已实现盈亏。",
+      "A barrier contract and SOL spot have different payoffs. Review outcome-token prices, redemption, and realized P&L."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "交易的是 SOL 在指定十月是否向下触及 175 美元的条件份额。",
+          "The outcome depended on SOL touching $175 on the downside during the specified October."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2025-10-02 04:29 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.1481。",
+          "First entry at 2025-10-02 04:29 UTC. The reported average price for Yes was $0.1481 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2025-10-02 04:31 UTC，买入 10,000 份 Yes，成交价约 $0.19，该笔成交金额 $1,900。",
+          "At 2025-10-02 04:31 UTC, the wallet bought 10,000 Yes shares at about $0.19, for $1,900 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2025-10-11 00:41 UTC，钱包赎回 70,755.24 份，官方活动记录的兑付金额为 $70,755.24。",
+          "At 2025-10-11 00:41 UTC, the wallet redeemed 70,755.24 shares. The activity ledger records $70,755.24 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2025-10-10，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2025-10-10 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2025-10-11 00:41 UTC。平台剩余份额为 0，已实现盈亏 +$60,271.22。",
+          "The last position activity was at 2025-10-11 00:41 UTC. The remaining size was 0 shares and the position realized +$60,271.22."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xf705fa…453ca7 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xf705fa045201391d9632b7f3cde06a5e24453ca7&condition=0x4024907e4a1c481e4030f86cb241bcd871eeb7da5f0816c161ebb2f02a301ca2&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Solana dip to $175 in October?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-solana-dip-to-175-in-october"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xf705fa045201391d9632b7f3cde06a5e24453ca7&condition=0x4024907e4a1c481e4030f86cb241bcd871eeb7da5f0816c161ebb2f02a301ca2&limit=100"
+      },
+      {
+        "label": "Polygon · #77,154,352 · 0xc5ee0c8d",
+        "url": "https://polygonscan.com/tx/0xc5ee0c8d95efc979c6fd4d3f4de929d85ee96bf74f22cfe1aeb0a9ed3a2b3dee"
+      },
+      {
+        "label": "Polygon · #77,519,329 · 0x83a3e1c4",
+        "url": "https://polygonscan.com/tx/0x83a3e1c4d3668f16122ccbe1faf6bac33e6a200bcc6157cb0e933e70e644647f"
+      }
+    ]
+  },
+  {
+    "id": "pm-ed107a85-9f41a3e4a2ef-0",
+    "actor": "elmcap2 · 0xed107a…7dd2e5",
+    "date": "2025-09-17",
+    "knownAt": "2026-11-26T04:51:06Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$176,473.46",
+      "+$176,473.46"
+    ],
+    "title": [
+      "美联储 2025 年九月降息 25 个基点 · Yes",
+      "Fed decreases interest rates by 25 bps after September 2025 meeting? · Yes"
+    ],
+    "summary": [
+      "elmcap2 · 0xed107a…7dd2e5 的 Yes 份额已平仓，该腿盈利 $176,473.46。",
+      "elmcap2 · 0xed107a…7dd2e5 closed the Yes position with a realized gain of $176,473.46."
+    ],
+    "logic": [
+      "Yes 对应 2025 年九月会议后目标区间上限落入规定的 25 个基点降息结果。 该钱包所持方向为 Yes，平均每份 $0.9335，最终该方向定价为 $1。",
+      "Yes took the 25-basis-point cut bucket for the September 2025 meeting, defined by the upper target bound. This wallet held Yes at an average of $0.9335 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "平均入场价接近一美元时，赎回现金中有很大部分是先前的成本。",
+      "At an average entry near one dollar, much of the cash returned at redemption reflects acquisition cost."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 对应 2025 年九月会议后目标区间上限落入规定的 25 个基点降息结果。",
+          "Yes took the 25-basis-point cut bucket for the September 2025 meeting, defined by the upper target bound."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2025-09-05 12:32 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.9335。",
+          "First entry at 2025-09-05 12:32 UTC. The reported average price for Yes was $0.9335 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2025-09-05 12:40 UTC，买入 30,730.11 份 Yes，成交价约 $0.9，该笔成交金额 $27,657.1。",
+          "At 2025-09-05 12:40 UTC, the wallet bought 30,730.11 Yes shares at about $0.9, for $27,657.1 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2025-09-17 23:51 UTC，钱包赎回 2,656,132.77 份，官方活动记录的兑付金额为 $2,656,132.77。",
+          "At 2025-09-17 23:51 UTC, the wallet redeemed 2,656,132.77 shares. The activity ledger records $2,656,132.77 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2025-09-17，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2025-09-17 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2025-09-17 23:51 UTC。平台剩余份额为 0，已实现盈亏 +$176,473.46。",
+          "The last position activity was at 2025-09-17 23:51 UTC. The remaining size was 0 shares and the position realized +$176,473.46."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xed107a…7dd2e5 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xed107a85a4585a381e48c7f7ca4144909e7dd2e5&condition=0x9f41a3e4a2ef548cf207c22a48dbaf73e28dda5ec014c145217f428aaf3769e3&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Fed decreases interest rates by 25 bps after September 2025 meeting?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/fed-decreases-interest-rates-by-25-bps-after-september-2025-meeting"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xed107a85a4585a381e48c7f7ca4144909e7dd2e5&condition=0x9f41a3e4a2ef548cf207c22a48dbaf73e28dda5ec014c145217f428aaf3769e3&limit=100"
+      },
+      {
+        "label": "Polygon · #76,083,819 · 0x8a7febfd",
+        "url": "https://polygonscan.com/tx/0x8a7febfd5c7aac875a080bf6b3c904a2ab41e836c45e1cf292ba4b4630eeafa0"
+      },
+      {
+        "label": "Polygon · #76,578,834 · 0x9111f187",
+        "url": "https://polygonscan.com/tx/0x9111f1871e283297904da85afdde590173c5532ba9389427c405c3d272038d62"
+      }
+    ]
+  },
+  {
+    "id": "pm-cc500cbc-b803598e76d5-0",
+    "actor": "justdance · 0xcc500c…644c82",
+    "date": "2024-12-01",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:bitcoin"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$86,105.83",
+      "+$86,105.83"
+    ],
+    "title": [
+      "BTC 十一月触及十万美元 · Yes",
+      "Will Bitcoin hit $100k in November? · Yes"
+    ],
+    "summary": [
+      "justdance · 0xcc500c…644c82 的 Yes 份额已平仓，该腿盈利 $86,105.83。",
+      "justdance · 0xcc500c…644c82 closed the Yes position with a realized gain of $86,105.83."
+    ],
+    "logic": [
+      "Yes 对应 2024 年 11 月内币安 BTC/USDT 一分钟最高价触及十万美元。 该钱包所持方向为 Yes，平均每份 $0.0274，最终该方向定价为 $0。",
+      "Yes required a $100,000 Binance BTC/USDT one-minute high in November 2024. This wallet held Yes at an average of $0.0274 per share; this outcome ended at $0."
+    ],
+    "lesson": [
+      "该腿最终兑付为零，平台却记录正的已实现盈亏。复盘必须核对交易与互补腿；零兑付本身不足以推断全程亏损。",
+      "This leg paid zero at settlement yet booked a realized gain. Check trading and the complementary leg before attributing the result."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 对应 2024 年 11 月内币安 BTC/USDT 一分钟最高价触及十万美元。",
+          "Yes required a $100,000 Binance BTC/USDT one-minute high in November 2024."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2024-11-11 23:37 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.0274。",
+          "First entry at 2024-11-11 23:37 UTC. The reported average price for Yes was $0.0274 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2024-11-12 09:44 UTC，买入 4,390.03 份 Yes，成交价约 $0.37，该笔成交金额 $1,624.31。",
+          "At 2024-11-12 09:44 UTC, the wallet bought 4,390.03 Yes shares at about $0.37, for $1,624.31 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2024-12-01 13:05 UTC，钱包赎回 10,231.12 份，官方活动记录的兑付金额为 $0。",
+          "At 2024-12-01 13:05 UTC, the wallet redeemed 10,231.12 shares. The activity ledger records $0 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2024-12-01，该市场关闭，Yes 的最终价格为每份 $0。",
+          "On 2024-12-01 the market closed, with Yes priced at $0 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2024-12-01 13:05 UTC。平台剩余份额为 0，已实现盈亏 +$86,105.83。",
+          "The last position activity was at 2024-12-01 13:05 UTC. The remaining size was 0 shares and the position realized +$86,105.83."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 No 已平仓盈亏 −$62,760.39。两条已平仓记录合计 +$23,345.44。",
+          "The wallet’s closed No leg realized −$62,760.39. The two closed legs sum to +$23,345.44."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xcc500c…644c82 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xcc500cbcc8b7cf5bd21975ebbea34f21b5644c82&condition=0xb803598e76d5fb6841e1f4dec4adc2e6f43fab996eb2a552f9cccfc5938b15cb&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Bitcoin hit $100k in November?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-bitcoin-hit-100k-in-november"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xcc500cbcc8b7cf5bd21975ebbea34f21b5644c82&condition=0xb803598e76d5fb6841e1f4dec4adc2e6f43fab996eb2a552f9cccfc5938b15cb&limit=100"
+      },
+      {
+        "label": "Polygon · #64,190,039 · 0xc322d24c",
+        "url": "https://polygonscan.com/tx/0xc322d24c2dd821073bdade8f6a6b24a4987101fd13f353a5042c5216cd656145"
+      },
+      {
+        "label": "Polygon · #64,954,203 · 0xbf203c52",
+        "url": "https://polygonscan.com/tx/0xbf203c52da57eab0af533d76cbcf83afe9aceac1682c80cdfab39d42b2c2979c"
+      }
+    ]
+  },
+  {
+    "id": "pm-cc500cbc-ea5c34ee2738-1",
+    "actor": "justdance · 0xcc500c…644c82",
+    "date": "2024-11-24",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:bitcoin"
+    ],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "−$100,856.14",
+      "−$100,856.14"
+    ],
+    "title": [
+      "BTC 周日触及十万美元 · No",
+      "Will Bitcoin hit $100k by Sunday? · No"
+    ],
+    "summary": [
+      "justdance · 0xcc500c…644c82 的 No 份额已平仓，该腿亏损 $100,856.14。",
+      "justdance · 0xcc500c…644c82 closed the No position with a realized loss of $100,856.14."
+    ],
+    "logic": [
+      "No 对应指定周日结束前，币安 BTC/USDT 没有达到十万美元。 该钱包所持方向为 No，平均每份 $0.893，最终该方向定价为 $1。",
+      "No represented the Binance BTC/USDT high staying below $100,000 through the specified Sunday. This wallet held No at an average of $0.893 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "No 最终赢得兑付，钱包的这条腿仍录得亏损。结合相反仓的金额，避免把押中结果等同于赚到钱。",
+      "The No token ultimately won yet this leg booked a loss. Review the opposite leg alongside it."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "No 对应指定周日结束前，币安 BTC/USDT 没有达到十万美元。",
+          "No represented the Binance BTC/USDT high staying below $100,000 through the specified Sunday."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2024-11-22 18:29 UTC。持有 No，平台记录该腿的平均价为每份 $0.893。",
+          "First entry at 2024-11-22 18:29 UTC. The reported average price for No was $0.893 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2024-11-24 16:38 UTC，买入 22,978.87 份 No，成交价约 $0.621，该笔成交金额 $14,269.88。",
+          "At 2024-11-24 16:38 UTC, the wallet bought 22,978.87 No shares at about $0.621, for $14,269.88 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2024-11-25，该市场关闭，No 的最终价格为每份 $1。",
+          "On 2024-11-25 the market closed, with No priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2024-11-24 22:31 UTC。平台剩余份额为 0，已实现盈亏 −$100,856.14。",
+          "The last position activity was at 2024-11-24 22:31 UTC. The remaining size was 0 shares and the position realized −$100,856.14."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 Yes 已平仓盈亏 +$33,168.47。两条已平仓记录合计 −$67,687.67。",
+          "The wallet’s closed Yes leg realized +$33,168.47. The two closed legs sum to −$67,687.67."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xcc500c…644c82 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xcc500cbcc8b7cf5bd21975ebbea34f21b5644c82&condition=0xea5c34ee273855ce65a14c4826cba2f394cdbbd4eefcb750d54e1047d33bc675&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Bitcoin hit $100k by Sunday?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-bitcoin-hit-100k-by-sunday"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xcc500cbcc8b7cf5bd21975ebbea34f21b5644c82&condition=0xea5c34ee273855ce65a14c4826cba2f394cdbbd4eefcb750d54e1047d33bc675&limit=100"
+      },
+      {
+        "label": "Polygon · #64,681,572 · 0xd7c2a709",
+        "url": "https://polygonscan.com/tx/0xd7c2a7099bdf95680d6da27466a7d03c3742a3e8ef06c16f8e7f67eeef0af07d"
+      }
+    ]
+  },
+  {
+    "id": "pm-56687bf4-cd1b6b71a196-0",
+    "actor": "Theo4 · 0x56687b…f55839",
+    "date": "2024-11-12",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$8,303,171.23",
+      "+$8,303,171.23"
+    ],
+    "title": [
+      "美国大选：特朗普普选票 · Yes",
+      "Will Donald Trump win the popular vote in the 2024 Presidential Election? · Yes"
+    ],
+    "summary": [
+      "Theo4 · 0x56687b…f55839 的 Yes 份额已平仓，该腿盈利 $8,303,171.23。",
+      "Theo4 · 0x56687b…f55839 closed the Yes position with a realized gain of $8,303,171.23."
+    ],
+    "logic": [
+      "Yes 押注特朗普在全国普选中拿到最多票。 该钱包所持方向为 Yes，平均每份 $0.3695，最终该方向定价为 $1。",
+      "Yes paid if Trump received the most popular votes nationally. This wallet held Yes at an average of $0.3695 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "选举人票和普选票有各自的合约，建仓与复盘都要核对具体条件。",
+      "An Electoral College win and a popular-vote win are separately priced contracts."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 押注特朗普在全国普选中拿到最多票。",
+          "Yes paid if Trump received the most popular votes nationally."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2024-10-14 15:15 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.3695。",
+          "First entry at 2024-10-14 15:15 UTC. The reported average price for Yes was $0.3695 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2024-10-14 15:16 UTC，买入 1,000 份 Yes，成交价约 $0.26，该笔成交金额 $260。",
+          "At 2024-10-14 15:16 UTC, the wallet bought 1,000 Yes shares at about $0.26, for $260 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2024-11-12 14:57 UTC，钱包赎回 13,167,411.75 份，官方活动记录的兑付金额为 $13,167,411.75。",
+          "At 2024-11-12 14:57 UTC, the wallet redeemed 13,167,411.75 shares. The activity ledger records $13,167,411.75 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2024-11-11，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2024-11-11 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2024-11-12 14:57 UTC。平台剩余份额为 0，已实现盈亏 +$8,303,171.23。",
+          "The last position activity was at 2024-11-12 14:57 UTC. The remaining size was 0 shares and the position realized +$8,303,171.23."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 No 已平仓盈亏 −$1,119.61。两条已平仓记录合计 +$8,302,051.62。",
+          "The wallet’s closed No leg realized −$1,119.61. The two closed legs sum to +$8,302,051.62."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0x56687b…f55839 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0x56687bf447db6ffa42ffe2204a05edaa20f55839&condition=0xcd1b6b71a1964f15e2c14809594cbfa0d576270e8ef94c8c24913121097e09e5&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Donald Trump win the popular vote in the 2024 Presidential Election?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-donald-trump-win-the-popular-vote-in-the-2024-presidential-election"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0x56687bf447db6ffa42ffe2204a05edaa20f55839&condition=0xcd1b6b71a1964f15e2c14809594cbfa0d576270e8ef94c8c24913121097e09e5&limit=100"
+      },
+      {
+        "label": "Polygon · #63,032,229 · 0xf3ff9cf7",
+        "url": "https://polygonscan.com/tx/0xf3ff9cf7132d4dee9a6c05ed86d8026020eab57120cfaaec96ed003da1953a92"
+      },
+      {
+        "label": "Polygon · #64,198,785 · 0x3533ddee",
+        "url": "https://polygonscan.com/tx/0x3533ddee290d3599b87ffc51f7d79974b07a593ea457ccbd48cd80be82dcea59"
+      }
+    ]
+  },
+  {
+    "id": "pm-d2359732-dd22472e5529-0",
+    "actor": "zxgngl · 0xd23597…0b0f29",
+    "date": "2024-11-06",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$11,447,930.97",
+      "+$11,447,930.97"
+    ],
+    "title": [
+      "美国大选：总统胜选 · Yes",
+      "Will Donald Trump win the 2024 US Presidential Election? · Yes"
+    ],
+    "summary": [
+      "zxgngl · 0xd23597…0b0f29 的 Yes 份额已平仓，该腿盈利 $11,447,930.97。",
+      "zxgngl · 0xd23597…0b0f29 closed the Yes position with a realized gain of $11,447,930.97."
+    ],
+    "logic": [
+      "Yes 的兑付条件是特朗普当选总统。 该钱包所持方向为 Yes，平均每份 $0.6115，最终该方向定价为 $1。",
+      "Yes paid if Trump won the presidency. This wallet held Yes at an average of $0.6115 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "大额赎回包含本金。把赎回额和该代币的已实现盈亏并列，才能区分现金流与收益。",
+      "Compare the redemption with realized P&L to separate returned principal from gains."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 的兑付条件是特朗普当选总统。",
+          "Yes paid if Trump won the presidency."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2024-10-11 00:04 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.6115。",
+          "First entry at 2024-10-11 00:04 UTC. The reported average price for Yes was $0.6115 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2024-10-16 13:32 UTC，买入 113,400.89 份 Yes，成交价约 $0.59742，该笔成交金额 $67,747.4。",
+          "At 2024-10-16 13:32 UTC, the wallet bought 113,400.89 Yes shares at about $0.59742, for $67,747.4 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2024-11-06 21:02 UTC，钱包赎回 29,473,072.88 份，官方活动记录的兑付金额为 $29,473,072.88。",
+          "At 2024-11-06 21:02 UTC, the wallet redeemed 29,473,072.88 shares. The activity ledger records $29,473,072.88 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2024-11-06，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2024-11-06 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2024-11-06 21:02 UTC。平台剩余份额为 0，已实现盈亏 +$11,447,930.97。",
+          "The last position activity was at 2024-11-06 21:02 UTC. The remaining size was 0 shares and the position realized +$11,447,930.97."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xd23597…0b0f29 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xd235973291b2b75ff4070e9c0b01728c520b0f29&condition=0xdd22472e552920b8438158ea7238bfadfa4f736aa4cee91a6b86c39ead110917&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Donald Trump win the 2024 US Presidential Election?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-donald-trump-win-the-2024-us-presidential-election"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xd235973291b2b75ff4070e9c0b01728c520b0f29&condition=0xdd22472e552920b8438158ea7238bfadfa4f736aa4cee91a6b86c39ead110917&limit=100"
+      },
+      {
+        "label": "Polygon · #63,110,328 · 0xa10e5fdc",
+        "url": "https://polygonscan.com/tx/0xa10e5fdc0891a77d5c78c9f50ff5cdb8cd04d958f1206343f814b43d4aa6c753"
+      },
+      {
+        "label": "Polygon · #63,968,579 · 0x58a43b33",
+        "url": "https://polygonscan.com/tx/0x58a43b33f3b2f167a2a5ed931eb7a9a368bf36154238cc86e7b41a620e679bc2"
+      }
+    ]
+  },
+  {
+    "id": "pm-c6587b11-dd22472e5529-1",
+    "actor": "Erasmus. · 0xc6587b…33b784",
+    "date": "2024-11-06",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "−$1,104,698.87",
+      "−$1,104,698.87"
+    ],
+    "title": [
+      "总统胜选合约：低价卖出 No · No",
+      "Will Donald Trump win the 2024 US Presidential Election? · No"
+    ],
+    "summary": [
+      "Erasmus. · 0xc6587b…33b784 的 No 份额已平仓，该腿亏损 $1,104,698.87。",
+      "Erasmus. · 0xc6587b…33b784 closed the No position with a realized loss of $1,104,698.87."
+    ],
+    "logic": [
+      "No 持仓在特朗普未能当选时兑付。 该钱包所持方向为 No，平均每份 $0.3687，最终该方向定价为 $0。",
+      "No paid if Trump did not win the presidency. This wallet held No at an average of $0.3687 per share; this outcome ended at $0."
+    ],
+    "lesson": [
+      "临近结果时仍能以残值卖出，但实际能收回多少，要看成交份额和成交价。",
+      "Near resolution, the amount recovered on an exit depends on the shares actually sold and their fill prices."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "No 持仓在特朗普未能当选时兑付。",
+          "No paid if Trump did not win the presidency."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2024-10-31 14:10 UTC。持有 No，平台记录该腿的平均价为每份 $0.3687。",
+          "First entry at 2024-10-31 14:10 UTC. The reported average price for No was $0.3687 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2024-11-05 19:28 UTC，买入 186,632.87 份 No，成交价约 $0.38，该笔成交金额 $70,920.49。",
+          "At 2024-11-05 19:28 UTC, the wallet bought 186,632.87 No shares at about $0.38, for $70,920.49 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "一笔卖出",
+          "Observed sale"
+        ],
+        "detail": [
+          "2024-11-06 06:27 UTC，卖出 1,489,632.83 份 No，成交价约 $0.00677，该笔成交金额 $10,084.85。",
+          "At 2024-11-06 06:27 UTC, the wallet sold 1,489,632.83 No shares at about $0.00677, for $10,084.85 in recorded volume."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2024-11-06，该市场关闭，No 的最终价格为每份 $0。",
+          "On 2024-11-06 the market closed, with No priced at $0 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2024-11-06 15:17 UTC。平台剩余份额为 0.0018，已实现盈亏 −$1,104,698.87。",
+          "The last position activity was at 2024-11-06 15:17 UTC. The remaining size was 0.0018 shares and the position realized −$1,104,698.87."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "同钱包互补腿",
+          "Opposite closed leg"
+        ],
+        "detail": [
+          "同市场 Yes 已平仓盈亏 +$6,109.28。两条已平仓记录合计 −$1,098,589.59。",
+          "The wallet’s closed Yes leg realized +$6,109.28. The two closed legs sum to −$1,098,589.59."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xc6587b…33b784 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xc6587b11a2209e46dfe3928b31c5514a8e33b784&condition=0xdd22472e552920b8438158ea7238bfadfa4f736aa4cee91a6b86c39ead110917&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Will Donald Trump win the 2024 US Presidential Election?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/will-donald-trump-win-the-2024-us-presidential-election"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xc6587b11a2209e46dfe3928b31c5514a8e33b784&condition=0xdd22472e552920b8438158ea7238bfadfa4f736aa4cee91a6b86c39ead110917&limit=100"
+      },
+      {
+        "label": "Polygon · #63,925,848 · 0x007fe77c",
+        "url": "https://polygonscan.com/tx/0x007fe77c4f7a36ea7783089568a4e260592f0878eba031ace2ff45a54cff75dd"
+      },
+      {
+        "label": "Polygon · #63,944,345 · 0x140c98ea",
+        "url": "https://polygonscan.com/tx/0x140c98eac66066f008b81ac2d811bce29b446afb12cce9e896382ac28813abbb"
+      }
+    ]
+  },
+  {
+    "id": "pm-ee50a31c-4fdc8c72f301-1",
+    "actor": "0xafEe · 0xee50a3…827ed6",
+    "date": "2024-10-28",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:ethereum"
+    ],
+    "outcome": "loss",
+    "basis": "realized",
+    "amount": [
+      "−$276,411.24",
+      "−$276,411.24"
+    ],
+    "title": [
+      "ETH ETF 审批的反向仓 · No",
+      "Ethereum ETF approved by May 31? · No"
+    ],
+    "summary": [
+      "0xafEe · 0xee50a3…827ed6 的 No 份额已平仓，该腿亏损 $276,411.24。",
+      "0xafEe · 0xee50a3…827ed6 closed the No position with a realized loss of $276,411.24."
+    ],
+    "logic": [
+      "No 持仓要求截止日以前没有符合条款的现货以太坊 ETF 获批。 该钱包所持方向为 No，平均每份 $0.3436，最终该方向定价为 $0。",
+      "The No outcome required the deadline to pass without a qualifying spot ether ETF approval. This wallet held No at an average of $0.3436 per share; this outcome ended at $0."
+    ],
+    "lesson": [
+      "同一事件可用不同钱包的正反仓对照。此钱包清理代币的日期晚于市场结算，两者应分别记录。",
+      "Compare opposite wallets on the same condition. The later token redemption is distinct from market resolution."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "No 持仓要求截止日以前没有符合条款的现货以太坊 ETF 获批。",
+          "The No outcome required the deadline to pass without a qualifying spot ether ETF approval."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2024-05-20 23:40 UTC。持有 No，平台记录该腿的平均价为每份 $0.3436。",
+          "First entry at 2024-05-20 23:40 UTC. The reported average price for No was $0.3436 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2024-05-21 12:52 UTC，买入 482,431.42 份 No，成交价约 $0.31，该笔成交金额 $149,553.74。",
+          "At 2024-05-21 12:52 UTC, the wallet bought 482,431.42 No shares at about $0.31, for $149,553.74 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2024-10-28 21:10 UTC，钱包赎回 804,294.95 份，官方活动记录的兑付金额为 $0。",
+          "At 2024-10-28 21:10 UTC, the wallet redeemed 804,294.95 shares. The activity ledger records $0 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2024-05-24，该市场关闭，No 的最终价格为每份 $0。",
+          "On 2024-05-24 the market closed, with No priced at $0 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2024-10-28 21:10 UTC。平台剩余份额为 0，已实现盈亏 −$276,411.24。",
+          "The last position activity was at 2024-10-28 21:10 UTC. The remaining size was 0 shares and the position realized −$276,411.24."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xee50a3…827ed6 · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xee50a31c3f5a7c77824b12a941a54388a2827ed6&condition=0x4fdc8c72f3013001dccc152e318cb3fcb16da16c741816c3078a42947702ece5&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Ethereum ETF approved by May 31?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/ethereum-etf-approved-by-may-31"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xee50a31c3f5a7c77824b12a941a54388a2827ed6&condition=0x4fdc8c72f3013001dccc152e318cb3fcb16da16c741816c3078a42947702ece5&limit=100"
+      },
+      {
+        "label": "Polygon · #57,222,681 · 0xd240094c",
+        "url": "https://polygonscan.com/tx/0xd240094cc72f4f38d215d70127efcd0a03a068c02d735fba0f2d9b9616de965e"
+      },
+      {
+        "label": "Polygon · #63,606,873 · 0x0c6de7fd",
+        "url": "https://polygonscan.com/tx/0x0c6de7fde67378fd1b33e87827e42878f257f6d2a2c3efcde0a98c12092332c9"
+      }
+    ]
+  },
+  {
+    "id": "pm-d205ced3-4fdc8c72f301-0",
+    "actor": "XRVIA · 0xd205ce…83859a",
+    "date": "2024-05-24",
+    "knownAt": "2026-11-26T04:51:05Z",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "coin:ethereum"
+    ],
+    "outcome": "gain",
+    "basis": "realized",
+    "amount": [
+      "+$298,382.55",
+      "+$298,382.55"
+    ],
+    "title": [
+      "美国现货以太坊 ETF 审批 · Yes",
+      "Ethereum ETF approved by May 31? · Yes"
+    ],
+    "summary": [
+      "XRVIA · 0xd205ce…83859a 的 Yes 份额已平仓，该腿盈利 $298,382.55。",
+      "XRVIA · 0xd205ce…83859a closed the Yes position with a realized gain of $298,382.55."
+    ],
+    "logic": [
+      "Yes 的风险敞口是 SEC 是否在 2024 年 5 月底前批准现货以太坊 ETF。 该钱包所持方向为 Yes，平均每份 $0.5178，最终该方向定价为 $1。",
+      "Yes represented SEC approval of a spot ether ETF by the May 2024 deadline. This wallet held Yes at an average of $0.5178 per share; this outcome ended at $1."
+    ],
+    "lesson": [
+      "审批结果、基金开始交易和 ETH 价格是三个事件。该仓兑现的是审批结果。",
+      "Approval, first trading day, and ETH spot performance are distinct events; this position settled on approval."
+    ],
+    "limits": [
+      "盈亏为 Polymarket 记录的该条件代币已实现值。样例成交仅展示部分交易；其他市场敞口、链下对冲、全账户成本和交易动机未知。",
+      "Realized P&L is the venue’s figure for this outcome token. Fills shown are examples. Other markets, off-platform hedges, account-wide costs and intent are unknown."
+    ],
+    "steps": [
+      {
+        "label": [
+          "结算条件",
+          "Market condition"
+        ],
+        "detail": [
+          "Yes 的风险敞口是 SEC 是否在 2024 年 5 月底前批准现货以太坊 ETF。",
+          "Yes represented SEC approval of a spot ether ETF by the May 2024 deadline."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "首笔入仓与均价",
+          "Entry window and average"
+        ],
+        "detail": [
+          "首次入仓 2024-02-09 01:00 UTC。持有 Yes，平台记录该腿的平均价为每份 $0.5178。",
+          "First entry at 2024-02-09 01:00 UTC. The reported average price for Yes was $0.5178 per share."
+        ],
+        "source": 0
+      },
+      {
+        "label": [
+          "一笔买入",
+          "Observed buy"
+        ],
+        "detail": [
+          "2024-02-09 05:36 UTC，买入 62,587.56 份 Yes，成交价约 $0.49717，该笔成交金额 $31,116.85。",
+          "At 2024-02-09 05:36 UTC, the wallet bought 62,587.56 Yes shares at about $0.49717, for $31,116.85 in recorded volume."
+        ],
+        "source": 3
+      },
+      {
+        "label": [
+          "赎回记录",
+          "Redemption"
+        ],
+        "detail": [
+          "2024-05-24 00:18 UTC，钱包赎回 618,914.83 份，官方活动记录的兑付金额为 $618,914.83。",
+          "At 2024-05-24 00:18 UTC, the wallet redeemed 618,914.83 shares. The activity ledger records $618,914.83 in proceeds."
+        ],
+        "source": 4
+      },
+      {
+        "label": [
+          "市场定案",
+          "Resolution"
+        ],
+        "detail": [
+          "2024-05-24，该市场关闭，Yes 的最终价格为每份 $1。",
+          "On 2024-05-24 the market closed, with Yes priced at $1 per share at resolution."
+        ],
+        "source": 1
+      },
+      {
+        "label": [
+          "已实现盈亏",
+          "Realized result"
+        ],
+        "detail": [
+          "该腿最后活动为 2024-05-24 00:18 UTC。平台剩余份额为 0，已实现盈亏 +$298,382.55。",
+          "The last position activity was at 2024-05-24 00:18 UTC. The remaining size was 0 shares and the position realized +$298,382.55."
+        ],
+        "source": 0
+      }
+    ],
+    "sources": [
+      {
+        "label": "Polymarket · 0xd205ce…83859a · CLOSED",
+        "url": "https://data-api.polymarket.com/v2/positions?user=0xd205ced392d30c050e42b0fe0a08787b7583859a&condition=0x4fdc8c72f3013001dccc152e318cb3fcb16da16c741816c3078a42947702ece5&status=CLOSED"
+      },
+      {
+        "label": "Polymarket · Ethereum ETF approved by May 31?",
+        "url": "https://gamma-api.polymarket.com/markets/slug/ethereum-etf-approved-by-may-31"
+      },
+      {
+        "label": "Polymarket · Wallet activity",
+        "url": "https://data-api.polymarket.com/v2/activity?user=0xd205ced392d30c050e42b0fe0a08787b7583859a&condition=0x4fdc8c72f3013001dccc152e318cb3fcb16da16c741816c3078a42947702ece5&limit=100"
+      },
+      {
+        "label": "Polygon · #53,300,566 · 0x5728b0bf",
+        "url": "https://polygonscan.com/tx/0x5728b0bf117a3a701248436a8ac5207d0b25b2828b8c71b0a31653f3a9202bad"
+      },
+      {
+        "label": "Polygon · #57,315,440 · 0x43adc71c",
+        "url": "https://polygonscan.com/tx/0x43adc71c51e3f99a8ea01f858fb8321fc8ade2de5a7e5e8457a0e18a0eb1dfdc"
+      }
+    ]
+  }
+]

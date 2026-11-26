@@ -4,9 +4,8 @@ import {pair as L} from './locale.mjs';
 import {canAutoRefresh} from './product-composition.mjs';
 import {CROSS_MARKETS,GOLD_SPOT,validateGoldSpot,validateCrossSnapshot} from './cross-market-data.mjs';
 import {HUB_RESOURCES,normalizeHubResource} from './market-hub-data.mjs';
-import {currentPublicEnvelope,publicRetryDelay,validatePublicEnvelope} from './public-data-client.mjs';
-import {publicCuratedSocialFeed,publicRecentSocialFilters} from './public-data-views.mjs';
-import {DIRECT_SOCIAL_REFRESH_MS,DIRECT_SOCIAL_VALID_MS,RECENT_SOCIAL_SCOPE,socialFiltersFromLocation} from './public-social-scope.mjs';
+import {publicRetryDelay,validatePublicEnvelope} from './public-data-client.mjs';
+import {publicCuratedSocialFeed} from './public-data-views.mjs';
 import {CHAIN_METRICS,CHAIN_INSIGHT_MAX_AGE,DERIVATIVE_VIEWS,DERIVATIVE_SYMBOLS,validateChainInsight,validateDerivativeBody} from './public-market-extended.mjs';
 import {PUBLIC_LIGHTNING_SOURCE,validateLightningStatistics} from './public-lightning.mjs';
 import {publicAccumulationView} from './public-accumulation-view.mjs';
@@ -75,29 +74,6 @@ const etherBalance=value=>{
 };
 const usd=value=>Number.isFinite(value)?(value<0?'−':'')+'$'+num(Math.abs(value)):'—';
 
-const flowPrecisionKey='hive.dc.flowFullPrecision';
-export function compactExchangeFlow(raw,signed=false){
- const match=typeof raw==='string'&&/^(-?)(\d+)(?:\.(\d+))?$/.exec(raw);
- if(!match)return '—';
- if(!/[1-9]/.test(raw))return '0';
- let [,negative,whole,fraction='']=match;
- const sign=negative||(signed?'+':'');
- let exponent=0;
- if(BigInt(whole)===0n&&fraction.startsWith('0000')){
-  // Shift sub-0.0001 amounts before rounding so even a single wei stays visible.
-  exponent=fraction.search(/[1-9]/)+1;
-  whole=fraction[exponent-1];
-  fraction=fraction.slice(exponent);
- }
- const discarded=fraction.slice(4);
- let units=BigInt(whole+fraction.slice(0,4).padEnd(4,'0'));
- if(discarded&&discarded[0]>='5')units+=1n;
- if(exponent&&units===100000n){units=10000n;exponent--;}
- const integer=(units/10000n).toLocaleString('en-US');
- const decimals=(units%10000n).toString().padStart(4,'0').replace(/0+$/,'');
- return (/[1-9]/.test(discarded)?'≈':'')+sign+integer+(decimals?'.'+decimals:'')+(exponent?'e−'+exponent:'');
-}
-
 export function liveDataRoute(page,search){
  const p=new URLSearchParams(search);
  if(p.get('data')==='demo')return null;
@@ -151,8 +127,7 @@ export function liveDataRoute(page,search){
    return make('traders',validAddress.test(address)?'traders':null,{address},30_000,5*MINUTE);
   }
   if(['rank','排行榜','发现交易员','交易员排行'].includes(view))return make('traders','traders',{},15*MINUTE,60*MINUTE);
-  const featured=p.get('social_feed')==='featured';
-  return make('social','social',{selection_version:0,limit:50,feed:featured?'featured':'recent',...(featured?{}:socialFiltersFromLocation(p))},DIRECT_SOCIAL_REFRESH_MS,60*MINUTE);
+  return make('social','social',{selection_version:0,limit:50},2*MINUTE,60*MINUTE);
  }
  return null;
 }
@@ -161,11 +136,9 @@ export function validateLiveDataResponse(response,route,now=Date.now()){
  const {kind,resource,query}=route;
  if(kind==='social'){
   const body=validatePublicEnvelope(response,'social',query);
-  const direct=body.coverage.scope===RECENT_SOCIAL_SCOPE;
-  if(body.mode!=='live_readonly'||!['LUNARCRUSH_KOL_TOPICS','LUNARCRUSH_TOPICS',RECENT_SOCIAL_SCOPE].includes(body.coverage.scope)||body.quality==='unavailable'||!Number.isSafeInteger(body.as_of_ms)||body.as_of_ms<=0||body.as_of_ms>now+60_000)throw Error('INVALID_DATA');
-  if(body.as_of_ms!==body.coverage.observed_at_ms||!body.sources.some(source=>source.status==='OK'&&(direct||source.provider_id==='lunarcrush-v4')))throw Error('INVALID_DATA');
-  const fast=direct&&body.sources.some(source=>source.provider_id!=='lunarcrush-v4'&&source.status==='OK');
-  return {body,receivedAt:body.as_of_ms,asOf:body.as_of_ms,validUntil:body.as_of_ms+(fast?DIRECT_SOCIAL_VALID_MS:route.stale)};
+  if(body.mode!=='live_readonly'||body.coverage.scope!=='LUNARCRUSH_KOL_TOPICS'||body.quality==='unavailable'||!Number.isSafeInteger(body.as_of_ms)||body.as_of_ms<=0||body.as_of_ms>now+60_000)throw Error('INVALID_DATA');
+  if(body.as_of_ms!==body.coverage.observed_at_ms||!body.sources.some(source=>source.provider_id==='lunarcrush-v4'&&source.status==='OK'))throw Error('INVALID_DATA');
+  return {body,receivedAt:body.as_of_ms,asOf:body.as_of_ms,validUntil:body.as_of_ms+route.stale};
  }
  if(response?.schema!=='public-market-relay-v1'||response.resource!==resource||!Number.isSafeInteger(response.receivedAt)||response.receivedAt<=0||response.receivedAt>now+60_000)throw Error('INVALID_DATA');
  const {body,receivedAt}=response;
@@ -245,9 +218,7 @@ export function validateLiveDataResponse(response,route,now=Date.now()){
 
 export function createLiveDataViews({root,rerender,link,section,table,stat,chartPanel,empty,fetchImpl=globalThis.fetch,now=Date.now}){
  let current=null,activeKey='',needsPaint=false,paintedStatus='',suspended=false;
- const crossReadings=new Map(),displayedStatuses=new Map();
- let flowFullPrecision=false;
- try{flowFullPrecision=globalThis.localStorage?.getItem(flowPrecisionKey)==='true';}catch{}
+ let displayedReceipt=null,badgeState='';
  const tab=(title,page,params,on)=>link(title,page,params,on?'selected':'');
  const nav=(label,links)=>`<nav class="dc-section-nav" aria-label="${escapeHtml(label)}">${links.join('')}</nav>`;
  const select=(label,param,values,selected,display=value=>value)=>`<label><span>${escapeHtml(label)}</span><select data-dc-route-select="${param}" aria-label="${escapeHtml(label)}">${values.map(value=>`<option value="${escapeHtml(value)}" ${selected===value?'selected':''}>${escapeHtml(display(value))}</option>`).join('')}</select></label>`;
@@ -272,13 +243,8 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   const key=route?JSON.stringify([route.kind,route.resource,route.query,route.displayMetric]):'';
   if(key!==activeKey){
    abort();activeKey=key;current=route?{route,pending:false,nextAt:0,failures:0}:null;
-   if(route?.kind==='cross'){
-    // Only predefined 1D markets enter this view. Keep their receipts and retry deadlines across tabs.
-    if(crossReadings.has(key))current=crossReadings.get(key);
-    else{
-     if(route.query.symbol==='XAU')current.spot={route:{kind:'gold-spot',resource:'gold-spot',query:{},interval:GOLD_SPOT.interval,stale:GOLD_SPOT.stale},nextAt:0,failures:0};
-     crossReadings.set(key,current);
-    }
+   if(route?.kind==='cross'&&route.query.symbol==='XAU'){
+    current.spot={route:{kind:'gold-spot',resource:'gold-spot',query:{},interval:GOLD_SPOT.interval,stale:GOLD_SPOT.stale},nextAt:0,failures:0};
    }
    if(route?.resource==='exchange-asset-flows')current.read=loadAssetExchangeFlows;
    if(route?.resource==='asset-liquidations')current.read=loadAssetVenueLiquidations;
@@ -286,42 +252,25 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
     current.breakdown={route:{resource:'asset-liquidations',kind:'asset-liquidations',query:{symbol:route.query.symbol},interval:MINUTE,stale:10*MINUTE},
      read:loadAssetVenueLiquidations,nextAt:0,failures:0};
    }
-   needsPaint=false;paintedStatus='';displayedStatuses.clear();
+   needsPaint=false;paintedStatus='';displayedReceipt=null;badgeState='';
   }
   return current;
  }
- const crossSource=s=>s.route.kind==='cross'||s.route.kind==='gold-spot';
- const waitingToRetry=s=>s.retryAt>now();
- const expired=s=>!!s.receipt&&(s.superseded||now()>=s.receipt.validUntil||!!s.error||offline());
- const badgeStamp=(s,receipt)=>[offline(),s.pending,s.error,receipt&&now()>=receipt.validUntil,s.receipt!==receipt,waitingToRetry(s)].join('|');
- function stateStamp(s){return JSON.stringify([s.pending,s.error,expired(s),offline(),s.receipt?.receivedAt,waitingToRetry(s),s.spot&&[expired(s.spot),waitingToRetry(s.spot)],s.breakdown&&expired(s.breakdown)]);}
+ const expired=s=>!!s.receipt&&(now()>=s.receipt.validUntil||!!s.error||offline());
+ function stateStamp(s){return JSON.stringify([s.pending,s.error,expired(s),offline(),s.receipt?.receivedAt,s.spot&&expired(s.spot),s.breakdown&&expired(s.breakdown)]);}
  function paint(force=false){
   if(!current||!needsPaint||!globalThis.document||document.hidden||suspended)return;
   if(!force&&!canAutoRefresh(root)){
-   for(const [s,shown] of displayedStatuses){
-    const stamp=badgeStamp(s,shown.receipt);
-    if(shown.stamp===stamp)continue;
-    shown.stamp=stamp;
-    // Chart interaction keeps the visible numbers and their original timestamp together.
-    const markup=statusBadge({...s,receipt:shown.receipt,superseded:s.receipt!==shown.receipt});
-    if(markup!==shown.markup){
-     const badge=root.querySelector?.(shown.selector);
-     if(badge)badge.outerHTML=markup;
-     shown.markup=markup;
-    }
-    if(crossSource(s)){
-     const controls=root.querySelector?.(`[data-dc-cross-actions="${s.route.resource}"]`);
-     if(controls){controls.innerHTML=crossAction(s);bindCrossButton(controls.querySelector('button'),s);}
-    }
+   const source=current.spot||current.breakdown||current;
+   const stamp=badgeStamp(source);
+   if(source.route.resource&&stamp!==badgeState){
+    const badge=root.querySelector?.('.dc-live > .pd-status .pd-quality');
+    if(badge)badge.outerHTML=statusBadge({...source,receipt:displayedReceipt});
+    badgeState=stamp;
    }
    return;
   }
   needsPaint=false;const y=root.scrollTop;rerender();root.scrollTop=y;
- }
- function loadAll(s,force=false){
-  if(s?.spot)load(s.spot,force);
-  if(s?.breakdown)load(s.breakdown,force);
-  load(s,force);
  }
  function load(s,force=false){
   if(s?.route.query.view==='venue-liquidations'&&s.route.resource){
@@ -330,12 +279,9 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
     s.tape.tick();
    }else if(s.tape){s.tape.dispose();s.tape=null;needsPaint=true;}
   }
-  if(!visible()||!s?.route.resource||s.pending)return;
-  const scoped=crossSource(s);
-  if(force&&scoped){
-   if(waitingToRetry(s))return;
-   s.retryAt=now()+15_000;
-  }else if((!force||s.error)&&now()<s.nextAt)return;
+  if(s?.spot)load(s.spot,force);
+  if(s?.breakdown)load(s.breakdown,force);
+  if(!visible()||!s?.route.resource||s.pending||(!force||s.error)&&now()<s.nextAt)return;
   const timeout=['exchange-asset-flows','asset-liquidations'].includes(s.route.resource)?65_000:s.route.query.metric==='eth-transfers'||s.route.kind==='macro'||['eth-validator-exits','eth-disclosed-balance','btc-disclosed-flows'].includes(s.route.resource)?14_000:11_000;
   const controller=new AbortController(),signal=AbortSignal.any([controller.signal,AbortSignal.timeout(timeout)]);
   s.controller=controller;s.pending=true;
@@ -363,52 +309,35 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
      receipt=validateLiveDataResponse(JSON.parse(text),route,now());
     }
     if(s.controller!==controller)return;
-    if(scoped&&s.receipt){
-     const earlierObservation=s.route.kind==='gold-spot'?receipt.asOf<s.receipt.asOf:receipt.body.closedAt<s.receipt.body.closedAt;
-     if(earlierObservation||receipt.receivedAt<s.receipt.receivedAt)throw Error('OLDER_MARKET_OBSERVATION');
-    }
     s.receipt=receipt;s.error=null;s.failures=0;s.nextAt=now()+route.interval;
    }catch(error){
     if(s.controller!==controller)return;
     s.error=['RATE_LIMIT','PROVIDER_RATE_LIMIT'].includes(error.message)?'rate-limit':'unavailable';
     retry=Math.max(retry,Number(error.retryAfterMs)||0);
-    s.failures++;
-    const baseDelay=scoped?s.route.interval:15_000;
-    s.nextAt=now()+Math.max(retry,Math.min(300_000,baseDelay*2**Math.min(s.failures-1,4)));
-    if(scoped&&retry)s.retryAt=Math.max(s.retryAt||0,now()+retry);
+    s.failures++;s.nextAt=now()+Math.max(retry,Math.min(300_000,15_000*2**Math.min(s.failures-1,4)));
    }finally{
     if(s.controller===controller){
      s.pending=false;s.controller=null;needsPaint=true;paint();
     }
    }
   })();
-  return true;
  }
  const statusTextFor=s=>!s.route.resource?L('当前查询暂无数据源','No source for this query'):offline()?L('网络已断开','Network offline'):s.pending?L('正在读取','Loading'):s.error==='rate-limit'?L('来源限流','Source is rate limited'):s.error?L('来源暂不可用','Source unavailable'):
   s.route.resource==='etf'&&s.receipt?.body.coverage.latestStatus==='historical'?L('逐基金历史数据','Historical fund data'):expired(s)||s.route.kind==='social'&&s.receipt?.body.quality==='stale'?L('数据已过期','Stale data'):(s.receipt?.quality==='partial'||s.route.kind==='social'&&s.receipt?.body.quality==='partial')?L('部分可用','Partial data'):s.receipt?L('已更新','Updated'):L('等待读取','Waiting for data');
- function sourceStatusText(s){
-  if(!crossSource(s))return statusTextFor(s);
-  const spot=s.route.kind==='gold-spot';
-  const unavailable=spot?L('现货报价暂不可用','Spot quote unavailable'):L('日线暂不可用','Daily candles unavailable');
-  const historical=spot?L('历史报价','Last known quote'):L('历史日线','Historical daily candles');
-  if(expired(s))return s.error||offline()||s.pending?statusTextFor(s)+' · '+historical:historical;
-  return s.error==='unavailable'&&!offline()&&!s.pending?unavailable:statusTextFor(s);
+ function badgeStamp(s){
+  return [offline(),s.pending,s.error,displayedReceipt&&now()>=displayedReceipt.validUntil].join('|');
  }
  function statusBadge(s){
   const quality=!s.receipt?'unavailable':expired(s)||s.route.kind==='social'&&s.receipt.body.quality==='stale'?'stale':(s.receipt.quality==='partial'||s.route.kind==='social'&&s.receipt.body.quality==='partial')?'partial':'fresh';
-  return `<span class="pd-quality" data-quality="${quality}"><i></i>${sourceStatusText(s)}</span>`;
+  return `<span class="pd-quality" data-quality="${quality}"><i></i>${statusTextFor(s)}</span>`;
  }
  function status(s){
   if(!s.route.resource)return '';
-  const scoped=crossSource(s),resource=s.route.resource,markup=statusBadge(s);
-  const selector=scoped?`[data-dc-cross-status="${resource}"] .pd-quality`:'.dc-live > .pd-status .pd-quality';
-  displayedStatuses.set(s,{receipt:s.receipt,selector,markup,stamp:badgeStamp(s,s.receipt)});
-  let stamp='';
-  if(s.receipt){
-   const spot=s.route.kind==='gold-spot',at=spot?s.receipt.asOf:s.receipt.receivedAt;
-   stamp=`<time datetime="${new Date(at).toISOString()}">${spot?L('报价时间','Quoted'):L('读取时间','Retrieved')} ${dateTime(at)} UTC</time>`;
-  }
-  return `<div class="pd-status" role="status"${scoped?` data-dc-cross-status="${resource}"`:''}>${markup}${stamp}</div>`;
+  // A user reading an open gallery keeps the receipt and timestamp currently on screen.
+  displayedReceipt=s.receipt||null;badgeState=badgeStamp(s);
+  const statusText=statusBadge(s);
+  if(!s.receipt)return `<div class="pd-status" role="status">${statusText}</div>`;
+  return `<div class="pd-status" role="status">${statusText}<time>${L('读取时间','Retrieved')} ${dateTime(s.receipt.receivedAt)} UTC</time></div>`;
  }
  function pageParams(page,s,preset=false){
   const params=new URLSearchParams(globalThis.location?.search);
@@ -421,42 +350,27 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
  function header(page,s){
   const demoParams=Object.fromEntries(pageParams(page,s,true));
   const demo=page==='intelligence'?'':link(L('预设','Preset'),page,{...demoParams,data:'demo'},'dc-button');
-  const refresh=s.route.resource&&s.route.kind!=='cross'?`<button type="button" class="dc-button" data-dc-live-refresh ${s.pending?'disabled':''}>${L('刷新','Refresh')}</button>`:'';
+  const refresh=s.route.resource?`<button type="button" class="dc-button" data-dc-live-refresh ${s.pending?'disabled':''}>${L('刷新','Refresh')}</button>`:'';
   const title=page==='social'?L('社媒动态','Social activity'):L(...titles[s.route.kind]);
   return `<header class="p-head dc-head"><div><h1>${title}</h1></div><div class="dc-head-actions">${refresh}${demo}</div></header>`;
  }
  const pending=s=>s.pending?L('正在读取真实数据','Loading source data'):s.error?L('数据暂不可用，可稍后刷新','Data unavailable. Try again shortly.'):L('等待读取','Waiting for data');
 
- function crossAction(s){
-  const spot=s.route.kind==='gold-spot';
-  const label=s.error?(spot?L('重试现货报价','Retry spot quote'):L('重试日线','Retry daily candles')):(spot?L('刷新现货报价','Refresh spot quote'):L('刷新日线','Refresh daily candles'));
-  const waiting=waitingToRetry(s);
-  const retryDate=s.error&&waiting?new Date(s.retryAt):null;
-  const retryTime=retryDate&&Number.isFinite(retryDate.getTime())?`<small>${L('可重试时间','Retry after')} <time datetime="${retryDate.toISOString()}">${dateTime(s.retryAt)} UTC</time></small>`:'';
-  return `<button type="button" class="dc-button" data-dc-cross-refresh="${s.route.resource}" ${s.pending||waiting||offline()?'disabled':''}>${label}</button>${retryTime}`;
- }
- function crossControls(s){
-  return `<div class="dc-cross-controls">${status(s)}<div data-dc-cross-actions="${s.route.resource}">${crossAction(s)}</div></div>`;
- }
- function bindCrossButton(button,s){
-  if(button)button.onclick=()=>{if((s===current||s===current?.spot)&&load(s,true)){needsPaint=true;paint(true);}};
- }
  function cross(s){
   const {symbol}=s.route.query,d=s.receipt?.body;
   const tabs=nav(L('传统资产','Traditional assets'),Object.keys(CROSS_MARKETS).map(code=>tab(code,'markets',{asset:code},code===symbol)));
   const spot=s.spot,quote=spot?.receipt?.body;
-  const currentQuote=spot?section(L('黄金现货 · XAU/USD','Spot gold · XAU/USD'),crossControls(spot)+
-   (quote?strip(stat(L('美元 / 金衡盎司','USD / troy oz'),num(quote.price,3))):''),sourceLink(GOLD_SPOT.source,GOLD_SPOT.sourceUrl)):'';
-  const title=symbol+' · '+L('已收盘日线','Closed daily candles'),source=`<small>${escapeHtml(CROSS_MARKETS[symbol].source)}</small>`,controls=crossControls(s);
-  if(!d)return tabs+currentQuote+section(title,controls,source);
+  const currentQuote=spot?section(L('黄金现货 · XAU/USD','Spot gold · XAU/USD'),quote?
+   strip(stat(L('美元 / 金衡盎司','USD / troy oz'),num(quote.price,3),dateTime(quote.asOf)+' UTC')):empty(pending(spot)),sourceLink(GOLD_SPOT.source,GOLD_SPOT.sourceUrl)):'';
+  if(!d)return tabs+currentQuote+section(symbol,empty(pending(s)));
   // History is expressed in the provider's trading sessions and carries no volume.
   const closed=d.bars.filter(bar=>bar.closedAt<=d.receivedAt/1000);
   const last=closed.at(-1),previous=closed.at(-2),delta=previous?last.close-previous.close:null;
   const unit=d.unit==='index'?L('点','points'):d.unit,change=previous?symbol==='US10Y'?num(delta*100,2)+' bp':num(delta/previous.close*100,2)+'%':'—';
-  const quotes=strip(stat(L('收盘价','Last close'),num(last.close,3)+' '+unit,d.sessionDate+' · '+d.timezone),stat(L('较前一交易日','Previous session change'),change),stat(L('开盘价','Session open'),num(last.open,3)),stat(L('日内区间','Session low–high'),num(last.low,3)+' – '+num(last.high,3)));
+  const quotes=strip(stat(L('收盘价','Last close'),num(last.close,3)+' '+unit,d.sessionDate),stat(L('较前一交易日','Previous session change'),change),stat(L('日内区间','Session low–high'),num(last.low,3)+' – '+num(last.high,3)),stat(L('成交量','Volume'),'—'));
   const candles=closed.slice(-160).map(b=>({...b,time:b.time*1000}));
   const body=chartPanel('tradfi-'+symbol,{title:symbol+' · '+L('已收盘日线','Closed daily candles'),bars:candles,period:'1D',unit,height:340});
-  return tabs+currentQuote+section(title,controls+quotes+body,source);
+  return tabs+currentQuote+section(symbol+' · '+d.source,quotes+notes(L('已收盘日线','Closed daily candles')+' · '+d.sessionDate+' · '+d.timezone+(spot&&expired(s)?' · '+L('日线已过期','Daily data stale'):''))+body);
  }
  function derivatives(s){
   const {view,symbol}=s.route.query,d=s.receipt?.body,title=L(...derivativeLabels[view]);
@@ -521,17 +435,16 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   const stats=latest?strip(stat(context,value(latest.value),dateTime(latest.at)+' UTC')):'';
   const rows=d.rows.slice(-15).reverse().map(point=>row(dateTime(point.at),value(point.value)));
   return tabs+section((d.instrument||symbol)+' · '+title,toolbar+notes(scope)+stats+
-   chart('derivatives-'+view,title,d.rows,unit)+(rows.length?table([L('时间 UTC','Time UTC'),title],rows,title):''),source);
+   chart('derivatives-'+view,title,d.rows,unit)+(rows.length?table([L('时间 UTC','Time UTC'),title],rows):''),source);
  }
  function renderCoinFlows(d){
   const amount=(raw,signed=false)=>{
-   const compact=compactExchangeFlow(raw,signed);
-   if(compact==='—')return compact;
-   const short=compact.startsWith('≈')?'<span class="dc-flow-approx">≈</span>'+compact.slice(1):compact;
-   const credit=signed&&!raw.startsWith('-')&&/[1-9]/.test(raw);
-   return '<span class="dc-flow-compact">'+short+'</span><span class="dc-flow-exact" data-no-translate'+(credit?' data-positive':'')+'>'+raw+'</span>';
+   if(typeof raw!=='string'||!/^[-]?\d+(?:\.\d+)?$/.test(raw))return '—';
+   const [whole,frac]=String(raw).split('.');
+   const grouped=whole.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+   return (signed&&!whole.startsWith('-')&&/[1-9]/.test(raw)?'+':'')+grouped+(frac?'.'+frac:'');
   };
-  const rows=d.rows.map(v=>row(escapeHtml(v.exchange)+'<small>'+L('披露地址数','Addresses')+' '+v.addressCount+'</small>',
+  const rows=d.rows.map(v=>row(escapeHtml(v.exchange)+'<small>'+v.addressCount+' '+L('个地址','addresses')+'</small>',
    amount(v.inflow),amount(v.outflow),amount(v.net,true)));
   const methodology=d.asset==='BTC'?L('已确认区块中的地址样本。扣除样本内部划转、找零及矿工费，归属不清的混合输入另行排除。','Confirmed blocks for the sampled addresses. Internal transfers, change, fees and unattributable mixed inputs are excluded.'):
    L('已确认时段内成功的原生 ETH 转账。排除样本内部划转、Gas 及合约内部调用。','Successful top-level native ETH transfers. Transfers within each sample, gas and internal calls are excluded.');
@@ -541,7 +454,7 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   const disclosure=d.rows.map(r=>'<div><strong>'+escapeHtml(r.exchange)+'</strong> '+sourceLink(r.disclosedOn,r.disclosureUrl)+
    r.addresses.map(a=>'<code>'+escapeHtml(a)+'</code>').join('')+'</div>').join('');
   return notes(range+dateTime(d.windowStart)+' — '+dateTime(d.windowEnd)+' UTC · '+L('仅统计披露地址的对外流动','Flows across the disclosed address boundary only'))+
-   table([L('交易所 · 样本','Exchange · sample'),L('充值','Deposits')+' · '+d.asset,L('提币','Withdrawals')+' · '+d.asset,L('净流量','Net flow')+' · '+d.asset],rows,d.asset+' · '+L('充值、提币与净流量','Deposits, withdrawals & net flow'))+
+   table([L('交易所 · 样本','Exchange · sample'),L('充值','Deposits')+' · '+d.asset,L('提币','Withdrawals')+' · '+d.asset,L('净流量','Net flow')+' · '+d.asset],rows)+
    (d.rows.some(r=>r.status!=='available')?notes(L('— 表示该样本未能完整读取。','— indicates the sample could not be read in full.')):'')+
    '<details class="dc-flow-disclosure" data-flow-sources="'+d.asset+'"'+open+'><summary>'+L('统计口径与披露地址','Method & disclosed addresses')+'</summary>'+notes(methodology+
     (mixed?' '+L('本窗口排除','Excluded in window')+' '+mixed+' '+L('笔混合输入交易。','mixed-input transactions.'):''))
@@ -555,11 +468,10 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
    key=>Object.hasOwn(chainLabels,key)?L(...chainLabels[key]):L('当前指标','Current metric'))+'</div>';
   if(metric==='exchange-asset-flows'){
    const symbol=s.route.query.symbol,d=s.receipt?.body;
-   const precision='<label class="dc-flow-precision"><input type="checkbox" data-flow-precision'+(flowFullPrecision?' checked':'')+'>'+L('完整精度','Full precision')+'</label>';
-   const picks='<div class="dc-flow-options">'+nav(L('选择币种','Choose asset'),['BTC','ETH'].map(a=>tab(a,'tracking',{metric,asset:a},a===symbol)))+precision+'</div>';
+   const picks=nav(L('选择币种','Choose asset'),['BTC','ETH'].map(a=>tab(a,'tracking',{metric,asset:a},a===symbol)));
    const content=!s.route.resource?empty(L('请选择 BTC 或 ETH','Choose BTC or ETH')):!d?empty(pending(s)):renderCoinFlows(d);
    return tabs+section((s.route.resource?symbol+' · ':'')+L('充值、提币与净流量','Deposits, withdrawals & net flow'),picks+content,
-    d?sourceLink(d.asset==='ETH'?'Powered by Routescan.io APIs':d.source,d.sourceUrl):'','dc-asset-breakdown dc-disclosed-flows');
+    d?sourceLink(d.asset==='ETH'?'Powered by Routescan.io APIs':d.source,d.sourceUrl):'','dc-asset-breakdown');
   }
   if(metric==='accumulation')return tabs+section(title,publicAccumulationView(L));
   if(!s.route.resource)return tabs+section(L('指标暂无数据源','Metric source unavailable'),empty(L('该指标需要经授权的历史数据或已核验的地址标签。','This metric requires authorized history or verified address labels.')));
@@ -681,22 +593,19 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   const percent=value=>value===null?'—':Array.isArray(value)?value.map(n=>num(n,3)).join('–')+'%':num(value,2)+'%';
   const rows=events.map(event=>{
    const release=event.release,title=release?metricTitle[release.metric]+(release.period!==event.date?' · '+escapeHtml(release.period):''):escapeHtml(event.title);
-   const cells=[cell(event.date,'dc-calendar-date'),cell(event.time||L('仅日期','Date only'),'dc-calendar-time'),cell(title,'dc-calendar-event')];
-   if(when==='past'){
-    cells.push(cell(`<span class="dc-calendar-field">${L('公布值','Actual')}</span>${percent(event.actual)}`,'dc-calendar-actual'),
-     cell(`<span class="dc-calendar-field">${L('前值','Previous')}</span>${percent(event.previous)}`,'dc-calendar-previous'));
-   }
+   const cells=[event.date,event.time||L('仅日期','Date only'),title];
+   if(when==='past')cells.push(percent(event.actual),percent(event.previous));
    const footnote=release?.vintageUrl?sourceLink('ALFRED',release.vintageUrl):'';
    const source=release?sourceLink(event.source==='fed'?L('联储声明','Fed statement'):L('BLS 新闻稿','BLS release'),release.url):sourceLink(sourceNames[event.source],event.sourceUrl);
-   cells.push(cell(footnote?source+' · '+footnote:source,'dc-calendar-source'));
-   return '<tr>'+cells.join('')+'</tr>';
+   cells.push(footnote?source+' · '+footnote:source);
+   return row(...cells);
   });
   const sourceStatus=d.sources.map(source=>{
    const label=({available:L('已读取','Available'),partial:L('部分可用','Partial'),unavailable:L('暂不可用','Unavailable')})[source.status];
    return sourceLink(source.name,source.url)+' · '+label;
   }).join('　');
   return back+filters+section(L('发布安排','Release schedule'),notes(when==='past'?L('美东时间。公布值与前值取自当期官方发布或 ALFRED 发布日快照。标为 ALFRED 的 CPI 环比由当期指数折算。利率前值为决议前区间。市场共识预期暂无来源。','US Eastern. Values use the dated official release or its ALFRED vintage. ALFRED CPI changes are calculated from the index. For rates, previous means the pre-decision range. Consensus forecasts are unavailable.'):L('时间按美国东部时区显示。市场共识预期暂无来源。','All times are US Eastern. Consensus forecasts are unavailable.'))+
-   (rows.length?table([L('发布日期','Release date'),L('美东时间','US Eastern'),L('事件','Event'),...(when==='past'?[L('公布值','Actual'),L('前值','Previous')]:[]),L('来源','Source')],rows,L('官方发布日历','Official release calendar')):empty(L('当前范围没有已读取的安排','No schedule entries in this range')))+notes(sourceStatus),'','dc-release-schedule');
+   (rows.length?table([L('发布日期','Release date'),L('美东时间','US Eastern'),L('事件','Event'),...(when==='past'?[L('公布值','Actual'),L('前值','Previous')]:[]),L('来源','Source')],rows):empty(L('当前范围没有已读取的安排','No schedule entries in this range')))+notes(sourceStatus));
  }
  function macroSeries(s){
   const d=s.receipt?.body,series=s.route.query.series,title=L(...macroLabels[series]);
@@ -708,7 +617,7 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   const rows=[...d.observations].reverse().map(point=>row(point.period,value(point),point.preliminary?L('初值','Preliminary'):point.value===null?L('未报告','Unreported'):'—'));
   const scope=L('BLS 当前公布的月度序列，历史值可能修订。','Current BLS monthly series. Earlier observations may be revised.');
   return macroTabs('series')+switches+section(title,notes(scope)+strip(stat(L('最新观测','Latest observation'),value(last),last.period))+
-   table([L('月份','Month'),L('观察值','Observation'),L('备注','Note')],rows,title),sourceLink(d.source,d.url),'dc-macro-series');
+   table([L('月份','Month'),L('观察值','Observation'),L('备注','Note')],rows),sourceLink(d.source,d.url));
  }
  function ethEtfHoldings(s){
   const title=L('ETH 持仓变化','ETH holdings changes'),d=s.receipt?.body;
@@ -744,7 +653,7 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   }));
   const stale=d.coverage.latestStatus==='historical'?notes(L('来源最近公布日期 ','Latest date published by source ')+last.date):'';
   const dateRange=history.at(-1).date+' — '+last.date;
-  const grid=selected?table([L('交易日','Trading session'),L('现金净申赎 / USD','Cash net flow / USD')],history.map(day=>row(day.date,amount(day.funds[selected]))),selected+' · '+title):
+  const grid=selected?table([L('交易日','Trading session'),L('现金净申赎 / USD','Cash net flow / USD')],history.map(day=>row(day.date,amount(day.funds[selected])))):
    table([L('基金 / USD','Fund / USD'),...sessions.map(day=>day.date)],[...d.funds].sort((a,b)=>(Math.abs(last.funds[b]??0)-Math.abs(last.funds[a]??0))||a.localeCompare(b))
     .map(symbol=>row(link(symbol,'etf',{asset:'eth',view:'flows',fund:symbol}),...sessions.map(day=>amount(day.funds[symbol])))));
   const historySource=d.source.fundUrl?' · '+sourceLink(selected,d.source.fundUrl):'';
@@ -765,18 +674,17 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   const range=['7','30','60'].includes(queryValue('range'))?Number(queryValue('range')):30;
   const rows=d.days.slice(-range),flow=day=>fund?day.funds[fund]:day.totalUsd,last=rows.at(-1);
   const cumulative=rows.every(day=>Number.isFinite(flow(day)))?rows.reduce((sum,day)=>sum+flow(day),0):null;
-  const fundFilters='<div class="dc-toolbar dc-etf-filters">'+
-   select(L('基金','Fund'),'fund',['',...d.funds],fund,symbol=>symbol||L('全部基金','All funds'))+
-   select(L('区间','Period'),'range',['7','30','60'],String(range),days=>days+' '+L('个交易日','sessions'))+'</div>';
+  const filter=nav(L('交易日范围','Trading sessions'),[7,30,60].map(days=>tab(String(days)+' '+L('交易日','sessions'),'etf',{asset,range:days,...(fund?{fund}:{})},range===days)));
+  const fundChoices=[link(L('全部基金','All funds'),'etf',{asset,range},fund?'':'selected'),...d.funds.map(symbol=>link(symbol,'etf',{asset,range,fund:symbol},symbol===fund?'selected':''))];
   const caption=d.coverage.latestStatus==='historical'?L('历史数据。最新已报告日期 ','Historical dataset. Last reported date ')+d.coverage.datasetThrough:d.coverage.latestStatus==='pending'?L('最新日仍待数据源公布','Latest session awaiting the source'):L('最新数据日 ','Latest date ')+d.coverage.datasetThrough;
   const bread=sourceLink(d.source.name,d.source.url)+' · '+sourceLink(d.source.license,d.source.licenseUrl)+' · '+sourceLink(d.source.upstreamName,d.source.upstreamUrl);
   const chartRows=rows.filter(r=>Number.isFinite(flow(r))).map(r=>({at:r.date,value:flow(r)/1e6}));
   const grid=[...rows].reverse().map(day=>row(day.date,...(fund?[usd(flow(day))]:[usd(day.totalUsd),...d.funds.map(symbol=>usd(day.funds[symbol]))])));
-  return tabs+fundFilters+section(asset==='eth'?L('逐基金历史净申赎','Historical net flows by fund'):L('每日净申赎','Daily net flows'),notes(caption)+
+  return tabs+filter+nav(L('基金','Fund'),fundChoices)+section(asset==='eth'?L('逐基金历史净申赎','Historical net flows by fund'):L('每日净申赎','Daily net flows'),notes(caption)+
    (requestedFund&&!fund?notes(L('这个基金不在来源的覆盖范围内','The selected fund is outside this dataset')):'')+
    strip(stat(L('最新一日','Latest session'),usd(flow(last)),last.date),stat(L('区间合计','Period total'),usd(cumulative),L('USD · 已报告金额','USD · reported amounts')))+
    chart('etf-live',fund||asset.toUpperCase(),chartRows,L('百万 USD','USD millions'),'bar')+
-   table([L('交易日','Session'),...(fund?[fund]:[L('合计 / USD','Total / USD'),...d.funds])],grid,fund?fund+' · '+L('每日净申赎','Daily net flows'):undefined)+
+   table([L('交易日','Session'),...(fund?[fund]:[L('合计 / USD','Total / USD'),...d.funds])],grid)+
    notes(L('— 表示该基金该日暂无报告。图表仅绘制已公布的记录。','— denotes an unreported amount. The chart plots published observations only.')+' '+bread),
    asset==='eth'?link(fund&&ETH_FLOW_FUNDS.includes(fund)?fund+' · '+L('近期净申赎','Recent flows'):L('查看最新逐基金申赎','Latest fund flows'),'etf',
     {asset,view:'flows',...(ETH_FLOW_FUNDS.includes(fund)?{fund}:{})}):'');
@@ -788,11 +696,8 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   ]);
  }
  function social(s){
-  const d=currentPublicEnvelope(s.receipt?.body,now(),!!s.error||offline()),title=L(...titles.social);
-  const featured=s.route.query.feed==='featured',feeds=nav(L('动态筛选','Feed selection'),[tab(L('最近动态','Recent posts'),'social',{},!featured),tab(L('精选作者','Featured creators'),'social',{social_feed:'featured'},featured)]);
-  const filters=featured?'':publicRecentSocialFilters(s.route.query,'data-dc-route-select');
-  const toolbar=`<div class="pd-social-toolbar">${socialTabs('social')}${feeds}${filters}</div>`;
-  return toolbar+(d?publicCuratedSocialFeed(d,title):section(title,empty(pending(s)),featured?sourceLink('LunarCrush','https://lunarcrush.com'):''));
+  const d=s.receipt?.body,title=L(...titles.social);
+  return socialTabs('social')+(d?publicCuratedSocialFeed(d,title):section(title,empty(pending(s)),sourceLink('LunarCrush','https://lunarcrush.com')));
  }
  const performanceWindows={day:['日','Day'],week:['周','Week'],month:['月','Month'],allTime:['全部','All time']};
  function traders(s){
@@ -802,11 +707,11 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
   if(!s.route.resource)return browse+section(L('公开地址无效','Invalid public address'),empty(L('从交易员排行选择一个公开地址','Choose an address from the leaderboard')),source);
   if(!d)return browse+section(L('Hyperliquid 主网','Hyperliquid mainnet'),empty(pending(s)),source);
   if(d.kind==='leaderboard'){
-   const rows=d.rows.map(item=>row(item.rank,link(`<span class="dc-trader-mobile-rank">#${item.rank}</span><span title="${item.address}">${shortAddress(item.address)}</span>`,'social',{trader:item.address}),usd(item.pnl),Number.isFinite(item.roiPct)?num(item.roiPct)+'%':'—',usd(item.volume),usd(item.accountValue)));
+   const rows=d.rows.map(item=>row(item.rank,link(`<span title="${item.address}">${shortAddress(item.address)}</span>`,'social',{trader:item.address}),usd(item.pnl),Number.isFinite(item.roiPct)?num(item.roiPct)+'%':'—',usd(item.volume),usd(item.accountValue)));
    return browse+section(L('Hyperliquid 月度盈亏排行','Hyperliquid monthly P&L leaderboard'),
     notes(d.rows.length+' / '+num(d.total,0)+L(' 个可排序公开地址 · 按来源的月度盈亏',' ranked public addresses · source-defined monthly P&L'))+
     (d.sourceAsOf?notes(L('排行榜源文件更新时间','Leaderboard source file updated')+' '+dateTime(d.sourceAsOf)+' UTC'):'')+
-    (rows.length?table([L('排名','Rank'),L('公开地址','Public address'),L('盈亏 / USD','P&L / USD'),L('收益率','ROI'),L('成交量 / USD','Volume / USD'),L('账户净值 / USD','Equity / USD')],rows):empty(L('当前范围暂无记录','No records in this range'))),source,'dc-trader-ranking');
+    (rows.length?table([L('排名','Rank'),L('公开地址','Public address'),L('盈亏 / USD','P&L / USD'),L('收益率','ROI'),L('成交量 / USD','Volume / USD'),L('账户净值 / USD','Equity / USD')],rows):empty(L('当前范围暂无记录','No records in this range'))),source);
   }
   const window=Object.hasOwn(performanceWindows,queryValue('window')||'')?queryValue('window'):'month';
   const currentWindow=d.performance.find(item=>item.window===window);
@@ -831,33 +736,22 @@ export function createLiveDataViews({root,rerender,link,section,table,stat,chart
  return {
   render(page){
    const s=sync(page);if(!s)return null;
-   if(s.route.kind!=='cross'||!paintedStatus)loadAll(s);
-   paintedStatus=stateStamp(s);
-   return `<div class="dc-root dc-live" data-data-center="${page}" data-public-data="live-${s.route.kind}">${header(page,s)}${s.route.kind==='cross'?'':status(s.breakdown||s)}${views[s.route.kind](s)}</div>`;
+   load(s);paintedStatus=stateStamp(s);
+   return `<div class="dc-root dc-live" data-data-center="${page}" data-public-data="live-${s.route.kind}">${header(page,s)}${status(s.spot||s.breakdown||s)}${views[s.route.kind](s)}</div>`;
   },
   bind(){
-   root.querySelector?.('[data-dc-live-refresh]')?.addEventListener('click',()=>{loadAll(current,true);needsPaint=true;paint(true);});
-   if(current?.route.kind==='cross'){
-    for(const s of [current,current.spot].filter(Boolean))
-     bindCrossButton(root.querySelector?.(`[data-dc-cross-refresh="${s.route.resource}"]`),s);
-   }
-   const precision=root.querySelector?.('[data-flow-precision]');
-   if(precision)precision.onchange=()=>{
-    flowFullPrecision=precision.checked;
-    try{globalThis.localStorage?.setItem(flowPrecisionKey,String(flowFullPrecision));}catch{}
-   };
+   root.querySelector?.('[data-dc-live-refresh]')?.addEventListener('click',()=>{load(current,true);needsPaint=true;paint(true);});
   },
   companionBrief(page){
    const s=sync(page);if(!s)return null;
    const primary=s.spot||s.breakdown||s;
-   const cross=s.route.kind==='cross',title=s.spot?L('黄金现货 · XAU/USD','Spot gold · XAU/USD'):cross?s.route.query.symbol+' · '+L('已收盘日线','Closed daily candles'):L(...titles[s.route.kind]);
-   return {kind:'data',label:L('数据状态','Data status'),title,body:sourceStatusText(primary),visual:'',
+   return {kind:'data',label:L('数据状态','Data status'),title:L(...titles[s.route.kind]),body:statusTextFor(primary),visual:'',
     href:'?'+pageParams(page,s),action:L('打开当前数据页','Open the data page'),
-    modeLabel:L('只读数据','Read-only data'),source:s.spot?GOLD_SPOT.source:cross?CROSS_MARKETS[s.route.query.symbol].source:'',timestamp:primary.receipt?dateTime(s.spot?primary.receipt.asOf:primary.receipt.receivedAt)+' UTC':null};
+    modeLabel:L('只读数据','Read-only data'),source:s.spot?GOLD_SPOT.source:'',timestamp:primary.receipt?dateTime(s.spot?primary.receipt.asOf:primary.receipt.receivedAt)+' UTC':null};
   },
   tick(page){
    const s=sync(page);if(!s)return;
-   loadAll(s);if(stateStamp(s)!==paintedStatus)needsPaint=true;
+   load(s);if(stateStamp(s)!==paintedStatus)needsPaint=true;
    paint();
   }
  };

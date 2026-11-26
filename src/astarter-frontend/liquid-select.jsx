@@ -2,7 +2,7 @@ import React,{Component,useLayoutEffect} from 'react';
 import {createRoot} from 'react-dom/client';
 import {LiquidSelect} from './liquid-select-source/liquid-select';
 import {LiquefyProvider} from './liquid-select-source/provider';
-import {chooseOption,replacementSelect,selectLabel,selectOptions} from './liquid-select-state.mjs';
+import {chooseOption,selectLabel,selectOptions} from './liquid-select-state.mjs';
 import {refreshSelectIdentity} from './brand-icons.mjs';
 import './liquid-select-source/liquefy-ui.css';
 
@@ -24,37 +24,19 @@ function SelectField({entry,state}) {
    aria-invalid={state.invalid||undefined} title={state.title||undefined}
    tabIndex={entry.tabIndex===null?0:Number(entry.tabIndex)}
    onOpenChange={open=>{entry.host.toggleAttribute('data-liquid-open',open);if(open)entry.update();}}
-   onValueChange={entry.choose} />
+   onValueChange={index=>{chooseOption(entry.native,index);entry.update();}} />
  </LiquefyProvider>;
 }
 
 // The native field remains the source of form values, validation and business events.
 export function mountLiquidSelects(doc=document) {
  const entries=new Map(),pending=new Set(),failed=new WeakSet(),media=matchMedia('(prefers-reduced-motion: reduce)');
- let scheduled=false,returnFocus=null;
+ let scheduled=false;
  const schedule=()=>{if(!scheduled){scheduled=true;queueMicrotask(flush);}};
- function restoreChoice(entry){
-  const choice=returnFocus;
-  if(choice?.field!==entry.native)return;
-  requestAnimationFrame(()=>{
-   if(returnFocus!==choice)return;
-   returnFocus=null;
-   const active=doc.activeElement;
-   if(entry.native.isConnected&&(active===doc.body||active===entry.native||choice.portal?.contains(active)))entry.focus();
-  });
- }
  const visible=new IntersectionObserver(records=>{
   for(const record of records)if(record.isIntersecting){pending.add(record.target);schedule();}
  },{rootMargin:'120px'});
  const eligible=select=>!select.multiple&&select.size<=1&&!select.hasAttribute('data-native-select');
- function focusRenderedSelect(field,portal=null){
-  if(!field||field.matches(':disabled')||field.closest('[hidden],[inert]')||!field.getClientRects().length||failed.has(field)||!eligible(field))return false;
-  returnFocus={field,portal};
-  const mounted=entries.get(field);
-  if(mounted?.host.hasAttribute('data-liquid-ready'))restoreChoice(mounted);
-  else enhance(field);
-  return true;
- }
  const discover=(node,now=false)=>{
   if(node.nodeType!==1)return;
   for(const select of node.matches('select')?[node]:node.querySelectorAll('select')) {
@@ -73,7 +55,7 @@ export function mountLiquidSelects(doc=document) {
    reduced:media.matches||doc.documentElement.dataset.reducedMotion==='true'};
  };
  function enhance(native) {
-  if(!native.isConnected||entries.has(native)||!eligible(native)||failed.has(native)||(doc.activeElement===native&&returnFocus?.field!==native))return;
+  if(!native.isConnected||entries.has(native)||!eligible(native)||failed.has(native)||doc.activeElement===native)return;
   // A field without a box stays observed; the visibility observer adds it back when it can be measured.
   const box=native.getBoundingClientRect();if(!box.width||!box.height){pending.delete(native);return;}
   visible.unobserve(native);pending.delete(native);
@@ -95,20 +77,8 @@ export function mountLiquidSelects(doc=document) {
     if(host.hasAttribute('data-liquid-ready'))return;
     const focus=doc.activeElement===native;
     host.setAttribute('data-liquid-ready','');native.tabIndex=-1;native.setAttribute('aria-hidden','true');
-    if(focus)entry.focus();restoreChoice(entry);
-   },focus(){host.querySelector('.lq-select__trigger')?.focus({preventScroll:true});},choose(index){
-    const scope=native.closest('dialog,#product-page,.workspace')||doc.body,page=doc.body.dataset.page;
-    const ownedFocus=doc.activeElement===doc.body||host.contains(doc.activeElement)||portal.contains(doc.activeElement);
-    const changed=chooseOption(native,index);entry.update();
-    if(!changed||native.isConnected||!ownedFocus)return;
-    queueMicrotask(()=>{
-     if(!scope.isConnected||doc.body.dataset.page!==page)return;
-     const next=replacementSelect(native,scope);
-     if(!next)return;
-     if(doc.activeElement!==doc.body&&doc.activeElement!==next&&!portal.contains(doc.activeElement))return;
-     if(!focusRenderedSelect(next,portal)&&!next.matches(':disabled')&&next.getClientRects().length)next.focus({preventScroll:true});
-    });
-   },update(){
+    if(focus)entry.focus();
+   },focus(){host.querySelector('.lq-select__trigger')?.focus({preventScroll:true});},update(){
     if(!native.isConnected||!entries.has(native))return;
     refreshSelectIdentity(native);
     const state=read(entry),signature=JSON.stringify(state);if(signature===entry.signature)return;
@@ -133,7 +103,6 @@ export function mountLiquidSelects(doc=document) {
   entry.update();
  }
  function destroy(entry) {
-  if(returnFocus?.field===entry.native)returnFocus=null;
   entries.delete(entry.native);entry.dispose();entry.root.unmount();entry.portal.remove();
   const {native,host,tabIndex,ariaHidden}=entry;
   if(tabIndex===null)native.removeAttribute('tabindex');else native.setAttribute('tabindex',tabIndex);
@@ -143,7 +112,6 @@ export function mountLiquidSelects(doc=document) {
  }
  function flush() {
   scheduled=false;
-  if(returnFocus&&!returnFocus.field.isConnected)returnFocus=null;
   for(const entry of entries.values())if(!entry.native.isConnected||!eligible(entry.native))destroy(entry);
   for(const select of pending){if(!select.isConnected){pending.delete(select);visible.unobserve(select);}else enhance(select);}
  }
@@ -164,11 +132,7 @@ export function mountLiquidSelects(doc=document) {
  themeObserver.observe(doc.documentElement,{attributes:true,attributeFilter:['data-theme','data-reduced-motion','lang']});
  // A native reset applies its default action after the event's microtask checkpoint.
  const reset=event=>setTimeout(()=>{for(const entry of entries.values())if(entry.native.form===event.target){entry.invalid=false;entry.update();}},0);
- const focusRequest=event=>{if(event.target.tagName==='SELECT'&&focusRenderedSelect(event.target))event.preventDefault();};
- const cancelReturn=()=>{returnFocus=null;};
- doc.addEventListener('hive:focus-select',focusRequest);
- doc.addEventListener('pointerdown',cancelReturn,true);doc.addEventListener('keydown',cancelReturn,true);
  doc.addEventListener('reset',reset,true);doc.addEventListener('focusout',schedule);media.addEventListener('change',refresh);
  discover(doc.body,true);schedule();
- return ()=>{observer.disconnect();themeObserver.disconnect();visible.disconnect();doc.removeEventListener('hive:focus-select',focusRequest);doc.removeEventListener('pointerdown',cancelReturn,true);doc.removeEventListener('keydown',cancelReturn,true);doc.removeEventListener('reset',reset,true);doc.removeEventListener('focusout',schedule);media.removeEventListener('change',refresh);for(const entry of [...entries.values()])destroy(entry);};
+ return ()=>{observer.disconnect();themeObserver.disconnect();visible.disconnect();doc.removeEventListener('reset',reset,true);doc.removeEventListener('focusout',schedule);media.removeEventListener('change',refresh);for(const entry of [...entries.values()])destroy(entry);};
 }

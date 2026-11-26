@@ -1,6 +1,8 @@
+import {routeSearch} from './site-routes.mjs';
 import {positionValue} from './order-markets.mjs';
 import {syntheticPrice} from './research-state.mjs';
-export const PAGES=[['watchlist','我的追踪','☆'],['assistant','交易助手','◌'],['advisor','帮我选策略','◇'],['copy-trading','聪明钱跟随','↗'],['contributions','我的贡献','✧'],['signals','AI 信号','↗'],['workbench','AI 战队','◎'],['markets','市场行情','⌁'],['tracking','AI 与链上追踪','↗'],['intelligence','新闻舆情','◷'],['social','社媒动态','◌'],['derivatives','合约与清算','⌁'],['etf','ETF 资金','▥'],['strategies','策略 Agent','▦'],['logs','交易记录','≡'],['assets','资产信息','◫'],['setup','初始设定','⚙'],['inbox','待办事项','!'],['mandate','交易方式','◇'],['opportunities','机会发现','↗'],['my-strategies','我的策略','▦'],['validation','策略检查','✓'],['execution','我的 Agent','▶'],['risk','Astarter 风控策略','◇'],['plans','订阅','◉'],['topup','积分充值','◉'],['staking','质押奖励','◇'],['billing','账户账单','≡'],['usage','用量','◉'],['profile','个人中心','○'],['settings','连接与设置','⚙']];
+export const BRAIN_PAGE_NAME=Object.freeze(['链上深脑','Deep Brain']);
+export const PAGES=[['brain',BRAIN_PAGE_NAME[0],'◎'],['watchlist','我的追踪','☆'],['assistant','交易助手','◌'],['advisor','帮我选策略','◇'],['copy-trading','聪明钱跟随','↗'],['contributions','我的贡献','✧'],['signals','AI 信号','↗'],['workbench','AI 交易','◎'],['markets','市场行情','⌁'],['tracking','AI 与链上追踪','↗'],['intelligence','新闻舆情','◷'],['social','社媒动态','◌'],['derivatives','合约与清算','⌁'],['etf','ETF 资金','▥'],['strategies','策略 Agent','▦'],['logs','交易记录','≡'],['assets','资产信息','◫'],['setup','初始设定','⚙'],['inbox','待办事项','!'],['mandate','交易方式','◇'],['opportunities','机会发现','↗'],['my-strategies','我的策略','▦'],['validation','策略检查','✓'],['execution','我的 Agent','▶'],['risk','Astarter 风控策略','◇'],['plans','订阅','◉'],['topup','积分充值','◉'],['staking','质押奖励','◇'],['billing','账户账单','≡'],['usage','用量','◉'],['profile','个人中心','○'],['settings','连接与设置','⚙']];
 export const INTELLIGENCE=[
 {id:'macro-01',source:'macro',symbol:'BTC',title:'利率决议窗口临近',time:'14:30',type:'宏观事件',value:'90',unit:'分钟',decision:'conflict',reason:'模拟高影响事件窗口内，新增风险需要等待重新核验。',detail:'演示经济日历：利率决议前后可能放大波动。事件时间为固定剧本，不是真实经济日历。',role:0},
 {id:'social-01',source:'social',symbol:'ETH',title:'讨论升温，原始消息尚待确认',time:'14:22',type:'社交舆情',value:'68',unit:'热度',decision:'missing',reason:'传播热度不能验证消息真实性；缺少原始出处。',detail:'示例讨论量上升 26%，正向占比 61%。重复传播需去重，先核验来源，再判断价格影响。',role:3},
@@ -59,7 +61,17 @@ export function wealthRoute(search){
  params.delete('asset');
  return '?'+params.toString();
 }
-export function routePage(search){const p=new URLSearchParams(search).get('page');if(p==='wealth')return 'workbench';if(p==='staking')return 'plans';if(p==='my-strategies')return 'execution';return PAGES.some(([id])=>id===p)?p:'workbench';}
+export function routePage(search){
+ const params=new URLSearchParams(search),page=params.get('page');
+ if(!page){
+  const workbenchLink=['scene','research','localSim','asset','task'].some(key=>params.has(key));
+  return workbenchLink?'workbench':'brain';
+ }
+ if(page==='wealth')return 'workbench';
+ if(page==='staking')return 'plans';
+ if(page==='my-strategies')return 'execution';
+ return PAGES.some(([id])=>id===page)?page:'workbench';
+}
 export const TRADING_TABS=[
  {id:'strategies',zh:'策略 Agent',en:'Strategy Agents',pages:['strategies','advisor','copy-trading','contributions']},
  {id:'execution',zh:'我的 Agent',en:'My Agents',pages:['execution','my-strategies','validation','inbox','assets','risk','mandate']}
@@ -67,8 +79,9 @@ export const TRADING_TABS=[
 export const TRADING_PAGES=TRADING_TABS.flatMap(item=>item.pages);
 export const tradingSection=page=>TRADING_TABS.find(item=>item.pages.includes(page))?.id||null;
 export const MOBILE_DOCK=[
- {id:'workbench',home:'workbench',zh:'AI 星谱',en:'LensWave',ja:'AI',ko:'AI',vi:'AI',es:'IA',fr:'IA',ru:'ИИ',pages:['workbench']},
- {id:'execution',home:'strategies',zh:'策略交易',en:'Trade',ja:'取引',ko:'거래',vi:'Giao dịch',es:'Operar',fr:'Trade',ru:'Трейд',pages:TRADING_PAGES},
+ {id:'brain',home:'brain',zh:BRAIN_PAGE_NAME[0],en:BRAIN_PAGE_NAME[1],pages:['brain']},
+ {id:'workbench',home:'workbench',zh:'AI 交易',en:'LensWave',ja:'AI',ko:'AI',vi:'AI',es:'IA',fr:'IA',ru:'ИИ',pages:['workbench']},
+ {id:'execution',home:'strategies',zh:'策略交易',en:'Agents',ja:'取引',ko:'거래',vi:'Giao dịch',es:'Operar',fr:'Trade',ru:'Трейд',pages:TRADING_PAGES},
  {id:'signals',home:'signals',zh:'智选信号',en:'Signals',ja:'シグナル',ko:'신호',vi:'Tín hiệu',es:'Señales',fr:'Signaux',ru:'Сигналы',pages:['signals','opportunities']},
  {id:'data',home:'markets',zh:'数据中心',en:'Data',ja:'データ',ko:'데이터',vi:'Dữ liệu',es:'Datos',fr:'Données',ru:'Данные',pages:['markets','tracking','intelligence','social','derivatives','etf']}
 ];
@@ -77,10 +90,27 @@ export const MOBILE_NAV=[...MOBILE_DOCK,ASSISTANT_NAV];
 export const mobileNavSection=page=>MOBILE_NAV.find(item=>item.pages.includes(page))?.id||null;
 export function restoreNavigationSearch(search,currentSearch){
  const target=new URLSearchParams(search),current=new URLSearchParams(currentSearch);
- const missing=['motion','look'].filter(key=>current.has(key)&&!target.has(key));
+ const missing=['motion','look','lang'].filter(key=>current.has(key)&&!target.has(key));
  if(!missing.length)return search;
  for(const key of missing)target.set(key,current.get(key));
  return '?'+target.toString();
+}
+// Only a handoff from Deep Brain carries a research scope into its return link.
+export function brainEntrySearch(origin=globalThis.history?.state?.brainReturn,current=routeSearch()){
+ const source=new URLSearchParams(origin),here=new URLSearchParams(current);
+ const target=new URLSearchParams({page:'brain',view:'cortexa'});
+ if(source.get('page')==='brain'){
+  const scope=source.get('scope');
+  if(scope&&scope.length<=500)target.set('scope',scope);
+ }
+ const lang=here.get('lang')||source.get('lang');
+ if(lang)target.set('lang',lang);
+ return '?'+target.toString();
+}
+export function updateBrainEntry(link,origin,current){
+ if(!link)return;
+ const href=brainEntrySearch(origin,current);
+ if(link.getAttribute('href')!==href)link.setAttribute('href',href);
 }
 export function createNavigationMemory(){
  const routes=new Map(),positions=new Map();

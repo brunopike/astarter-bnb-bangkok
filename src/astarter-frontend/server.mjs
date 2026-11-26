@@ -1,5 +1,7 @@
+import {serveSitePage} from './site-seo.mjs';
 import {handleWalletAuth,readWalletSession} from './wallet-auth.mjs';
 import http from 'node:http';
+import handleAssistantChat from './api/assistant-chat.mjs';
 import {handleCommerce} from './commerce-api.mjs';
 import {handleNotifications,startNotifications} from './notification-service.mjs';
 import {loadNotificationConfig} from './notification-config.mjs';
@@ -43,14 +45,18 @@ http.createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Cache-Control', /^fonts\/[a-z-]+-[0-9a-f]{12}\.woff2$/.test(file)?'public, max-age=31536000, immutable':'no-store');
   res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://coin-images.coingecko.com https://assets.coingecko.com https://cdn.dexscreener.com https://pbs.twimg.com https://avatars.githubusercontent.com https://api.web3modal.com https://api.web3modal.org; connect-src 'self' https://api.fxtwitter.com https://swolecharts.com https://api.routescan.io https://mempool.space https://www.tradingview-widget.com https://api.dexscreener.com https://api.coingecko.com https://api.llama.fi https://stablecoins.llama.fi https://api.alternative.me https://data-api.binance.vision wss://data-stream.binance.vision wss://fstream.binance.com wss://stream.bybit.com https://bsc-dataseed.binance.org https://rpc.walletconnect.com https://rpc.walletconnect.org https://relay.walletconnect.com https://relay.walletconnect.org wss://relay.walletconnect.com wss://relay.walletconnect.org https://api.web3modal.com https://api.web3modal.org; font-src 'self'; frame-src 'self' https://algoros.ai https://www.tradingview-widget.com https://verify.walletconnect.com https://verify.walletconnect.org; object-src 'none'; base-uri 'none'; frame-ancestors 'self'");
+  if(['account-access.html','membership.html','crystal-character.html'].includes(file)||file.startsWith('vendor/')&&file.endsWith('.html'))res.setHeader('X-Robots-Tag','noindex, follow');
   // An isolated acceptance process must not lazily open the user's stores or notification transport.
   if(localSimOwner){
     res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'");
   }
+  if(localSimOwner)res.setHeader('X-Robots-Tag','noindex, follow');
+  if(await serveSitePage(req,res,path.join(root,'index.html')))return;
   if(localSimOwner&&file.startsWith('api/')&&!file.startsWith('api/local-sim/')){
     res.writeHead(503,{'Content-Type':'application/json; charset=utf-8'});
     res.end(JSON.stringify({error:'LOCAL_SIMULATION_ISOLATED',mode:'simulation-only'}));return;
   }
+  if(file==='api/assistant/chat'){await handleAssistantChat(req,res);return;}
   if(await handleWalletAuth(req,res))return;
   if(await handleMemory(req,res))return;
   if(await handleAtlasFeeds(req,res))return;

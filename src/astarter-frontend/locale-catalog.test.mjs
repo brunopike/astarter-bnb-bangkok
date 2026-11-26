@@ -6,11 +6,6 @@ import {receiptSummary} from './core-reports.mjs';
 const slots=s=>[...s.matchAll(/\{p\d+\}/g)].map(x=>x[0]).sort();
 const numbers=s=>[...s.replace(/\{p\d+\}/g,'').matchAll(/\d+(?:[.,]\d+)*/g)].map(x=>x[0]).sort();
 const english=[...new Set(messages.map(([,en])=>en))];
-test('exchange deposit quantities use a financial noun in each data table',async()=>{
- for(const [id,label] of Object.entries({zh:'充值',en:'Deposits',fr:'Dépôts',es:'Depósitos',ja:'入金',ko:'입금',ru:'Ввод',vi:'Nạp'})){
-  await loadLocale(id);assert.equal(pair('充值','Deposits',id),label);
- }
-});
 test('Agent save and launch actions do not reuse bookmark or chart-origin translations',async()=>{
  for(const [id,save,start]of [['ja','設定を保存','開始'],['ko','설정 저장','시작'],['vi','Lưu cài đặt','Khởi chạy'],['es','Guardar','Iniciar'],['fr','Enregistrer','Démarrer'],['ru','Сохранить','Запустить']]){
   await loadLocale(id);assert.equal(pair('保存','Save setup',id),save);assert.equal(pair('启动','Launch',id),start);

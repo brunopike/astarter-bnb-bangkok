@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "brain.evidence.strategy-at-cutoff.v1",
+  "ref": "ETH-MERGE-STRATEGY@1",
+  "caseId": "ETH-MERGE-20220915",
+  "snapshotRef": "ETH-MERGE-SNAPSHOT@1",
+  "mode": "historical_replay",
+  "asOf": "2022-09-15T06:44:00Z",
+  "availableAt": null,
+  "availabilityBasis": "historical_reconstruction",
+  "originalBodySha256": "9055c8ba83045328d950cf2b89a97cbcaf94b2dce33d99de50ebfd89c35c4ac9",
+  "excerptSha256": "9cf8d1ab87fd48f77174be3db0f218a7e38e83290bda537dd83e0d31d66b53c0",
+  "excerpt": "# 策略卡\n\n**ETH 合并后的五分钟 · 观察**\n\n2022-09-15 06:44 UTC，两项事实已经成立：以太坊产出了首个权益证明执行区块，Coinbase ETH-USD 最近一根完整分钟 K 线收在 1,616.76 美元。只有一个交易场所的成交数据，方向性信号继续待定。\n\n| 策略条件 | 本例设定 |\n|---|---|\n| 升级条件 | 观察期内取得独立场所的同向成交证据与可核验的盘口深度，再生成新版判断。 |\n| 到期条件 | 到 06:49 UTC 关闭本版观察窗口，保存结果。 |",
+  "decision": "watch",
+  "expiresAt": "2022-09-15T06:49:00Z",
+  "evidenceRefs": [
+    "BLOCK-15537394-AT-MERGE@1",
+    "COINBASE-ETH-USD-0644@1"
+  ]
+}

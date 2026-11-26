@@ -280,8 +280,6 @@ export function createMarketScanner(onChange,{subscribe=subscribeCandles,subscri
      if(entry.sample.state!=='ready'||entry.sample.closedAt!==Math.floor(now()/86400)*86400)calculate();
     },onStatus:status=>{
      if(token!==entry.token||!enabled)return;
-     // Starting a poll supplies no new receipt. rows() still checks the previous sample's expiry.
-     if(request.sessionBased&&status.state==='refreshing'){onChange();return;}
      const {state,...meta}=status;entry.meta={...entry.meta,...meta,feedState:state};
      if(state==='live')entry.meta.quoteAsOf=status.asOf/1000;
      if(['snapshot','live'].includes(state))entry.meta.activityAt=now();

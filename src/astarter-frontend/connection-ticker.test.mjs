@@ -64,18 +64,3 @@ test('the market page shares in-flight footer reads, honors a 15s cadence and ca
  ticker.resume();market.tick();assert.equal(calls.length,3);calls[2].resolve();await settle();
  assert.ok(calls.every(call=>call.url===HUB_RESOURCES.tickers.url));
 });
-
-test('the empty ticker shows an automatic retry until the provider permits another read',async t=>{
- let now=at,reads=0;
- const fetchQuote=async()=>{
-  if(++reads===1)return new Response('',{status:503,headers:{'Retry-After':'20'}});
-  return Response.json([{...quote('BTC',101,100),closeTime:now}]);
- };
- const {ticker,viewport}=productTicker(t,'social',fetchQuote,()=>now);
- ticker.refresh();await settle();
- assert.ok(viewport.innerHTML.includes(pair('将自动重试','Retrying shortly.')));
- assert.doesNotMatch(viewport.innerHTML,/data-ticker-retry/);
- now+=19_000;ticker.refresh();assert.equal(reads,1);
- now+=1000;ticker.refresh();await settle();
- assert.equal(reads,2);assert.match(viewport.innerHTML,/data-ticker-symbol="BTC"/);
-});

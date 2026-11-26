@@ -4,7 +4,7 @@ import {workbenchTracking,workbenchFilter,toggleWorkbenchWatch,activeWorkbenchOr
 export {workbenchTracking} from './workbench-targets.mjs';
 import {createWorkbenchCharts} from './workbench-charts.mjs';
 import {createWorkbenchConsole,createWorkbenchInformationDesk,workbenchOperationState,workbenchOperationLabel,workbenchPlainEvent} from './workbench-console.mjs?v=20261122e';
-import {t} from './locale.mjs';
+import {t,getLocale} from './locale.mjs';
 import {RESEARCH_GROUPS} from './multi-research.mjs';
 import {L,label} from './execution-views.mjs';
 import {tokenIcon} from './brand-icons.mjs';
@@ -14,7 +14,7 @@ import {escapeUI as esc} from './product-experience.mjs';
 const groupNames=[['市场结构','Market structure'],['链上生态','On-chain'],['情绪异动','Sentiment'],['全球权益','Global equities'],['避险轮动','Defensive rotation'],['宏观事件','Macro events']];
 const phaseNames={queued:['等待线索','Watching'],collect:['采集数据','Collecting'],verify:['交叉检查','Cross-checking'],queuedCore:['准备交接','Handoff queued'],core:['核心汇总','Core review'],complete:['已形成判断','Reviewed'],monitor:['持续扫描','Scanning']};
 const number=(v,d=2)=>Number.isFinite(v)?v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
-const wordmark=()=>`<span class="lenswave-wordmark">LENSWAVE</span>`;
+const wordmark=()=>`<span class="lenswave-wordmark">${getLocale()==='zh'?'AI 交易':'LENSWAVE'}</span>`;
 const role=id=>'A'+String(id+1).padStart(2,'0');
 
 export function renderWorkbenchWalletButton(balance,mobile=false){
@@ -234,7 +234,7 @@ export function createWorkbenchTerminal({research,desk,workspace,onSelect,onOpen
   teamToggle.hidden=!enabled;teamToggle.innerHTML=uiGlyph('strategy')+'<span>'+L('信息台','Information desk')+'</span>';teamToggle.setAttribute('aria-label',L('信息台','Information desk'));teamToggle.title=L('信息台','Information desk');teamToggle.setAttribute('aria-expanded',String(phone.matches?document.body.dataset.mobileView==='status':teamsOpen));
   toggle.hidden=enabled&&!new URLSearchParams(location.search).has('compare');
   toggle.textContent=enabled?phone.matches?L('原版','Original'):L('原版对比','Compare original'):L('返回新版','Use new layout');toggle.setAttribute('aria-pressed',String(!enabled));
-  const h=document.getElementById('stage-title');h.innerHTML=wordmark();stage.setAttribute('aria-label',L('AI 星谱','LensWave'));h.setAttribute('aria-level',enabled&&!phone.matches?'2':'1');
+  const h=document.getElementById('stage-title');h.innerHTML=wordmark();stage.setAttribute('aria-label',L('AI 交易','LensWave'));h.setAttribute('aria-level',enabled&&!phone.matches?'2':'1');
   update();onResize();requestAnimationFrame(clip);
  }
  toggle.onclick=()=>{enabled=!enabled;const url=new URL(location.href);if(enabled)url.searchParams.delete('layout');else url.searchParams.set('layout','classic');history.replaceState(null,'',url);setLayout();};
@@ -305,15 +305,13 @@ export function createWorkbenchTerminal({research,desk,workspace,onSelect,onOpen
   }else{
    if(ribbon.parentElement!==main)main.prepend(ribbon);
    opticalHeader?.dispose();opticalHeader=null;ribbon.classList.remove('terminal-halftone');
-  put(ribbon,`<div class="terminal-title"><div><h1>${wordmark()}</h1><p class="terminal-os-identity" data-no-translate>AGENT TRADING OS</p></div></div><div class="terminal-system-overview"><div class="terminal-core-status"><i class="terminal-live-dot" data-paused="${paused}"></i><b>${paused?L('Agent 协作已暂停','Agent collaboration paused'):L('Agent 协作中','Agents at work')}</b></div><p><button data-terminal-route="watchlist">${L('我的追踪','My tracking')} ${watchCount}</button><span>·</span><button data-terminal-route="signals">${scanCount} ${L('个扫描候选',scanCount===1?'scan candidate':'scan candidates')}</button></p></div><div class="terminal-account">${renderWorkbenchWalletButton(balance)}<button data-terminal-route="usage"><small>${L('AI 积分','AI credits')}</small><b data-terminal-number="credits">${number(workspace.available,0)}<em>${workspace.reserved?L('预留 ','Held ')+workspace.reserved:L('可用','available')}</em></b></button></div><button class="terminal-session" data-terminal-route="execution" data-phase="${operation.status}"><span class="terminal-session-label">${L('交易运行','Trading activity')}${uiGlyph('arrow')}</span><b>${runStatus}</b><small>${scopedTrade?trade.position?1:0:'—'} ${L('持仓','positions')}<i>·</i>${scopedTrade?activeWorkbenchOrders(scopedTrade).length:'—'} ${L('挂单','open orders')}</small></button>`);
-  }
+  put(ribbon,`<div class="terminal-title"><div><h1>${wordmark()}</h1><p class="terminal-os-identity" data-no-translate>AGENT TRADING OS</p></div></div><div class="terminal-system-overview"><div class="terminal-core-status"><i class="terminal-live-dot" data-paused="${paused}"></i><b>${paused?L('Agent 协作已暂停','Agent collaboration paused'):L('Agent 协作中','Agents at work')}</b></div><p><button data-terminal-route="watchlist">${L('我的追踪','My tracking')} ${watchCount}</button><span>·</span><button data-terminal-route="signals">${scanCount} ${L('个扫描候选',scanCount===1?'scan candidate':'scan candidates')}</button></p></div><div class="terminal-account">${renderWorkbenchWalletButton(balance)}<button data-terminal-route="usage"><small>${L('AI 积分','AI credits')}</small><b data-terminal-number="credits">${number(workspace.available,0)}<em>${workspace.reserved?L('预留 ','Held ')+workspace.reserved:L('可用','available')}</em></b></button></div><button class="terminal-session" data-terminal-route="execution" data-phase="${operation.status}"><span class="terminal-session-label">${L('交易运行','Trading activity')}${uiGlyph('arrow')}</span><b>${runStatus}</b><small>${scopedTrade?trade.position?1:0:'—'} ${L('持仓','positions')}<i>·</i>${scopedTrade?activeWorkbenchOrders(scopedTrade).length:'—'} ${L('挂单','open orders')}</small></button>`);  }
   put(teams.querySelector('header h2'),L('信息台','Information desk'));
   const close=teams.querySelector('.terminal-rail-close');close.hidden=phone.matches;close.setAttribute('aria-label',L('收起','Collapse')+' · '+L('信息台','Information desk'));
   for(const button of teams.querySelectorAll('[data-terminal-mode]')){const active=button.dataset.terminalMode===railMode;button.setAttribute('aria-pressed',String(active));button.textContent=button.dataset.terminalMode==='teams'?(document.body.dataset.workbenchView==='photonic'?L('数据','Data'):L('战队','Squad')):button.dataset.terminalMode==='feed'?L('信息流','Live feed'):L('Agent 日志','Agent log');}
   const informationMode=document.body.dataset.workbenchView==='photonic'?'workspace':railMode;
   teams.querySelector('.terminal-team-list').hidden=railMode!=='teams';liveFeed.hidden=!['feed','workspace'].includes(informationMode);recordPane.hidden=!['records','workspace'].includes(informationMode);
-  put(teams.querySelector('.terminal-mobile-overview'),`<div><span>${L('交易状态','Trading status')}<b>${runStatus}</b></span><button data-terminal-pane="console">${L('去操作台','Open controls')}${uiGlyph('arrow')}</button></div>${renderWorkbenchWalletButton(balance,true)}<button data-terminal-route="usage"><small>${L('可用 AI 积分','AI credits available')}</small><strong>${number(workspace.available,0)}</strong></button>`);
-  put(teams.querySelector('.terminal-team-summary'),`<span>${paused?L('协作已暂停','Collaboration paused'):visibleTasks.some(t=>t.phase!=='complete')?L('研究中','Researching'):L('持续观察','Monitoring')}</span><b>${visibleTasks.filter(t=>t.phase==='complete'&&t.outcome==='candidate').length} ${L('个机会候选','candidates')}</b>`);
+  put(teams.querySelector('.terminal-mobile-overview'),`<div><span>${L('交易状态','Trading status')}<b>${runStatus}</b></span><button data-terminal-pane="console">${L('去操作台','Open controls')}${uiGlyph('arrow')}</button></div>${renderWorkbenchWalletButton(balance,true)}<button data-terminal-route="usage"><small>${L('可用 AI 积分','AI credits available')}</small><strong>${number(workspace.available,0)}</strong></button>`);  put(teams.querySelector('.terminal-team-summary'),`<span>${paused?L('协作已暂停','Collaboration paused'):visibleTasks.some(t=>t.phase!=='complete')?L('研究中','Researching'):L('持续观察','Monitoring')}</span><b>${visibleTasks.filter(t=>t.phase==='complete'&&t.outcome==='candidate').length} ${L('个机会候选','candidates')}</b>`);
   put(teams.querySelector('.terminal-team-footer'),`<button data-terminal-route="risk">${uiGlyph('shield')}<span>${L('资金保护','Capital protection')}<b>${number(workspace.s.risk.cap,0)} USDT</b></span>${uiGlyph('chevron')}</button><button data-terminal-route="my-strategies">${uiGlyph('strategy')}${L('我的策略','My strategies')}${uiGlyph('chevron')}</button>`);
   teams.dataset.railMode=railMode;informationDesk.update(scopedTrade,informationMode,desk.syncStatus().scope,visibleTasks);
   const hasChart=Boolean(focus.task&&visibleTasks.length);

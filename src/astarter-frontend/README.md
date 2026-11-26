@@ -1,5 +1,8 @@
 > **当前发布入口（2026-11-12）**：4188 应用的 GitHub / Vercel 发布说明见 [DEPLOYMENT.md](./DEPLOYMENT.md)。下面按时间保留原有开发记录，不能作为云端服务已接通的证明。
 
+This public Hackathon edition opens Onchain Deep Brain and its interactive evidence graph. The [hosted demo](https://dapp.ipfund.art/) also includes a licensed particle portrait. The public source includes the graph, research notes, and asset picker. To run it, use Node.js 24, then run `npm ci` and `npm start`.
+
+
 # HIVE · 当前前端 v0.34（2026-10-29 API 动态图标与场景清理）
 
 [AI 协作台](http://127.0.0.1:4188/?page=workbench) · [AI 信号](http://127.0.0.1:4188/?page=signals) · [社媒动态](http://127.0.0.1:4188/?page=social) · [市场行情](http://127.0.0.1:4188/?page=markets) · [交易助手](http://127.0.0.1:4188/?page=assistant)

@@ -28,34 +28,34 @@ const locales={zh:'zh-CN',en:'en-US',ja:'ja-JP',ko:'ko-KR',vi:'vi-VN',es:'es-419
 const menuGlyph=path=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={path}/></svg>;
 const chevron=menuGlyph('m9 5 7 7-7 7');
 export function WalletAccountMenu({address,displayName,description,lang,busy,onManage,onDisconnect}){
- const trigger=useRef(null),panel=useRef(null),profile=useRef(null),appearance=useRef(null),language=useRef(null);
+ const trigger=useRef(null),panel=useRef(null),profile=useRef(null);
  const [expanded,setExpanded]=useState(false),[copied,setCopied]=useState('');
  const labels=walletMenuLabels(lang),name=displayName||address.slice(0,6)+'…'+address.slice(-4);
  const close=(restore=false)=>{if(panel.current?.matches(':popover-open'))panel.current.hidePopover();if(restore)trigger.current?.focus({preventScroll:true});};
  useLayoutEffect(()=>{
-  const menu=panel.current,button=trigger.current,moved=[];
-  // Move the existing controls so their navigation, locale and scene-theme handlers stay intact.
-  for(const [selector,slot] of [['.header-settings',profile.current],['.theme-switch',appearance.current],['.language-picker',language.current]]){
-   const node=document.querySelector('.topbar>'+selector);if(!node)continue;
-   const marker=document.createComment('wallet-menu-control');node.before(marker);slot.append(node);moved.push([node,marker]);
+  const menu=panel.current,button=trigger.current,slot=profile.current;
+  const profileButton=document.querySelector('.topbar>.header-settings');
+  const marker=document.createComment('wallet-menu-profile');
+  if(profileButton){
+   profileButton.before(marker);
+   slot.append(profileButton);
   }
   const position=()=>{const {right,top}=walletMenuPosition(button.getBoundingClientRect(),{width:innerWidth,height:innerHeight});menu.style.right=right+'px';menu.style.top=top+'px';menu.style.setProperty('--wallet-menu-top',top+'px');};
   const before=event=>{if(event.newState==='open')position();};
-  const toggle=event=>{const open=event.newState==='open';setExpanded(open);if(!open){setCopied('');const picker=language.current?.querySelector('details');if(picker)picker.open=false;}};
+  const toggle=event=>{const open=event.newState==='open';setExpanded(open);if(!open)setCopied('');};
   const resize=()=>close(),navigate=()=>close(true);
-  menu.addEventListener('beforetoggle',before);menu.addEventListener('toggle',toggle);profile.current.addEventListener('click',navigate);window.addEventListener('resize',resize);
+  menu.addEventListener('beforetoggle',before);menu.addEventListener('toggle',toggle);slot.addEventListener('click',navigate);window.addEventListener('resize',resize);
   return()=>{
-   const hadFocus=menu.contains(document.activeElement)||document.activeElement===button;menu.removeEventListener('beforetoggle',before);menu.removeEventListener('toggle',toggle);profile.current?.removeEventListener('click',navigate);window.removeEventListener('resize',resize);
-   for(const [node,marker] of moved)marker.replaceWith(node);
+   const hadFocus=menu.contains(document.activeElement)||document.activeElement===button;menu.removeEventListener('beforetoggle',before);menu.removeEventListener('toggle',toggle);slot.removeEventListener('click',navigate);window.removeEventListener('resize',resize);
+   if(profileButton)marker.replaceWith(profileButton);
    if(hadFocus)requestAnimationFrame(()=>document.querySelector('.header-wallet .wallet-login')?.focus({preventScroll:true}));
   };
  },[]);
  useEffect(()=>{const button=profile.current?.querySelector('button');if(!button)return;let text=button.querySelector('.wallet-account-label');if(!text){text=document.createElement('span');text.className='wallet-account-label';button.append(text);}text.textContent=labels[2];return()=>text.remove();},[lang]);
- return <><button ref={trigger} type="button" className="wallet-login is-authenticated" popoverTarget="wallet-account-menu" aria-haspopup="dialog" aria-expanded={expanded} aria-controls="wallet-account-menu" aria-label={description} aria-disabled={Boolean(busy)} aria-busy={Boolean(busy)} onClick={event=>{if(busy)event.preventDefault();}}><span className="wallet-avatar" aria-hidden="true"/><span className="wallet-name">{name}</span>{chevron}</button>
- <div ref={panel} id="wallet-account-menu" className="wallet-account-menu" popover="auto" role="dialog" aria-label={labels[0]} onKeyDownCapture={event=>{const picker=language.current?.querySelector('details[open]');if(event.key==='Escape'&&picker){event.preventDefault();event.stopPropagation();picker.open=false;picker.querySelector('summary')?.focus();}}}>
+ return <><button ref={trigger} type="button" className="wallet-login is-authenticated" popoverTarget="wallet-account-menu" aria-haspopup="dialog" aria-expanded={expanded} aria-controls="wallet-account-menu" aria-label={description} title={description} aria-disabled={Boolean(busy)} aria-busy={Boolean(busy)} onClick={event=>{if(busy)event.preventDefault();}}><span className="wallet-avatar" aria-hidden="true"/><span className="wallet-name">{name}</span>{chevron}</button>
+ <div ref={panel} id="wallet-account-menu" className="wallet-account-menu" popover="auto" role="dialog" aria-label={labels[0]}>
   <section className="wallet-menu-identity"><p className="wallet-menu-eyebrow">{labels[1]}</p><div className="wallet-menu-address"><span className="wallet-avatar" aria-hidden="true"/><div><strong title={address}>{name}</strong><span>BSC <i aria-hidden="true"/> {walletLabels(lang)[9]}</span></div><button type="button" className="wallet-menu-icon" aria-label={labels[8]} title={labels[8]} onClick={()=>{close(true);onManage();}}>{menuGlyph('M5 12h.01M12 12h.01M19 12h.01')}</button></div><div className="wallet-menu-address-actions"><button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(address);setCopied('ok');}catch{setCopied('error');}}}>{menuGlyph(copied==='ok'?'m5 12 4 4L19 6':'M9 5V3h12v12h-2M3 9h12v12H3Z')}<span>{labels[copied==='ok'?6:5]}</span></button><a href={'https://bscscan.com/address/'+address} target="_blank" rel="noopener noreferrer" aria-label={labels[7]} title={labels[7]}>{menuGlyph('M14 3h7v7M21 3 11 13M10 3H3v18h18v-7')}</a></div>{copied==='error'&&<p className="wallet-menu-copy-error" role="alert">{labels[10]}</p>}<span className="sr-only" role="status">{copied==='ok'?labels[6]:''}</span></section>
   <div ref={profile} className="wallet-menu-profile"/>
-  <div className="wallet-menu-preferences"><div className="wallet-menu-preference"><span>{labels[3]}</span><div ref={appearance}/></div><div className="wallet-menu-preference wallet-menu-language"><span>{labels[4]}</span><div ref={language}/></div></div>
   <button type="button" className="wallet-menu-disconnect" disabled={Boolean(busy)} onClick={()=>{close(true);onDisconnect();}}>{menuGlyph('M9 4H4v16h5M9 12h12m-4-4 4 4-4 4')}<span>{labels[9]}</span></button>
  </div></>;
 }

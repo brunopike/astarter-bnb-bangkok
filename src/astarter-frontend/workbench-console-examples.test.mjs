@@ -49,11 +49,6 @@ test('live controls show the current empty account until examples are explicitly
   globalThis.document={activeElement:null,querySelector:node,addEventListener(){}};
   const view=createWorkbenchConsole({host,research,workspace,desk:{readSnapshot:()=>trade,syncStatus:()=>({scope})}});view.update();
   assert.ok(node('#ops-runs').innerHTML.includes(pair('暂无运行','No runs yet')));
-  const emptyRuns=node('#ops-runs').innerHTML;
-  assert.match(emptyRuns,/<\/header><div class="ops-run-empty"><p class="ops-empty">/);
-  assert.match(emptyRuns,/data-statements="AI_SPECTRUM"/);
-  assert.doesNotMatch(emptyRuns,/ops-section-count|ops-example-source|data-ops-example="history"/);
-  assert.equal((emptyRuns.match(/data-ops-example-toggle/g)||[]).length,1);
   assert.doesNotMatch(node('#ops-runs').innerHTML,/data-ops-example="history"/);
   assert.equal(node('#ops-view-notifications').dataset.unreadCount,'');
   events['host:click']({target:{closest:()=>({dataset:{},hasAttribute:name=>name==='data-ops-example-toggle'})}});

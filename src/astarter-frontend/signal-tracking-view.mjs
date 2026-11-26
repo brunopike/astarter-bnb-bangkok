@@ -1,12 +1,12 @@
+import {routeSearch,routeHref} from './site-routes.mjs';
+import {BRAIN_PAGE_NAME,brainEntrySearch} from './product-data.mjs';
 import {TRACKING_CASES,TRACKING_SOURCES,TRACKING_STAGES,TRACKING_GUIDANCE,trackingReview,trackingRows,TRACKING_CUTOFF,signalPreferences,filterSignalPreferences,signalStrategy,publicRunSignals,trackingRecord,signalExcerpt,signalCandleIdentity,signalReferenceKey,signalReferencePlan,signalReferenceFor,loadSignalReferencePlan,signalQuote} from './signal-tracking.mjs';
-import {liveSignalRow,liveSignalCard,liveSignalDetail,liveSignalExcerpt,liveSignalCopyText} from './live-signal-view.mjs';
-import {TOKEN_IDS} from './brand-icon-data.mjs';
 import {tokenIcon} from './brand-icons.mjs';
 import {chartPanel,mountCharts} from './product-chart-ui.mjs';
 import {tradingChartPanel} from './trading-chart.mjs';
 import {HUB_ASSET_IDS} from './market-hub-data.mjs';
 import {sameWatchAssetKey} from './market-watchlist.mjs';
-import {uiGlyph,bindSearchRender,canAutoRefresh,captureProductFocus} from './product-composition.mjs';
+import {uiGlyph,bindSearchRender} from './product-composition.mjs';
 import {escapeUI as esc} from './product-experience.mjs';
 import {L} from './execution-views.mjs';
 import {getLocale,localeInfo} from './locale.mjs';
@@ -17,29 +17,8 @@ import {formatSimulationTime as simClock} from './product-help.mjs';
 import {readWorkbenchTargets,matchesWorkbenchTarget,renderWorkbenchTargets,bindWorkbenchTargets,setWorkbenchTargets} from './workbench-targets.mjs';
 
 const number=n=>!Number.isFinite(n)?'—':n.toLocaleString('en-US',n!==0&&Math.abs(n)<.01?{maximumSignificantDigits:10}:{maximumFractionDigits:Math.abs(n)<10?4:2});
-let statsModule,statsLoadAttempt=0;
-function loadStats(){
- if(!statsModule){
-  const url=new URL('./signal-ui/advanced-stats.js',import.meta.url);
-  // A failed module URL can remain in the browser's module map until navigation.
-  if(statsLoadAttempt)url.searchParams.set('retry',String(statsLoadAttempt));
-  statsModule=import(url.href).catch(error=>{statsModule=null;statsLoadAttempt++;throw error;});
- }
- return statsModule;
-}
-const historicalRows=trackingRows(TRACKING_CASES,{latestOnly:true});
-// These labels identify fixed examples distinctly from runtime records in every supported locale.
-const feedLabels={
- zh:{runs:'运行信号',all:'全部来源（含样例）',examples:'历史示例',archive:n=>`查看 ${n} 条历史样例`,empty:'暂无运行信号',hint:'AI 自主或 BOT 运行产生信号后，会显示在这里。',refresh:'列表按所选间隔读取已有运行记录。',charts:'信号图表暂时无法加载。',retry:'重试图表'},
- en:{runs:'Run signals',all:'All origins (including examples)',examples:'Example archive',archive:n=>`View ${n} historical example${n===1?'':'s'}`,empty:'No run signals yet',hint:'Signals from autonomous AI and bot runs appear here.',refresh:'The list checks existing run records at this interval.',charts:'Signal charts are temporarily unavailable.',retry:'Retry charts'},
- ja:{runs:'実行シグナル',all:'すべてのソース（サンプルを含む）',examples:'過去のサンプル',archive:n=>`過去のサンプルを${n}件見る`,empty:'実行シグナルはまだありません',hint:'自律型AIやBOTが生成したシグナルがここに表示されます。',refresh:'設定した間隔で実行記録を確認します。',charts:'現在、シグナルのチャートを読み込めません。',retry:'チャートを再読み込み'},
- ko:{runs:'실행 신호',all:'모든 출처(예시 포함)',examples:'과거 예시',archive:n=>`과거 예시 ${n}개 보기`,empty:'아직 실행 신호가 없습니다',hint:'자율 AI 또는 봇 실행에서 생성된 신호가 여기에 표시됩니다.',refresh:'선택한 간격으로 실행 기록을 확인합니다.',charts:'지금은 신호 차트를 불러올 수 없습니다.',retry:'차트 다시 시도'},
- vi:{runs:'Tín hiệu từ phiên chạy',all:'Tất cả nguồn (gồm ví dụ)',examples:'Ví dụ lịch sử',archive:n=>`Xem ${n} ví dụ lịch sử`,empty:'Chưa có tín hiệu từ phiên chạy',hint:'Tín hiệu do AI tự động hoặc bot tạo sẽ xuất hiện ở đây.',refresh:'Danh sách kiểm tra các phiên chạy theo khoảng thời gian đã chọn.',charts:'Tạm thời không thể tải biểu đồ tín hiệu.',retry:'Tải lại biểu đồ'},
- es:{runs:'Señales de ejecución',all:'Todos los orígenes (incluye ejemplos)',examples:'Ejemplos históricos',archive:n=>n===1?'Ver 1 ejemplo histórico':`Ver ${n} ejemplos históricos`,empty:'Aún no hay señales de ejecución',hint:'Aquí aparecerán las señales generadas por la IA autónoma o los bots.',refresh:'La lista consulta las ejecuciones con el intervalo seleccionado.',charts:'Los gráficos de señales no están disponibles en este momento.',retry:'Reintentar gráficos'},
- fr:{runs:'Signaux d’exécution',all:'Toutes les sources (exemples inclus)',examples:'Exemples historiques',archive:n=>n===1?'Voir 1 exemple historique':`Voir ${n} exemples historiques`,empty:'Aucun signal d’exécution pour le moment',hint:'Les signaux générés par l’IA autonome ou les bots apparaîtront ici.',refresh:'La liste vérifie les exécutions à l’intervalle choisi.',charts:'Les graphiques des signaux sont temporairement indisponibles.',retry:'Recharger les graphiques'},
- ru:{runs:'Сигналы запусков',all:'Все источники (включая примеры)',examples:'Архив примеров',archive:n=>`Посмотреть примеры из архива (${n})`,empty:'Пока нет сигналов запусков',hint:'Здесь появятся сигналы, созданные автономным ИИ или ботами.',refresh:'Список проверяет записи запусков с выбранным интервалом.',charts:'Графики сигналов временно недоступны.',retry:'Загрузить графики снова'}
-};
-
+let statsModule;
+const loadStats=()=>statsModule||=import('./signal-ui/advanced-stats.js').catch(error=>{statsModule=null;throw error;});
 const unitText=row=>{const unit=signalQuote(row).priceUnit;return unit?L(unit,({'点':'pts','USD/盎司':'USD/oz'})[unit]||unit):L('单位待确认','Unit unknown');};
 const priceLabel=row=>{
  const quote=signalQuote(row);
@@ -130,7 +109,6 @@ function signalReportContent(row){
  return {symbol:instrument.symbol||c.id,title,source:source(c),priceLabel:priceLabel(row),price:money(r.price),facts,sections,identity,history,values:review?.path?.map(event=>event.price)||[]};
 }
 export function signalCopyText(row){
- if(row.live)return liveSignalCopyText(row);
  const report=signalReportContent(row),lines=[report.symbol+' · '+L('AI 信号','AI signal'),report.title,report.source,report.priceLabel+': '+report.price,...report.facts.map(([label,value])=>label+': '+value)];
  for(const section of report.sections)lines.push('',section.title,...section.paragraphs||[],...(section.facts||[]).map(([label,value])=>label+': '+value));
  lines.push('',L('数据来源','Data source'),...report.identity.map(([label,value])=>label+': '+value));return lines.join('\n');
@@ -156,124 +134,34 @@ export function signalStatsData(row){
   kpis:row.record?[{label:L('运行','Run'),value:r.runId||missing},{label:L('信号','Signal'),value:r.signalId||missing}]:[{label:signalQuote(row).priceUnit==='点'?L('首次记录点位','First recorded level'):L('首次记录价格','First record price'),value:history.length?number(history[0].price):missing,unit,numeric:history.length>0},{label:L('观察记录','Observation history'),value:String(history.length),numeric:true},{label:strategy?L('对照策略','Library reference'):L('策略','Strategy'),value:strategy||L('未关联策略','No linked strategy')}]};
 }
 
-const marketFeedCopy={
- zh:['行情信号','正在分析最新行情','最新行情暂不可用','有了近期已收盘 K 线后会自动更新。','重新获取行情','加密资产有新分钟收盘才重算。选 120 或 300 秒时按该间隔读取。跨市场每 15 分钟核对最近交易日收盘。','行情待更新'],
- en:['Market signals','Analyzing market data','Current market data unavailable','Analysis resumes when recent closed candles are available.','Retry market data','Crypto analysis changes with a new closed minute. The 120- and 300-second settings check less often. Other markets check their latest daily close every 15 minutes.','Awaiting data'],
- ja:['市場シグナル','最新の相場を分析中','最新の相場を取得できません','直近の確定足を取得すると自動で更新します。','相場を再取得','暗号資産は1分足の確定後に更新します。120秒・300秒を選んだ場合はその間隔で取得します。その他の市場は15分ごとに直近の日足終値を確認します。','データ待ち'],
- ko:['시장 신호','최신 시세 분석 중','최신 시세를 불러올 수 없습니다','최근 마감 봉을 받으면 자동으로 갱신됩니다.','시세 다시 받기','암호화폐는 새 1분 봉이 마감된 뒤 갱신됩니다. 120초 또는 300초를 선택하면 해당 간격으로 조회합니다. 다른 시장은 15분마다 최근 일봉 종가를 확인합니다.','갱신 대기'],
- vi:['Tín hiệu thị trường','Đang phân tích thị trường','Chưa có dữ liệu thị trường mới','Phân tích tự cập nhật khi có nến đã đóng gần đây.','Tải lại dữ liệu','Tiền mã hóa cập nhật khi nến phút đóng. Nếu chọn 120 hoặc 300 giây, dữ liệu được kiểm tra theo chu kỳ đó. Các thị trường khác kiểm tra giá đóng cửa ngày gần nhất mỗi 15 phút.','Chờ dữ liệu'],
- es:['Señales de mercado','Analizando el mercado','Datos de mercado no disponibles','El análisis se actualiza cuando hay velas cerradas recientes.','Reintentar','Las señales cripto cambian con cada vela de un minuto cerrada. Con 120 o 300 segundos se consulta con menor frecuencia. Los demás mercados comprueban el último cierre diario cada 15 minutos.','Pendiente de actualización'],
- fr:['Signaux de marché','Analyse du marché en cours','Données de marché indisponibles','L’analyse reprend dès que des bougies clôturées récentes sont disponibles.','Réessayer','Les signaux crypto évoluent à la clôture des bougies d’une minute. Les réglages de 120 ou 300 secondes espacent les lectures. La dernière clôture des autres marchés est vérifiée toutes les 15 minutes.','Données en attente'],
- ru:['Рыночные сигналы','Анализируем рынок','Свежие рыночные данные недоступны','Анализ обновится при получении свежих закрытых свечей.','Повторить запрос','Сигналы по криптовалютам обновляются после закрытия минутной свечи. При выборе 120 или 300 секунд проверки идут реже. Для других рынков последнее дневное закрытие проверяется каждые 15 минут.','Ожидание данных']
-};
-export function createSignalTracker({w,research,createLiveFeed,loadReference=loadSignalReferencePlan,loadCardStats=loadStats,localizeResearch=text=>text,root,refresh,notify=()=>{},onBrowse,onManageWatch,onStrategy=()=>{},onRelatedLink=()=>false,readSnapshot=()=>({})}){
- const defaultOrigin=createLiveFeed?'live':'runtime';
- let kind='all',origin=defaultOrigin,validity='all',query='',page=1,selected='',mode='personal',dispose=()=>{},pendingOpen=false,prefError=false,sourceView=null,readerOrigin=null;
- let disposeStats=()=>{},statsRevision=0,statsFailed=false,lastSignalRoute;
- const statsRecords=new Map(),referencePlans=new Map(),referenceTasks=new Map();
+export function createSignalTracker({w,research,loadReference=loadSignalReferencePlan,localizeResearch=text=>text,root,refresh,notify=()=>{},onBrowse,onManageWatch,onStrategy=()=>{},onRelatedLink=()=>false,readSnapshot=()=>({})}){
+ let kind='all',origin='all',validity='all',query='',page=1,selected='',mode='personal',dispose=()=>{},pendingOpen=false,prefError=false,sourceView=null;
+ let disposeStats=()=>{},statsRevision=0;const statsRecords=new Map(),referencePlans=new Map(),referenceTasks=new Map();
  const targetSelection=()=>readWorkbenchTargets(w,research),targetSignature=()=>{const s=targetSelection();return JSON.stringify([s.filter,s.focusAsset,s.tasks.map(task=>task.symbol)]);};
  let targetsRevision=targetSignature(),scopePagePinned=false,disposeTargets=()=>{};
  const targetsChanged=()=>{const next=targetSignature();if(next===targetsRevision)return;targetsRevision=next;page=1;scopePagePinned=true;refresh();};
  const clearTargetScope=()=>{const issue=research||w.research?setWorkbenchTargets(w,research||w.research,{filter:'all',focusAsset:null}):null;if(issue){notify(issue,{tone:'error'});return false;}return true;};
- const withReference=row=>row.live?row:({...row,referencePlan:referencePlans.get(signalReferenceKey(row))||signalReferencePlan(row)});
+ const withReference=row=>({...row,referencePlan:referencePlans.get(signalReferenceKey(row))||signalReferencePlan(row)});
  const stopReferences=container=>{for(const [host,controller]of referenceTasks)if(!host.isConnected||container?.contains?.(host)){controller.abort();referenceTasks.delete(host);}};
  const prefKey='hive.ai-signal.preferences.v1';
  const size=15,dialog=document.createElement('dialog');dialog.className='sig-track-dialog';dialog.setAttribute('data-localized-ui','');dialog.setAttribute('aria-labelledby','sig-dialog-title');document.body.append(dialog);
- let readerLiveSymbol='',readerLiveRevision='';
- const dismiss=()=>{readerOrigin=null;readerLiveSymbol='';readerLiveRevision='';if(!dialog.open)return;stopReferences(dialog);sourceView=null;dispose();dispose=()=>{};dialog.close();};
- let linkedLiveAsset=null,routeLiveAsset=null,followFirstLive=true,paintTimer=null,paintedRevision='',requestedSymbols='',liveOwner=false;
- const liveFeed=createLiveFeed?.({onChange:scheduleLivePaint});
- const wantsLive=()=>Boolean(liveFeed)&&(origin==='live'||origin==='all');
- const liveRows=()=>liveFeed?.snapshot().rows.map(liveSignalRow).filter(Boolean)||[];
- function observationRevision(row){
-  return [row.symbol,row.closedAt,row.price,row.direction,row.momentumPct,row.ema20,row.rsi14,row.volumeRatio,row.freshness,row.refreshFailed];
- }
- function liveRevision(){
-  if(!wantsLive())return '';
-  const {rows,loading,failed}=liveFeed.snapshot();
-  return JSON.stringify([rows.map(observationRevision),failed.map(item=>item.symbol),!rows.length&&loading]);
- }
- function refreshLiveReader(){
-  const body=dialog.querySelector('.sig-dialog-body');
-  if(!readerLiveSymbol||!body||document.getSelection?.()?.toString())return;
-  const row=liveRows().find(item=>item.symbol===readerLiveSymbol);
-  const revision=row?JSON.stringify(observationRevision(row.live)):'unavailable';
-  if(revision===readerLiveRevision)return;
-  const restore=captureProductFocus(body),scroll=dialog.scrollTop,bodyScroll=body.scrollTop,expanded=body.querySelector('.sig-live-exact')?.open;
-  readerLiveRevision=revision;
-  if(row){
-   body.innerHTML=detail(row,true);
-   const exact=body.querySelector('.sig-live-exact');if(expanded&&exact)exact.open=true;
-  }else{
-   const copy=marketFeedCopy[getLocale()]||marketFeedCopy.en;
-   body.innerHTML='<div class="sig-empty"><h2 id="sig-dialog-title">'+esc(readerLiveSymbol)+'</h2><p role="status">'+esc(copy[2])+'</p><button type="button" class="p-button" data-track-live-retry>'+esc(copy[4])+'</button></div>';
-  }
-  bind(body);restore();dialog.scrollTop=scroll;body.scrollTop=bodyScroll;
- }
- function scheduleLivePaint(){
-  if(paintTimer!==null||!liveOwner||document.hidden||!wantsLive())return;
-  paintTimer=setTimeout(()=>{
-   paintTimer=null;
-   if(!liveOwner||document.hidden||document.body.dataset?.page!=='signals'||!wantsLive()||!root.querySelector('.sig-tracking'))return;
-   if(dialog.open){refreshLiveReader();return;}
-   if(paintedRevision===liveRevision()||!canAutoRefresh(root))return;
-   const scroll=root.scrollTop;refresh();root.scrollTop=scroll;
-  },90);
- }
- function syncLiveFeed(){
-  if(!liveFeed)return;
-  const active=liveOwner&&document.body.dataset?.page==='signals'&&!document.hidden&&wantsLive();
-  if(active){
-   const symbols=watchKeys().map(key=>typeof key==='string'&&key.startsWith('coin:')?TOKEN_IDS[key.slice(5)]:key).filter(Boolean);
-   if(routeLiveAsset)symbols.push(routeLiveAsset);
-   const key=JSON.stringify(symbols);
-   if(key!==requestedSymbols){requestedSymbols=key;liveFeed.setSymbols(symbols);}
-   liveFeed.setRefreshSeconds(refreshInterval());
-  }
-  liveFeed.setActive(active);
- }
- function stopLiveFeed(){
-  liveOwner=false;clearTimeout(paintTimer);paintTimer=null;liveFeed?.setActive(false);
- }
- document.addEventListener?.('hive:page-leave',event=>{if(event.detail==='signals'){stopLiveFeed();lastSignalRoute=undefined;linkedLiveAsset=null;routeLiveAsset=null;
-   if(liveFeed){origin=defaultOrigin;selected='';pendingOpen=false;followFirstLive=true;page=1;}}dismiss();});
- if(liveFeed){
-  document.addEventListener?.('visibilitychange',()=>{syncLiveFeed();scheduleLivePaint();});
-  root.addEventListener?.('focusout',scheduleLivePaint);
-  globalThis.window?.addEventListener('pagehide',stopLiveFeed);
-  globalThis.window?.addEventListener('pageshow',()=>{liveOwner=document.body.dataset?.page==='signals';syncLiveFeed();scheduleLivePaint();});
- }
- function originButton(origin){
-  if(!origin)return null;
-  const card=`[data-track-record="${origin.id}"]`;
-  return (origin.read&&root.querySelector(card+' [data-track-read]'))||root.querySelector(card+' .sig-event-title');
- }
- const close=(returnToCard=true)=>{
-  if(!dialog.open)return;
-  const y=root.scrollTop,context=sourceView,origin=readerOrigin;dismiss();
-  if(context){if(returnToCard)context.onReturn?.();return;}
-  refresh();root.scrollTop=y;
-  const original=originButton(origin);
-  const target=original||root.querySelector('[data-track-record][aria-current="true"] .sig-event-title')||root.querySelector('.sig-event-title')||root.querySelector('.sig-empty button')||root.querySelector('#sig-search');
-  target?.focus({preventScroll:true});if(!original)target?.scrollIntoView?.({block:'nearest',behavior:'instant'});
- };
+ const dismiss=()=>{if(!dialog.open)return;stopReferences(dialog);sourceView=null;dispose();dispose=()=>{};dialog.close();};
+ document.addEventListener?.('hive:page-leave',dismiss);
+ const close=(returnToCard=true)=>{if(!dialog.open)return;const y=root.scrollTop,context=sourceView;dismiss();if(context){if(returnToCard)context.onReturn?.();return;}refresh();const target=root.querySelector(`[data-track-record="${selected}"] .sig-event-title`)||root.querySelector('.sig-empty button')||root.querySelector('#sig-search');target?.focus({preventScroll:true});root.scrollTop=y;};
  const closePanels=except=>{for(const panel of root.querySelectorAll('.sig-filter-panel[open],.sig-preferences[open]'))if(panel!==except)panel.open=false;};
  document.addEventListener?.('click',event=>closePanels(event.target.closest?.('.sig-filter-panel,.sig-preferences')));
  document.addEventListener?.('keydown',event=>{if(event.key!=='Escape')return;const panel=root.querySelector('.sig-filter-panel[open],.sig-preferences[open]');if(panel){event.preventDefault();closePanels();panel.querySelector('summary')?.focus();}});
  dialog.addEventListener('cancel',ev=>{ev.preventDefault();close();});dialog.addEventListener('click',ev=>{if(ev.target===dialog)close();});
  const watchKeys=()=>Array.isArray(w.s.aiSignalWatch)?w.s.aiSignalWatch:[];
- const watched=()=>[...new Set([...TRACKING_CASES.map(row=>row.id),...recordRows().map(row=>row.symbol),...liveRows().map(row=>row.symbol)])].filter(symbol=>watchKeys().some(key=>sameWatchAssetKey(key,symbol)));
+ const watched=()=>[...new Set([...TRACKING_CASES.map(row=>row.id),...recordRows().map(row=>row.symbol)])].filter(symbol=>watchKeys().some(key=>sameWatchAssetKey(key,symbol)));
  const prefs=()=>{try{const saved=localStorage.getItem(prefKey);if(saved!==null){const value=signalPreferences(JSON.parse(saved));w.s.aiSignalPreferences=value;return value;}}catch{}return signalPreferences(w.s.aiSignalPreferences);};
  const savePrefs=value=>{w.s.aiSignalPreferences=signalPreferences(value);try{localStorage.setItem(prefKey,JSON.stringify(w.s.aiSignalPreferences));prefError=false;}catch{prefError=true;}w.touch();};
  try{if(localStorage.getItem(prefKey)!==null)prefs();}catch{}
  if(typeof window!=='undefined'){
-  const syncInterval=()=>{syncLiveFeed();const select=root.querySelector('[data-sig-interval]');if(select)select.value=String(refreshInterval());};
+  const syncInterval=()=>{const select=root.querySelector('[data-sig-interval]');if(select)select.value=String(refreshInterval());};
   window.addEventListener('hive:market-refresh-interval',syncInterval);
   window.addEventListener('hive:signal-source',({detail})=>{
-   if(document.body.dataset?.page!=='signals'||typeof detail?.id!=='string')return;
-   if(origin!=='all'&&historicalRows.some(row=>row.id===detail.id))origin='historical';
-   else if(origin!=='all'&&recordRows().some(row=>row.id===detail.id))origin='runtime';
-   else if(origin!=='all'&&liveRows().some(row=>row.id===detail.id))origin='live';
+   if(document.body.dataset.page!=='signals'||typeof detail?.id!=='string')return;
    open(detail.id);
    const title=[...root.querySelectorAll('[data-track-record]')].find(card=>card.dataset.trackRecord===detail.id)?.querySelector('.sig-event-title');
    if(dialog.open)title?.scrollIntoView({block:'nearest'});else title?.focus();
@@ -291,35 +179,16 @@ export function createSignalTracker({w,research,createLiveFeed,loadReference=loa
   if(ref?.type!=='signal'||typeof ref.revision!=='string')return null;
   return recordRows().map(withReference).find(row=>row.id===ref.recordId&&row.record.sourceId===ref.sourceId&&row.record.signalId===ref.signalId&&row.record.runId===ref.runId&&row.record.version===ref.revision&&row.symbol===ref.asset)||null;
  };
- function rowsInScope(){
-  const selection=targetSelection(),watch=mode==='watch'?watched():null;
-  const rows=[...(wantsLive()?liveRows():[]),...recordRows(),...historicalRows].filter(row=>(kind==='all'||row.track.source===kind)&&(!watch||watch.includes(row.symbol))&&matchesWorkbenchTarget(row.symbol,selection));
-  return mode==='personal'?filterSignalPreferences(rows,prefs()):rows;
- }
- function filteredRows(candidates,sourceFilter=origin,validityFilter=validity){
-  let rows=candidates.filter(row=>(sourceFilter==='all'||(sourceFilter==='runtime'?Boolean(row.record):sourceFilter===(row.live?'live':row.record?.sourceType||'historical')))&&(validityFilter==='all'||validityFilter===(row.live?'active':row.record?.validity||'historical')));
+ const allRows=()=>{
+  let rows=trackingRows(TRACKING_CASES,{source:kind,watched:watched(),watchOnly:mode==='watch',latestOnly:true});
+  if(mode==='personal')rows=filterSignalPreferences(rows,prefs());
+  const live=recordRows().filter(row=>(kind==='all'||row.track.source===kind)&&(mode!=='watch'||watched().includes(row.symbol)));
+  rows=[...(mode==='personal'?filterSignalPreferences(live,prefs()):live),...rows].filter(row=>{const r=trackingRecord(row);return (origin==='all'||r.sourceType===origin)&&(validity==='all'||r.validity===validity);});
   const q=query.trim().toLowerCase(),symbol=rows.find(row=>row.symbol.toLowerCase()===q)?.symbol;
-  if(q)rows=rows.filter(({track:c,live})=>symbol?c.id===symbol:[c.id,c.asset.name,...c.title,...c.thesis,...TRACKING_SOURCES[c.source],live?live.source:c.record?c.record.strategy:signalStrategy(c)].join(' ').toLowerCase().includes(q));
-  return rows.sort((a,b)=>Number(!!b.live)-Number(!!a.live)||Number(!!b.record)-Number(!!a.record)||b.minute-a.minute);
- }
- const allRows=(candidates=rowsInScope())=>filteredRows(candidates).map(withReference);
- function selectExample(symbol,keepSelectionFilters=false){
-  const row=historicalRows.find(item=>item.symbol===symbol);if(!row)return false;
-  if(!keepSelectionFilters||selected!==row.id){kind='all';origin='historical';validity='all';query='';}
-  selected=row.id;scopePagePinned=false;page=1;pendingOpen=true;return true;
- }
- function applySignalRoute(){
-  const params=new URLSearchParams(globalThis.location?.search);
-  if(params.get('page')!=='signals')return;
-  const data=params.get('data'),asset=params.get('asset')?.toUpperCase(),route=JSON.stringify([data,asset]);
-  if(route===lastSignalRoute)return;
-  const wasLinked=lastSignalRoute!==undefined;lastSignalRoute=route;
-  routeLiveAsset=liveFeed&&asset&&data!=='demo'?asset:null;linkedLiveAsset=routeLiveAsset;
-  if(asset&&(data==='demo'||!liveFeed&&data!=='live')&&selectExample(asset,wasLinked))return;
-  if(data==='demo'||data==='live'||linkedLiveAsset||wasLinked){
-   kind='all';origin=data==='demo'?'historical':defaultOrigin;validity='all';query='';selected='';page=1;pendingOpen=false;
-  }
- }
+  if(q)rows=rows.filter(({track:c,price:recordPrice})=>symbol?c.id===symbol:[c.id,c.asset.name,...c.title,...c.thesis,...TRACKING_SOURCES[c.source],c.record?.strategy||signalStrategy(c)].join(' ').toLowerCase().includes(q));
+  const selection=targetSelection();
+  return rows.filter(row=>matchesWorkbenchTarget(row.symbol,selection)).sort((a,b)=>Number(!!b.record)-Number(!!a.record)||b.minute-a.minute).map(withReference);
+ };
  function changeList(){if(!allRows().some(row=>row.id===selected))selected='';page=1;refresh();}
  function plan(c,ev){
   const {p,state}=signalPlanPresentation(ev),guidance=signalActionGuidance(ev),report=referenceReport(ev,n=>number(n)+' '+(p.levels?.unit||unitText(ev)));
@@ -340,67 +209,33 @@ export function createSignalTracker({w,research,createLiveFeed,loadReference=loa
  }
  function recordActions(row){return `<div class="sig-record-actions"><button type="button" class="p-button" data-track-copy="${row.id}">${L('复制信号','Copy signal')}</button><button type="button" class="p-button" data-track-export="${row.id}">${L('导出报告','Export report')}</button></div>`;}
  function detail(ev,popup=false){
-  if(ev.live)return liveSignalDetail(ev,{popup,watched:watched().includes(ev.symbol)});
   const c=ev.track,id=popup?'sig-dialog-title':'sig-detail-title',r=trackingRecord(ev),thesis=ev.record?r.condition||'':ev.simulation?.thesis||L(...c.thesis),clockSuffix=signalClockSuffix(ev);
-  return `<div class="sig-reading-tools">${popup?'':`<h3 tabindex="-1" data-track-reading-heading aria-describedby="sig-detail-title">${L('信号解读','Signal analysis')}</h3>`}${recordActions(ev)}</div><section class="sig-reading-hero"><div class="sig-detail-title sig-asset">${icon(c)}<div><h2 id="${id}">${c.id}</h2><small>${source(c)} · ${c.asset.domain}</small></div><button type="button" class="sig-watch" data-track-watch="${c.id}" aria-pressed="${watched().includes(c.id)}">${uiGlyph('star')}${watched().includes(c.id)?L('已关注','Following'):L('关注','Follow')}</button></div>${recordSummary(ev)}<section class="sig-reading-lead"><h3>${esc(ev.simulation?.title||L(...c.title))}</h3>${thesis?`<p class="sig-detail-thesis">${esc(thesis)}</p>`:''}</section><div class="sig-detail-quote"><small>${priceLabel(ev)} · ${esc(ev.date)} ${esc(ev.time)}${clockSuffix?' '+clockSuffix:''}</small><div class="sig-price-focus">${Number.isFinite(ev.price)?`<strong class="dot-number">${price(ev,ev.price)}</strong>`:`<strong class="sig-price-missing">${L('未提供','Not provided')}</strong>`}</div></div></section>${recordContext(ev)}<div data-signal-reference="${esc(signalReferenceKey(ev))}" data-signal-reference-id="${esc(ev.id)}">${plan(c,ev)}</div>${signalCandleIdentity(ev)&&Object.hasOwn(HUB_ASSET_IDS,c.asset.symbol)?`<details class="sig-candle-view"><summary>${L('当前市场 K 线','Current market candles')}${uiGlyph('chevron')}</summary>${tradingChartPanel(popup?'sig-modal-candles':'sig-side-candles',{...signalCandleIdentity(ev),hostedMarket:true})}</details>`:''}${c.events.length?`<details class="sig-history"><summary>${L('观察记录','Observation history')} <span>${c.events.length}</span></summary><ol>${c.events.map(event=>`<li><time datetime="${event.date}T${event.time}:00+08:00">${event.time}</time><div><b>${L(...TRACKING_STAGES[event.stage])}</b><p>${L(...event.reason)}</p></div><span>${price(ev,event.price)}</span></li>`).join('')}</ol></details>`:''}${c.events.length?chartPanel(popup?'sig-modal-chart':'sig-side-chart',{title:signalQuote(ev).priceUnit==='点'?L('记录点位走势','Recorded level history'):L('记录价格走势','Recorded price history'),kind:'line',values:c.events.map(x=>x.price),labels:c.events.map(x=>x.time),unit:unitText(ev),height:160,color:'var(--chart-accent)',initialWindow:'all',compact:true,showPresets:false}):''}<div class="sig-detail-links">${marketLink(c,L('当前市场概览','Current market overview'))}${c.href&&c.href!=='?page=markets&asset='+c.id&&!(c.source==='macro'&&c.href==='?page=intelligence')&&!(c.source==='onchain'&&c.href==='?page=tracking')?`<a data-track-link data-dc-link href="${c.href}">${L(...({onchain:['打开链上数据','Open on-chain data'],macro:['打开宏观消息','Open macro news'],social:['打开社媒数据','Open social data'],money:['打开账户动态','Open account activity']}[c.source]||['打开相关数据','Open related data']))} ↗</a>`:''}</div>`;
+  return `<div class="sig-reading-tools">${popup?'':`<h3>${L('信号解读','Signal analysis')}</h3>`}${recordActions(ev)}</div><section class="sig-reading-hero"><div class="sig-detail-title sig-asset">${icon(c)}<div><h2 id="${id}">${c.id}</h2><small>${source(c)} · ${c.asset.domain}</small></div><button type="button" class="sig-watch" data-track-watch="${c.id}" aria-pressed="${watched().includes(c.id)}">${uiGlyph('star')}${watched().includes(c.id)?L('已关注','Following'):L('关注','Follow')}</button></div>${recordSummary(ev)}<section class="sig-reading-lead"><h3>${esc(ev.simulation?.title||L(...c.title))}</h3>${thesis?`<p class="sig-detail-thesis">${esc(thesis)}</p>`:''}</section><div class="sig-detail-quote"><small>${priceLabel(ev)} · ${esc(ev.date)} ${esc(ev.time)}${clockSuffix?' '+clockSuffix:''}</small><div class="sig-price-focus">${Number.isFinite(ev.price)?`<strong class="dot-number">${price(ev,ev.price)}</strong>`:`<strong class="sig-price-missing">${L('未提供','Not provided')}</strong>`}</div></div></section>${recordContext(ev)}<div data-signal-reference="${esc(signalReferenceKey(ev))}" data-signal-reference-id="${esc(ev.id)}">${plan(c,ev)}</div>${signalCandleIdentity(ev)&&Object.hasOwn(HUB_ASSET_IDS,c.asset.symbol)?`<details class="sig-candle-view"><summary>${L('当前市场 K 线','Current market candles')}${uiGlyph('chevron')}</summary>${tradingChartPanel(popup?'sig-modal-candles':'sig-side-candles',{...signalCandleIdentity(ev),hostedMarket:true})}</details>`:''}${c.events.length?`<details class="sig-history"><summary>${L('观察记录','Observation history')} <span>${c.events.length}</span></summary><ol>${c.events.map(event=>`<li><time datetime="${event.date}T${event.time}:00+08:00">${event.time}</time><div><b>${L(...TRACKING_STAGES[event.stage])}</b><p>${L(...event.reason)}</p></div><span>${price(ev,event.price)}</span></li>`).join('')}</ol></details>`:''}${c.events.length?chartPanel(popup?'sig-modal-chart':'sig-side-chart',{title:signalQuote(ev).priceUnit==='点'?L('记录点位走势','Recorded level history'):L('记录价格走势','Recorded price history'),kind:'line',values:c.events.map(x=>x.price),labels:c.events.map(x=>x.time),unit:unitText(ev),height:160,color:'var(--chart-accent)',initialWindow:'all',compact:true,showPresets:false}):''}<div class="sig-detail-links">${marketLink(c,L('当前市场概览','Current market overview'))}${c.href&&c.href!=='?page=markets&asset='+c.id&&!(c.source==='macro'&&c.href==='?page=intelligence')&&!(c.source==='onchain'&&c.href==='?page=tracking')?`<a data-track-link data-dc-link href="${c.href}">${L(...({onchain:['打开链上数据','Open on-chain data'],macro:['打开宏观消息','Open macro news'],social:['打开社媒数据','Open social data'],money:['打开账户动态','Open account activity']}[c.source]||['打开相关数据','Open related data']))} ↗</a>`:''}</div>`;
  }
  function card(ev){
-  if(ev.live)return liveSignalCard(ev,{selected:selected===ev.id,watched:watched().includes(ev.symbol)});
   const c=ev.track,r=trackingRecord(ev),on=selected===ev.id,isWatched=watched().includes(c.id),strategy=ev.record?r.strategy:signalStrategy(c),change=r.review?.changePercent,compact=ev.record&&!Number.isFinite(ev.price)&&!r.condition,clockSuffix=signalClockSuffix(ev);
-  const originLabel=origin==='all'&&!ev.record?(feedLabels[getLocale()]||feedLabels.en).examples+' · ':'';
   const guidance=signalActionGuidance(ev),metrics=ev.record?`<span>${L('运行','Run')}<b class="sig-record-reference">${esc(r.runId)}</b></span><span>${L('信号','Signal')}<b class="sig-record-reference">${esc(r.signalId)}</b></span>`:`${r.review?`<span>${L('较首次记录','From first record')}<b class="${change>0?'is-positive':change<0?'is-negative':''}">${signedPercent(change)}</b></span>`:''}${strategy?`<span>${L('参考策略','Strategy')}<b class="sig-record-reference">${esc(strategy)}</b></span>`:''}<span>${L('观察记录','Observation history')}<b>${c.events.length}</b></span>`;
   const actionMetric=`<p class="sig-card-guidance"><span>${L('操作参考','Action guidance')}</span><b data-signal-action="${esc(ev.id)}" data-signal-action-key="${esc(signalReferenceKey(ev))}">${esc(guidance.judgment)} · ${esc(guidance.label)}</b></p>`;
   statsRecords.set(ev.id,signalStatsData(ev));
-  return `<article class="sig-event ${on?'selected':''}" data-track-record="${ev.id}" aria-current="${on}" data-signal-density="${compact?'compact':'full'}">${on?'<span class="sig-current-marker" aria-hidden="true">✓</span>':''}<div class="sig-event-body"><header><span class="sig-event-asset">${icon(c)}<span><b>${c.id}</b><small>${originLabel}${source(c)} · ${c.asset.domain}</small></span></span><button type="button" class="sig-event-title" data-track-open="${ev.id}" tabindex="0">${esc(ev.simulation?.title||L(...c.title))}</button><span class="sig-card-state" data-stage="${ev.record?r.stage:ev.stage}">${ev.record?recordState(r):L(...TRACKING_STAGES[ev.stage])}</span></header>
+  return `<article class="sig-event ${on?'selected':''}" data-track-record="${ev.id}" aria-current="${on}" data-signal-density="${compact?'compact':'full'}">${on?'<span class="sig-current-marker" aria-hidden="true">✓</span>':''}<div class="sig-event-body"><header><span class="sig-event-asset">${icon(c)}<span><b>${c.id}</b><small>${source(c)} · ${c.asset.domain}</small></span></span><button type="button" class="sig-event-title" data-track-open="${ev.id}">${esc(ev.simulation?.title||L(...c.title))}</button><span class="sig-card-state" data-stage="${ev.record?r.stage:ev.stage}">${ev.record?recordState(r):L(...TRACKING_STAGES[ev.stage])}</span></header>
    
    <div data-signal-stats="${ev.id}"><div class="sig-card-insights"><div class="sig-card-quote"><div><span>${priceLabel(ev)}</span><strong class="${Number.isFinite(ev.price)?'dot-number':'sig-card-price-missing'}">${Number.isFinite(ev.price)?price(ev,ev.price):L('未提供','Not provided')}</strong></div></div>${signalHistoryPreview(ev)}<div class="sig-event-data">${metrics}</div></div></div>
-   ${actionMetric}<footer><div class="sig-event-time"><time${ev.date?` datetime="${ev.date}T${ev.time}:00${ev.record?'Z':'+08:00'}"`:''}>${ev.date?esc(ev.date)+' · ':''}${esc(ev.time)}</time>${clockSuffix?`<span>${clockSuffix}</span>`:''}</div><button type="button" class="sig-watch" data-track-watch="${c.id}" aria-pressed="${isWatched}" aria-label="${isWatched?L('取消关注','Unfollow'):L('关注','Follow')} ${c.id}">${uiGlyph('star')}${isWatched?L('已关注','Following'):L('关注','Follow')}</button><button type="button" data-track-open="${ev.id}" data-track-read>${L('解读信号','Analyze signal')} ${uiGlyph('arrow')}</button></footer></div></article>`;
+   ${actionMetric}<footer><div class="sig-event-time"><time${ev.date?` datetime="${ev.date}T${ev.time}:00${ev.record?'Z':'+08:00'}"`:''}>${ev.date?esc(ev.date)+' · ':''}${esc(ev.time)}</time>${clockSuffix?`<span>${clockSuffix}</span>`:''}</div><button type="button" class="sig-watch" data-track-watch="${c.id}" aria-pressed="${isWatched}" aria-label="${isWatched?L('取消关注','Unfollow'):L('关注','Follow')} ${c.id}">${uiGlyph('star')}${isWatched?L('已关注','Following'):L('关注','Follow')}</button><button type="button" data-track-open="${ev.id}">${L('解读信号','Analyze signal')} ${uiGlyph('arrow')}</button></footer></div></article>`;
  }
  function render({nav,myWatch=false,view='personal'}){
-  applySignalRoute();liveOwner=true;syncLiveFeed();paintedRevision=liveRevision();
   const nextTargets=targetSignature();if(nextTargets!==targetsRevision){targetsRevision=nextTargets;page=1;scopePagePinned=true;}
   stopReferences(root);statsRevision++;disposeStats();disposeStats=()=>{};statsRecords.clear();
   const nextMode=myWatch?'watch':view,viewChanged=mode!==nextMode;mode=nextMode;
-  const labels=feedLabels[getLocale()]||feedLabels.en;
-  const [marketLabel,marketLoading,marketUnavailable,marketHint,marketRetry,marketRefresh,marketMissing]=marketFeedCopy[getLocale()]||marketFeedCopy.en;
-  const candidates=rowsInScope(),rows=allRows(candidates),runCount=rows.filter(row=>row.record).length,liveCount=rows.filter(row=>row.live).length;
-  if(origin==='live'&&followFirstLive)selected=rows[(page-1)*size]?.id||'';
-  if(linkedLiveAsset){
-   const linked=rows.find(row=>row.live&&row.symbol===linkedLiveAsset);
-   if(linked){selected=linked.id;pendingOpen=true;followFirstLive=false;scopePagePinned=false;linkedLiveAsset=null;}
-  }
-  if(selected&&!rows.some(row=>row.id===selected)&&wantsLive()&&!sourceView)selected='';
-  const pages=Math.max(1,Math.ceil(rows.length/size)),index=rows.findIndex(row=>row.id===selected);
+  const rows=allRows(),runCount=rows.filter(row=>row.record).length,pages=Math.max(1,Math.ceil(rows.length/size)),index=rows.findIndex(row=>row.id===selected);
   if(viewChanged&&index<0&&!pendingOpen){selected='';page=1;}
   if(index>=0&&!scopePagePinned)page=Math.floor(index/size)+1;else page=Math.min(page,pages);
   const visible=rows.slice((page-1)*size,page*size),picked=selected?rows.find(ev=>ev.id===selected):visible[0],p=prefs(),preferenceCount=mode==='personal'?Object.values(p).filter(value=>value!=='all').length:0,noWatch=mode==='watch'&&!watchKeys().length;selected=picked?.id||selected;
   const pagination=rows.length?`<div class="sig-pagination"><span>${rows.length?`${(page-1)*size+1}–${Math.min(page*size,rows.length)} / ${rows.length}`:'0'}</span><div><button type="button" data-track-page="${page-1}" ${page===1?'disabled':''} aria-label="${L('上一页','Previous page')}">${uiGlyph('chevron')}</button><span>${page} / ${pages}</span><button type="button" data-track-page="${page+1}" ${page===pages?'disabled':''} aria-label="${L('下一页','Next page')}">${uiGlyph('chevron')}</button></div></div>`:'';
   const selection=targetSelection(),scoped=selection.filter!=='all'||selection.focusAsset;
   const side=rows.length?`<aside class="sig-detail-aside">${picked?detail(picked):`<div class="sig-empty">${selected?(scoped?L('当前范围内未选中信号','No signal selected in this scope'):L('记录暂不可用','Record unavailable')):L('选择一条信号查看解读','Select a signal to read its analysis')}</div>`}</aside>`:'';
-  const hasFilters=Boolean(query.trim())||kind!=='all'||origin!==defaultOrigin||validity!=='all';
-  const defaultEmpty=mode!=='watch'&&!scoped&&!preferenceCount&&!hasFilters;
-  const archiveCount=origin==='historical'||wantsLive()||origin==='all'?0:filteredRows(candidates,'historical','all').length;
-  const archiveAction=archiveCount?`<button type="button" class="p-button sig-archive-action" data-track-archive data-no-translate>${esc(labels.archive(archiveCount))}</button>`:'';
-  const state=wantsLive()?liveFeed.snapshot():null;
-  const marketEmpty=defaultEmpty&&origin==='live';
-  const emptyTitle=marketEmpty?(state.loading?marketLoading:marketUnavailable):noWatch?L('还没有追踪的标的','Your watchlist is empty'):mode==='watch'?L('追踪标的暂无匹配信号','No matching signals for your watchlist'):scoped&&selected?L('当前范围内未选中信号','No signal selected in this scope'):defaultEmpty?labels.empty:L('没有匹配的信号','No matching signals');
-  const emptyHint=marketEmpty?(state.loading?'':marketHint):mode==='watch'?L('在这里集中查看追踪标的的相关信号。','Signals for your tracked assets appear here.'):defaultEmpty?labels.hint:L('调整筛选或研究偏好，也可以查看全市场。','Adjust your filters or preferences, or view all markets.');
-  const empty=`<div class="sig-empty${defaultEmpty?' sig-empty-run':''}">${uiGlyph('search')}<h2${marketEmpty?' role="status"':''}>${emptyTitle}</h2>${emptyHint?'<p>'+esc(emptyHint)+'</p>':''}<div class="sig-empty-actions">${noWatch&&onManageWatch?`<button type="button" class="p-button" data-track-manage>${L('添加标的','Add assets')}</button>`:''}${archiveAction}${marketEmpty&&!state.loading?'<button type="button" class="p-button" data-track-live-retry>'+esc(marketRetry)+'</button>':''}${!defaultEmpty?`<button type="button" class="p-button" data-track-browse>${L('查看全市场','View all markets')}</button>`:''}</div></div>`;
-  const counts=`<span class="sig-feed-counts">${wantsLive()?`<span>${esc(marketLabel)} <b>${liveCount}</b></span>`:''}${state?.failed.length?`<span>${esc(marketMissing)} · ${esc(state.failed.map(item=>item.symbol).join(', '))}</span>`:''}${origin!=='historical'&&origin!=='live'?`<span>${L('运行记录','Run history')} <b>${runCount}</b></span>`:''}${origin==='all'||origin==='historical'?`<span>${labels.examples} <b>${rows.length-runCount-liveCount}</b></span>`:''}${origin==='historical'?`<time datetime="${TRACKING_CUTOFF.slice(0,10)}">${TRACKING_CUTOFF.slice(0,10)}</time>`:''}${visible.length?archiveAction:''}</span>`;
-  const chartStatus=visible.some(row=>!row.live)?`<div class="sig-chart-status" data-signal-chart-status ${statsFailed?'':'hidden'}><span role="status">${labels.charts}</span><button type="button" class="p-button" data-signal-chart-retry>${labels.retry}</button></div>`:'';
-  return `<div class="as-page sig-tracking" data-localized-ui>${nav}${renderWorkbenchTargets(w,research)}<div class="sig-controls"><div class="sig-toolbar sig-toolbar-simple"><label class="as-search">${uiGlyph('search')}<input id="sig-search" value="${esc(query)}" placeholder="${L('搜索资产或信号','Search assets or signals')}" aria-label="${L('搜索 AI 信号','Search AI signals')}"></label>
-   <label class="sig-origin-control"><span class="sr-only">${L('信号来源','Signal origin')}</span><select data-track-origin>${[...(liveFeed?[['live',marketLabel]]:[]),['runtime',labels.runs],['autonomous',L('AI 自主','Autonomous AI')],['bot','AI BOT'],['historical',labels.examples],['all',labels.all]].map(([id,label])=>`<option value="${id}" ${origin===id?'selected':''}>${esc(label)}</option>`).join('')}</select></label>
-   <details class="sig-filter-panel" data-persist-key="signal-filters"><summary>${uiGlyph('filter')}${L('筛选','Filter')}${kind!=='all'||validity!=='all'?'<b>'+[kind,validity].filter(v=>v!=='all').length+'</b>':''}</summary><div class="sig-filter-body"><div class="sig-sources" role="group" aria-label="${L('信息类型','Information type')}">${[['all',['全部','All']],...Object.entries(TRACKING_SOURCES)].map(([id,label])=>`<button type="button" data-track-source="${id}" aria-pressed="${kind===id}">${L(...label)}</button>`).join('')}</div><label class="sig-record-filter">${L('有效期','Validity')}<select data-track-validity>${[['all',L('全部时效','All validity states')],['active',L('有效期内','Within validity')],['expired',L('已过期','Expired')],['unknown',L('有效期未提供','Validity unavailable')],['historical',labels.examples]].map(([id,label])=>`<option value="${id}" ${validity===id?'selected':''}>${esc(label)}</option>`).join('')}</select></label>${hasFilters?`<button type="button" class="p-button" data-track-reset>${L('清除筛选','Clear filter')}</button>`:''}</div></details>
-   ${mode==='watch'&&!noWatch&&onManageWatch?`<button type="button" class="p-button sig-watch-manage" data-track-manage>${uiGlyph('sliders')}${L('管理追踪','Manage watchlist')}</button>`:''}
-   <details class="sig-preferences" ${mode==='watch'?'hidden':''} data-persist-key="signal-preferences"><summary>${uiGlyph('settings')}${L('研究偏好','Research preferences')}${preferenceCount?`<b class="sig-applied-count">${preferenceCount}</b>`:''}</summary><div class="sig-preferences-panel"><h2>${L('研究偏好','Research preferences')}</h2><p class="sig-pref-hint">${L('用于“为你精选”；全市场不受影响。','Applies to For you; All markets remains unfiltered.')}</p><label>${L('研究市场','Markets')}<select data-sig-pref="scope">${choice('scope',p.scope)}</select></label><label>${L('关注信息','Focus')}<select data-sig-pref="focus">${choice('focus',p.focus)}</select></label><label>${L('参考策略','Strategies')}<select data-sig-pref="strategy">${choice('strategy',p.strategy)}</select></label><div class="sig-pref-source">${connectionLabel()}</div><button type="button" class="p-button" data-pref-reset>${L('恢复默认','Reset defaults')}</button>${prefError?`<p role="status" class="sig-pref-hint">${L('当前浏览器无法保存偏好，请检查存储设置。','Preferences could not be saved. Check browser storage.')}</p>`:''}</div></details>
-   ${hasFilters?`<button type="button" class="p-button sig-reset" data-track-reset><span class="sig-reset-label">${L('清除筛选','Clear filters')}</span>${uiGlyph('close')}</button>`:''}</div>
-   <div class="sig-feed-meta">${counts}<div class="sig-refresh-controls"><label><span class="sig-refresh-label">${L('列表刷新','List refresh')}</span> <select data-sig-interval aria-label="${L('列表刷新','List refresh')}">${HUB_REFRESH_SECONDS.map(s=>`<option value="${s}" ${refreshInterval()===s?'selected':''}>${s} ${L('秒','sec')}</option>`).join('')}</select></label><details class="dc-info"><summary aria-label="${L('数据说明','About the data')}">i</summary><div>${wantsLive()?marketRefresh:labels.refresh}${origin==='historical'||origin==='all'?`<br>${labels.examples} · ${TRACKING_CUTOFF} UTC+8`:''}</div></details></div></div></div>
-   ${chartStatus}
-   <div class="sig-workspace"><section class="sig-feed" aria-label="${L('AI 信号','AI signals')}">${visible.length?visible.map(card).join(''):empty}${pagination}</section>${side}</div></div>`;
+  return `<div class="as-page sig-tracking" data-localized-ui>${nav}${renderWorkbenchTargets(w,research)}<div class="sig-controls"><div class="sig-toolbar sig-toolbar-simple"><a class="brain-entry" data-brain-route="brain" href="${esc(brainEntrySearch())}">${L(...BRAIN_PAGE_NAME)} ↗</a><label class="as-search">${uiGlyph('search')}<input id="sig-search" value="${esc(query)}" placeholder="${L('搜索资产或信号','Search assets or signals')}" aria-label="${L('搜索 AI 信号','Search AI signals')}"></label><label class="sig-origin-control"><span class="sr-only">${L('信号来源','Signal origin')}</span><select data-track-origin>${[['all','全部来源','All origins'],['autonomous','AI 自主','Autonomous AI'],['bot','AI BOT','AI BOT'],['historical','历史样例','Historical examples']].map(([id,z,en])=>`<option value="${id}" ${origin===id?'selected':''}>${L(z,en)}</option>`).join('')}</select></label><details class="sig-filter-panel" data-persist-key="signal-filters"><summary>${uiGlyph('filter')}${L('筛选','Filter')}${kind!=='all'||validity!=='all'?'<b>'+[kind,validity].filter(v=>v!=='all').length+'</b>':''}</summary><div class="sig-filter-body"><div class="sig-sources" role="group" aria-label="${L('信息类型','Information type')}">${[['all',['全部','All']],...Object.entries(TRACKING_SOURCES)].map(([id,label])=>`<button type="button" data-track-source="${id}" aria-pressed="${kind===id}">${L(...label)}</button>`).join('')}</div><label class="sig-record-filter">${L('有效期','Validity')}<select data-track-validity>${[['all','全部时效','All validity states'],['active','有效期内','Within validity'],['expired','已过期','Expired'],['unknown','有效期未提供','Validity unavailable'],['historical','历史样例','Historical examples']].map(([id,z,en])=>`<option value="${id}" ${validity===id?'selected':''}>${L(z,en)}</option>`).join('')}</select></label>${kind!=='all'||origin!=='all'||validity!=='all'?`<button type="button" class="p-button" data-track-reset>${L('清除筛选','Clear filter')}</button>`:''}</div></details>${mode==='watch'&&!noWatch&&onManageWatch?`<button type="button" class="p-button sig-watch-manage" data-track-manage>${uiGlyph('sliders')}${L('管理追踪','Manage watchlist')}</button>`:''}<details class="sig-preferences" ${mode==='watch'?'hidden':''} data-persist-key="signal-preferences"><summary>${uiGlyph('settings')}${L('研究偏好','Research preferences')}${preferenceCount?`<b class="sig-applied-count">${preferenceCount}</b>`:''}</summary><div class="sig-preferences-panel"><h2>${L('研究偏好','Research preferences')}</h2><p class="sig-pref-hint">${L('用于“为你精选”；全市场不受影响。','Applies to For you; All markets remains unfiltered.')}</p><label>${L('研究市场','Markets')}<select data-sig-pref="scope">${choice('scope',p.scope)}</select></label><label>${L('关注信息','Focus')}<select data-sig-pref="focus">${choice('focus',p.focus)}</select></label><label>${L('参考策略','Strategies')}<select data-sig-pref="strategy">${choice('strategy',p.strategy)}</select></label><div class="sig-pref-source">${connectionLabel()} <span>${L('固定历史样例','Fixed historical examples')}</span></div><button type="button" class="p-button" data-pref-reset>${L('恢复默认','Reset defaults')}</button>${prefError?`<p role="status" class="sig-pref-hint">${L('当前浏览器无法保存偏好，请检查存储设置。','Preferences could not be saved. Check browser storage.')}</p>`:''}</div></details>${query||kind!=='all'||origin!=='all'||validity!=='all'?`<button type="button" class="p-button sig-reset" data-track-reset><span class="sig-reset-label">${L('清除筛选','Clear filters')}</span>${uiGlyph('close')}</button>`:''}</div><div class="sig-feed-meta"><span class="sig-feed-counts"><span>${L('运行记录','Run history')} <b>${runCount}</b></span><span>${L('历史观察记录','Historical observations')} <b>${rows.length-runCount}</b></span></span><div class="sig-refresh-controls"><label><span class="sig-refresh-label">${L('列表刷新','List refresh')}</span> <select data-sig-interval aria-label="${L('列表刷新','List refresh')}">${HUB_REFRESH_SECONDS.map(s=>`<option value="${s}" ${refreshInterval()===s?'selected':''}>${s} ${L('秒','sec')}</option>`).join('')}</select></label><details class="dc-info"><summary aria-label="${L('数据说明','About the data')}">i</summary><div>${L('列表按所选间隔读取已有运行记录。历史观察截至','The list checks existing run records at this interval. Historical observations through')} ${TRACKING_CUTOFF} UTC+8</div></details></div></div></div><p class="sig-feed-note">${L('卡片日期来自固定历史样本，截至 '+TRACKING_CUTOFF+' UTC+8。「观察结束」表示这段样本已经收束，不是刚刚结束的实盘信号。','Card dates are the fixed historical sample through '+TRACKING_CUTOFF+' UTC+8. “Observation ended” means that sample window closed. It is not a live signal that just ended.')}</p><div class="sig-workspace"><section class="sig-feed" aria-label="${L('AI 信号','AI signals')}">${visible.length?visible.map(card).join(''):`<div class="sig-empty">${uiGlyph('search')}<h2>${noWatch?L('还没有追踪的标的','Your watchlist is empty'):mode==='watch'?L('追踪标的暂无匹配信号','No matching signals for your watchlist'):scoped&&selected?L('当前范围内未选中信号','No signal selected in this scope'):L('没有匹配的信号','No matching signals')}</h2><p>${mode==='watch'?L('在这里集中查看追踪标的的相关信号。','Signals for your tracked assets appear here.'):L('调整筛选或研究偏好，也可以查看全市场。','Adjust your filters or preferences, or view all markets.')}</p>${noWatch&&onManageWatch?`<button type="button" class="p-button" data-track-manage>${L('添加标的','Add assets')}</button>`:''}<button class="p-button" data-track-browse>${L('查看全市场','View all markets')}</button></div>`}${pagination}</section>${side}</div></div>`;
  }
- function showDetail(ev){
-  readerLiveSymbol=ev.live?ev.symbol:'';readerLiveRevision=ev.live?JSON.stringify(observationRevision(ev.live)):'';
-  stopReferences(dialog);ev=withReference(ev);dispose();dispose=()=>{};dialog.innerHTML=`<header><h2>${L('信号解读','Signal analysis')}</h2><button type="button" data-track-close aria-label="${L('关闭','Close')}">${uiGlyph('close')}</button></header><div class="sig-dialog-body">${detail(ev,true)}</div>`;bind(dialog);dialog.showModal();dispose=mountCharts(dialog);}
+ function showDetail(ev){stopReferences(dialog);ev=withReference(ev);dispose();dispose=()=>{};dialog.innerHTML=`<header><h2>${L('信号解读','Signal analysis')}</h2><button type="button" data-track-close aria-label="${L('关闭','Close')}">${uiGlyph('close')}</button></header><div class="sig-dialog-body">${detail(ev,true)}</div>`;bind(dialog);dialog.showModal();dispose=mountCharts(dialog);}
  function openSource(ref,onReturn){
   if(dialog.open)return false;
   const row=sourceRow(ref);if(!row)return false;
@@ -408,16 +243,7 @@ export function createSignalTracker({w,research,createLiveFeed,loadReference=loa
   sourceView={ref:{type,recordId,sourceId,signalId,runId,revision,asset},onReturn:typeof onReturn==='function'?onReturn:null};
   try{showDetail(row);return true;}catch{sourceView=null;dispose();dispose=()=>{};if(dialog.open)dialog.close();return false;}
  }
- function open(id,read=false){
-  scopePagePinned=false;const y=root.scrollTop,ev=allRows().find(x=>x.id===id);selected=id;
-  if(!ev){if(dialog.open)close();else{refresh();root.scrollTop=y;}notify(L('记录暂不可用','Record unavailable')+' · '+L('选择一条信号查看解读','Select a signal to read its analysis'));return;}
-  readerOrigin={id,read};if(ev.live)followFirstLive=false;refresh();root.scrollTop=y;
-  if(matchMedia('(max-width:1000px)').matches){showDetail(ev);return;}
-  if(read){
-   const heading=root.querySelector('[data-track-reading-heading]');
-   heading?.focus({preventScroll:true});heading?.scrollIntoView?.({block:'nearest',behavior:'instant'});
-  }
- }
+ function open(id){scopePagePinned=false;const y=root.scrollTop,ev=allRows().find(x=>x.id===id);selected=id;if(!ev){if(dialog.open)close();else{refresh();root.scrollTop=y;}notify(L('记录暂不可用','Record unavailable')+' · '+L('选择一条信号查看解读','Select a signal to read its analysis'));return;}refresh();root.scrollTop=y;if(matchMedia('(max-width:1000px)').matches)showDetail(ev);}
 
  function updateCardGuidance(row){
   const key=signalReferenceKey(row),guidance=signalActionGuidance(row);
@@ -433,31 +259,6 @@ export function createSignalTracker({w,research,createLiveFeed,loadReference=loa
   };
   loadReference(row,{signal:controller.signal}).then(finish).catch(()=>finish({...initial,status:'error',reasons:[['参考核算暂不可用，请重试','Reference calculation is unavailable. Please retry']]})).finally(()=>referenceTasks.delete(host));
  }
- function bindCardStats(container){
-  const hosts=[...container.querySelectorAll('[data-signal-stats]')];if(!hosts.length)return;
-  const revision=++statsRevision,records=new Map(statsRecords),notice=container.querySelector('[data-signal-chart-status]'),retry=container.querySelector('[data-signal-chart-retry]');
-  const current=()=>revision===statsRevision&&!container.hidden&&hosts.every(host=>host.isConnected);
-  disposeStats();disposeStats=()=>{};
-  let mounting=false;
-  async function mount(){
-   if(!current()||mounting)return;
-   const hadFocus=document.activeElement===retry;
-   mounting=true;if(retry)retry.disabled=true;
-   try{
-    const {mountAdvancedStats}=await loadCardStats();if(!current())return;
-    disposeStats=mountAdvancedStats(container,records);statsFailed=false;
-    if(notice){
-     if(hadFocus&&(document.activeElement===retry||document.activeElement===document.body))(container.querySelector('[data-track-record][aria-current="true"] .sig-event-title')||container.querySelector('.sig-event-title'))?.focus({preventScroll:true});
-     notice.hidden=true;
-    }
-   }catch{
-    if(!current())return;
-    statsFailed=true;if(notice)notice.hidden=false;
-   }finally{mounting=false;if(retry&&current())retry.disabled=false;}
-  }
-  if(retry)retry.onclick=mount;
-  if(!statsFailed||retry?.disabled)void mount();
- }
  function bind(container=root){
   stopReferences();
   const referenceRow=host=>sourceView&&(container===dialog||dialog.contains?.(host))?sourceRow(sourceView.ref):allRows().find(row=>row.id===host.dataset.signalReferenceId);
@@ -472,20 +273,15 @@ export function createSignalTracker({w,research,createLiveFeed,loadReference=loa
   container.querySelectorAll('[data-track-manage]').forEach(button=>button.onclick=()=>onManageWatch?.());
   if(container===root){
    disposeTargets();disposeTargets=bindWorkbenchTargets(root,{workspace:w,research,onChange:targetsChanged,onManage:()=>onManageWatch?.(),notify:issue=>notify(issue,{tone:'error'})});
-   bindCardStats(container);
+   const hosts=[...container.querySelectorAll('[data-signal-stats]')];
+   if(hosts.length){const revision=++statsRevision,records=new Map(statsRecords),current=()=>revision===statsRevision&&!container.hidden&&hosts.every(host=>host.isConnected);disposeStats();disposeStats=()=>{};loadStats().then(({mountAdvancedStats})=>{if(current())disposeStats=mountAdvancedStats(container,records);}).catch(()=>{if(current())notify(L('信号图表加载失败，请刷新重试','Signal charts could not load. Refresh to try again.'),{tone:'error'});});}
   }
   for(const action of ['copy','export'])container.querySelectorAll(`[data-track-${action}]`).forEach(button=>button.onclick=async()=>{
    const id=button.dataset[action==='copy'?'trackCopy':'trackExport'],row=container===dialog&&sourceView?sourceRow(sourceView.ref):allRows().find(row=>row.id===id);if(!row||row.id!==id)return;
    try{const text=action==='copy'?signalCopyText(row):signalReportHTML(row);if(action==='copy')await navigator.clipboard.writeText(text);else{const url=URL.createObjectURL(new Blob([text],{type:'text/html;charset=utf-8'}));try{const a=document.createElement('a');a.href=url;a.download=('Astarter-'+row.track.id+'-'+trackingRecord(row).signalId+'-report').replace(/[^\w.-]/g,'_').slice(0,160)+'.html';a.click();}finally{setTimeout(()=>URL.revokeObjectURL(url),1000);}}notify(action==='copy'?L('已复制','Copied'):L('已导出','Exported'),{tone:'success'});}
    catch{notify(L('操作失败，请重试','Action failed. Try again.'),{tone:'error'});}
   });
-  container.querySelectorAll('[data-track-open]').forEach(b=>b.onclick=()=>open(b.dataset.trackOpen,b.dataset.trackRead!==undefined));
-  const reader=container.querySelector('.sig-detail-aside');
-  if(reader)reader.onkeydown=event=>{
-   if(event.key!=='Tab'||!event.shiftKey||!readerOrigin?.read||readerOrigin.id!==selected)return;
-   if(!event.target.matches('[data-track-reading-heading],[data-track-copy]'))return;
-   const origin=originButton(readerOrigin);if(origin){event.preventDefault();origin.focus();}
-  };
+  container.querySelectorAll('[data-track-open]').forEach(b=>b.onclick=()=>open(b.dataset.trackOpen));
   container.querySelectorAll('[data-track-record]').forEach(card=>card.onclick=event=>{
    if(event.defaultPrevented||event.target.closest('button,a,input,select,textarea,summary,label,[contenteditable]')||document.getSelection?.()?.toString())return;
    card.querySelector('.sig-event-title')?.focus({preventScroll:true});open(card.dataset.trackRecord);
@@ -495,21 +291,15 @@ export function createSignalTracker({w,research,createLiveFeed,loadReference=loa
   container.querySelectorAll('[data-track-strategy]').forEach(b=>b.onclick=()=>{
    const context=sourceView&&(container===dialog||dialog.contains?.(b))?sourceView:null,returnId=b.closest?.('[data-signal-reference-id]')?.dataset.signalReferenceId||selected,row=context?sourceRow(context.ref):allRows().find(row=>row.id===returnId);
    if(!row){if(context)close();else open(returnId);return;}
-   const read=readerOrigin?.id===returnId&&readerOrigin.read;
-   const returnTo=context?()=>{if(!openSource(context.ref,context.onReturn))context.onReturn?.();}:()=>{if(document.body.dataset?.page==='signals')open(returnId,read);};
+   const returnTo=context?()=>{if(!openSource(context.ref,context.onReturn))context.onReturn?.();}:()=>{if(document.body.dataset.page==='signals')open(returnId);};
    if(dialog.open)close(!context);onStrategy(b.dataset.trackStrategy,returnTo,trackingRecord(row));
   });
   container.querySelectorAll('[data-track-source]').forEach(b=>b.onclick=()=>{kind=b.dataset.trackSource;changeList();});
-  container.querySelector('[data-track-origin]')?.addEventListener('change',e=>{origin=e.target.value;followFirstLive=true;changeList();});
-  container.querySelector('[data-track-validity]')?.addEventListener('change',e=>{validity=e.target.value;if(validity==='historical'&&(origin==='runtime'||origin==='live'))origin='historical';changeList();});
-  container.querySelectorAll('[data-track-page]').forEach(b=>b.onclick=()=>{selected='';followFirstLive=true;page=Math.max(1,Number(b.dataset.trackPage));refresh();root.querySelector('.sig-feed-meta')?.scrollIntoView({block:'start'});});
-  container.querySelectorAll('[data-track-reset]').forEach(b=>b.onclick=()=>{kind='all';origin=defaultOrigin;followFirstLive=true;validity='all';query='';changeList();});
-  container.querySelector('[data-track-live-retry]')?.addEventListener('click',()=>liveFeed?.refresh());
-  container.querySelector('[data-track-archive]')?.addEventListener('click',()=>{
-   origin='historical';validity='all';changeList();
-   root.querySelector('.sig-event-title')?.focus({preventScroll:true});
-  });
-  container.querySelector('[data-track-browse]')?.addEventListener('click',()=>{if(!clearTargetScope())return;kind='all';validity='all';query='';page=1;onBrowse();});
+  container.querySelector('[data-track-origin]')?.addEventListener('change',e=>{origin=e.target.value;changeList();});
+  container.querySelector('[data-track-validity]')?.addEventListener('change',e=>{validity=e.target.value;changeList();});
+  container.querySelectorAll('[data-track-page]').forEach(b=>b.onclick=()=>{selected='';page=Math.max(1,Number(b.dataset.trackPage));refresh();root.querySelector('.sig-feed-meta')?.scrollIntoView({block:'start'});});
+  container.querySelectorAll('[data-track-reset]').forEach(b=>b.onclick=()=>{kind='all';origin='all';validity='all';query='';changeList();});
+  container.querySelector('[data-track-browse]')?.addEventListener('click',()=>{if(!clearTargetScope())return;kind='all';origin='all';validity='all';query='';page=1;onBrowse();});
   const q=container.querySelector('#sig-search');if(q)bindSearchRender(q,value=>{query=value;},()=>{changeList();return root.querySelector('#sig-search');});
   container.querySelectorAll('[data-sig-pref]').forEach(el=>el.onchange=()=>{savePrefs({...prefs(),[el.dataset.sigPref]:el.value});changeList();});
   container.querySelector('[data-pref-reset]')?.addEventListener('click',()=>{savePrefs({});changeList();});
@@ -517,23 +307,11 @@ export function createSignalTracker({w,research,createLiveFeed,loadReference=loa
   if(container===dialog)container.querySelectorAll('[data-track-link]').forEach(a=>a.onclick=ev=>{
    if(ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.altKey)return;ev.preventDefault();
    const href=a.getAttribute('href'),returnId=selected,context=sourceView;
-   const read=readerOrigin?.id===returnId&&readerOrigin.read;
-   const returnTo=context?()=>{const opened=openSource(context.ref,context.onReturn);if(!opened)context.onReturn?.();return opened;}:()=>{if(document.body.dataset?.page==='signals')open(returnId,read);};
+   const returnTo=context?()=>{const opened=openSource(context.ref,context.onReturn);if(!opened)context.onReturn?.();return opened;}:()=>{if(document.body.dataset.page==='signals')open(returnId);};
    close(!context);if(onRelatedLink(href,returnTo))return;
-   if(context)context.onReturn?.();history.pushState(null,'',href);window.dispatchEvent(new PopStateEvent('popstate'));
+   if(context)context.onReturn?.();history.pushState(null,'',routeHref(href));window.dispatchEvent(new PopStateEvent('popstate'));
   });
-  if(container===root&&pendingOpen){
-   const id=selected;pendingOpen=false;
-   if(matchMedia('(max-width:1000px)').matches)queueMicrotask(()=>{if(selected===id&&!dialog.open&&document.body.dataset?.page==='signals')open(id);});
-  }
+  if(container===root&&pendingOpen){pendingOpen=false;if(matchMedia('(max-width:1000px)').matches)queueMicrotask(()=>open(selected));}
  }
- function sourceSnapshot(){
-  const row=allRows().find(row=>row.id===selected);if(!row)return null;
-  const params=new URLSearchParams(globalThis.location?.search);params.set('page','signals');
-  if(row.live){params.set('data','live');params.set('asset',row.symbol);}
-  else if(!row.record){params.set('data','demo');params.set('asset',row.symbol);}
-  else{params.delete('asset');if(params.get('data')==='demo')params.delete('data');}
-  return {id:row.id,title:row.symbol+' · '+L('AI 信号','AI signal'),text:row.live?liveSignalExcerpt(row):signalExcerpt(row),href:'?'+params,kind:'excerpt'};
- }
- return {render,bind,openSource,clearTargetScope,sourceSnapshot,watchCount:()=>watched().length,revision:()=>JSON.stringify([watchKeys(),targetSignature(),liveRevision(),publicRunSignals(w.s.signals||[],readSnapshot())]),get refreshSeconds(){return refreshInterval();},select:selectExample};
+ return {render,bind,openSource,clearTargetScope,watchCount:()=>watched().length,revision:()=>JSON.stringify([watchKeys(),targetSignature(),publicRunSignals(w.s.signals||[],readSnapshot())]),sourceSnapshot(){const row=allRows().find(row=>row.id===selected);return row?{id:row.id,title:row.symbol+' · '+L('AI 信号','AI signal'),text:signalExcerpt(row),href:routeSearch(),kind:'excerpt'}:null;},get refreshSeconds(){return refreshInterval();},select(symbol){const row=trackingRows(TRACKING_CASES,{asset:symbol,latestOnly:true})[0];if(!row)return false;selected=row.id;scopePagePinned=false;kind='all';origin='all';validity='all';query='';page=1;pendingOpen=true;return true;}};
 }

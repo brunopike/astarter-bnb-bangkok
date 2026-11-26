@@ -20,7 +20,7 @@ const distributionAccounts={
 const promotion=/(?:^|\s)#(?:ad|sponsored)\b|\b(?:sponsored (?:post|content|by)|paid (?:promotion|partnership)|promo code|affiliate partner|register now and (?:get|earn)|use code .{1,20} (?:for|to get))\b|限时返现|返佣码|注册立领|扫码领币/iu;
 const transferAlert=/^[\p{P}\p{S}\s]*(?:whale alert[\p{P}\s]*)?[\d,.]+\s*[#$]?(?:BTC|WBTC|ETH|WETH|SOL|USDC|USDT)\b[^\n!?]{0,110}\b(?:transferred|sent|moved) from\s+[^\n!?]{1,80}\s+to\s+[^\n.!?]{1,80}[.!\s]*$/iu;
 const textKey=title=>title.normalize('NFKC').toLowerCase().replace(/https?:\/\/\S+/gu,' ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-const spam=/\b(?:giveaway|referral (?:link|code)|affiliate (?:link|code)|use (?:my|our) (?:code|link)|sign up (?:with|using)|claim (?:your )?(?:free )?(?:airdrop|reward)|join (?:my|our) (?:vip|signals? group)|retweet to (?:win|enter)|guaranteed returns?|deposit bonus)\b|邀请码|返佣链接|转发抽奖|关注.{0,8}抽奖|入群领|领取空投|加群返利/iu;
+const spam=/\b(?:giveaway|referral (?:link|code)|affiliate (?:link|code)|use (?:my|our) (?:code|link)|sign up (?:with|using)|claim (?:your|free) (?:airdrop|reward)|join (?:my|our) (?:vip|signals? group)|retweet to (?:win|enter)|guaranteed returns?|deposit bonus)\b|邀请码|返佣链接|转发抽奖|关注.{0,8}抽奖|入群领|领取空投|加群返利/iu;
 const networkIds={X:'twitter',YouTube:'youtube',Reddit:'reddit',TikTok:'tiktok',Instagram:'instagram',Facebook:'facebook'};
 const namedTopic={bitcoin:/\bbitcoin\b|\bBTC\b|比特[币幣]|ビットコイン|비트코인|биткоин/iu,ethereum:/\bethereum\b|\bether\b|\bETH\b|以太[坊幣币]|イーサリアム|이더리움|эфириум/iu,solana:/\bsolana\b|索拉[娜纳納]|ソラナ|솔라나/iu};
 const subjectMatter=/\b(?:liquidity|inflows?|outflows?|reserves?|issuance|staking|staked|validators?|upgrades?|protocol|etfs?|filings?|regulat\w+|treasur\w+|spot volume|open interest|funding rate|liquidat\w+|transferr?\w*|exploit\w*|hacks?|on[- ]chain|settlement|throughput|transactions?|fees?|rollups?|collateral|support level|resistance|volatility|integrat\w+|partnership|mainnet|testnet|deployed|inflation|hashrate|mining|supply|drawdown|basis points|custody)\b|[$€£]\s?[\d,.]+[kmb]?\b|\d(?:[\d,.]*)\s?(?:%|bps\b|usd\b|usdt\b)|流动性|资金流|成交量|锁仓|质押|链上|合约持仓|清算|升级|漏洞|监管|转账|主网|测试网|通胀/iu;
@@ -51,11 +51,10 @@ function postRows(rows,topic,now){
   const url=typeof row.post_link==='string'&&row.post_link.length<=2048&&URL.canParse(row.post_link)?new URL(row.post_link):null;
   if(!id||!title||publishedAt===null||publishedAt<now-86400000||publishedAt>now||!url||url.protocol!=='https:'||url.port||url.username||url.password||!hosts.some(host=>url.hostname===host||url.hostname.endsWith('.'+host)))continue;
   const creatorId=string(row.creator_id,200),interactions24h=count(row.interactions_24h);
-  if(!creatorId?.startsWith(networkIds[network]+'::')||!/^[a-z]+::[A-Za-z0-9_-]{1,100}$/.test(creatorId)||interactions24h===null||spam.test(title)||promotion.test(title)||/^\s*RT\s+@/iu.test(title)||typeof row.post_description==='string'&&(spam.test(row.post_description)||promotion.test(row.post_description)))continue;
+  if(!creatorId?.startsWith(networkIds[network]+'::')||!interactions24h||spam.test(title)||promotion.test(title)||/^\s*RT\s+@/iu.test(title)||typeof row.post_description==='string'&&(spam.test(row.post_description)||promotion.test(row.post_description)))continue;
   const excerpt=title.slice(0,600).replace(/[\uD800-\uDBFF]$/u,''),headline=excerpt.replace(/https?:\/\/\S+/giu,'').replace(/(?:\s+[#$][\p{L}\p{N}_]+[,.!]*)+\s*$/gu,'').trim();
-  if(transferAlert.test(headline)||topic&&!(namedTopic[topic].test(headline)||topic==='solana'&&/\bSOL\b/u.test(headline))||!subjectMatter.test(headline)||headline.replace(/[#$][\p{L}\p{N}_]+/gu,'').length<18)continue;
-  const symbols=topic?[assets[topic]]:Object.entries(namedTopic).filter(([name,match])=>match.test(headline)||name==='solana'&&/\bSOL\b/u.test(headline)).map(([name])=>assets[name]);
-  posts.push({id,symbols,network,title:excerpt,url:url.href,creatorId,author:string(row.creator_name,100),publishedAt,interactions24h});
+  if(transferAlert.test(headline)||!(namedTopic[topic].test(headline)||topic==='solana'&&/\bSOL\b/u.test(headline))||!subjectMatter.test(headline)||headline.replace(/[#$][\p{L}\p{N}_]+/gu,'').length<18)continue;
+  posts.push({id,symbols:[assets[topic]],network,title:excerpt,url:url.href,creatorId,publishedAt,interactions24h});
  }
  return posts;
 }
@@ -96,7 +95,7 @@ function selectKols(results){
   if(creators)for(const id of creators.keys())rankedIds.add(id);
   if(!creators||!posts){failedTopics.push(symbol);continue;}
   checkedTopics.push(symbol);
-  for(const post of posts){if(!post.interactions24h)continue;const creator=creators.get(post.creatorId),text=textKey(post.title);
+  for(const post of posts){const creator=creators.get(post.creatorId),text=textKey(post.title);
    if(Object.hasOwn(distributionAccounts,post.creatorId)||textAuthors.get(text)!==post.creatorId||!creator?.author||!creator.profileUrl||creator.followers<kolRules.minFollowers||!creator.topicRank||creator.topicRank>kolRules.maxTopicRank||creator.creatorInteractions24h<kolRules.minCreatorInteractions24h)continue;
    if(!authors.has(post.creatorId))authors.set(post.creatorId,{posts:new Map(),urls:new Set(),texts:new Set()});
    const candidates=authors.get(post.creatorId);
@@ -120,23 +119,6 @@ function selectKols(results){
  return {posts:[...featured.values()],curation:{...kolRules,checkedTopics,failedTopics,rankedCreators:rankedIds.size,qualifiedCreators:qualifiedIds.size}};
 }
 
-function recentPosts(results){
- const merged=new Map();
- for(const group of results.filter(row=>['posts','category-posts'].includes(row.resource)))for(const post of group.rows){
-  const key=post.network+':'+post.id,old=merged.get(key);
-  if(old){if(old.creatorId===post.creatorId)old.symbols=[...new Set([...old.symbols,...post.symbols])];}
-  else merged.set(key,{...post,symbols:[...post.symbols]});
- }
- const authors=new Map(),texts=new Set(),urls=new Set(),selected=[];
- for(const post of [...merged.values()].sort((a,b)=>b.publishedAt-a.publishedAt||b.interactions24h-a.interactions24h)){
-  const key=textKey(post.title),count=authors.get(post.creatorId)||0;
-  if(count>=2||texts.has(key)||urls.has(post.url))continue;
-  selected.push(post);authors.set(post.creatorId,count+1);texts.add(key);urls.add(post.url);
-  if(selected.length===200)break;
- }
- return selected;
-}
-
 export async function fetchLunarCrush(fetchImpl,key,signal){
  if(typeof key!=='string'||!key.trim()||/[\r\n]/.test(key))throw Error('AUTH_REQUIRED');
  const timeout=AbortSignal.timeout(8000),requestSignal=signal?AbortSignal.any([signal,timeout]):timeout;
@@ -153,17 +135,9 @@ export async function fetchLunarCrush(fetchImpl,key,signal){
    return {error:{symbol:assets[topic],resource,code}};
   }
  }));
- tasks.push((async()=>{
-  try{
-   const response=await fetchImpl('https://lunarcrush.com/api4/public/category/cryptocurrencies/posts/v1',{method:'GET',headers:{Authorization:'Bearer '+key.trim(),Accept:'application/json'},credentials:'omit',redirect:'error',signal:requestSignal});
-   const body=await readJSON(response,8*1024*1024);
-   if((body?.config?.category??body?.config?.id)!=='cryptocurrencies')invalid();
-   return {resource:'category-posts',rows:postRows(body.data,null,Date.now())};
-  }catch(error){return {error:{symbol:'CRYPTO',resource:'category-posts',code:requestSignal.aborted?'TIMEOUT':providerCodes.has(error.message)?error.message:error instanceof SyntaxError?'INVALID_DATA':'UNAVAILABLE'}};}
- })());
  const results=await Promise.all(tasks),errors=results.filter(row=>row.error).map(row=>row.error);
  if(errors.length===results.length)throw Error(errors.every(row=>row.code===errors[0].code)?errors[0].code:'UNAVAILABLE');
- const topics=results.filter(row=>row.resource==='topic').flatMap(row=>row.rows),selection=selectKols(results),discovery=results.find(row=>row.resource==='category-posts');
- if(!topics.length&&!selection.curation.checkedTopics.length&&!discovery)throw Error('UNAVAILABLE');
- return {provider:'LunarCrush',observedAt:Date.now(),topics,...selection,recentPosts:recentPosts(results),discovery:{category:'cryptocurrencies',status:discovery?'OK':'UNAVAILABLE'},errors};
+ const topics=results.filter(row=>row.resource==='topic').flatMap(row=>row.rows),selection=selectKols(results);
+ if(!topics.length&&!selection.curation.checkedTopics.length)throw Error('UNAVAILABLE');
+ return {provider:'LunarCrush',observedAt:Date.now(),topics,...selection,errors};
 }

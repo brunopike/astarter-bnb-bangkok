@@ -1,4 +1,4 @@
-import {RESEARCH_GROUPS,researchRoleColor as colorFor} from './multi-research.mjs';
+import {RESEARCH_GROUPS} from './multi-research.mjs';
 import {createCoreReactions} from './core-reactions.mjs';
 import {createMotionClock} from './motion-clock.mjs';
 import { createEvidenceMotion } from './evidence-motion.js';
@@ -17,6 +17,7 @@ import { createCouriers } from './couriers.js';
 const TAU=Math.PI*2;
 // One palette for agents, stream families and the static fallback.
 const COLORS=RESEARCH_GROUPS.map(group=>group.color);
+const colorFor=id=>RESEARCH_GROUPS.find(g=>g.roles.includes(id))?.color||COLORS[0];
 export const reactorRoleColor=colorFor;
 export function setCoreCrystalTheme(material,edge,eyes,dark){
   // Keep a white diffuse body: near-total transmission turns the face into the dark backdrop.

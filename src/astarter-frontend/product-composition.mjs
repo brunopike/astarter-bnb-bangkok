@@ -53,14 +53,9 @@ export function canAutoRefresh(root){
  // The closing portal outlives the open flag; keep its trigger until focus returns.
  if(document.querySelector('dialog[open]')||document.querySelector('.lq-select__positioner:not([hidden]) .lq-select__listbox'))return false;
  // Floating menus carry data-info-open; the desktop toolbar stays open inline.
- if(root.querySelector('button:active,a:active,summary:active,.dc-flow-precision:active,details[data-info-open],.layout-tab-glide,.account-navigation.is-open,details.layout-section-switch[open],[data-liquid-open],[data-bh-recommendation-rail][data-interacting],:is(select:open),.chart-canvas.is-dragging,.trading-chart[data-interacting],[data-hub-plot][data-interacting],.trading-chart-hosted[data-chart-view=widget]'))return false;
+ if(root.querySelector('button:active,a:active,summary:active,details[data-info-open],.account-navigation.is-open,details.layout-section-switch[open],[data-liquid-open],[data-bh-recommendation-rail][data-interacting],:is(select:open),.chart-canvas.is-dragging,.trading-chart[data-interacting],[data-hub-plot][data-interacting],.trading-chart-hosted[data-chart-view=widget]'))return false;
  const active=document.activeElement;
- if(root.contains(active)&&active.matches('.lq-select__trigger,input:not([data-flow-precision]),select,textarea,[contenteditable=true],.chart-canvas,.trading-chart-canvas,[data-hub-plot],.pd-post-media a')){
-  const dataFilter=active.closest?.('.dc-root .liquid-native-host')?.querySelector('select[data-dc-route-select],select[data-pd-news-date],select[data-pd-news-publisher],select[data-pd-limit],select[data-pd-social-filter]');
-  const closedSocialSelect=active.tagName==='SELECT'&&active.matches('select[data-pd-social-filter]');
-  if(!closedSocialSelect&&(!active.matches('.lq-select__trigger')||!dataFilter))return false;
- }
- return !hasUnsavedFields(root);
+ return !(root.contains(active)&&active.matches('.lq-select__trigger,input,select,textarea,[contenteditable=true],.chart-canvas,.trading-chart-canvas,[data-hub-plot],.pd-post-media a'))&&!hasUnsavedFields(root);
 }
 export function bindSearchRender(input,setValue,render){
  let composing=false,scheduled=false;
@@ -95,7 +90,6 @@ export function captureProductFocus(root){
   const next=matches.length===1?matches[0]:matches.length===prior.length&&ordinal>=0?matches[ordinal]:null;
   if(next&&!next.disabled&&!next.closest('[hidden]')){
    if(tabIndex!==null)next.setAttribute('tabindex',tabIndex);
-   if(native&&next.dispatchEvent&&!next.dispatchEvent(new CustomEvent('hive:focus-select',{bubbles:true,cancelable:true})))return;
    next.focus({preventScroll:true});
    if(doc.activeElement===next)return;
   }

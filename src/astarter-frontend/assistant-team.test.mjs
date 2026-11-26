@@ -34,27 +34,18 @@ function fixture({deferred=false,reduced=false,english=false}={}){
  document.createElement=name=>{const node=new Element(name);if(name==='dialog')dialogs.push(node);return node;};
  document.querySelector=()=>trigger;
  const model={elapsed:12,multiResearch:{},config:{actors:[0,1]},events:[],flows:[]};
- const context={model,running:true,reducedMotion:reduced};let next=0,loads=0,resolve;
+ const context={model,running:true,reducedMotion:reduced};let next=0,resolve;
  const factory={createReactor(canvas,labels,options){const scene={canvas,labels,options,updates:[],disposed:0,needsRender:false,
   update(value,delta,running){assert.equal(this.disposed,0);this.updates.push({value,at:value.elapsed,delta,running});},
   focus(){},setRotate(){},setTheme(){},reset(){},dispose(){this.disposed++;}};scenes.push(scene);return scene;}};
  const loading=deferred?new Promise(done=>resolve=done):Promise.resolve(factory);
  const sandbox={document,window,requestAnimationFrame:fn=>{frames.set(++next,fn);return next;},cancelAnimationFrame:id=>frames.delete(id),
   MutationObserver:class{constructor(fn){this.fn=fn;observers.push(this);}observe(){this.active=true;}disconnect(){this.active=false;}},
-  L:english?(zh,en)=>pair(zh,en,'en'):zh=>zh,uiGlyph:()=>'<svg/>',getContext:()=>context,loadScene:()=>{loads++;return loading;}};
+  L:english?(zh,en)=>pair(zh,en,'en'):zh=>zh,uiGlyph:()=>'<svg/>',getContext:()=>context,loadScene:()=>loading};
  runInNewContext(source+';globalThis.team=createAssistantTeam({getContext,loadScene});',sandbox);
  return {document,window,trigger,model,context,frames,dialogs,scenes,observers,team:sandbox.team,
-  loads:()=>loads,resolve:()=>resolve(factory),step(time=16){const pending=[...frames.values()];frames.clear();pending.forEach(fn=>fn(time));}};
+  resolve:()=>resolve(factory),step(time=16){const pending=[...frames.values()];frames.clear();pending.forEach(fn=>fn(time));}};
 }
-
-test('intent warms only the squad module and opening reuses that request',async()=>{
- const f=fixture({deferred:true});
- assert.equal(f.loads(),0);
- f.team.preload();f.team.preload();await settle();
- assert.equal(f.loads(),1);assert.equal(f.dialogs.length,0);assert.equal(f.frames.size,0);assert.equal(f.scenes.length,0);
- f.team.open(f.trigger);f.resolve();await settle();
- assert.equal(f.loads(),1);assert.equal(f.scenes.length,1);f.team.close();
-});
 
 test('team renders the shared research object without changing page state; close disposes and restores focus',async()=>{
  const f=fixture(),before=JSON.stringify(f.document.body.dataset);

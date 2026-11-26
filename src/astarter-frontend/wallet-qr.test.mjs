@@ -51,11 +51,15 @@ test('Binance stays first across recent and discovered wallets, retaining the di
  const desktop=prioritizeBinanceWallets([other,installed],false);
  assert.deepEqual(desktop.map(wallet=>wallet.id),['com.binance.wallet','metaMask']);
  assert.equal(desktop[0].groupIndex,-1);
+ assert.equal(desktop[0].iconUrl,'/brand/binance-wallet.svg');
+ assert.equal(desktop[1],other);
  const mobile=prioritizeBinanceWallets([other,installed,branded],true).filter(wallet=>wallet.id!=='com.binance.wallet');
  assert.deepEqual(mobile.map(wallet=>wallet.id),['binance','metaMask']);
  assert.equal(mobile[0].connect,connect);
  assert.equal(mobile[0].getMobileUri,undefined);
  const wallet=binanceBrowserWallet(),download=wallet.downloadUrls.mobile;
+ assert.equal(mobile[0].iconUrl,wallet.iconUrl);
+ assert.equal(desktop[0].iconBackground,wallet.iconBackground);
  const fallback={...wallet,ready:false,mobileDownloadUrl:download};
  assert.equal(prioritizeBinanceWallets([other,fallback],false)[0].extensionDownloadUrl,download);
  assert.equal(prioritizeBinanceWallets([other,fallback],true)[0].ready,true);

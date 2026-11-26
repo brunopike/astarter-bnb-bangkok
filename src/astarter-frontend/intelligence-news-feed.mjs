@@ -173,8 +173,8 @@ export function renderIntelligenceNewsFeed(items, {search = '', source = 'all', 
   const message = source === 'saved' && !saved.length
     ? L('暂无追踪的快讯', 'No tracked stories yet')
     : filtered ? L('没有匹配的快讯', 'No matching stories') : L('暂无快讯', 'No stories available');
-  const noResults = `<div class="df-calm">${message}</div>`;
-  const reset = filtered ? `<button type="button" class="df-quiet" data-pd-news-reset>${L('清除筛选', 'Clear filters')}</button>` : '';
+  const noResults = `<div class="df-calm">${message}
+    ${filtered ? `<button type="button" class="dc-button" data-pd-news-reset>${L('清除筛选', 'Clear filters')}</button>` : ''}</div>`;
   return `<div class="df-news-tools">
     <div class="df-tabs" style="flex-wrap:nowrap;overflow-x:auto" role="group" aria-label="${L('筛选快讯', 'Filter news')}">${sourceTabs}</div>
     <label class="df-search">${uiGlyph('search')}<input type="search" data-pd-search value="${esc(search)}"
@@ -182,7 +182,7 @@ export function renderIntelligenceNewsFeed(items, {search = '', source = 'all', 
     <div class="df-news-date"><div><label><select data-pd-news-date aria-label="${L('消息日期', 'News date')}">${dateOptions}</select></label>
       <label><select data-pd-news-publisher aria-label="${L('新闻来源', 'News source')}">${publisherOptions}</select></label>
       <label>${L('条数', 'Items')}<select data-pd-limit aria-label="${L('内容条数', 'Feed limit')}">${[20, 50].map(n => `<option value="${n}"${n === limit ? ' selected' : ''}>${n}</option>`).join('')}</select></label></div>
-      <span class="df-result-count"><span>${rows.length} ${L('条消息', rows.length === 1 ? 'story' : 'stories')} · UTC+8</span>${reset}</span></div>
+      <span>${rows.length} ${L('条消息', 'stories')} · UTC+8</span></div>
     <div class="df-timeline">${timeline || (!items.length && source !== 'saved' && empty) || noResults}</div>`;
 }
 

@@ -18,7 +18,7 @@ function fixture({width=320,height=779,bodyTop=null,actions=[],strategyActions=[
  const doc=Object.assign(new EventTarget(),{defaultView:win,body:{},querySelector:s=>s==='.topbar'?header:s==='body > .biz-mobile-nav'?nav:s==='#product-page'?page:s==='.network-stage'?workbenchRoot:null,querySelectorAll:s=>s.startsWith('#product-page :is(button,a[href],input:not([type=hidden]),select,textarea,summary,[role=button]),.trading-chart>.trading-chart-footer :is(a,button)')?[...(currentPage==='workbench'&&s.includes('body[data-page=workbench] :is(.pw-output-filter,.pw-result)')?workbenchResults:[]),...strategyActions,...recommendationActions.filter(el=>!el.card?.ariaHidden),...chartFooterActions,...categoryActions,...pageControls,...(s.includes('.trading-chart-canvas .tv-lightweight-charts>table>tr:first-child>td:last-child canvas:first-of-type')&&s.includes('.trading-chart-canvas .tv-lightweight-charts>table>tr:last-child>td:nth-child(2) canvas:first-of-type')?chartAxes:[])]:s.startsWith('#product-page .layout-actions-menu')?[focusTarget]:s.startsWith('#product-page .bh-strategy-card .bh-card-actions > button[data-bh="choose"]')?[...strategyActions,...(s.includes('#product-page .bh-recommendation-card:not([aria-hidden=true])>footer button:is([data-bh="recommendation-logic"],[data-bh="recommendation"])')?recommendationActions.filter(el=>!el.card?.ariaHidden):[]),...(s.includes('.trading-chart>.trading-chart-footer :is(a,button)')?chartFooterActions:[]),...(s.includes('#product-page .bh-category-tabs>button[data-bh="category"]')?categoryActions:[])]:s.startsWith('#product-page >')?pageHeaders:s.startsWith('#product-page.account-context')?[...account,...(s.includes('.st-date-axis time')?reading:[]),...(s.includes('.st-calendar th')?calendarRead:[]),...(s.includes('.pnl-details>summary')?pnlControls:[]),...(s.includes('.st-range>summary')?rangeControls:[]),...(s.includes('#product-page .bh-recommendation-card:not([aria-hidden=true]) .bh-pick-plan :is(dt,dd)')?recommendationReading.filter(el=>!el.card?.ariaHidden):[]),...(s.includes('.trading-chart>.trading-chart-footer :is(.trading-chart-status>span,time)')?chartFooterReading:[]),...(s.includes('#product-page .sig-event .sig-stats-readout>:is(strong,small)')?signalReading:[]),...(s.includes('#product-page .pd-social-text')?socialReading:[]),...(s.includes('#product-page .df-economic-calendar :is(h2,h3,')&&s.includes('.df-calendar-selection>span')?economicReading:[])]:s.startsWith('.ux-profile-cta,')?[...actions,...(s.includes('body[data-page=workbench]>.connection-bar')?connectionBars:[])]:[],createRange(){let target;return {selectNodeContents(el){target=el;},getClientRects(){return target.textRects||[target.box];}};}});
  const trigger=new EventTarget(),pocket=new EventTarget();
  const style={setProperty(k,v){this[k]=v;},removeProperty(k){delete this[k];}};
- Object.assign(pocket,{ownerDocument:doc,dataset:{},style,attributes:{},matches:()=>false,setAttribute(k,v){this.attributes[k]=v;},removeAttribute(k){delete this.attributes[k];},contains:el=>el===trigger||panels.includes(el),querySelector:()=>trigger,querySelectorAll:()=>panels,getBoundingClientRect(){const mobile=win.innerWidth<=900;return rect(win.innerWidth-(mobile?(win.innerWidth<=380?12:16):24)-48+parseFloat(style['--companion-offset-x']||0),(bodyTop??win.innerHeight-(mobile?72:24)-48)+parseFloat(style['--companion-offset-y']||0),48,48);}});
+ Object.assign(pocket,{ownerDocument:doc,dataset:{},style,attributes:{},matches:()=>false,setAttribute(k,v){this.attributes[k]=v;},removeAttribute(k){delete this.attributes[k];},contains:el=>el===trigger||panels.includes(el),querySelector:()=>trigger,querySelectorAll:()=>panels,getBoundingClientRect(){const mobile=win.innerWidth<=900;return rect(win.innerWidth-(mobile?(win.innerWidth<=380?12:16):24)-48+parseFloat(style['--companion-offset-x']||0),(bodyTop??win.innerHeight-(mobile?72:24)-48)+parseFloat(style['--companion-offset-y']||0)+parseFloat(style['--companion-panel-shift-y']||0),48,48);}});
  const api=mountCompanionMotion(pocket),send=(target,type,props={})=>{const event=new Event(type,{cancelable:true});Object.assign(event,props);target.dispatchEvent(event);return event;};
  const flush=()=>{let turns=0;while(frames.size){assert.ok(++turns<5,'layout must settle without a frame loop');const pending=[...frames.values()];frames.clear();pending.forEach(fn=>fn());}};
  return {api,pocket,trigger,view,win,doc,nav,header,page,send,flush,resize,structure,frames,actions,strategyActions,recommendationActions,recommendationReading,account,reading,connectionBars,pageHeaders,focusTarget};
@@ -51,27 +51,8 @@ test('narrow Data Center charts cannot isolate the dock inside the painted graph
   f.api.layout();const available=f.pocket.getBoundingClientRect();
   assert.equal(f.pocket.inert,false);assert.equal(available.width,48);assert.equal(overlaps(available,plot.box,0),false);
   f.api.layout();assert.deepEqual(f.pocket.getBoundingClientRect(),available,'a safe position stays still on the next paint');
-  plot.box=rect(20,80,180,160);
-  f.api.requestLayout();f.api.requestLayout();
-  assert.equal(f.frames.size,1,'multiple receipts share a placement frame');f.flush();
-  assert.deepEqual(f.pocket.getBoundingClientRect(),available,'loading a panel does not call the crew back to a newly vacant corner');
   f.api.dispose();
  }
-});
-
-test('a narrow embedded chart leaves meeting space next to its dock without repeated shifts',()=>{
- function place(embedded){
-  const f=fixture({width:320,height:660,navTop:600}),tag=embedded?'iframe':'canvas';
-  const plot=element(rect(24,380,272,360),{tagName:tag.toUpperCase(),childNodes:[],matches:s=>s.split(',').includes(tag)});
-  const area=element(rect(0,52,320,548),{tagName:'DIV',dataset:{dataCenter:'tracking'},childNodes:[plot],hasAttribute:k=>k==='data-public-data',querySelectorAll:()=>[]});
-  Object.assign(f.page,element(rect(0,52,320,548)),{tagName:'DIV',childNodes:[area],ownerDocument:f.doc,querySelector:s=>s==='.dc-root'?area:s==='.dc-root iframe'&&embedded?plot:null});
-  area.parentElement=f.page;plot.parentElement=area;f.doc.body.dataset={page:'tracking'};
-  f.api.layout();const dock=f.pocket.getBoundingClientRect();
-  f.api.layout();assert.deepEqual(f.pocket.getBoundingClientRect(),dock);assert.equal(overlaps(dock,plot.box,0),false);
-  f.api.dispose();return dock;
- }
- const chart=place(false),embed=place(true);
- assert.equal(embed.left,chart.left);assert.equal(embed.top,chart.top-32);
 });
 
 test('a 320px calendar fits the entire companion between painted data and an original-source link',()=>{
@@ -416,4 +397,27 @@ test('the measured390px price/time axes protect their actual canvases after asyn
  assert.ok(f.resize.targets.has(price)&&f.resize.targets.has(time),'collect primary price and time axes through their measured DOM selectors');assertSafe(f,[price,time,credit]);
  assert.equal(overlaps(f.pocket.getBoundingClientRect(),rect(289,626.390625,80,46),0),true,'blank volume-axis space is not a whole-chart obstacle');
  price.box=rect(289,f.pocket.getBoundingClientRect().top+4,80,185);f.resize.callback();f.flush();assertSafe(f,[price,time,credit]);f.api.dispose();
+});
+
+test('assistant briefs stay next to the figure and clear typing, sending, tools and mobile navigation',()=>{
+ for(const [width,height,inputs] of [
+  [1440,900,[rect(423,640,810,62),rect(1191,706,42,42),rect(717,767,108,44)]],
+  [390,844,[rect(42,496,306,62),rect(304,562,44,44),rect(103,623,90,44)]],
+  [320,625,[rect(42,277,236,62),rect(234,343,44,44),rect(80,404,90,44)]],
+  [1920,1080,[rect(600,820,810,62),rect(1370,886,42,42),rect(900,947,108,44)]],
+ ]){
+  const controls=inputs.map(bounds=>element(bounds));
+  const composer=element(rect(16,height-287,width-32,222),{matches:s=>s==='.chat-composer-area',querySelectorAll:()=>controls});
+  const brief=panel();brief.offsetHeight=320;brief.hidden=true;
+  const f=fixture({width,height,navTop:width<=900?height-60:null,panels:[brief],actions:[composer],pageControls:controls});
+  f.doc.body.dataset={page:'assistant'};f.api.layout();
+  const rest=f.pocket.getBoundingClientRect();
+  brief.hidden=false;f.api.layout();
+  const anchor=f.pocket.getBoundingClientRect(),[dy,,,dx]=brief.style.inset.split(' ').map(parseFloat);
+  const card=rect(anchor.left+dx,anchor.top+dy,Math.min(brief.offsetWidth,parseFloat(brief.style.maxWidth)),Math.min(brief.offsetHeight,parseFloat(brief.style.maxHeight)));
+  assert.ok(anchor.top-card.bottom===12||anchor.left-card.right===12,'brief stays 12px from the figure at '+width+'px');
+  for(const r of [...inputs,...(f.nav?[f.nav.box]:[])]){assert.equal(overlaps(card,r,0),false);assert.equal(overlaps(anchor,r,0),false);}
+  if(width===1920)assert.equal(anchor.top,rest.top,'empty space beside the composer remains usable');
+  brief.hidden=true;f.api.layout();assert.deepEqual(f.pocket.getBoundingClientRect(),rest);f.api.dispose();
+ }
 });

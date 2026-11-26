@@ -65,7 +65,7 @@ export function decorateBento(root,page,{account=null,credits=null}={}){
   intro?.querySelector('.sc-intro-main')?.remove();intro?.classList.add('compact-strategy-intro');
  }
  // Keep the active secondary route reachable on compact screens.
- requestAnimationFrame(()=>{for(const nav of root.querySelectorAll('.biz-subnav,.dc-section-nav:not(.data-subtabs)')){const active=nav.querySelector('[aria-current=page],.selected');if(active&&nav.scrollWidth>nav.clientWidth){const n=nav.getBoundingClientRect(),a=active.getBoundingClientRect();if(a.right>n.right||a.left<n.left)nav.scrollLeft+=a.left-n.left-(nav.clientWidth-a.width)/2;}}});
+ requestAnimationFrame(()=>{for(const nav of root.querySelectorAll('.biz-subnav,.dc-section-nav')){const active=nav.querySelector('[aria-current=page],.selected');if(active&&nav.scrollWidth>nav.clientWidth){const n=nav.getBoundingClientRect(),a=active.getBoundingClientRect();if(a.right>n.right||a.left<n.left)nav.scrollLeft+=a.left-n.left-(nav.clientWidth-a.width)/2;}}});
  if(page==='markets'&&!new URLSearchParams(location.search).get('asset')){
   const grid=root.querySelector('.dc-compact-kpis');
   if(grid&&!grid.querySelector('.bento-pulse')){grid.classList.add('bento-market-kpis');grid.insertAdjacentHTML('afterbegin',marketPulse());const pulse=grid.querySelector('.bento-pulse');wireReadout(pulse,'[data-pulse-asset]',pulse.querySelector('[data-bento-readout]').textContent,el=>{const a=CRYPTO.find(a=>a.symbol===el.dataset.pulseAsset);return `${a.symbol} · ${fmt(a.price)} ${a.unit} · ${signed(a.change)}`;});}

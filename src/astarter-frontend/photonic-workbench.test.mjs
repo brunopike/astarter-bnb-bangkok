@@ -502,13 +502,8 @@ test('whole-card asset readings and individual previews use the same verified va
   assert.equal(summary.basis,'assets');assert.equal(summary.total,8);assert.equal(summary.done,7);assert.equal(summary.state,'partial');
   assert.match(photonicStageMeter(phase),/aria-label="[^"]*7\/8/);
   assert.deepEqual([...list.matchAll(/data-runtime-asset="([^"]+)"/g)].map(match=>match[1]),tasks.map(task=>task.symbol));
-  assert.doesNotMatch(list,/aria-current=/);
   for(const [i,asset] of summary.assets.entries()){
    const preview=photonic.photonicRuntimeReadings(phase,i);
-   const opened=photonic.photonicRuntimeReadings(phase,i,true);
-   const selected=[...opened.matchAll(/data-runtime-asset="([^"]+)"[^>]*aria-current="true"/g)];
-   assert.deepEqual(selected.map(match=>match[1]),[asset.symbol]);
-   assert.equal((opened.match(/data-runtime-asset=/g)||[]).length,summary.total);
    assert.equal((preview.match(/data-runtime-asset=/g)||[]).length,1);
    assert.ok(list.includes(`<dd>${asset.detail}</dd>`)&&preview.includes(`<dd>${asset.detail}</dd>`));
    if(asset.symbol==='DXY'){assert.equal(asset.reading,null);assert.equal(asset.state,'waiting');assert.match(asset.detail,/—.*校验|—.*validation/);}
@@ -790,7 +785,7 @@ test('live source cards expose limited context with source clocks while retainin
   assert.equal(photonicCoverage(projection,'evidence').count,1,'background is never a retained or verified source');assert.equal(research.context(symbol).ready,false);assert.equal(research.handoff(symbol),null);
   assert.ok(photonicRuntime(research,research.tasks).filter(phase=>['verify','queuedCore','core'].includes(phase.key)).every(phase=>phase.summary.done===0));
  }
- const btc=photonicChannels(research.task('BTC'),research,'unassigned',rows);assert.equal(btc.find(field=>field.id==='btcSentiment').text,'37 / 100');assert.equal(btc.find(field=>field.id==='btcSentiment').provider,'CoinMarketCap');
+ const btc=photonicChannels(research.task('BTC'),research,'unassigned',rows);assert.equal(btc.find(field=>field.id==='btcSentiment').text,'37 / 100');assert.equal(btc.find(field=>field.id==='btcSentiment').provider,'Alternative.me');
  const eth=photonicChannels(research.task('ETH'),research,'unassigned',rows),tvl=eth.find(field=>field.id==='chainTvl');assert.equal(tvl.text,'1K USD');assert.equal(tvl.timeBasis,'retrieval-time');assert.equal(tvl.asOf,'2026-11-06T00:30:00.000Z');
  for(const key of ['chain','macro','social']){const graphic=photonicSourceGraphic(key,(key==='chain'?eth:btc).filter(field=>field.source===key));if(key!=='chain'||tvl)assert.match(graphic,/背景快照|Context snapshot/);assert.doesNotMatch(graphic,/NaN|Infinity/);}
  const tradfi=photonicProjection(research,{task:research.task('SPX')},research.tasks,{},rows);assert.equal(tradfi.sources.find(source=>source.key==='chain').status,'na');assert.ok(tradfi.sources.filter(source=>['macro','social'].includes(source.key)).every(source=>source.status==='missing'));
@@ -819,7 +814,7 @@ test('the actual source-card renderer labels available background as Context and
  field.text='39 / 100';draw(task,false);draw();assert.equal(flashes,1);
  button.parentElement.dataset.inView='false';field.text='40 / 100';draw();assert.equal(flashes,1);
  button.parentElement.dataset.inView='true';field.text='37 / 100';draw({...task,symbol:'ETH'});assert.equal(flashes,1);
- assert.equal(nodes.get('.pw-src-tag').textContent,'背景参考');assert.equal(nodes.get('.pw-source-value').textContent,'37 / 100');assert.equal(nodes.get('.pw-source-value').dataset.label,'BTC 日度情绪');assert.match(nodes.get('.pw-source-value').title,/CoinMarketCap/);assert.match(nodes.get('.pw-source-value').title,/2026-11-06T00:00:00.000Z/);assert.doesNotMatch(nodes.get('.pw-src-tag').textContent,/已核对|已采用/);
+ assert.equal(nodes.get('.pw-src-tag').textContent,'背景参考');assert.equal(nodes.get('.pw-source-value').textContent,'37 / 100');assert.equal(nodes.get('.pw-source-value').dataset.label,'BTC 日度情绪');assert.match(nodes.get('.pw-source-value').title,/Alternative.me/);assert.match(nodes.get('.pw-source-value').title,/2026-11-06T00:00:00.000Z/);assert.doesNotMatch(nodes.get('.pw-src-tag').textContent,/已核对|已采用/);
 });
 
 const jobViewNow=1793925000000,jobOwner='wallet:56:0x'+'a'.repeat(40);

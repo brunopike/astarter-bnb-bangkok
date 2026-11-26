@@ -2,7 +2,7 @@
 
 **A fresh price can still lead to a stale decision.** When agents hand off a trade idea for a tokenized stock, a price alone is of little use. The next agent needs its timestamp, the market conditions, and the rule that would invalidate the trade. Astarter is an AI Trading OS that gives agents a shared market snapshot and ties each decision to the evidence available at the time.
 
-[Run the local demo](#run-locally) · [Inspect the integrations](#what-you-can-verify) · [Download v0.1.0](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
+[Run the local demo](#run-locally) · [Inspect the integrations](#what-you-can-verify) · [Download Hackathon frontend packages](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.2.0-frontend) · [Download v0.1.0](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
 ## Two ways to turn research into a strategy
 
@@ -29,6 +29,12 @@ Living Brain provides persistent memory for cases and plans. The architecture pa
 
 The local demo runs in simulation mode. Continuous cross-agent scheduling, public beta publishing, and automatic feedback ingestion are design targets.
 
+## Frontend packages
+
+The default frontend directory follows the deployed `HACKATHON` branch. It opens Deep Brain, where you can select a research asset and explore the evidence behind each graph node. The [hosted demo](https://dapp.ipfund.art/) also includes a licensed particle portrait. The open repository uses the interactive evidence graph as its opening view.
+
+The [frontend release](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.2.0-frontend) provides two independently buildable source archives. Choose **deployed** for Deep Brain and localized page URLs. Choose **feature** to reproduce the separate lowercase `hackathon` branch, including its market-data, Atlas, and social-feed changes. Both packages include the dependency lockfile. After downloading both ZIPs and `SHA256SUMS.txt` to one folder, run `shasum -a 256 -c SHA256SUMS.txt`.
+
 ## Run locally
 
 Use Node.js 24 with npm.
@@ -39,7 +45,7 @@ npm ci
 npm start
 ```
 
-Open [LensWave, Astarter’s trading workspace, on localhost](http://127.0.0.1:4188/). The public Atlas catalog works without an API key.
+Open [Astarter on localhost](http://127.0.0.1:4188/). The public Atlas catalog works without an API key.
 
 ```sh
 curl -fsS 'http://127.0.0.1:4188/api/atlas/feeds?symbol=NVDAB'
@@ -64,6 +70,6 @@ From `src/astarter-frontend`, run the catalog, adapter, memory, and simulated ch
 node --import ./test-locale.mjs --test atlas-feed-master.test.mjs market-source-adapters.test.mjs living-brain.test.mjs commerce.test.mjs
 ```
 
-Verify the release ZIP with `shasum -a 256 -c SHA256SUMS.txt` after downloading both release assets to the same directory.
+The earlier [v0.1.0 release](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) contains the combined frontend and backend source snapshot.
 
 </details>

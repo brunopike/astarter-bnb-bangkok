@@ -1,0 +1,987 @@
+{
+  "schemaVersion": 1,
+  "retrievedAt": "2026-11-25T20:19:00Z",
+  "timeBasis": {
+    "eventAt": "UTC. When eventPrecision is day, midnight represents the date only.",
+    "knownAt": "Reconstructed cutoff for replay. A date-only publication becomes eligible at 12:00 UTC the following day to account for publisher time zones. Block and epoch cutoffs are historical clocks, not an archive ingestion receipt."
+  },
+  "records": [
+    {
+      "id": "chain/630000-bitcoin",
+      "scopeKeys": [
+        "coin:bitcoin"
+      ],
+      "nodes": [
+        0,
+        1,
+        4,
+        5,
+        7,
+        13
+      ],
+      "eventAt": "2020-05-11T19:23:43Z",
+      "knownAt": "2020-05-11T20:02:50Z",
+      "title": [
+        "第三次减半区块",
+        "Third halving block"
+      ],
+      "body": [
+        "区块 630,000 包含 3,134 笔交易。矿工领取 7.15968084 BTC，其中协议补贴 6.25 BTC，其余 0.90968084 BTC 来自手续费。",
+        "Block 630,000 contains 3,134 transactions. The miner claimed 7.15968084 BTC, comprising the 6.25 BTC subsidy and 0.90968084 BTC in fees."
+      ],
+      "source": "Bitcoin · Blockstream",
+      "sourceUrl": "https://blockstream.info/block/000000000000000000024bead8df69990852c202db0e0097c1a12ea637d7e96d",
+      "kind": "chain",
+      "availabilityBasis": "next_block_timestamp_reconstruction",
+      "eventPrecision": "second",
+      "references": [
+        {
+          "label": "Coinbase transaction",
+          "url": "https://blockstream.info/tx/cc2ca076fd04c2aeed6d02151c447ced3d09be6fb4d4ef36cb5ed4e7a3260566"
+        },
+        {
+          "label": "Next block header",
+          "url": "https://blockstream.info/block/00000000000000000004e772f5a00a5bb86cb74f3b35407e9256fdb0fb38a904"
+        }
+      ],
+      "blockHeight": 630000,
+      "blockHash": "000000000000000000024bead8df69990852c202db0e0097c1a12ea637d7e96d",
+      "txHash": "cc2ca076fd04c2aeed6d02151c447ced3d09be6fb4d4ef36cb5ed4e7a3260566",
+      "metrics": {
+        "transactions": 3134,
+        "totalCoinbaseOutputsSat": 715968084,
+        "subsidySat": 625000000,
+        "claimedFeesSat": 90968084
+      },
+      "facets": {
+        "5": [
+          "Bitcoin 区块 630,000 · 000000000000000000024bead8df69990852c202db0e0097c1a12ea637d7e96d",
+          "Bitcoin block 630,000 · 000000000000000000024bead8df69990852c202db0e0097c1a12ea637d7e96d"
+        ],
+        "7": [
+          "区块时间为 2020-05-11 19:23:43 UTC。此回放取下一块引用该区块的区块头时间 2020-05-11 20:02:50 UTC 作为可引用截点。",
+          "Block timestamp: 2020-05-11 19:23:43 UTC. The replay cutoff uses the next block header referencing this block, at 2020-05-11 20:02:50 UTC."
+        ],
+        "13": [
+          "核对 Coinbase 交易的所有输出，再减去 6.25 BTC 协议补贴，可复算矿工领取的手续费。",
+          "Sum all coinbase outputs and deduct the 6.25 BTC subsidy to reproduce the fees claimed by the miner."
+        ]
+      }
+    },
+    {
+      "id": "chain/dogecoin-1-14-6",
+      "scopeKeys": [
+        "coin:dogecoin"
+      ],
+      "nodes": [
+        1,
+        3,
+        4,
+        5,
+        10
+      ],
+      "eventAt": "2022-07-20T23:58:01Z",
+      "knownAt": "2022-07-20T23:58:01Z",
+      "title": [
+        "Dogecoin 调低小额输出门槛",
+        "Dogecoin lowered its recommended dust threshold"
+      ],
+      "body": [
+        "Core 1.14.6 将建议的尘埃输出门槛从 1 DOGE 降到 0.01 DOGE。交易所最低提币额和实际手续费需从对应场所取证。",
+        "Core 1.14.6 lowered its recommended dust threshold from 1 DOGE to 0.01 DOGE. Exchange withdrawal minimums and actual fees need separate venue evidence."
+      ],
+      "source": "Dogecoin Core",
+      "sourceUrl": "https://github.com/dogecoin/dogecoin/releases/tag/v1.14.6",
+      "kind": "chain",
+      "availabilityBasis": "publisher_timestamp",
+      "eventPrecision": "second",
+      "facets": {
+        "3": [
+          "计算小额转账约束时读取实际节点的尘埃策略，提现场景另查场所最低额度。0.01 DOGE 是该版本的建议值。",
+          "Check the active node’s dust policy for small transfers and the venue minimum for withdrawals. This release recommends 0.01 DOGE."
+        ]
+      }
+    },
+    {
+      "id": "chain/ethereum-merge",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        0,
+        1,
+        5,
+        7,
+        10
+      ],
+      "eventAt": "2022-09-15T06:42:59Z",
+      "knownAt": "2022-09-15T06:44:00Z",
+      "title": [
+        "合并后的首个执行区块",
+        "First execution block after the Merge"
+      ],
+      "body": [
+        "区块 15,537,394 的难度为 0，包含 80 笔交易。Astarter 历史快照取 06:44 UTC 为判断截点，保留了区块哈希和原始回包。",
+        "Block 15,537,394 has zero difficulty and 80 transactions. Astarter’s reconstructed 06:44 UTC snapshot retains the block hash and original response."
+      ],
+      "source": "Ethereum · Blockscout",
+      "sourceUrl": "https://eth.blockscout.com/block/0x56a9bb0302da44b8c0b3df540781424684c3af04d0b7a38d72842b762076a664",
+      "kind": "chain",
+      "availabilityBasis": "historical_snapshot_cutoff",
+      "eventPrecision": "second",
+      "blockHeight": 15537394,
+      "blockHash": "0x56a9bb0302da44b8c0b3df540781424684c3af04d0b7a38d72842b762076a664",
+      "archiveFile": "brain-evidence/BLOCK-15537394@1.json",
+      "facets": {
+        "5": [
+          "Ethereum 区块 15,537,394 · 0x56a9bb0302da44b8c0b3df540781424684c3af04d0b7a38d72842b762076a664",
+          "Ethereum block 15,537,394 · 0x56a9bb0302da44b8c0b3df540781424684c3af04d0b7a38d72842b762076a664"
+        ],
+        "7": [
+          "原始区块时间为 2022-09-15 06:42:59 UTC。项目历史回放的判断截点为 2022-09-15 06:44:00 UTC。",
+          "The original block is timestamped 2022-09-15 06:42:59 UTC. The project replay uses a decision cutoff of 2022-09-15 06:44:00 UTC."
+        ],
+        "10": [
+          "快照保留区块哈希、父哈希、难度和 80 笔交易的数量。推断买卖方向还需同一时间窗内的市场成交。",
+          "This snapshot retains the block hash, parent hash, difficulty and transaction count of 80. Directional market activity requires trades from the same window."
+        ]
+      }
+    },
+    {
+      "id": "chain/circle-usdc-svb",
+      "scopeKeys": [
+        "ca:ethereum:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      ],
+      "nodes": [
+        3,
+        4,
+        7,
+        10,
+        13
+      ],
+      "eventAt": "2023-03-12T00:00:00Z",
+      "knownAt": "2023-03-14T12:00:00Z",
+      "title": [
+        "Circle 披露 SVB 储备敞口",
+        "Circle disclosed its SVB reserve exposure"
+      ],
+      "body": [
+        "Circle 披露其在 SVB 的储备为 33 亿美元，约占当时全球 USDC 储备的 8%。储备披露说明发行方敞口，复盘 ETH 上的卖出价格还需池子成交记录。",
+        "Circle disclosed $3.3 billion at SVB, around 8% of global USDC reserves at the time. This measures issuer exposure. Reconstructing the Ethereum sale price requires pool trades."
+      ],
+      "source": "Circle",
+      "sourceUrl": "https://www.circle.com/pressroom/3-3-billion-of-usdc-reserve-risk-removed-dollar-de-peg-closes",
+      "kind": "review",
+      "availabilityBasis": "published_date_upper_bound",
+      "eventPrecision": "day",
+      "publishedDate": "2023-03-13",
+      "metricScope": "issuer-global",
+      "facets": {
+        "7": [
+          "事件日期 2023-03-12，来源发布日期 2023-03-13。来源只精确到日，回放按 2023-03-14 12:00:00 UTC 纳入。",
+          "Event: 2023-03-12. Source publication date: 2023-03-13. Only the date is available, so replay includes it from 2023-03-14 12:00:00 UTC."
+        ],
+        "3": [
+          "将发行方赎回、链上池报价和实际成交分项回放。33 亿美元为全球储备敞口，不能按 ETH 地址直接归因。",
+          "Replay issuer redemptions, pool quotes and fills separately. The $3.3 billion was a global reserve exposure and cannot be attributed to Ethereum addresses."
+        ]
+      }
+    },
+    {
+      "id": "chain/arb-governance-address",
+      "scopeKeys": [
+        "ca:arbitrum:0x912ce59144191c1204e64559fe8253a0e49e6548"
+      ],
+      "nodes": [
+        0,
+        1,
+        4,
+        5,
+        10
+      ],
+      "eventAt": "2023-04-11T19:35:01Z",
+      "knownAt": "2023-04-11T19:35:01Z",
+      "title": [
+        "ARB 治理代币的 L2 地址",
+        "ARB governance token on Arbitrum One"
+      ],
+      "body": [
+        "Offchain Labs 的主网部署清单将 l2Token 记为 0x912C…6548。核对治理代币时使用 Arbitrum One 的合约地址，链名和代币符号一并校验。",
+        "The Offchain Labs mainnet deployment file identifies l2Token as 0x912C…6548. Match this Arbitrum One address and network before attributing governance-token activity."
+      ],
+      "source": "Offchain Labs",
+      "sourceUrl": "https://github.com/OffchainLabs/governance/blob/e1686d5a7a2cd3d401fb1eea633cd13deb9e2a55/files/mainnet/deployedContracts.json",
+      "kind": "chain",
+      "availabilityBasis": "git_committer_timestamp",
+      "eventPrecision": "second",
+      "facets": {
+        "5": [
+          "Arbitrum One · 0x912ce59144191c1204e64559fe8253a0e49e6548",
+          "Arbitrum One · 0x912ce59144191c1204e64559fe8253a0e49e6548"
+        ],
+        "10": [
+          "同一份清单分别列出 l2Token、治理合约和金库。归类 ARB 转账时取 l2Token 的完整地址，再核对实际 Transfer 事件。",
+          "The same file lists the L2 token, governor and treasury separately. Match the full l2Token address before classifying ARB Transfer events."
+        ]
+      }
+    },
+    {
+      "id": "chain/aero-base-deployment",
+      "scopeKeys": [
+        "ca:base:0x940181a94a35a4569e4529a3cdfb74e38fd98631"
+      ],
+      "nodes": [
+        0,
+        1,
+        5,
+        7,
+        10
+      ],
+      "eventAt": "2023-08-28T02:40:47Z",
+      "knownAt": "2023-08-28T02:40:47Z",
+      "title": [
+        "Base 合约部署回执",
+        "Contract creation receipt on Base"
+      ],
+      "body": [
+        "Base 区块 3,200,550 的创建回执记录地址 0x9401…8631，状态为成功。部署本身只能证明合约创建，首笔成交要从交易池核对。",
+        "The successful creation receipt in Base block 3,200,550 identifies contract 0x9401…8631. The deployment establishes contract creation. Its first trade requires pool evidence."
+      ],
+      "source": "Base · BaseScan",
+      "sourceUrl": "https://basescan.org/tx/0x5727b7b346eb94d6f139e10e7ac922158dacd84f5d2844c01cf815b29d9ba58c",
+      "kind": "chain",
+      "availabilityBasis": "block_timestamp_reconstruction",
+      "eventPrecision": "second",
+      "blockHeight": 3200550,
+      "blockHash": "0x329046737570581802a54ac968c6d3bb051597f4fa8f8cf2b2e7f058329aeabf",
+      "txHash": "0x5727b7b346eb94d6f139e10e7ac922158dacd84f5d2844c01cf815b29d9ba58c",
+      "contractAddress": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+      "facets": {
+        "5": [
+          "Base · 0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+          "Base · 0x940181a94a35a4569e4529a3cdfb74e38fd98631"
+        ],
+        "7": [
+          "回放采用链上时间 2023-08-28 02:40:47 UTC；原始系统首次收到数据的时间未知。",
+          "Replay uses the on-chain time 2023-08-28 02:40:47 UTC. The original first-seen time is unknown."
+        ],
+        "10": [
+          "创建交易回执的 status 为 0x1，contractAddress 为 0x9401…8631。该回执可验证部署，首笔交换需读取具体池的 Swap 事件。",
+          "The creation receipt reports status 0x1 and contractAddress 0x9401…8631. It verifies deployment. The first swap requires a pool swap event."
+        ]
+      }
+    },
+    {
+      "id": "chain/aero-issuer-address",
+      "scopeKeys": [
+        "ca:base:0x940181a94a35a4569e4529a3cdfb74e38fd98631"
+      ],
+      "nodes": [
+        1,
+        4,
+        5,
+        10
+      ],
+      "eventAt": "2023-09-01T13:15:30Z",
+      "knownAt": "2023-09-01T13:15:30Z",
+      "title": [
+        "Aerodrome 部署清单核对 AERO",
+        "Aerodrome’s deployment list identifies AERO"
+      ],
+      "body": [
+        "协议仓库的 9 月 1 日版本将 0x9401…8631 列为 AERO。将项目清单与 Base 上的创建回执对照，可核验资产身份。",
+        "The September 1 version of Aerodrome’s deployment list identifies 0x9401…8631 as AERO. Compare that mapping with the Base creation receipt to verify the asset."
+      ],
+      "source": "Aerodrome Finance",
+      "sourceUrl": "https://github.com/aerodrome-finance/contracts/blob/bbeb3b10ccb50c612edc242f84a245123d1f014e/README.md",
+      "kind": "chain",
+      "availabilityBasis": "git_committer_timestamp",
+      "eventPrecision": "second",
+      "references": [
+        {
+          "label": "Base creation receipt",
+          "url": "https://basescan.org/tx/0x5727b7b346eb94d6f139e10e7ac922158dacd84f5d2844c01cf815b29d9ba58c"
+        }
+      ],
+      "facets": {
+        "5": [
+          "Base · 0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+          "Base · 0x940181a94a35a4569e4529a3cdfb74e38fd98631"
+        ],
+        "10": [
+          "项目部署清单与 Base 创建回执中的合约地址一致。这两项证据提供代币身份和创建时间，发行时市价仍需市场成交。",
+          "The project deployment list matches the Base creation receipt. Together they establish token identity and creation time. Launch price still needs market trades."
+        ]
+      }
+    },
+    {
+      "id": "chain/circle-base-native",
+      "scopeKeys": [
+        "ca:base:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+      ],
+      "nodes": [
+        0,
+        1,
+        4,
+        5,
+        10
+      ],
+      "eventAt": "2023-09-05T00:00:00Z",
+      "knownAt": "2023-09-06T12:00:00Z",
+      "title": [
+        "Base 原生 USDC 与 USDbC 分流",
+        "Native USDC and bridged USDbC on Base"
+      ],
+      "body": [
+        "Circle 于 9 月 5 日公布 Base 原生 USDC，合约为 0x8335…2913。桥接版本 USDbC 使用独立合约，比较深度或转账额时按各自地址统计。",
+        "Circle announced native USDC on Base on September 5 at 0x8335…2913. Bridged USDbC uses a separate contract. Measure depth and transfers against each address independently."
+      ],
+      "source": "Circle",
+      "sourceUrl": "https://www.circle.com/blog/usdc-now-available-natively-on-base",
+      "kind": "chain",
+      "availabilityBasis": "published_date_upper_bound",
+      "eventPrecision": "day",
+      "facets": {
+        "5": [
+          "Base · 0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "Base · 0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+        ],
+        "10": [
+          "用 Base chain ID 8453 和完整合约地址匹配原生 USDC。汇总池子深度时将 USDbC 单列，避免同名资产混合。",
+          "Match native USDC with Base chain ID 8453 and the full contract address. Keep USDbC separate when aggregating pool depth."
+        ]
+      }
+    },
+    {
+      "id": "chain/arb-claim-end",
+      "scopeKeys": [
+        "ca:arbitrum:0x912ce59144191c1204e64559fe8253a0e49e6548"
+      ],
+      "nodes": [
+        3,
+        4,
+        7,
+        10,
+        13
+      ],
+      "eventAt": "2023-09-24T20:20:23Z",
+      "knownAt": "2023-09-24T20:20:23Z",
+      "title": [
+        "ARB 申领截止使用 L1 区块高度",
+        "The ARB claim deadline used an L1 height"
+      ],
+      "body": [
+        "治理配置将申领结束高度设为 18,208,000。这个以太坊 L1 区块的时间为 9 月 24 日 20:20:23 UTC，Arbitrum One 上的申领交易需另取回执。",
+        "The governance configuration sets the claim end height to 18,208,000. This Ethereum L1 block is timestamped September 24 at 20:20:23 UTC. Individual Arbitrum One claims require L2 receipts."
+      ],
+      "source": "Ethereum · Blockscout",
+      "sourceUrl": "https://eth.blockscout.com/api/v2/blocks/18208000",
+      "kind": "review",
+      "availabilityBasis": "block_timestamp_reconstruction",
+      "eventPrecision": "second",
+      "blockHeight": 18208000,
+      "blockHash": "0x8d00fb31c34df7b7cd6f4607e88ba0debc9e30d6e7c1222233fb03daed4fcd7a",
+      "clockNetwork": "ethereum",
+      "references": [
+        {
+          "label": "Governance configuration",
+          "url": "https://github.com/OffchainLabs/governance/blob/e1686d5a7a2cd3d401fb1eea633cd13deb9e2a55/files/mainnet/deployConfig.json"
+        },
+        {
+          "label": "L1 block number for claims",
+          "url": "https://docs.arbitrum.foundation/airdrop-eligibility-distribution"
+        }
+      ],
+      "facets": {
+        "7": [
+          "回放采用链上时间 2023-09-24 20:20:23 UTC；原始系统首次收到数据的时间未知。",
+          "Replay uses the on-chain time 2023-09-24 20:20:23 UTC. The original first-seen time is unknown."
+        ],
+        "3": [
+          "按以太坊 L1 高度 18,208,000 截断申领窗口。核查某笔申领时，同时保留 Arbitrum One 的交易和 L1 时钟依据。",
+          "Cut off the claim window at Ethereum L1 height 18,208,000. To review a particular claim, retain its Arbitrum One transaction and the L1 clock reference."
+        ]
+      }
+    },
+    {
+      "id": "chain/solana-1-17-20",
+      "scopeKeys": [
+        "coin:solana"
+      ],
+      "nodes": [
+        1,
+        4,
+        5,
+        7,
+        10
+      ],
+      "eventAt": "2024-02-06T11:36:44Z",
+      "knownAt": "2024-02-06T11:36:44Z",
+      "title": [
+        "Solana 发布 v1.17.20",
+        "Solana v1.17.20 published"
+      ],
+      "body": [
+        "Solana Labs 在 11:36:44 UTC 发布 v1.17.20。此时可确认客户端已经发布。共识是否恢复，还需核对网络出块。",
+        "Solana Labs published v1.17.20 at 11:36:44 UTC. The release is timestamped. Confirming consensus recovery requires separate network evidence."
+      ],
+      "source": "Solana Labs",
+      "sourceUrl": "https://github.com/solana-labs/solana/releases/tag/v1.17.20",
+      "kind": "chain",
+      "availabilityBasis": "publisher_timestamp",
+      "eventPrecision": "second",
+      "facets": {
+        "10": [
+          "客户端发布记录可核验版本和发布时间。评估网络可用性还要观察已最终确认的槽位是否持续推进。",
+          "The release verifies the client version and publication time. To assess availability, check whether finalized slots continue to advance."
+        ]
+      }
+    },
+    {
+      "id": "chain/solana-2024-02-outage",
+      "scopeKeys": [
+        "coin:solana"
+      ],
+      "nodes": [
+        3,
+        4,
+        7,
+        10,
+        13
+      ],
+      "eventAt": "2024-02-06T14:55:00Z",
+      "knownAt": "2024-02-10T12:00:00Z",
+      "title": [
+        "停链后从哪个槽位恢复",
+        "Recovery checkpoint after the halt"
+      ],
+      "body": [
+        "2 月 9 日的报告回溯，2 月 6 日约 09:53 UTC 网络停止最终确认，从槽位 246,464,040 重启，14:55 UTC 恢复共识。期间的行情缺口与链上成交须分别记录。",
+        "The February 9 report dates the finalization halt to about 09:53 UTC on February 6. Validators restarted from slot 246,464,040 and consensus resumed at 14:55 UTC. Quote gaps and on-chain fills need separate evidence."
+      ],
+      "source": "Solana · Anza incident report",
+      "sourceUrl": "https://solana.com/news/02-06-24-solana-mainnet-beta-outage-report",
+      "kind": "review",
+      "availabilityBasis": "published_date_upper_bound",
+      "eventPrecision": "minute",
+      "checkpointSlot": 246464040,
+      "publishedDate": "2024-02-09",
+      "facets": {
+        "7": [
+          "事件日期 2024-02-06 14:55:00 UTC，来源发布日期 2024-02-09。来源只精确到日，回放按 2024-02-10 12:00:00 UTC 纳入。",
+          "Event: 2024-02-06 14:55:00 UTC. Source publication date: 2024-02-09. Only the date is available, so replay includes it from 2024-02-10 12:00:00 UTC."
+        ],
+        "3": [
+          "以恢复共识的 14:55 UTC 划分窗口。恢复后的第一笔策略交易仍需交易签名、槽位和结果。",
+          "Split the replay at the reported 14:55 UTC consensus recovery. The first subsequent strategy fill would still require a signature, slot and result."
+        ]
+      }
+    },
+    {
+      "id": "chain/ethereum-dencun-schedule",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        3,
+        4,
+        7,
+        10
+      ],
+      "eventAt": "2024-02-27T00:00:00Z",
+      "knownAt": "2024-02-28T12:00:00Z",
+      "title": [
+        "Dencun 公布激活窗口",
+        "Dencun activation window announced"
+      ],
+      "body": [
+        "以太坊基金会公布主网激活点为信标链 epoch 269,568，预计 3 月 13 日 13:55 UTC。公告可用于预设观察窗口，实际出块和 Blob 使用量另行核对。",
+        "The Ethereum Foundation scheduled mainnet activation for beacon epoch 269,568, around 13:55 UTC on March 13. This dated notice sets the observation window. Blocks and blob usage require chain evidence."
+      ],
+      "source": "Ethereum Foundation",
+      "sourceUrl": "https://blog.ethereum.org/2024/02/27/dencun-mainnet-announcement",
+      "kind": "chain",
+      "availabilityBasis": "published_date_upper_bound",
+      "eventPrecision": "day",
+      "scheduledEpoch": 269568,
+      "facets": {
+        "7": [
+          "事件日期 2024-02-27，来源发布日期 2024-02-27。来源只精确到日，回放按 2024-02-28 12:00:00 UTC 纳入。",
+          "Event: 2024-02-27. Source publication date: 2024-02-27. Only the date is available, so replay includes it from 2024-02-28 12:00:00 UTC."
+        ],
+        "3": [
+          "以 epoch 269,568 为观察起点，激活后再读取执行块的 Blob gas 用量。公告没有给出实际 Blob 数量。",
+          "Monitor epoch 269,568, then read blob gas from execution blocks after activation. The announcement supplies no observed blob count."
+        ]
+      }
+    },
+    {
+      "id": "chain/ethereum-dencun-first",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        0,
+        1,
+        5,
+        7,
+        13
+      ],
+      "eventAt": "2024-03-13T13:55:35Z",
+      "knownAt": "2024-03-13T13:55:35Z",
+      "title": [
+        "Dencun 首块的 Blob 用量为零",
+        "Zero blob gas in the Dencun activation block"
+      ],
+      "body": [
+        "区块 19,426,587 包含 37 笔交易，Blob gas 用量为 0。判断 Blob 需求需要观察后续区块。",
+        "Block 19,426,587 contains 37 transactions and consumed zero blob gas. Demand estimates require observations across subsequent blocks."
+      ],
+      "source": "Ethereum · Blockscout",
+      "sourceUrl": "https://eth.blockscout.com/api/v2/blocks/19426587",
+      "kind": "chain",
+      "availabilityBasis": "block_timestamp_reconstruction",
+      "eventPrecision": "second",
+      "blockHeight": 19426587,
+      "blockHash": "0xf8e2f40d98fe5862bc947c8c83d34799c50fb344d7445d020a8a946d891b62ee",
+      "metrics": {
+        "transactions": 37,
+        "blobGasUsed": 0
+      },
+      "facets": {
+        "5": [
+          "Ethereum 区块 19,426,587 · 0xf8e2f40d98fe5862bc947c8c83d34799c50fb344d7445d020a8a946d891b62ee",
+          "Ethereum block 19,426,587 · 0xf8e2f40d98fe5862bc947c8c83d34799c50fb344d7445d020a8a946d891b62ee"
+        ],
+        "7": [
+          "回放采用链上时间 2024-03-13 13:55:35 UTC；原始系统首次收到数据的时间未知。",
+          "Replay uses the on-chain time 2024-03-13 13:55:35 UTC. The original first-seen time is unknown."
+        ],
+        "13": [
+          "首块的 Blob gas 为 0。下一轮判断网络使用量时，在连续区块中统计 Blob gas 和有 Blob 的区块占比。",
+          "The first block used zero blob gas. For the next observation, measure blob gas and the share of blocks carrying blobs across a continuous window."
+        ]
+      }
+    },
+    {
+      "id": "chain/840000-bitcoin",
+      "scopeKeys": [
+        "coin:bitcoin"
+      ],
+      "nodes": [
+        0,
+        1,
+        4,
+        5,
+        7,
+        13
+      ],
+      "eventAt": "2024-04-20T00:09:27Z",
+      "knownAt": "2024-04-20T00:10:54Z",
+      "title": [
+        "第四次减半，矿工收入反升",
+        "Fees outweighed the fourth halving"
+      ],
+      "body": [
+        "补贴由 6.25 降到 3.125 BTC，但相邻两块的矿工实领从 7.29455386 升至 40.75061499 BTC。区块 840,000 的手续费贡献了 37.62561499 BTC。",
+        "The subsidy fell from 6.25 to 3.125 BTC. The miner payout rose from 7.29455386 BTC in block 839,999 to 40.75061499 BTC in block 840,000, including 37.62561499 BTC in fees."
+      ],
+      "source": "Bitcoin · Blockstream",
+      "sourceUrl": "https://blockstream.info/block/0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5",
+      "kind": "chain",
+      "availabilityBasis": "next_block_timestamp_reconstruction",
+      "eventPrecision": "second",
+      "references": [
+        {
+          "label": "Coinbase transaction",
+          "url": "https://blockstream.info/tx/a0db149ace545beabbd87a8d6b20ffd6aa3b5a50e58add49a3d435f898c272cf"
+        },
+        {
+          "label": "Next block header",
+          "url": "https://blockstream.info/block/00000000000000000001b48a75d5a3077913f3f441eb7e08c13c43f768db2463"
+        },
+        {
+          "label": "Previous coinbase transaction",
+          "url": "https://blockstream.info/tx/00ee8496ded6c91ec7e1850e24d047403f20f30c02af6a3cd8fb4b222828db68"
+        }
+      ],
+      "blockHeight": 840000,
+      "blockHash": "0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5",
+      "txHash": "a0db149ace545beabbd87a8d6b20ffd6aa3b5a50e58add49a3d435f898c272cf",
+      "metrics": {
+        "transactions": 3050,
+        "totalCoinbaseOutputsSat": 4075061499,
+        "subsidySat": 312500000,
+        "claimedFeesSat": 3762561499
+      },
+      "facets": {
+        "5": [
+          "Bitcoin 区块 840,000 · 0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5",
+          "Bitcoin block 840,000 · 0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5"
+        ],
+        "7": [
+          "区块时间为 2024-04-20 00:09:27 UTC。此回放取下一块引用该区块的区块头时间 2024-04-20 00:10:54 UTC 作为可引用截点。",
+          "Block timestamp: 2024-04-20 00:09:27 UTC. The replay cutoff uses the next block header referencing this block, at 2024-04-20 00:10:54 UTC."
+        ],
+        "13": [
+          "将相邻两块的 Coinbase 输出按补贴和手续费拆分。该样本解释矿工收入的变化，判断现货买盘还需交易场所的主动成交。",
+          "Separate subsidy and fees in each adjacent coinbase transaction. The pair explains miner payouts. Spot buying needs venue-level taker trades."
+        ]
+      }
+    },
+    {
+      "id": "chain/ton-tether-launch",
+      "scopeKeys": [
+        "coin:the-open-network"
+      ],
+      "nodes": [
+        1,
+        3,
+        4,
+        5,
+        10
+      ],
+      "eventAt": "2024-04-19T00:00:00Z",
+      "knownAt": "2024-04-20T12:00:00Z",
+      "title": [
+        "USD₮ 上线 TON",
+        "USD₮ launched on TON"
+      ],
+      "body": [
+        "Tether 于 4 月 19 日宣布 USD₮ 上线 TON。记录覆盖发行方确认的网络支持，原生 Toncoin 的买入量和池子深度仍需从各自市场取得。",
+        "On April 19 Tether announced USD₮ on TON. The announcement establishes network support. Native Toncoin purchases and pool depth require market-level observations."
+      ],
+      "source": "Tether",
+      "sourceUrl": "https://tether.io/news/tether-tokens-usdt-and-xaut-launch-on-the-open-network-ton/",
+      "kind": "chain",
+      "availabilityBasis": "published_date_upper_bound",
+      "eventPrecision": "day",
+      "facets": {
+        "3": [
+          "将 TON 上的 USD₮ 和原生 Toncoin 分开观察。若要评估发行后的使用情况，需按相同链和代币统计实际转账。",
+          "Track USD₮ on TON separately from native Toncoin. To measure post-launch usage, count transfers for the relevant chain and token."
+        ]
+      }
+    },
+    {
+      "id": "chain/cardano-conway-epoch-507",
+      "scopeKeys": [
+        "coin:cardano"
+      ],
+      "nodes": [
+        0,
+        1,
+        5,
+        7
+      ],
+      "eventAt": "2024-09-01T21:45:46Z",
+      "knownAt": "2024-09-01T21:45:46Z",
+      "title": [
+        "Cardano 进入 Conway 的 epoch 507",
+        "First block of Cardano’s Conway epoch 507"
+      ],
+      "body": [
+        "Koios 将 epoch 507 标记为 Conway。首个区块于 9 月 1 日 21:45:46 UTC 生成，提供新时期记录的起点。",
+        "Koios identifies epoch 507 as Conway. Its first block was produced on September 1 at 21:45:46 UTC, establishing an anchor for observations in the new era."
+      ],
+      "source": "Cardano · Koios",
+      "sourceUrl": "https://api.koios.rest/api/v1/epoch_info?_epoch_no=507",
+      "kind": "chain",
+      "availabilityBasis": "block_timestamp_reconstruction",
+      "eventPrecision": "second",
+      "epoch": 507,
+      "facets": {
+        "7": [
+          "回放采用链上时间 2024-09-01 21:45:46 UTC；原始系统首次收到数据的时间未知。",
+          "Replay uses the on-chain time 2024-09-01 21:45:46 UTC. The original first-seen time is unknown."
+        ]
+      }
+    },
+    {
+      "id": "chain/cardano-epoch-507-close",
+      "scopeKeys": [
+        "coin:cardano"
+      ],
+      "nodes": [
+        2,
+        4,
+        7,
+        13
+      ],
+      "eventAt": "2024-09-06T21:44:51Z",
+      "knownAt": "2024-09-06T21:44:51Z",
+      "title": [
+        "Conway 首个完整 epoch 的基线",
+        "A full-epoch baseline for Conway"
+      ],
+      "body": [
+        "epoch 507 结束时共收录 20,803 个区块、349,397 笔交易。比较活跃度时应选择同为完整 epoch 的窗口。",
+        "Epoch 507 closed with 20,803 blocks and 349,397 transactions. Use equally complete epochs when comparing activity."
+      ],
+      "source": "Cardano · Koios",
+      "sourceUrl": "https://api.koios.rest/api/v1/epoch_info?_epoch_no=507",
+      "kind": "review",
+      "availabilityBasis": "epoch_close_reconstruction",
+      "eventPrecision": "second",
+      "epoch": 507,
+      "metrics": {
+        "blocks": 20803,
+        "transactions": 349397
+      },
+      "facets": {
+        "7": [
+          "回放采用链上时间 2024-09-06 21:44:51 UTC；原始系统首次收到数据的时间未知。",
+          "Replay uses the on-chain time 2024-09-06 21:44:51 UTC. The original first-seen time is unknown."
+        ],
+        "13": [
+          "这个五天窗口的分母是 20,803 个区块，合计 349,397 笔交易，平均每块约 16.8 笔。",
+          "Across this five-day epoch, 349,397 transactions in 20,803 blocks averaged about 16.8 transactions per block."
+        ]
+      }
+    },
+    {
+      "id": "chain/bnb-29-burn-transfer",
+      "scopeKeys": [
+        "coin:binancecoin"
+      ],
+      "nodes": [
+        0,
+        1,
+        5,
+        7,
+        10
+      ],
+      "eventAt": "2024-11-01T06:14:02Z",
+      "knownAt": "2024-11-01T06:14:02Z",
+      "title": [
+        "BNB 销毁地址收到 177.27 万枚",
+        "1.77 million BNB sent to the burn address"
+      ],
+      "body": [
+        "BNB Smart Chain 区块 43,620,556 记录一笔 1,772,712.363 BNB 转往 0x000…dEaD。链上字段给出转账数量和去向，解析每项销毁构成还需发行方说明。",
+        "Block 43,620,556 records a transfer of 1,772,712.363 BNB to 0x000…dEaD. The transaction gives the amount and destination. Its component breakdown needs issuer evidence."
+      ],
+      "source": "BNB Smart Chain · BscScan",
+      "sourceUrl": "https://bscscan.com/tx/0x44df032bb1790ef26195d2b5a8a74b1ce03607ff627bbc02f096451b83250eae",
+      "kind": "chain",
+      "availabilityBasis": "block_timestamp_reconstruction",
+      "eventPrecision": "second",
+      "blockHeight": 43620556,
+      "blockHash": "0x68b868d99a8338bf21f142459f5af564809bd15b6cd9ff2bd5730ddaa5aad425",
+      "txHash": "0x44df032bb1790ef26195d2b5a8a74b1ce03607ff627bbc02f096451b83250eae",
+      "to": "0x000000000000000000000000000000000000dead",
+      "valueWei": "1772712363000000000000000",
+      "facets": {
+        "5": [
+          "BNB Smart Chain 区块 43,620,556 · 0x68b868d99a8338bf21f142459f5af564809bd15b6cd9ff2bd5730ddaa5aad425",
+          "BNB Smart Chain block 43,620,556 · 0x68b868d99a8338bf21f142459f5af564809bd15b6cd9ff2bd5730ddaa5aad425"
+        ],
+        "7": [
+          "回放采用链上时间 2024-11-01 06:14:02 UTC；原始系统首次收到数据的时间未知。",
+          "Replay uses the on-chain time 2024-11-01 06:14:02 UTC. The original first-seen time is unknown."
+        ],
+        "10": [
+          "交易 value 为 1,772,712.363 BNB，接收地址为 0x000…dEaD。该条公开记录覆盖一笔发送，无法归因到用户交易。",
+          "The value sent to 0x000…dEaD was 1,772,712.363 BNB. This public record covers one transfer and carries no user-trade attribution."
+        ]
+      }
+    },
+    {
+      "id": "chain/bnb-29-burn-breakdown",
+      "scopeKeys": [
+        "coin:binancecoin"
+      ],
+      "nodes": [
+        3,
+        4,
+        10,
+        13
+      ],
+      "eventAt": "2024-11-01T06:14:02Z",
+      "knownAt": "2024-11-01T07:38:20Z",
+      "title": [
+        "第 29 次 BNB 销毁的两项构成",
+        "Two components of the 29th BNB burn"
+      ],
+      "body": [
+        "BNB 基金会披露，常规销毁为 1,710,142.733 BNB，另有 62,569.63 BNB 属于 BToken 调整。分析常规销毁趋势时，须先剔除这项调整。",
+        "The foundation attributed 1,710,142.733 BNB to the regular burn and 62,569.63 BNB to a BToken adjustment. Isolate the adjustment before comparing recurring burns."
+      ],
+      "source": "BNB Foundation",
+      "sourceUrl": "https://www.bnbchain.org/en/blog/29th-bnb-burn",
+      "kind": "review",
+      "availabilityBasis": "publisher_timestamp",
+      "eventPrecision": "second",
+      "references": [
+        {
+          "label": "Burn transaction",
+          "url": "https://bscscan.com/tx/0x44df032bb1790ef26195d2b5a8a74b1ce03607ff627bbc02f096451b83250eae"
+        }
+      ],
+      "facets": {
+        "3": [
+          "比较常规销毁时使用 1,710,142.733 BNB；统计本次全部销毁时加上 62,569.63 BNB 的 BToken 调整。",
+          "Use 1,710,142.733 BNB for recurring-burn comparisons. Add the 62,569.63 BNB BToken adjustment when measuring the total burn."
+        ]
+      }
+    },
+    {
+      "id": "chain/sui-2024-stall",
+      "scopeKeys": [
+        "coin:sui"
+      ],
+      "nodes": [
+        1,
+        3,
+        4,
+        7,
+        13
+      ],
+      "eventAt": "2024-11-21T11:45:00Z",
+      "knownAt": "2024-11-21T20:56:28Z",
+      "title": [
+        "Sui 停止处理交易约 150 分钟",
+        "Sui transaction processing paused for ~150 minutes"
+      ],
+      "body": [
+        "Sui 公告回溯，11 月 21 日约 09:15–11:45 UTC 主网停止处理交易。回放该窗口时应标记链上交易不可用，交易所行情单独核查。",
+        "Sui’s incident report places the transaction-processing halt at approximately 09:15–11:45 UTC on November 21. Mark chain execution unavailable in that window and examine exchange quotes separately."
+      ],
+      "source": "Sui Foundation",
+      "sourceUrl": "https://www.sui.io/blog/sui-mainnet-outage-resolution",
+      "kind": "review",
+      "availabilityBasis": "publisher_timestamp",
+      "eventPrecision": "minute",
+      "facets": {
+        "7": [
+          "事件时间记录为 2024-11-21 11:45:00 UTC。来源在 2024-11-21 20:56:28 UTC 发布，相关复盘从发布时起可引用。",
+          "The event was dated 2024-11-21 11:45:00 UTC. Its source was published at 2024-11-21 20:56:28 UTC, when the review becomes eligible."
+        ],
+        "3": [
+          "约 150 分钟的停链区间单独标记。若用交易所成交价复盘，场所和时间需与链上执行窗口分列。",
+          "Mark the roughly 150-minute halt separately. For reviews using exchange fills, retain venue and time apart from the chain execution window."
+        ]
+      }
+    },
+    {
+      "id": "chain/avalanche-etna-schedule",
+      "scopeKeys": [
+        "coin:avalanche-2"
+      ],
+      "nodes": [
+        1,
+        3,
+        4,
+        5,
+        10
+      ],
+      "eventAt": "2024-12-02T22:26:05Z",
+      "knownAt": "2024-12-02T22:26:05Z",
+      "title": [
+        "Etna 公布 C 链费率下限",
+        "Etna scheduled a lower C-Chain fee floor"
+      ],
+      "body": [
+        "AvalancheGo v1.12.0 计划于 12 月 16 日 17:00 UTC 激活 Etna。ACP-125 将 C 链基础费下限从 25 调至 1 nAVAX，单笔成本仍由实际 gas 和费率决定。",
+        "AvalancheGo v1.12.0 scheduled Etna for December 16 at 17:00 UTC. ACP-125 lowers the C-Chain base fee floor from 25 to 1 nAVAX. Transaction cost still depends on gas and the effective price."
+      ],
+      "source": "AvalancheGo",
+      "sourceUrl": "https://github.com/ava-labs/avalanchego/releases/tag/v1.12.0",
+      "kind": "chain",
+      "availabilityBasis": "publisher_timestamp",
+      "eventPrecision": "second",
+      "facets": {
+        "3": [
+          "在公告窗口后核对主网 C 链区块的 baseFeePerGas；计算单笔交易成本，读取其 gasUsed 和 effectiveGasPrice。",
+          "After the scheduled window, verify C-Chain baseFeePerGas. To reconstruct a transaction’s cost, inspect its gasUsed and effectiveGasPrice."
+        ]
+      }
+    },
+    {
+      "id": "chain/ethereum-pectra-first",
+      "scopeKeys": [
+        "coin:ethereum"
+      ],
+      "nodes": [
+        0,
+        1,
+        5,
+        7,
+        13
+      ],
+      "eventAt": "2025-05-07T10:05:11Z",
+      "knownAt": "2025-05-07T10:05:11Z",
+      "title": [
+        "Pectra 激活区块",
+        "Pectra activation block"
+      ],
+      "body": [
+        "区块 22,431,084 记入 95 笔交易，使用 1,179,648 单位 Blob gas。此值只覆盖该区块，可与相同时长的历史窗口对照。",
+        "Block 22,431,084 contains 95 transactions and used 1,179,648 blob gas. This is one block of activity; comparisons need a matching observation window."
+      ],
+      "source": "Ethereum · Blockscout",
+      "sourceUrl": "https://eth.blockscout.com/api/v2/blocks/22431084",
+      "kind": "chain",
+      "availabilityBasis": "block_timestamp_reconstruction",
+      "eventPrecision": "second",
+      "blockHeight": 22431084,
+      "blockHash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+      "metrics": {
+        "transactions": 95,
+        "blobGasUsed": 1179648
+      },
+      "facets": {
+        "5": [
+          "Ethereum 区块 22,431,084 · 0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+          "Ethereum block 22,431,084 · 0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8"
+        ],
+        "7": [
+          "回放采用链上时间 2025-05-07 10:05:11 UTC；原始系统首次收到数据的时间未知。",
+          "Replay uses the on-chain time 2025-05-07 10:05:11 UTC. The original first-seen time is unknown."
+        ],
+        "13": [
+          "这份基线只覆盖 1 个区块、95 笔交易。要评估升级后的持续需求，需选择前后等长的区块窗口。",
+          "This baseline covers one block and 95 transactions. Assessing persistent post-upgrade demand requires equal-length windows around activation."
+        ]
+      }
+    },
+    {
+      "id": "chain/sui-2026-stall",
+      "scopeKeys": [
+        "coin:sui"
+      ],
+      "nodes": [
+        3,
+        4,
+        7,
+        10,
+        13
+      ],
+      "eventAt": "2026-01-14T00:00:00Z",
+      "knownAt": "2026-01-15T21:38:45Z",
+      "title": [
+        "RPC 可读时，交易仍会超时",
+        "RPC reads continued during a write outage"
+      ],
+      "body": [
+        "1 月 14 日的主网停滞持续约 6 小时。RPC 可返回最近已认证的状态，写入却会超时。复盘时应核对检查点是否推进以及实际交易回执。",
+        "The January 14 mainnet stall lasted around six hours. RPCs served the last certified state while writes timed out. Review checkpoint progression and actual transaction receipts before attributing fills."
+      ],
+      "source": "Sui Foundation",
+      "sourceUrl": "https://www.sui.io/blog/sui-mainnet-network-stall-resolution",
+      "kind": "review",
+      "availabilityBasis": "publisher_timestamp",
+      "eventPrecision": "day",
+      "facets": {
+        "7": [
+          "事件时间记录为 2026-01-14。来源在 2026-01-15 21:38:45 UTC 发布，相关复盘从发布时起可引用。",
+          "The event was dated 2026-01-14. Its source was published at 2026-01-15 21:38:45 UTC, when the review becomes eligible."
+        ],
+        "3": [
+          "验证写入能力时，同时检查最新认证检查点的时间和交易状态。RPC 响应成功只能确认读取路径。",
+          "Check both the timestamp of the latest certified checkpoint and transaction status to assess write availability. A successful RPC read verifies the read path."
+        ]
+      }
+    }
+  ]
+}

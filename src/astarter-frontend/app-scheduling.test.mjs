@@ -26,9 +26,11 @@ test('all six data channels retain their own patrol while Spectrum, navigation a
   const motion={dispose(){disposals++;}},pocket={remove(){removals++;}};
   const courier={dispose(){courierDisposals++;}};
   const patrol={dispose(){patrolDisposals++;}};
-  const context={page,DATA_PAGES,location:{search},URLSearchParams,petContext:sameRoute?page+search:'previous',petEnabled:enabled,petMotion:existing?motion:null,newsCourier:courier,newsPilot:false,newsMotionEnabled:dataEnabled,signalMotionEnabled:signalEnabled,signalCourier:patrol,
+  let stopped=0;
+  const context={stopBriefFeed(){stopped++;},petOpen:true,page,DATA_PAGES,location:{search},URLSearchParams,petContext:sameRoute?page+search:'previous',petEnabled:enabled,petMotion:existing?motion:null,newsCourier:courier,newsPilot:false,newsMotionEnabled:dataEnabled,signalMotionEnabled:signalEnabled,signalCourier:patrol,
    root:{querySelector:()=>hasContent?pocket:null},document:{getElementById:id=>{assert.equal(id,'hive-mascot');return existing?pocket:null;}}};
   runInNewContext(gate,context);
+  assert.equal(stopped,removed?1:0);
   assert.equal(disposals,removed&&existing?1:0);assert.equal(removals,removed&&existing?1:0);
   assert.equal(context.petMotion,removed?null:motion);assert.equal(context.petEnabled,enabled,'page navigation must not change the saved assistant preference');
   const activeData=DATA_PAGES.includes(page)&&enabled&&dataEnabled&&sameRoute&&hasContent;

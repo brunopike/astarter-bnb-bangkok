@@ -1,9 +1,10 @@
-import {EXCHANGE_OPERATIONS,readAssistantQuotes,cleanAssistantQuote} from './assistant-exchange-data.mjs';
+import {EXCHANGE_OPERATIONS} from './assistant-exchange-data.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {captureMarketWindow} from './trading-chart-data.mjs';
-import {analyzeBars,extractMaterial,addSource,normalizeChatStore,questionTopic,questionLanguage,questionQuoteSymbols,technicalIntent,CHAT_LIMITS,BINANCE_AGENT_OS,ASSISTANT_TOOLSETS,normalizeResearchConfig,researchAssets,researchRange,researchDate,RESEARCH_AS_OF,buildResearchReport,normalizeResearchReport,technicalContext,cleanSharedOutput,encodeSharedOutput,decodeSharedOutput,sharedOutputURL,socialDraft} from './assistant-analysis.mjs';
-import {withLocale} from './locale.mjs';import {assistantBars,createTradingAssistant} from './trading-assistant.mjs';
+import {analyzeBars,extractMaterial,addSource,normalizeChatStore,questionTopic,questionLanguage,technicalIntent,CHAT_LIMITS,BINANCE_AGENT_OS,ASSISTANT_TOOLSETS,normalizeResearchConfig,researchAssets,researchRange,researchDate,RESEARCH_AS_OF,buildResearchReport,normalizeResearchReport,technicalContext,cleanSharedOutput,encodeSharedOutput,decodeSharedOutput,sharedOutputURL,socialDraft} from './assistant-analysis.mjs';
+import {withLocale} from './locale.mjs';
+import {assistantBars,createTradingAssistant} from './trading-assistant.mjs';
 import {MARKET} from './data-center-fixtures.mjs';
 const bars=values=>values.map((close,i)=>({open:i?values[i-1]:close,close,high:Math.max(close,i?values[i-1]:close)+1,low:Math.min(close,i?values[i-1]:close)-1,time:i*3600000}));
 test('saved market analysis preserves its real source, period and exact OHLCV window',()=>{
@@ -24,78 +25,16 @@ test('current crypto analysis without a ready chart cannot bill or replace a sav
   assert.equal(billed,0);assert.equal(JSON.parse(storage.get(key)).threads[0].turns.length,0);assert.equal(notices.length,1);
  }finally{for(const [k,v]of Object.entries(saved)){if(v===undefined)delete globalThis[k];else globalThis[k]=v;}}
 });
-test('analyzing historical bars delivers a free example and retains the earlier record',async()=>{
- const saved={document:globalThis.document,localStorage:globalThis.localStorage},storage=new Map(),nodes=new Map(),input={value:'Read this window',focus(){}},key='hive.trading-assistant.v1';
+test('cancelling an analysis quote keeps the current chart and unsent question open',async()=>{
+ const saved={document:globalThis.document,localStorage:globalThis.localStorage},storage=new Map(),nodes=new Map(),input={value:'Read this window'},key='hive.trading-assistant.v1';
  const node=s=>{if(!nodes.has(s))nodes.set(s,{addEventListener(type,fn){this[type]=fn;}});return nodes.get(s);};
  const root={querySelector:s=>s==='[data-chat-input]'?input:s==='[data-trading-chart="assistant-market"]'?null:s==='[data-chart="assistant-window"]'?{dataset:{rangeStart:'10',visibleCount:'30'}}:s==='.chat-feed'?{scrollTop:0}:s==='.chat-turn:last-child'?null:node(s),querySelectorAll:()=>[]};
  const sample=assistantBars(MARKET.find(a=>a.symbol==='XAU')).slice(-30),previous={id:'old',mode:'technical',question:'Earlier analysis',technical:{...analyzeBars(sample),asset:'XAU',period:'1H',bars:sample}};
  storage.set(key,JSON.stringify({schema:1,active:'T',threads:[{id:'T',mode:'technical',asset:'XAU',period:'1H',chartOpen:true,turns:[previous]}]}));
  try{globalThis.document={addEventListener(){}};globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
-  const assistant=createTradingAssistant({root,refresh(){},go(){},notify(){},context:()=>({}),account:{s:{scopeType:'personal',tasks:[]},subscribe(){},runTask(){assert.fail('Historical bars must not request a quote');}}});assistant.bind();await node('[data-chat-analyze]').click();
-  const thread=JSON.parse(storage.get(key)).threads[0],last=thread.turns.at(-1);
-  assert.equal(thread.turns.length,2);assert.equal(thread.turns[0].id,'old');assert.equal(last.technical.clockKind,'historical');assert.equal(last.technical.count,30);
-  assert.equal(last.billingJob,undefined);assert.match(assistant.render(),/免费历史示例|Free historical example/);assert.match(assistant.render(),/Read this window/);
+  const assistant=createTradingAssistant({root,refresh(){},go(){},notify(){},context:()=>({}),account:{s:{scopeType:'personal',tasks:[]},subscribe(){},async runTask(){return null;}}});assistant.bind();await node('[data-chat-analyze]').click();
+  assert.match(assistant.render(),/data-chat-analyze/);assert.match(assistant.render(),/Read this window/);assert.equal(JSON.parse(storage.get(key)).threads[0].turns.length,1);
  }finally{for(const [k,v]of Object.entries(saved)){if(v===undefined)delete globalThis[k];else globalThis[k]=v;}}
-});
-test('public quote snapshots check the exact instrument and source time independently of relay receipt time',async()=>{
- const now=1_800_000_000_000,receivedAt=now-50,asOf=now-6000,at=()=>now;
- const ticker=(symbol,closeTime)=>({symbol,lastPrice:'101',openPrice:'100',quoteVolume:'1000',closeTime});
- const responses={tickers:[ticker('BTCUSDT',now-3600000),ticker('ETHUSDT',asOf),ticker('DOGEUSDT',asOf)],
-  'gold-spot':{source:'Gold API',symbol:'XAU',currency:'USD',unit:'USD/troy oz',price:1200,asOf}};
- const calls=[];
- const fetchImpl=async(url,init)=>{
-  calls.push(url);assert.equal(init.method,'GET');assert.equal(init.credentials,'omit');assert.ok(init.signal);
-  const resource=new URL(url,'http://localhost').searchParams.get('resource');
-  return Response.json({schema:'public-market-relay-v1',resource,receivedAt,body:responses[resource]});
- };
- const [eth,btc,sol,gold]=await readAssistantQuotes(['ETH','BTC','SOL','XAU'],{fetchImpl,now:at});
- assert.deepEqual(calls.sort(),['/api/market-hub?resource=gold-spot','/api/market-hub?resource=tickers']);
- assert.equal(eth.state,'observed');assert.equal(eth.market,'ETH/USDT');assert.equal(eth.source,'Binance Spot');assert.equal(eth.price,101);assert.equal(eth.asOf,asOf);
- assert.equal(btc.state,'stale');assert.equal(btc.price,undefined);assert.equal(btc.asOf,now-3600000);assert.equal(sol.state,'unavailable');
- assert.equal(gold.market,'XAU/USD');assert.equal(gold.asOf,asOf);assert.equal(gold.unit,'USD/troy oz');
- assert.equal(cleanAssistantQuote({...eth,market:'BTC/USDT'}).state,'unavailable');
- assert.equal(cleanAssistantQuote({...eth,source:'Example'}).state,'unavailable');
- const [offline]=await readAssistantQuotes(['ETH'],{now:at,fetchImpl:async()=>new Response(null,{status:503})});
- assert.deepEqual(offline,{symbol:'ETH',state:'unavailable'});
- const controller=new AbortController(),hung=readAssistantQuotes(['ETH'],{now:at,signal:controller.signal,fetchImpl:async()=>({ok:true,text:()=>new Promise(()=>{})})});
- await Promise.resolve();controller.abort();assert.deepEqual(await hung,[offline]);
-});
-test('ordinary chat delivers free examples and current quotes through the composer, and restores the original price and time',async t=>{
- const storage=new Map(),nodes=new Map(),key='hive.trading-assistant.v1',input={value:'',focus(){}};
- const saved={document:globalThis.document,localStorage:globalThis.localStorage};
- t.after(()=>{for(const [k,v]of Object.entries(saved)){if(v===undefined)delete globalThis[k];else globalThis[k]=v;}});
- globalThis.document={body:{dataset:{page:'assistant'}},addEventListener(){},querySelector(){return null;}};
- globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
- const root={
-  querySelector(s){
-   if(s==='[data-chat-input]')return input;
-   if(['.chat-feed','.chat-turn:last-child','[data-chart="assistant-window"]'].includes(s))return null;
-   if(!nodes.has(s))nodes.set(s,{focus(){},addEventListener(){}});
-   return nodes.get(s);
-  },
-  querySelectorAll:()=>[]
- };
- let billings=0;const calls=[],sourceAt=Date.now()-4500;
- t.mock.method(globalThis,'fetch',async(url,init)=>{
-  calls.push(url);assert.equal(init.credentials,'omit');
-  return Response.json({schema:'public-market-relay-v1',resource:'tickers',receivedAt:Date.now(),body:[{symbol:'ETHUSDT',lastPrice:'2501',openPrice:'2500',quoteVolume:'30000',closeTime:sourceAt}]});
- });
- const options={root,account:{s:{scopeType:'personal',tasks:[]},subscribe(){},runTask(){billings++;}},refresh(){},go(){},notify(){},context:()=>({})};
- const assistant=createTradingAssistant(options);
- const ask=async text=>{assistant.bind();input.value=text;input.oninput();await root.querySelector('.chat-composer').onsubmit({preventDefault(){}});};
- const read=()=>JSON.parse(storage.get(key)).threads[0].turns;
- await ask('你好');await ask('限价单和市价单有什么区别？');
- assert.equal(calls.length,0);assert.match(assistant.render(),/免费示例|Free example/);assert.doesNotMatch(assistant.render(),/2026-10-24/);
- await ask('以太坊现在市价多少？');
- assert.deepEqual(calls,['/api/market-hub?resource=tickers']);assert.equal(billings,0);assert.ok(read().every(t=>!t.billingJob));
- const quote=read().at(-1).quotes[0];assert.equal(quote.symbol,'ETH');assert.equal(quote.asOf,sourceAt);assert.equal(quote.price,2501);
- const fresh=createTradingAssistant(options).render();
- assert.match(fresh,/ETH\/USDT/);assert.match(fresh,/Binance Spot/);assert.match(fresh,/2,501.00 USDT/);assert.match(fresh,/来源时间|Source time/);assert.doesNotMatch(fresh,/2026-10-24/);
- assert.equal(calls.length,1);
- await ask('SOL/USDT 现在多少钱？');
- const missed=read().at(-1);assert.deepEqual(missed.quotes,[{symbol:'SOL',state:'unavailable'}]);assert.ok(!missed.billingJob);
- assert.match(assistant.render(),/没有返回这个标的的有效报价|no verified quote/);assert.equal(billings,0);
- assert.deepEqual(questionQuoteSymbols('市场行情怎么样？'),['BTC','ETH','SOL']);assert.deepEqual(questionQuoteSymbols('ETH/USDC 现价？'),[]);assert.deepEqual(questionQuoteSymbols('BTCUSDT 走势与风险？','risk'),['BTC']);
 });
 test('technical summary uses exactly the selected candles, including flat RSI and open-to-close return',()=>{
  const all=bars(Array.from({length:40},(_,i)=>100+i)),r=analyzeBars(all.slice(10,30));
@@ -230,7 +169,7 @@ test('composer tools and exchange shortcuts preserve the draft, sources and sele
  const node=key=>{if(!nodes.has(key))nodes.set(key,{events:{},isConnected:true,dataset:{},style:{},attributes:{},setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];},matches(){return !!this.popoverOpen;},showPopover(){this.popoverOpen=true;},hidePopover(){this.onbeforetoggle?.({newState:'closed'});this.popoverOpen=false;},getBoundingClientRect(){return {left:16,top:650,bottom:694};},querySelectorAll(s){return s==='[data-chat-capability]'?EXCHANGE_OPERATIONS.map(id=>Object.assign(node('capability-'+id),{dataset:{chatCapability:id}})):[];},value:key==='[data-exchange-asset]'?'BTC':'1H',focus(){this.focused=true;},reset(){},replaceChildren(){this.innerHTML='';},querySelector:node,addEventListener(type,fn){this.events[type]=fn;}});return nodes.get(key);};
  const viewport=Object.assign(new EventTarget(),{width:390,height:844,offsetLeft:0,offsetTop:0});
  const pickerWindow=Object.assign(new EventTarget(),{innerWidth:390,innerHeight:844,visualViewport:viewport});
- const shortcuts=['binance','okx'].map(id=>Object.assign(node('shortcut-'+id),{dataset:{chatExchange:id},ownerDocument:{defaultView:pickerWindow}})),ops=['market','orderbook','candles','funding','analysis','account','positions','fills'].map(id=>({dataset:{exchangeOperation:id},setAttribute(){}}));
+ const shortcuts=ASSISTANT_TOOLSETS.filter(toolset=>toolset.exchange).map(toolset=>toolset.brand).map(id=>Object.assign(node('shortcut-'+id),{dataset:{chatExchange:id},ownerDocument:{defaultView:pickerWindow}})),ops=['market','orderbook','candles','funding','analysis','account','positions','fills'].map(id=>({dataset:{exchangeOperation:id},setAttribute(){}}));
  const root={querySelector:s=>s==='[data-chat-input]'?input:s==='.chat-feed'||s==='.chat-turn:last-child'||s==='[data-chart="assistant-window"]'?null:node(s),querySelectorAll:s=>s==='[data-chat-exchange]'?shortcuts:[]};
  storage.set('hive.trading-assistant.v1',JSON.stringify({schema:1,active:'one',threads:[{id:'one',draft:input.value,mode:'ask',providerTask:'account',sources:[source],turns:[]}]}));
  const read=()=>JSON.parse(storage.get('hive.trading-assistant.v1')).threads[0];
@@ -240,11 +179,11 @@ test('composer tools and exchange shortcuts preserve the draft, sources and sele
   globalThis.fetch=()=>{externalCalls++;throw Error('No external call is authorized');};
   const assistant=createTradingAssistant({root,account:{s:{scopeType:"personal",tasks:[]},subscribe(){},async runTask(){billingCalls++;throw Error("Tool data must not enter billing");}},refresh(){},go(){},notify(){},context:()=>({available:600})});assistant.bind();
   const html=assistant.render();assert.match(html,/data-chat-tools aria-label="打开工具"|data-chat-tools aria-label="Open tools"/);assert.doesNotMatch(html,/>Agent OS<\/span>/);
-  const composerStart=html.indexOf('<form class="chat-composer">'),composerEnd=html.indexOf('</form>',composerStart),shelfStart=html.indexOf('class="chat-input-tools');assert.ok(shelfStart>composerEnd);const shelf=html.slice(shelfStart);assert.match(shelf,/data-chat-exchange="binance"/);assert.match(shelf,/data-chat-exchange="okx"/);assert.match(shelf,/popover="auto"/);assert.equal((html.match(/data-chat-tools /g)||[]).length,1);assert.doesNotMatch(html.slice(0,html.indexOf('</header>')),/data-chat-tools/);
+  const composerStart=html.indexOf('<form class="chat-composer">'),composerEnd=html.indexOf('</form>',composerStart),shelfStart=html.indexOf('class="chat-input-tools');assert.ok(shelfStart>composerEnd);const shelf=html.slice(shelfStart);assert.match(shelf,/data-chat-exchange="binance"/);assert.doesNotMatch(shelf,/data-chat-exchange="okx"/);assert.match(shelf,/popover="auto"/);assert.equal((html.match(/data-chat-tools /g)||[]).length,1);assert.doesNotMatch(html.slice(0,html.indexOf('</header>')),/data-chat-tools/);
   node('[data-chat-tools]').events.click();assert.equal(dialogs[0].open,true);
   assert.equal((dialogs[0].innerHTML.match(/ disabled/g)||[]).length,0);
-  assert.match(dialogs[0].innerHTML,/data-chat-toolset="binance-agent-os"/);assert.match(dialogs[0].innerHTML,/data-chat-toolset="okx-agent-trade-kit"/);
-  assert.equal(ASSISTANT_TOOLSETS.filter(t=>t.exchange).length,2);assert.ok(tasks.every(t=>typeof t.onclick==='function'));
+  assert.match(dialogs[0].innerHTML,/data-chat-toolset="binance-agent-os"/);assert.doesNotMatch(dialogs[0].innerHTML,/okx-agent-trade-kit|>OKX</);
+  assert.deepEqual(ASSISTANT_TOOLSETS.map(t=>t.id),['workspace','binance-agent-os']);assert.ok(tasks.every(t=>typeof t.onclick==='function'));
   assert.doesNotMatch(html,/data-chat-return|data-chat-export/);
   assert.equal(read().providerTask,'account');assert.equal(read().turns.length,0);
   const chart=tasks.find(t=>t.dataset.chatTool==='technical');chart.dataset.chatToolset='binance-agent-os';chart.onclick();assert.equal(read().mode,'ask');assert.equal(dialogs[0].open,true);chart.dataset.chatToolset='workspace';chart.onclick();
@@ -252,21 +191,22 @@ test('composer tools and exchange shortcuts preserve the draft, sources and sele
   assistant.bind();node('[data-chat-tools]').events.click();tasks.find(t=>t.dataset.chatTool==='material').onclick();thread=read();assert.equal(thread.mode,'material');assert.equal(thread.reportOpen,true);assert.equal(thread.draft,input.value);assert.deepEqual(thread.sources,[source]);assert.equal(thread.turns.length,0);
   assistant.bind();node('[data-chat-tools]').events.click();tasks.find(t=>t.dataset.chatTool==='sources').onclick();assert.equal(dialogs[0].open,false);assert.equal(dialogs[1].open,true);assert.match(dialogs[1].innerHTML,/chat-excerpt-form/);assert.equal(read().draft,input.value);assert.equal(read().turns.length,0);assert.equal(externalCalls,0);
   dialogs[1].close();assert.match(assistant.render(),/chat-report-tools/);
-  globalThis.fetch=async path=>{externalCalls++;const url=new URL(path,'http://localhost'),provider=url.pathname.split('/')[4];
-   if(url.pathname.endsWith('/status'))return Response.json({provider,connected:false});
-   assert.ok(url.pathname.endsWith('/market'));return Response.json({provider,operation:'market',asset:'BTC',period:'1H',market:provider==='okx'?'BTC-USDT':'BTCUSDT',unit:'USDT',asOf:1000,private:false,rows:[{last:100,changePct:1,high:110,low:90,volume:2,quoteVolume:200}]});
+  const exchangePaths=[];
+  globalThis.fetch=async path=>{externalCalls++;const url=new URL(path,'http://localhost'),provider=url.pathname.split('/')[4];exchangePaths.push(url.pathname);
+   assert.equal(provider,'binance');if(url.pathname.endsWith('/status'))return Response.json({provider,connected:false});
+   assert.ok(url.pathname.endsWith('/market'));return Response.json({provider,operation:'market',asset:'BTC',period:'1H',market:'BTCUSDT',unit:'USDT',asOf:1000,private:false,rows:[{last:100,changePct:1,high:110,low:90,volume:2,quoteVolume:200}]});
   };
   for(const shortcut of shortcuts){
    const beforeCalls=externalCalls;shortcut.onclick();const picker=node('#chat-exchange-picker');assert.equal(picker.popoverOpen,true);assert.equal(externalCalls,beforeCalls);
    assert.equal((picker.innerHTML.match(/data-chat-capability=/g)||[]).length,8);assert.ok(node('capability-market').focused);
    node('capability-market').onclick();assert.equal(picker.popoverOpen,false);assert.match(assistant.render(),/data-chat-tool-clear/);assert.match(assistant.render(),/Fetch selected tool data|获取所选工具数据/);
    assistant.bind();await node('.chat-composer').onsubmit({preventDefault(){}});for(let i=0;i<6;i++)await new Promise(r=>setImmediate(r));
-   assert.match(node('[data-exchange-output]').innerHTML,new RegExp(shortcut.dataset.chatExchange==='okx'?'OKX · BTC-USDT':'Binance · BTCUSDT'));
+   assert.match(node('[data-exchange-output]').innerHTML,/Binance · BTCUSDT/);
    dialogs[0].close();assert.ok(node('.chat-send').focused);assert.equal(read().mode,'ask');assert.equal(read().draft,input.value);assert.deepEqual(read().sources,[source]);assert.equal(read().turns.length,0);
    node('[data-chat-tool-clear]').events.click();assert.doesNotMatch(assistant.render(),/class="chat-tool-selection"/);
   }
   await t.test('an open capability picker follows the visible viewport and Escape restores its trigger',()=>{
-   const picker=node('#chat-exchange-picker'),shortcut=shortcuts[1];let anchorTop=650;
+   const picker=node('#chat-exchange-picker'),shortcut=shortcuts[0];let anchorTop=650;
    shortcut.getBoundingClientRect=()=>({left:210,top:anchorTop,bottom:anchorTop+44});
    shortcut.onclick();
    Object.assign(pickerWindow,{innerWidth:844,innerHeight:390});Object.assign(viewport,{width:844,height:390});anchorTop=280;
@@ -283,7 +223,7 @@ test('composer tools and exchange shortcuts preserve the draft, sources and sele
    const closedStyle={...picker.style};anchorTop=400;pickerWindow.dispatchEvent(new Event('resize'));
    assert.deepEqual(picker.style,closedStyle);
   });
-  assert.equal(externalCalls,4);assert.equal(billingCalls,0);
+  assert.deepEqual(exchangePaths,['/api/assistant/exchanges/binance/status','/api/assistant/exchanges/binance/market']);assert.equal(billingCalls,0);
  }finally{for(const [key,value]of Object.entries(saved)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
 });
 
@@ -351,15 +291,13 @@ test('report generation needs no attachment, and technical follow-ups reuse a fr
  try{
   globalThis.document={addEventListener(){}};globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
   const initial={schema:1,active:'one',threads:[{id:'one',turns:[],mode:'material',asset:'XAU',research:{assets:['ETH']}}]};storage.set('hive.trading-assistant.v1',JSON.stringify(initial));
-  let charged=0;const account={s:{scopeType:'personal',tasks:[]},subscribe(){},runTask(){charged++;}};
-  let assistant=createTradingAssistant({account,root,refresh(){},go(){},notify(){},context:()=>({})});assistant.bind();node('[data-report-generate]').events.click();
+  let assistant=createTradingAssistant({root,refresh(){},go(){},notify(){},context:()=>({})});assistant.bind();node('[data-report-generate]').events.click();
   let thread=JSON.parse(storage.get('hive.trading-assistant.v1')).threads[0];assert.equal(thread.turns[0].report.rows[0].asset,'ETH');assert.equal(thread.turns[0].sources.length,0);assert.equal(thread.reportOpen,false);assert.equal(thread.turns[0].generatedQuestion,true);assert.doesNotMatch(assistant.render(),/class="chat-user"/);
-  assert.match(assistant.render(),/免费历史示例|Free historical example/);assert.match(assistant.render(),/2026-10-24 14:00/);assert.equal(thread.turns[0].billingJob,undefined);
-  thread.mode='technical';thread.chartOpen=true;storage.set('hive.trading-assistant.v1',JSON.stringify({schema:1,active:'one',threads:[thread]}));assistant=createTradingAssistant({account,root,refresh(){},go(){},notify(){},context:()=>({})});assistant.bind();node('[data-chat-analyze]').events.click();
+  thread.mode='technical';thread.chartOpen=true;storage.set('hive.trading-assistant.v1',JSON.stringify({schema:1,active:'one',threads:[thread]}));assistant=createTradingAssistant({root,refresh(){},go(){},notify(){},context:()=>({})});assistant.bind();node('[data-chat-analyze]').events.click();
   thread=JSON.parse(storage.get('hive.trading-assistant.v1')).threads[0];const first=thread.turns.at(-1).technical;assert.equal(thread.chartOpen,false);
   chart.dataset.rangeStart='50';input.value='这段行情有什么风险？';assistant.bind();input.oninput();node('.chat-composer').onsubmit({preventDefault(){}});
   thread=JSON.parse(storage.get('hive.trading-assistant.v1')).threads[0];assert.equal(thread.turns.at(-1).followup,true);assert.equal(thread.turns.at(-1).technical.start,first.start);assert.equal(thread.turns.at(-1).technical.end,first.end);
-  assistant.bind();node('[data-chat-change-window]').events.click();input.value='';assistant.bind();node('[data-chat-analyze]').events.click();thread=JSON.parse(storage.get('hive.trading-assistant.v1')).threads[0];assert.equal(thread.turns.at(-1).followup,false);assert.notEqual(thread.turns.at(-1).technical.start,first.start);assert.equal(charged,0);
+  assistant.bind();node('[data-chat-change-window]').events.click();input.value='';assistant.bind();node('[data-chat-analyze]').events.click();thread=JSON.parse(storage.get('hive.trading-assistant.v1')).threads[0];assert.equal(thread.turns.at(-1).followup,false);assert.notEqual(thread.turns.at(-1).technical.start,first.start);
  }finally{for(const [key,value]of Object.entries(saved)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
 });
 
@@ -519,9 +457,7 @@ test('undelivered analyses expose status recovery and cannot be shared or billed
   globalThis.document={body:{dataset:{page:'signals'}},querySelector(){return null;},addEventListener(){}};
   for(const status of ['reserved','unknown','failed','cancelled','complete']){
    const storage=new Map(),nodes=new Map(),input={value:'RSI momentum?',focus(){}},feed={scrollTop:0};let quoted=0;
-   const now=Math.floor(Date.now()/3600000)*3600000,values=Array.from({length:40},(_,i)=>({time:now/1000-(40-i)*3600,open:100+i,close:101+i,high:102+i,low:99+i,volume:10}));
-   const snap=captureMarketWindow({market:'BTC/USDT',period:'1H'},values,{from:0,to:39},{state:'live',asOf:now},now);
-   const technical={...snap,...analyzeBars(snap.bars),asset:'BTC'};
+   const technical={...analyzeBars(assistantBars(MARKET[0]).slice(-40)),asset:'BTC',period:'1H'};
    storage.set('hive.trading-assistant.v1',JSON.stringify({schema:1,active:'one',threads:[{id:'one',mode:'technical',chartOpen:false,asset:'BTC',period:'1H',turns:[{id:'turn',mode:'technical',question:'Read this move',billingJob:'job',technical}]}]}));
    globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
    const node=key=>{if(!nodes.has(key))nodes.set(key,{focus(){},addEventListener(){}});return nodes.get(key);};
@@ -529,14 +465,7 @@ test('undelivered analyses expose status recovery and cannot be shared or billed
    const account={scope:'',s:{scopeType:'personal',tasks:[{id:'job',status,settled:88}]},subscribe(){},runTask:async()=>{quoted++;return null;}};
    const assistant=createTradingAssistant({root,account,refresh(){},go(){},notify(){},context:()=>({})});
    const html=assistant.render();assistant.bind();await Promise.resolve();
-   if(status==='complete'){
-    assert.match(html,/88 Credit/);assert.match(html,/data-chat-share=/);assert.match(html,/data-chat-followup=/);
-    await input.onkeydown({key:'Enter',preventDefault(){}});
-    const [previous,followup]=JSON.parse(storage.get('hive.trading-assistant.v1')).threads[0].turns;
-    assert.equal(previous.billingJob,'job');assert.equal(followup.followup,true);assert.equal(followup.technical.clockKind,'wall');
-    assert.deepEqual(followup.technical.bars,technical.bars);assert.equal(followup.billingJob,undefined);assert.equal(quoted,0);
-    assert.match(assistant.render(),/本地指标计算|Locally calculated indicators/);
-   }
+   if(status==='complete'){assert.match(html,/data-chat-share=/);assert.match(html,/data-chat-followup=/);}
    else{assert.doesNotMatch(html,/data-chat-share=|data-chat-followup=/);if(['reserved','unknown'].includes(status))assert.match(html,/chat-task-status/);input.onkeydown({key:'Enter',preventDefault(){}});await Promise.resolve();assert.equal(quoted,0);assert.equal(JSON.parse(storage.get('hive.trading-assistant.v1')).threads[0].turns.length,1);}
   }
  }finally{for(const [key,value]of Object.entries(saved)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
@@ -645,8 +574,8 @@ test('a news headline attached as an assistant source is shown as text',async()=
  assert.ok(html.includes(`<summary data-no-translate>${r4Escape(title)}</summary>`));assert.ok(html.includes(`<p data-no-translate>${r4Escape(text)}</p>`));
 });
 
-// Reconstruct an older paid conversation with the fixture ledger's quote, reservation, settlement and cancellation.
-// Opening it in today's assistant or analyzing its saved XAU candles must never start another paid task.
+// R4 steps 2 and 4 on the local simulation: a paid chart conversation on the local ledger fixture (no model, network or paid call).
+// Turn 1 analyses an XAU 4H window (M1), turn 2 is a settled follow-up (Q1), turn 3 is a follow-up cancelled before it settles.
 async function r4PaidChat(t){
  const {commerceFixture}=await import('./commerce-test-fixture.mjs'),previous={document:globalThis.document,localStorage:globalThis.localStorage};
  t.after(()=>{for(const [name,value]of Object.entries(previous)){if(value===undefined)delete globalThis[name];else globalThis[name]=value;}});
@@ -661,39 +590,20 @@ async function r4PaidChat(t){
  const open=()=>{const before=new Set(f.account.listeners),assistant=createTradingAssistant({root,account:f.account,refresh(){},go(){},notify:text=>notices.push(text),context:()=>({available:f.account.available,reserved:f.account.reserved,spent:f.account.spent})});listeners=[...f.account.listeners].filter(fn=>!before.has(fn));return assistant;};
  const ask=async(assistant,question)=>{input.value=question;assistant.bind();input.oninput();node('.chat-composer').onsubmit({preventDefault(){}});await settle();};
  const saved=()=>JSON.parse(storage.get(key)).threads.find(item=>item.id===thread);
- const bars=assistantBars(MARKET.find(asset=>asset.symbol==='XAU'),'4H').slice(10,40);
- const technical={...analyzeBars(bars),asset:'XAU',period:'4H',bars,clockKind:'historical',provider:'Astarter fixed historical example'};
- const history=[];
- async function historicalTask(profile,question){
-  const turn={id:crypto.randomUUID(),mode:'technical',question,topic:questionTopic(question),sources:[],
-   technical,marketContext:technicalContext(technical),followup:history.length>0};
-  const request={profile,input:{title:question,source:'assistant',threadId:thread,turn,assets:['XAU'],bars:bars.length}};
-  const quote=await f.account.command('quote',request);
-  const job=await f.account.command('job-start',{quote:quote.id});
-  history.push({...turn,billingJob:job.id});
-  storage.set(key,JSON.stringify({schema:1,active:thread,threads:[{id:thread,mode:'technical',asset:'XAU',
-   period:'4H',chartOpen:false,turns:history}]}));
-  return job.id;
- }
- function closeBrowser(){for(const fn of listeners)f.account.listeners.delete(fn);storage=new Map();}
- await historicalTask('M1','Read this XAU window');
- const pendingBrowser=open();await settle();const pending=pendingBrowser.render();closeBrowser();
- await f.advance(1001);
- await historicalTask('Q1','What are the main risks in this window?');
- await f.advance(1001);
- const cancelled=await historicalTask('Q1','Which price levels matter?');
- await f.account.cancel(cancelled);
- const assistant=open();await settle();
- return {f,thread,started,notices,input,chart,threads,links,pending,assistant,saved,ask,settle,open,
-  jobs:history.map(turn=>turn.billingJob),closeBrowser};
+ const assistant=open();await settle();assistant.bind();await node('[data-chat-analyze]').events.click();
+ const pending=assistant.render();
+ await f.advance(1001);await ask(assistant,'What are the main risks in this window?');
+ await f.advance(1001);await ask(assistant,'Which price levels matter?');
+ await f.account.cancel(saved().turns[2].billingJob);
+ // closeBrowser: the first browser stops listening and a second browser starts with no saved chats.
+ return {f,thread,started,notices,input,chart,threads,links,pending,assistant,saved,ask,settle,open,jobs:saved().turns.map(turn=>turn.billingJob),closeBrowser(){for(const fn of listeners)f.account.listeners.delete(fn);storage=new Map();}};
 }
-test('a historical paid chart conversation retains each reservation and settlement, including its cancelled follow-up at zero',async t=>{
+test('a paid chart conversation on the local ledger holds and settles each turn once, follow-ups at the context price and a cancelled turn at zero',async t=>{
  const {estimate}=await import('./commerce-catalog.mjs'),c=await r4PaidChat(t),{f}=c,price=profile=>estimate(profile,f.account.s.plan);
  const jobs=c.jobs.map(id=>f.account.s.tasks.find(job=>job.id===id)),turns=c.saved().turns;
  assert.deepEqual(c.notices,[]);assert.equal(new Set(c.jobs).size,3);
- assert.equal(c.started.length,0);
- assert.deepEqual(jobs.map(job=>[job.profile,job.input.threadId,job.input.turn.id]),turns.map((turn,i)=>[i?'Q1':'M1',c.thread,turn.id]));
- assert.deepEqual(jobs.map(job=>job.input.assets),[['XAU'],['XAU'],['XAU']]);
+ assert.deepEqual(c.started.map(request=>[request.profile,request.input.threadId,request.input.turn.id]),turns.map((turn,i)=>[i?'Q1':'M1',c.thread,turn.id]));
+ assert.deepEqual(c.started.map(request=>request.input.assets),[['XAU'],['XAU'],['XAU']]);
  assert.deepEqual(jobs.map(job=>[job.status,job.reserved,job.settled]),[['complete',price('M1').max,price('M1').normal],['complete',price('Q1').max,price('Q1').normal],['cancelled',price('Q1').max,0]]);
  assert.equal(f.account.spent,price('M1').normal+price('Q1').normal);assert.equal(f.account.reserved,0);
  assert.deepEqual(turns.map(turn=>turn.followup),[false,true,true]);assert.ok(turns.every(turn=>turn.technical.start===turns[0].technical.start&&turn.technical.end===turns[0].technical.end));
@@ -707,7 +617,7 @@ test('each paid assistant answer links to its own task record while pending, set
  c.input.value='Keep this unsent question';c.chart.dataset.rangeStart='12';c.links.push({});c.assistant.bind();c.links[0].onclick();
  const thread=c.saved();assert.equal(thread.draft,'Keep this unsent question');assert.deepEqual(thread.range,{start:12,count:30});
 });
-test('a historical paid chart conversation recovered in another browser reopens its original task links and continues with free local analysis',async t=>{
+test('a paid chart conversation recovered in another browser reopens in chart mode with its answers and task links, charges nothing, and continues at the follow-up price',async t=>{
  const c=await r4PaidChat(t),{f}=c,charged={spent:f.account.spent,tasks:f.account.s.tasks.length,started:c.started.length};
  c.closeBrowser();const assistant=c.open();await c.settle();
  const thread=c.saved();
@@ -720,12 +630,8 @@ test('a historical paid chart conversation recovered in another browser reopens 
  for(const turn of thread.turns.slice(0,2))assert.ok(html.includes(`data-chat-share="${turn.id}"`),turn.id);
  assert.match(html,/data-chat-followup=/);
  await c.ask(assistant,'What do RSI and momentum show in this window?');
- assert.deepEqual({spent:f.account.spent,tasks:f.account.s.tasks.length,started:c.started.length},charged);
- assert.equal(f.account.reserved,0);
- const savedTurns=c.saved().turns,next=savedTurns.at(-1);
- assert.equal(savedTurns.length,thread.turns.length+1);assert.deepEqual(savedTurns.slice(0,-1).map(turn=>turn.billingJob),c.jobs);
- assert.equal(next.followup,true);assert.equal(next.technical.asset,'XAU');assert.equal(next.technical.start,thread.turns[0].technical.start);
- assert.deepEqual(next.technical.bars,thread.turns[0].technical.bars);assert.equal(next.billingJob,undefined);
+ assert.equal(c.started.length,charged.started+1);assert.equal(c.started.at(-1).profile,'Q1');assert.deepEqual(c.started.at(-1).input.assets,['XAU']);
+ const next=c.saved().turns.at(-1);assert.equal(next.followup,true);assert.equal(next.technical.start,thread.turns[0].technical.start);assert.equal(next.billingJob,f.account.s.tasks[0].id);
 });
 test('a paid conversation stops at 24 turns before any new quote, hold or charge',async()=>{
  const previous={document:globalThis.document,localStorage:globalThis.localStorage},storage=new Map(),nodes=new Map(),notices=[],input={value:'',focus(){}},key='hive.trading-assistant.v1:personal';let quoted=0;

@@ -1,15 +1,5 @@
 // Complete UI messages; generated from the checked source catalog.
 export const messages=[
-["充值、提币与净流量","Deposits, withdrawals & net flow"],
-["充值与提币 · 披露地址","Deposits & withdrawals · disclosed wallets"],
-["仅统计披露地址的对外流动","Flows across the disclosed address boundary only"],
-["交易所 · 样本","Exchange · sample"],
-["充值量","Deposits"],
-["净流量","Net flow"],
-["披露地址数","Addresses"],
-["统计口径与披露地址","Method & disclosed addresses"],
-["— 表示该样本未能完整读取。","— indicates the sample could not be read in full."],
-["完整精度","Full precision"],
 ["示例数据","Sample data"],
 ["市场快讯","Market headlines"],
 ["按发布时间浏览快讯，打开标题可查看原文。","Browse headlines by publication time. Open a headline to read the source."],

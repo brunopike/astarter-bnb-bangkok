@@ -16,7 +16,7 @@ test('overview shows no preferred-scope note when no connection is preferred',()
   assert.doesNotMatch(html,/data-preferred-scope/);
 });
 
-// A small page fake for the connections dialog: it parses the dialog's own markup and matches the selectors the dialog uses, so a test can press the dialog's own buttons. Network calls are recorded locally, including the public ticker read from the shared page footer.
+// A small page fake for the connections dialog: it parses the dialog's own markup and matches the selectors the dialog uses, so a test can press the dialog's own buttons. fetch is replaced by a counter that fails, so nothing leaves the process.
 const VOID_TAGS=new Set(['area','br','col','embed','hr','img','input','link','meta','source','track','wbr']);
 const decodeText=value=>value.replace(/&(amp|lt|gt|quot|#39);/g,(_,name)=>({amp:'&',lt:'<',gt:'>',quot:'"','#39':"'"}[name]));
 const MARKUP=/<\/([a-zA-Z][\w-]*)\s*>|<([a-zA-Z][\w-]*)((?:\s+[^\s=\/>"]+(?:\s*=\s*"[^"]*")?)*)\s*(\/?)>|([^<]+)|</g;
@@ -119,13 +119,8 @@ function connectionHarness(stored,{getAccess}={}){
   const mobileNav=new FakeElement('nav',page);mobileNav.className='mobile-nav';page.body.append(mobileNav);
   const prior=Object.fromEntries(['document','window','fetch'].map(key=>[key,Object.getOwnPropertyDescriptor(globalThis,key)]));
   const restore=()=>{for(const [key,descriptor]of Object.entries(prior))if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];};
-  let current=connectionUI.normalizeConnections(stored);
-  const saves=[],requests=[];
-  const recordRequest=async(input,options={})=>{
-    requests.push({url:typeof input==='string'?input:input.url,method:options.method??input.method??'GET'});
-    throw new Error('Offline connection dialog test');
-  };
-  for(const [key,value]of Object.entries({document:page,window:{innerWidth:1440,addEventListener(){},removeEventListener(){}},fetch:recordRequest}))Object.defineProperty(globalThis,key,{configurable:true,writable:true,value});
+  let fetches=0,current=connectionUI.normalizeConnections(stored);const saves=[];
+  for(const [key,value]of Object.entries({document:page,window:{innerWidth:1440,addEventListener(){},removeEventListener(){}},fetch:async()=>{fetches++;throw new Error('no network in this test');}}))Object.defineProperty(globalThis,key,{configurable:true,writable:true,value});
   try{
     const center=connectionUI.createConnectionCenter({get:()=>current,onSave:(next,category)=>{current=connectionUI.normalizeConnections(next);saves.push(category);return null;},getAccess});
     const dialog=page.querySelector('#connection-dialog'),find=selector=>{const node=dialog.querySelector(selector);assert.ok(node,'no element for '+selector);return node;};
@@ -137,7 +132,7 @@ function connectionHarness(stored,{getAccess}={}){
       pressed:selector=>find(selector).getAttribute('aria-pressed'),
       feedback:()=>(dialog.querySelector('#cc-inline-feedback')||find('#connection-feedback')).textContent,
       preferredIds:()=>dialog.querySelectorAll('.cc-account-row').filter(row=>row.querySelector('.cc-source-chip')).map(row=>row.querySelector('[data-connection-edit]').getAttribute('data-connection-edit')),
-      assertOnlyPublicTickerRead:()=>assert.deepEqual(requests,[{url:'/api/market-hub?resource=tickers',method:'GET'}])};
+      fetches:()=>fetches};
   }catch(error){restore();throw error;}
 }
 const UNSAVED_HINT=/^(?:有未保存的更改，保存后才会生效。|Unsaved changes\. They apply only after you save\.)$/;
@@ -162,7 +157,7 @@ test('saving Research data keeps an unsaved AI model edit and its hint, and the 
     assert.deepEqual(ui.saves,['data','ai']);
     assert.equal(ui.stored().preferences.ai.model,'fast');
     assert.equal(ui.feedback(),'');
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -194,7 +189,7 @@ test('with no stored list, the SIM-01 card and its form show the stored settings
     assert.equal(ui.feedback(),'');
     assert.deepEqual(ui.saves,[]);
     assert.equal(ui.stored().preferences.exchange.market,'spot');
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -220,7 +215,7 @@ test('saving a trading connection keeps an unsaved AI model edit and its hint, a
     ui.press('#connections-save');
     assert.equal(ui.stored().preferences.ai.model,'fast');
     assert.equal(ui.stored().tradingAccounts[0].market,'perp');
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -250,7 +245,7 @@ test('making a connection preferred or disconnecting it keeps an unsaved AI mode
     assert.equal(ui.pressed('[data-ai-mode="fast"]'),'true');
     assert.match(ui.feedback(),UNSAVED_HINT);
     assert.equal(ui.stored().preferences.ai.model,'balanced');
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -274,7 +269,7 @@ test('a saved section shows no unsaved-changes hint after Back to settings',()=>
     ui.press('[data-cc="back"]');
     ui.press('[data-provider="okx"]');
     assert.equal(ui.feedback(),'');
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -300,7 +295,7 @@ test('Research data shows no unsaved-changes hint after the dialog drops a provi
     ui.press('#connections-save');
     assert.deepEqual(ui.saves,['data']);
     assert.deepEqual(ui.stored().preferences.data.services,['coinglass']);
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -326,7 +321,7 @@ test('a new connection form shows no unsaved-changes hint after the back arrow d
     ui.choose('[data-pref="exchange.market"]','spot');
     assert.equal(ui.feedback(),'');
     assert.deepEqual(ui.saves,[]);
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -346,7 +341,7 @@ test('the wallet form shows no unsaved-changes hint after the Hyperliquid card p
     ui.choose('[data-pref="wallet.access"]','confirm');
     assert.match(ui.feedback(),UNSAVED_HINT);
     assert.deepEqual(ui.saves,[]);
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -368,7 +363,7 @@ test('in the form of a saved connection the unsaved-changes hint compares with t
     ui.choose('[data-connection-label]','Perp B');
     assert.equal(ui.feedback(),'');
     assert.deepEqual(ui.saves,[]);
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -380,7 +375,7 @@ test('the remove button of a saved data source names the provider, not its id',(
     assert.deepEqual(buttons.map(button=>button.getAttribute('data-remove-source')),['coinglass','blockbeats']);
     assert.match(buttons[0].getAttribute('aria-label'),/^(?:移除|Remove) CoinGlass$/);
     assert.match(buttons[1].getAttribute('aria-label'),/^(?:移除|Remove) BlockBeats$/);
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -395,7 +390,7 @@ test('a custom agent model id shows the unsaved-changes hint at once, and the st
     assert.match(ui.feedback(),UNSAVED_HINT);
     input.value='acme/custom-one';input.oninput();
     assert.equal(ui.feedback(),'');
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -411,7 +406,7 @@ test('the wallet form offers BSC only and does not ask for another network',()=>
     assert.doesNotMatch(ui.dialog.innerHTML,/Arbitrum|Ethereum|Base|Solana/);
     assert.equal(ui.feedback(),'');
     assert.deepEqual(ui.saves,[]);
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -428,7 +423,7 @@ test('Research data with a stored own-API source shows the unsaved-changes hint 
     assert.equal(ui.pressed('[data-source-mode="custom"]'),'true');
     assert.equal(ui.feedback(),'');
     assert.deepEqual(ui.saves,[]);
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -447,7 +442,7 @@ test('a new exchange connection form shows the unsaved-changes hint for trade ac
     assert.equal(access(),'read');
     assert.equal(ui.feedback(),'');
     assert.deepEqual(ui.saves,[]);
-    ui.assertOnlyPublicTickerRead();
+    assert.equal(ui.fetches(),0);
   }finally{ui.restore();}
 });
 
@@ -479,7 +474,7 @@ test('the remove button of a saved data source puts the provider name where each
           // The page translator (locale.mjs initLocale) skips the label, so it cannot rewrite the provider name.
           assert.ok(button.hasAttribute('data-no-translate'),id);
         }
-        ui.assertOnlyPublicTickerRead();
+        assert.equal(ui.fetches(),0);
       }finally{ui.restore();}
     }
   }finally{await selectAppLanguage(before);}

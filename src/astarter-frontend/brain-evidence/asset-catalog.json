@@ -1,0 +1,216 @@
+{
+  "schema": "astarter-brain-market-snapshot-v1",
+  "sources": [
+    {
+      "provider": "CoinGecko",
+      "requestUrl": "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,binancecoin,solana,the-open-network,sui,cardano,avalanche-2,dogecoin",
+      "receivedAt": "2026-11-25T18:20:20.988Z",
+      "rows": [
+        {
+          "id": "bitcoin",
+          "symbol": "btc",
+          "name": "Bitcoin",
+          "current_price": 59859,
+          "market_cap": 1204360863241,
+          "total_volume": 34306255298,
+          "price_change_percentage_24h": -0.25239,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        },
+        {
+          "id": "ethereum",
+          "symbol": "eth",
+          "name": "Ethereum",
+          "current_price": 1689.48,
+          "market_cap": 206500766438,
+          "total_volume": 12159278333,
+          "price_change_percentage_24h": 0.38276,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        },
+        {
+          "id": "binancecoin",
+          "symbol": "bnb",
+          "name": "BNB",
+          "current_price": 550.03,
+          "market_cap": 72333249133,
+          "total_volume": 602969919,
+          "price_change_percentage_24h": -0.03818,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        },
+        {
+          "id": "solana",
+          "symbol": "sol",
+          "name": "Solana",
+          "current_price": 69.85,
+          "market_cap": 41367923653,
+          "total_volume": 3088729107,
+          "price_change_percentage_24h": 0.37141,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        },
+        {
+          "id": "dogecoin",
+          "symbol": "doge",
+          "name": "Dogecoin",
+          "current_price": 0.055093,
+          "market_cap": 8646069950,
+          "total_volume": 414340102,
+          "price_change_percentage_24h": -0.56296,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        },
+        {
+          "id": "cardano",
+          "symbol": "ada",
+          "name": "Cardano",
+          "current_price": 0.144528,
+          "market_cap": 5432128202,
+          "total_volume": 252413866,
+          "price_change_percentage_24h": -0.91341,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        },
+        {
+          "id": "avalanche-2",
+          "symbol": "avax",
+          "name": "Avalanche",
+          "current_price": 6.54,
+          "market_cap": 2922172320,
+          "total_volume": 153499743,
+          "price_change_percentage_24h": -0.92028,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        },
+        {
+          "id": "sui",
+          "symbol": "sui",
+          "name": "Sui",
+          "current_price": 0.65638,
+          "market_cap": 2717077849,
+          "total_volume": 278031528,
+          "price_change_percentage_24h": 0.84051,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        },
+        {
+          "id": "the-open-network",
+          "symbol": "gram",
+          "name": "Gram (prev. Toncoin)",
+          "current_price": 0.939219,
+          "market_cap": 2702566694,
+          "total_volume": 42139783,
+          "price_change_percentage_24h": -0.91721,
+          "last_updated": "2026-11-25T18:19:52.000Z"
+        }
+      ]
+    },
+    {
+      "provider": "DEX Screener",
+      "requestUrl": "https://api.dexscreener.com/token-pairs/v1/base/0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+      "receivedAt": "2026-11-25T18:20:20.652Z",
+      "rows": [
+        {
+          "chainId": "base",
+          "dexId": "aerodrome",
+          "pairAddress": "0x6cDcb1C4A4D1C3C6d054b27AC5B77e89eAFb971d",
+          "url": "https://dexscreener.com/base/0x6cdcb1c4a4d1c3c6d054b27ac5b77e89eafb971d",
+          "baseToken": {
+            "address": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
+            "name": "Aerodrome",
+            "symbol": "AERO"
+          },
+          "priceUsd": "0.4030",
+          "priceChange": {
+            "h24": -0.2
+          },
+          "liquidity": {
+            "usd": 3285335.22
+          },
+          "volume": {
+            "h24": 274932.54
+          }
+        }
+      ]
+    },
+    {
+      "provider": "DEX Screener",
+      "requestUrl": "https://api.dexscreener.com/token-pairs/v1/arbitrum/0x912CE59144191C1204E64559FE8253a0e49E6548",
+      "receivedAt": "2026-11-25T18:20:20.883Z",
+      "rows": [
+        {
+          "chainId": "arbitrum",
+          "dexId": "uniswap",
+          "pairAddress": "0xC6F780497A95e246EB9449f5e4770916DCd6396A",
+          "url": "https://dexscreener.com/arbitrum/0xc6f780497a95e246eb9449f5e4770916dcd6396a",
+          "baseToken": {
+            "address": "0x912CE59144191C1204E64559FE8253a0e49E6548",
+            "name": "Arbitrum",
+            "symbol": "ARB"
+          },
+          "priceUsd": "0.1112",
+          "priceChange": {
+            "h24": -0.83
+          },
+          "liquidity": {
+            "usd": 1069509.83
+          },
+          "volume": {
+            "h24": 2431012.23
+          }
+        }
+      ]
+    },
+    {
+      "provider": "DEX Screener",
+      "identitySource": "https://developers.circle.com/stablecoins/usdc-contract-addresses",
+      "requestUrl": "https://api.dexscreener.com/token-pairs/v1/ethereum/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "receivedAt": "2026-11-25T18:28:09.073Z",
+      "rows": [
+        {
+          "chainId": "ethereum",
+          "dexId": "curve",
+          "pairAddress": "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48-0xdAC17F958D2ee523a2206206994597C13D831ec7",
+          "url": "https://dexscreener.com/ethereum/0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48-0xdac17f958d2ee523a2206206994597c13d831ec7",
+          "baseToken": {
+            "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "name": "USD Coin",
+            "symbol": "USDC"
+          },
+          "priceUsd": "1.0010",
+          "priceChange": {
+            "h24": 0.03
+          },
+          "volume": {
+            "h24": 11699018.59
+          },
+          "liquidity": {
+            "usd": 137419521.16
+          }
+        }
+      ]
+    },
+    {
+      "provider": "DEX Screener",
+      "identitySource": "https://developers.circle.com/stablecoins/usdc-contract-addresses",
+      "requestUrl": "https://api.dexscreener.com/token-pairs/v1/base/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "receivedAt": "2026-11-25T18:28:08.952Z",
+      "rows": [
+        {
+          "chainId": "base",
+          "dexId": "alien-base",
+          "pairAddress": "0x0E635F8EeED4F7279d56692D552F034ECE136019",
+          "url": "https://dexscreener.com/base/0x0e635f8eeed4f7279d56692d552f034ece136019",
+          "baseToken": {
+            "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "name": "USD Coin",
+            "symbol": "USDC"
+          },
+          "priceUsd": "0.9999",
+          "priceChange": {
+            "h24": 0.01
+          },
+          "volume": {
+            "h24": 3827.4
+          },
+          "liquidity": {
+            "usd": 85273.87
+          }
+        }
+      ]
+    }
+  ]
+}

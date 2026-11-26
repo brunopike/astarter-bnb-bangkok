@@ -17,23 +17,24 @@ function structural(value,depth=0){
   if(!Object.hasOwn(descriptor,'value')||forbidden(key))fault('PRIVATE_REQUEST_INVALID');structural(descriptor.value,depth+1);
  }
 }
-async function readBody(req){
+async function readBody(req,maxBytes=MAX_BYTES){
  if(typeof req.headers['content-type']!=='string'||!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(req.headers['content-type']))fault('JSON_REQUIRED');
- const length=req.headers['content-length'];if(length!==undefined&&(typeof length!=='string'||!/^\d+$/.test(length)||Number(length)>MAX_BYTES))fault('BODY_TOO_LARGE');
+ const length=req.headers['content-length'];if(length!==undefined&&(typeof length!=='string'||!/^\d+$/.test(length)||Number(length)>maxBytes))fault('BODY_TOO_LARGE');
  let raw,value;
  if(req.body!==undefined&&plain(req.body)){
-  structural(req.body);try{raw=JSON.stringify(req.body);}catch{fault('PRIVATE_REQUEST_INVALID');}if(Buffer.byteLength(raw)>MAX_BYTES)fault('BODY_TOO_LARGE');value=req.body;
+  structural(req.body);try{raw=JSON.stringify(req.body);}catch{fault('PRIVATE_REQUEST_INVALID');}if(Buffer.byteLength(raw)>maxBytes)fault('BODY_TOO_LARGE');value=req.body;
  }else{
   let bytes;
   if(req.body!==undefined){if(typeof req.body!=='string'&&!Buffer.isBuffer(req.body))fault('PRIVATE_REQUEST_INVALID');bytes=Buffer.from(req.body);}
-  else{const chunks=[];let size=0;for await(const chunk of req){const bytes=Buffer.from(chunk);size+=bytes.byteLength;if(size>MAX_BYTES)fault('BODY_TOO_LARGE');chunks.push(bytes);}bytes=Buffer.concat(chunks);}
-  if(bytes.byteLength>MAX_BYTES)fault('BODY_TOO_LARGE');if(length!==undefined&&Number(length)!==bytes.byteLength)fault('PRIVATE_REQUEST_INVALID');
+  else{const chunks=[];let size=0;for await(const chunk of req){const bytes=Buffer.from(chunk);size+=bytes.byteLength;if(size>maxBytes)fault('BODY_TOO_LARGE');chunks.push(bytes);}bytes=Buffer.concat(chunks);}
+  if(bytes.byteLength>maxBytes)fault('BODY_TOO_LARGE');if(length!==undefined&&Number(length)!==bytes.byteLength)fault('PRIVATE_REQUEST_INVALID');
   try{raw=new TextDecoder('utf-8',{fatal:true}).decode(bytes);value=JSON.parse(raw);}catch{fault('PRIVATE_REQUEST_INVALID');}
   structural(value);
  }
  if(!plain(value))fault('PRIVATE_REQUEST_INVALID');return value;
 }
 export {readBody as readPrivateJSONBody};
+
 function query(url,allowed){
  const seen=new Set();for(const [key] of url.searchParams){if(seen.has(key)||!allowed.includes(key))fault('PRIVATE_REQUEST_INVALID');seen.add(key);}return url.searchParams;
 }

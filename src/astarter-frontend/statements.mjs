@@ -1,3 +1,4 @@
+import {routeSearch,routeHref} from './site-routes.mjs';
 import {statementRecords,projectStatements,statementScope,statementSearch,statementDay,statementMonth,statementCurveDay} from './statements-data.mjs?v=20261123p';
 import {statementsView,statementOwnerName,statementHover} from './statements-view.mjs?v=20261123g';
 import {L} from './execution-views.mjs';
@@ -44,7 +45,7 @@ export function createStatements({desk,root,dialog,show,navigate,notify=()=>{},s
   limit=20;detailKey='';
   if(scope.from&&scope.to&&scope.from>scope.to){scope.to=scope.from;}
   if(records)model=projectStatements(records,scope);
-  if(!modal){const nextSearch=search(scope,location.search);history.replaceState(null,'',nextSearch);pageKey=nextSearch;}
+  if(!modal){const nextSearch=search(scope,location.search);history.replaceState(null,'',routeHref(nextSearch));pageKey=nextSearch;}
   draw();if(filter)(modal?dialog:root).querySelector(`[data-st-filter="${filter}"]`)?.focus({preventScroll:true});
  }
  function page(search=location.search){
@@ -71,7 +72,7 @@ export function createStatements({desk,root,dialog,show,navigate,notify=()=>{},s
  }
  function open(options={},origin=document.activeElement){
   accountKind=options.accountKind||'';
-  if(exampleId!==(options.example||''))exampleData=null;exampleId=options.example||'';returnSearch=location.search;returnScroll=root.scrollTop;returnOrigin=origin;returnEntry=null;returnTargetId=origin?.dataset?.statementReturnId||'';
+  if(exampleId!==(options.example||''))exampleData=null;exampleId=options.example||'';returnSearch=routeSearch();returnScroll=root.scrollTop;returnOrigin=origin;returnEntry=null;returnTargetId=origin?.dataset?.statementReturnId||'';
   if(origin?.matches?.('[data-statements]')){
    const container=origin.parentElement?.closest('[id]'),selector=['data-statements','data-statement-run','data-statement-order'].filter(name=>origin.hasAttribute(name)).map(name=>`[${name}="${CSS.escape(origin.getAttribute(name))}"]`).join('');
    returnEntry={containerId:container?.id||'',selector,index:[...(container||root.ownerDocument).querySelectorAll(selector)].indexOf(origin)};

@@ -1,5 +1,6 @@
 import {createConnector, injected} from 'wagmi';
 
+const binanceIcon={iconUrl:'/brand/binance-wallet.svg',iconBackground:'#000000'};
 const walletPage='https://www.binance.com/en/web3wallet';
 function binanceProvider(win){
  const providers=Array.isArray(win?.ethereum?.providers)?win.ethereum.providers:[];
@@ -11,7 +12,7 @@ function binanceProvider(win){
 // Extension-only builds can still log in with Binance or direct users to its official download.
 export function binanceBrowserWallet(){
  const id='binance',name='Binance Wallet';
- return {id,name,rdns:'com.binance.wallet',iconUrl:'/vendor/brand-assets/exchanges/binance.webp',iconBackground:'#181a20',
+ return {id,name,rdns:'com.binance.wallet',...binanceIcon,
   installed:Boolean(binanceProvider(globalThis.window)),downloadUrls:{mobile:walletPage,browserExtension:walletPage},
   createConnector:details=>createConnector(config=>({
    ...injected({target:{id,name,provider:binanceProvider}})(config),...details
@@ -24,7 +25,7 @@ export function prioritizeBinanceWallets(wallets,mobile){
  const discovered=mobile&&wallets.find(wallet=>wallet.id==='com.binance.wallet'&&wallet.ready);
  for(const wallet of wallets){
   if(wallet.id!=='binance'&&wallet.id!=='com.binance.wallet'){others.push(wallet);continue;}
-  const option={...wallet,name:'Binance Wallet',groupName:'Recommended',groupIndex:-1};
+  const option={...wallet,...binanceIcon,name:'Binance Wallet',groupName:'Recommended',groupIndex:-1};
   if(discovered&&wallet.id==='binance'){
    // RainbowKit's mobile list renders branded entries even when EIP-6963 found the extension.
    Object.assign(option,{ready:true,connect:discovered.connect,getMobileUri:undefined});

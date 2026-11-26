@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "brain.case.v1",
+  "caseId": "ETH-MERGE-20220915",
+  "mode": "historical_replay",
+  "availabilityBasis": "historical_reconstruction",
+  "view": "review",
+  "snapshotRef": "ETH-MERGE-SNAPSHOT@1",
+  "decisionCutoff": "2022-09-15T06:44:00Z",
+  "reviewAsOf": "2022-09-15T06:49:00Z",
+  "strategyRef": "ETH-MERGE-STRATEGY@1",
+  "recommendationRef": null,
+  "nodes": [
+    {
+      "ref": "ETH-MERGE-SNAPSHOT@1",
+      "kind": "snapshot",
+      "title": "市场快照",
+      "bodyFile": "市场快照.md",
+      "bodySha256": "98c09d2832048b2701054a5fedf26844366df52ef26d89e6b027b28b5f9c9c62",
+      "evidenceRefs": [
+        "BLOCK-15537394@1",
+        "COINBASE-ETH-USD-0644@1"
+      ]
+    },
+    {
+      "ref": "ETH-MERGE-CHAIN@1",
+      "kind": "finding",
+      "title": "链上判断",
+      "bodyFile": "链上判断.md",
+      "bodySha256": "7c7566c73522dbcbcbb1cc464d94ad00a8fcaf56b84cc9d4537a7c2df61bbac0",
+      "evidenceRefs": [
+        "BLOCK-15537394@1"
+      ]
+    },
+    {
+      "ref": "ETH-MERGE-MARKET@1",
+      "kind": "finding",
+      "title": "市场判断",
+      "bodyFile": "市场判断.md",
+      "bodySha256": "dcce5638a1763abe73cf15d4ec7abc2ff3ac2da67cf168a03d66e4868398b1c6",
+      "evidenceRefs": [
+        "COINBASE-ETH-USD-0644@1"
+      ]
+    },
+    {
+      "ref": "ETH-MERGE-STRATEGY@1",
+      "kind": "strategy",
+      "title": "策略卡",
+      "bodyFile": "策略卡.md",
+      "bodySha256": "9055c8ba83045328d950cf2b89a97cbcaf94b2dce33d99de50ebfd89c35c4ac9",
+      "evidenceRefs": []
+    },
+    {
+      "ref": "ETH-MERGE-REVIEW@1",
+      "kind": "review",
+      "title": "结果复盘",
+      "bodyFile": "结果复盘.md",
+      "bodySha256": "0e360a7db6a57f637b49615ff0b960b60d1acc2139756301fefdcb4e9665ef7a",
+      "evidenceRefs": [
+        "COINBASE-ETH-USD-0649@1"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "ETH-MERGE-CHAIN@1",
+      "type": "uses_snapshot",
+      "to": "ETH-MERGE-SNAPSHOT@1"
+    },
+    {
+      "from": "ETH-MERGE-MARKET@1",
+      "type": "uses_snapshot",
+      "to": "ETH-MERGE-SNAPSHOT@1"
+    },
+    {
+      "from": "ETH-MERGE-STRATEGY@1",
+      "type": "based_on",
+      "to": "ETH-MERGE-CHAIN@1"
+    },
+    {
+      "from": "ETH-MERGE-STRATEGY@1",
+      "type": "based_on",
+      "to": "ETH-MERGE-MARKET@1"
+    },
+    {
+      "from": "ETH-MERGE-REVIEW@1",
+      "type": "reviews",
+      "to": "ETH-MERGE-STRATEGY@1"
+    }
+  ],
+  "sources": [
+    {
+      "ref": "BLOCK-15537394@1",
+      "phase": "snapshot",
+      "file": "来源/区块.json",
+      "sha256": "2e4712fb87ab853262783a01b65c774f7e697c416fa8f54a6c7b8f46d91fcc4f",
+      "sourceId": "BLOCK-15537394",
+      "sourceRevision": "1",
+      "availableAt": null,
+      "availableAtBasis": "historical_reconstruction"
+    },
+    {
+      "ref": "COINBASE-ETH-USD-0644@1",
+      "phase": "snapshot",
+      "file": "来源/初始行情.json",
+      "sha256": "e6e9620a3be034a4c06ae3c1a0e96327a0fd616859ebbd35e38f791ca6701d74",
+      "sourceId": "COINBASE-ETH-USD-0644",
+      "sourceRevision": "1",
+      "availableAt": null,
+      "availableAtBasis": "historical_reconstruction"
+    },
+    {
+      "ref": "COINBASE-ETH-USD-0649@1",
+      "phase": "review",
+      "file": "来源/后续行情.json",
+      "sha256": "4dec98cc5d083f2448e79512a2c28b390b2f2e522decfb0c023916bf22bb6783",
+      "sourceId": "COINBASE-ETH-USD-0649",
+      "sourceRevision": "1",
+      "availableAt": null,
+      "availableAtBasis": "historical_reconstruction"
+    }
+  ],
+  "outcome": {
+    "marketObservation": {
+      "venue": "Coinbase",
+      "instrument": "ETH-USD",
+      "currency": "USD",
+      "startClose": "1616.76",
+      "endClose": "1628.61",
+      "changePct": "0.73"
+    },
+    "selfDirectedFill": "unknown",
+    "delegatedExecution": "no_order",
+    "fee": null
+  },
+  "viewCutoff": "2022-09-15T06:49:00Z"
+}

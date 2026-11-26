@@ -1,14 +1,13 @@
 {
   "notice": "Synthetic test inputs only. This file records what the code accepts and shows. It is not a live observation, not connectivity, entitlement or production acceptance, and not a real-model acceptance of the 18 research roles.",
   "schema": "astarter-research-coverage-v1",
-  "description": "Coverage list of the live research model (live-research.mjs, MarketResearch) originally recorded at main 7a436fa and updated for the source changes through aacf600, for card R4 step 5, \"Publish the actual coverage matrix with unknown fields retained.\" For each of the eight assets and six dimensions it records the status before any source answers and when every connected source answers with valid data, including the public news and social answers that reach the model through ingestPublic, the provider name exactly as the code writes it, the time fields and time basis each kept item carries, and the history and freshness bounds the code holds for each source. A provider fact the code does not hold stays null (see unknown_fields). Each text is a pair [zh, en]: research-coverage.test.mjs compares the Chinese half in the zh locale and the English half in the en locale. The test fails when the code changes the model's mode or a source, status, provider name, time field, text or bound recorded here, until this file is updated; the facts listed under by_reading, and the line locations, are recorded by reading and no assertion holds them.",
+  "description": "Coverage list of the live research model (live-research.mjs, MarketResearch) at main 7a436fa, for card R4 step 5, \"Publish the actual coverage matrix with unknown fields retained.\" For each of the eight assets and six dimensions it records the status before any source answers and when every connected source answers with valid data, including the public news and social answers that reach the model through ingestPublic, the provider name exactly as the code writes it, the time fields and time basis each kept item carries, and the history and freshness bounds the code holds for each source. A provider fact the code does not hold stays null (see unknown_fields). Each text is a pair [zh, en]: research-coverage.test.mjs compares the Chinese half in the zh locale and the English half in the en locale. The test fails when the code changes the model's mode or a source, status, provider name, time field, text or bound recorded here, until this file is updated; the facts listed under by_reading, and the line locations, are recorded by reading and no assertion holds them.",
   "code": {
     "main": "7a436fa",
     "read_from": "b308d62",
     "read_from_note": "b308d62 contains main 7a436fa. Every file cited in this list is byte-identical in both commits except public-data-client.mjs, where this branch only adds checks (receipt times required, an empty-answer rule) and keeps a kept answer stale while a failed read is retried; the lines cited from that file are those at 7a436fa",
-    "dukascopy_request_at": "88322db (rule changed in b6ec429); the daily gold request now uses an hourly URL",
-    "release_updates": "aa5fe94 includes named daily-source failures from 966b607 and cryptocurrency category discovery from 418d321. Commit aacf600 adds Bluesky and Nostr to the separate recent social projection. The research model accepts the featured LunarCrush projection.",
-    "locations": "file and line at main 7a436fa unless a later commit is identified",
+    "dukascopy_request_at": "88322db (rule changed in b6ec429); every other entry and location is as read at 7a436fa",
+    "locations": "file and line at main 7a436fa",
     "model": "live-research.mjs MarketResearch",
     "mode": "live_readonly",
     "mode_location": "live-research.mjs L10, L75"
@@ -155,7 +154,7 @@
         "yahoo": {"seconds_after_sample": null, "rule": "no fixed window: the kept item has the validUntil of the last closed bar in the provider snapshot, which the scanner passes on; a later value is accepted too", "location": "cross-market-data.mjs L67, L75, L85; workbench-market-analysis.mjs L57, L257; live-research.mjs L66, L68, L70"},
         "dukascopy": {"seconds_after_sample": null, "rule": "no fixed window: the kept item has the validUntil of the last closed bar in the provider snapshot, which the scanner passes on; a later value is accepted too", "location": "cross-market-data.mjs L42, L85; workbench-market-analysis.mjs L57, L257; live-research.mjs L66, L68, L70"}
       },
-      "failure_trace": {"input": "a daily row in state error", "state_field": "observation.state", "state": "error", "status": "missing", "text": ["<provider> · 日线暂不可用", "<provider> · Daily candles unavailable"], "location": "live-research.mjs L24, L64, L92-L95, L108 at aa5fe94"}
+      "failure_trace": {"input": "a daily row in state error", "state_field": "observation.state", "state": "error", "status": "missing", "text": ["行情来源暂不可用", "Market source unavailable"], "location": "live-research.mjs L24, L64, L93, L107"}
     },
     "spot-depth": {
       "dimension": "depth",
@@ -360,25 +359,21 @@
             "page_limit": 50,
             "relay_path": "/api/market-hub?resource=social&selection_version=0&limit=50",
             "requests": [
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/posts/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/bitcoin/creators/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/posts/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/ethereum/creators/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/posts/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/topic/solana/creators/v1", "upstream_parameters": {}},
-              {"host": "lunarcrush.com", "path": "/api4/public/category/cryptocurrencies/posts/v1", "upstream_parameters": {}}
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/bitcoin/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/bitcoin/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/bitcoin/creators/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/ethereum/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/ethereum/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/ethereum/creators/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/solana/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/solana/posts/v1", "upstream_parameters": {}},
+              {"host": "lunarcrush.com", "path_ends_with": "/topic/solana/creators/v1", "upstream_parameters": {}}
             ],
-            "location": "public-data-client.mjs L29-L36; licensed-feeds.mjs L65; public-lunarcrush.mjs L143-L165 at aa5fe94"
+            "location": "workbench-console.mjs L621; public-data-client.mjs L32; licensed-feeds.mjs L64; public-lunarcrush.mjs L125-L126"
           },
-          "response_maximum_rows": {"posts": 5000, "creators": 5000, "category-posts": 5000, "location": "public-lunarcrush.mjs L46-L47, L62-L63, L156-L163 at aa5fe94"},
-          "discovery": {"category": "cryptocurrencies", "error_symbol": "CRYPTO"},
-          "featured_scope": "LUNARCRUSH_KOL_TOPICS",
-          "recent": {"scope": "SOCIAL_RECENT_POSTS", "relay_path": "/api/market-hub?resource=social&selection_version=0&limit=50&feed=recent", "providers": ["lunarcrush-v4", "bluesky-latest-v1", "nostr-relay-v1"], "direct_valid_ms": 180000, "location": "public-social-scope.mjs L1-L5; licensed-feeds.mjs L46-L97 at aacf600"},
+          "response_maximum_rows": {"posts": 5000, "creators": 5000, "location": "public-lunarcrush.mjs L47, L63"},
           "answer_maximum_items": {"value": 50, "location": "public-data-client.mjs L28"},
-          "research_keeps": "Research accepts the featured LunarCrush topic summaries for BTC, ETH and SOL and qualified KOL posts for their evidence asset. The recent list combines LunarCrush category and topic posts, Bluesky originals and Nostr notes. All three sources remain outside research evidence on this route, including posts about BTC, ETH and SOL.",
+          "research_keeps": "one 24-hour topic fact per asset (posts, contributors, interactions and sentiment by network) and each curated KOL post for its evidence asset, without the post text; the latest answer only, no series",
           "research_keeps_location": "workbench-public-evidence.mjs L6-L7, L20-L34; live-research.mjs L143",
           "fact_time": {"topic": "asOf, or observed_at_ms marked as retrieval time when asOf is null", "kol_post": "published_at_ms"},
           "evidence_valid_for_ms": {
@@ -434,7 +429,7 @@
     {"field": "the relay_path of each requested entry, and page_limit", "reading": "the page-side caller named in its location builds this path, and the workbench desk asks news and social with limit 50; the test sends the path to the served handler and checks the provider request, it does not run the caller", "location": "trading-chart-data.mjs L170-L171; cross-market-data.mjs L104; spot-depth-client.mjs L12; market-hub-data.mjs L232; workbench-console.mjs L621"},
     {"field": "which handler answers /api/market-hub", "reading": "at main 7a436fa the deployed function and the local server both use licensed-feeds.mjs, which answers news and social itself and passes every other resource to market-hub-relay.mjs; the test asks that handler", "location": "api/market-hub.mjs L1-L2; server.mjs L11, L50; licensed-feeds.mjs L56-L58"},
     {"field": "when the page passes news and social to the model", "reading": "the workbench information desk passes each answer to ingestPublic only while the workbench page is shown and not paused, and reads social only while a crypto asset is in view", "location": "workbench-console.mjs L510-L513, L617-L621"},
-    {"field": "the served handler's cut of the social posts to the query limit", "reading": "The handler applies the query limit to the selected feed. The research feed features at most 30 curated posts across three topics. The latest list combines up to 200 LunarCrush candidates with Bluesky and Nostr candidates, removes duplicate URLs and text, and returns at most the requested 50 ordered by source publication time.", "location": "licensed-feeds.mjs L40-L97; public-lunarcrush.mjs L109-L138 at aacf600"},
+    {"field": "the served handler's cut of the social posts to the query limit", "reading": "the handler cuts the social posts to the query limit; the test holds only the query bound of 1 to 50, and its social answer holds one post. At the limit of 50 the page asks for, this cut cannot bind: the LunarCrush reader features at most 30 posts (10 slots, 3 topics)", "location": "licensed-feeds.mjs L30; public-lunarcrush.mjs L113"},
     {"field": "sources.public-context.item.time_in_text and the item note on time, the BTC text in the notes of both feed failure traces, sources.public-context.feeds.social.provider_id, and the post-text part of sources.public-context.feeds.social.research_keeps", "reading": "the public summary shows counts per provider and no time; after a feed failure the BTC text keeps only the summary of the facts left; the social answer and its items carry provider_id lunarcrush-v4; a KOL fact keeps no post text. No assertion in this test holds these", "location": "workbench-public-evidence.mjs L22, L32, L38-L42; live-research.mjs L100; licensed-feeds.mjs L33, L35"},
     {"field": "the status and text of sources.public-context.feeds.social.failure_trace and the last sentence of its note, the per-asset part of sources.public-context.feeds.news.asset_matching and research_keeps, and the flash-link part of sources.public-context.feeds.news.research_keeps", "reading": "after a failed social read no fed cell is left without a public fact (ETH and SOL keep BlockBeats, BTC keeps Alternative.me, the TradFi assets hold no LunarCrush fact), so no assertion reaches the missing status and text of that trace; a cell left with no fact reads missing with the social missing text. Each fed headline names one asset, so no assertion holds that a headline naming several assets counts for each of them. The BlockBeats parser already refuses a link that is not a flash link, so the link check in research is not reached either", "location": "live-research.mjs L20, L102, L107; public-blockbeats.mjs L12, L16; workbench-public-evidence.mjs L17-L18"},
     {"field": "BlockBeats and LunarCrush access","reading": "both are read with a server key (BLOCKBEATS_API_KEY, LUNARCRUSH_API_KEY); the code holds no plan, quota or rights for these keys, so their unknown fields stay null", "location": "licensed-feeds.mjs L64-L65; public-blockbeats.mjs L22-L23; public-lunarcrush.mjs L123, L128"},

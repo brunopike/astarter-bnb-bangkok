@@ -1,6 +1,5 @@
 import {socialMediaAttributes} from './public-social-media.mjs';
 import {createPublicDataClient,currentPublicEnvelope,PUBLIC_ASSETS,PUBLIC_CHAINS,safePublicURL} from './public-data-client.mjs';
-import {RECENT_SOCIAL_SCOPE,SOCIAL_PLATFORMS,SOCIAL_SYMBOLS,socialFiltersFromLocation} from './public-social-scope.mjs';
 import {renderIntelligenceCalendar} from './intelligence-calendar.mjs';
 import {renderIntelligenceNewsFeed,renderIntelligenceNewsAside,filterIntelligenceNews,newsBookmarkSnapshots,createNewsDeliveryReader} from './intelligence-news-feed.mjs';
 import {createIntelligenceContext,renderIntelligenceMarkets} from './intelligence-context.mjs';
@@ -11,7 +10,7 @@ import {L} from './execution-views.mjs';
 import {HUB_REFRESH_SECONDS,parseHubRefreshSeconds,createMarketHubClient} from './market-hub-data.mjs';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={bitcoin:'Bitcoin',ethereum:'Ethereum',solana:'Solana'};
-const providers={'binance-spot-ticker-v1':'Binance Spot','coingecko-assets-v1':'CoinGecko','coindesk-rss-v1':'CoinDesk','mastodon-tag-v1':'Mastodon','lunarcrush-v4':'LunarCrush','bluesky-latest-v1':'Bluesky','nostr-relay-v1':'Nostr · Primal',etherscan:'Etherscan V2','etherscan-v2':'Etherscan V2','publicnode-rpc':'PublicNode'};
+const providers={'binance-spot-ticker-v1':'Binance Spot','coingecko-assets-v1':'CoinGecko','coindesk-rss-v1':'CoinDesk','mastodon-tag-v1':'Mastodon','lunarcrush-v4':'LunarCrush',etherscan:'Etherscan V2','etherscan-v2':'Etherscan V2','publicnode-rpc':'PublicNode'};
 const qualityLabel=q=>({fresh:L('已更新','Updated'),partial:L('部分可用','Partial data'),stale:L('数据已过期','Stale data'),unavailable:L('暂无可用数据','Data unavailable')})[q]||L('等待读取','Waiting');
 const numeric=(value,digits=2)=>value===null||value===undefined?'—':Number(value).toLocaleString('en-US',{maximumFractionDigits:digits,minimumFractionDigits:Math.min(2,digits)});
 const price=value=>value===null||value===undefined?'—':Number(value)>0&&Number(value)<1e-8?'<0.00000001':numeric(value,Number(value)<1?8:2);
@@ -46,11 +45,9 @@ export function publicDataStatus(state,formatTime=stamp,resource=''){
 
 export function publicSourceDetails(state){
  const b=state.snapshot;if(!b)return '';
- const multi=b.coverage.scope===RECENT_SOCIAL_SCOPE,lc=lunarCoverageOf(b.coverage);
- const scope=multi?L('Bluesky 最新搜索、Nostr 公开标签、LunarCrush 热门帖','Bluesky latest search, Nostr public tags and LunarCrush top posts'):curatedScope(b.coverage)?L('主题统计与精选作者','Topic metrics and featured creators'):b.coverage.feed==='recent'?L('BTC / ETH / SOL 与加密市场原帖','BTC / ETH / SOL and crypto-market posts'):lunarScope(b.coverage)?L('LunarCrush 主题与原帖','LunarCrush topics and posts'):b.coverage.scope==='SOCIAL_TAG_SAMPLES'?L('公开标签样本','Public hashtag sample'):b.coverage.scope||'—';
- const gaps=(lc?.errors||[]).map(({symbol,resource})=>esc(symbol)+' · '+(['posts','category-posts'].includes(resource)?L('原帖暂不可用','Posts unavailable'):resource==='topic'?L('主题统计暂不可用','Topic metrics unavailable'):L('作者榜单暂不可用','Creator ranking unavailable')));
- if(multi&&b.coverage.bluesky_failed_symbols.length)gaps.push('Bluesky · '+esc(b.coverage.bluesky_failed_symbols.join(' / '))+' '+L('暂未读到','unavailable'));
- return `<details class="pd-sources"><summary>${L('来源与覆盖范围','Sources and coverage')}</summary><div class="pd-source-body"><dl><div><dt>${L('范围','Scope')}</dt><dd>${esc(scope)}</dd></div><div><dt>${L('当前读取','Requested')}</dt><dd>${stamp(b.requested_at_ms)} UTC+8</dd></div></dl>${b.sources.map(s=>`<p><b>${esc(sourceName(s.provider_id))}</b><span>${esc(s.reason_code==='ENTITLEMENT_REQUIRED'?L('此项需额外套餐','Additional plan required'):s.status==='OK'?L('读取成功','Read succeeded'):s.status==='STALE'?L('保留过期数据','Stale data retained'):s.status==='UNCONFIGURED'?L('尚未配置','Not configured'):L('暂不可用','Unavailable'))}</span><time>${stamp(s.last_success_at_ms)}</time></p>`).join('')}${gaps.length?`<div>${gaps.join(' · ')}</div>`:''}${!multi&&b.missing_capabilities.length?`<div>${L('尚未覆盖','Not covered')}: ${b.missing_capabilities.map(esc).join(' · ')}</div>`:''}</div></details>`;
+ const scope=curatedScope(b.coverage)?L('全量主题统计与精选 KOL','Topic-wide metrics and curated creators'):lunarScope(b.coverage)?L('LunarCrush 主题与原帖','LunarCrush topics and posts'):b.coverage.scope==='SOCIAL_TAG_SAMPLES'?L('公开标签样本','Public hashtag sample'):b.coverage.scope||'—';
+ const gaps=lunarScope(b.coverage)?(b.coverage.errors||[]).map(({symbol,resource})=>esc(symbol)+' · '+(resource==='posts'?L('原帖暂不可用','Posts unavailable'):resource==='topic'?L('主题统计暂不可用','Topic metrics unavailable'):L('作者榜单暂不可用','Creator ranking unavailable'))):[];
+ return `<details class="pd-sources"><summary>${L('来源与覆盖范围','Sources and coverage')}</summary><div class="pd-source-body"><dl><div><dt>${L('范围','Scope')}</dt><dd>${esc(scope)}</dd></div><div><dt>${L('当前读取','Requested')}</dt><dd>${stamp(b.requested_at_ms)} UTC+8</dd></div></dl>${b.sources.map(s=>`<p><b>${esc(sourceName(s.provider_id))}</b><span>${esc(s.reason_code==='ENTITLEMENT_REQUIRED'?L('此项需额外套餐','Additional plan required'):s.status==='OK'?L('读取成功','Read succeeded'):s.status==='STALE'?L('保留过期数据','Stale data retained'):s.status==='UNCONFIGURED'?L('尚未配置','Not configured'):L('暂不可用','Unavailable'))}</span><time>${stamp(s.last_success_at_ms)}</time></p>`).join('')}${gaps.length?`<div>${gaps.join(' · ')}</div>`:''}${b.missing_capabilities.length?`<div>${L('尚未覆盖','Not covered')}: ${b.missing_capabilities.map(esc).join(' · ')}</div>`:''}</div></details>`;
 }
 
 export function publicMarketRows(state,assetState,{query=''}={}){
@@ -79,16 +76,11 @@ const newsSymbols=data=>[...new Set([...(Array.isArray(data.symbols)?data.symbol
 const newsContext=item=>({provider:sourceName(item.provider_id),quality:item.quality,title:item.data.title,url:safePublicURL(item.data.url),published_at_ms:item.data.published_at_ms,symbols:newsSymbols(item.data)});
 export function publicNewsRecords(items){return items.map(i=>{const d=i.data,url=safePublicURL(d.url);return `<article><div class="pd-news-time"><time datetime="${new Date(d.published_at_ms).toISOString()}">${feedDateTime.format(d.published_at_ms)}</time><small>${qualityLabel(i.quality)}</small></div><div><h2 data-no-translate>${esc(d.title)}</h2><footer><span>${esc(sourceName(i.provider_id))}</span>${newsSymbols(d).map(symbol=>{const label=`${tokenIcon(symbol,{size:16})}<span>${symbol}</span>`;return ['BTC','ETH','SOL'].includes(symbol)?go(label,'markets',{asset:symbol},'pd-news-asset'):`<span class="pd-news-asset">${label}</span>`;}).join('')}${url?`<a class="pd-news-source" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${L('原文','Source')} ↗</a>`:''}</footer></div></article>`;}).join('');}
 
-const socialSymbols=data=>[...new Set(Array.isArray(data.symbols)?data.symbols:[])].filter(symbol=>SOCIAL_SYMBOLS.includes(symbol));
-const socialAssetTags=data=>socialSymbols(data).map(symbol=>{
- const label=`${tokenIcon(symbol,{size:16})}<span>${symbol}</span>`;
- return ['BTC','ETH','SOL'].includes(symbol)?go(label,'markets',{asset:symbol},'pd-news-asset'):`<span class="pd-news-asset">${label}</span>`;
-}).join('');
+const socialSymbols=data=>[...new Set(Array.isArray(data.symbols)?data.symbols:[])].filter(symbol=>['BTC','ETH','SOL'].includes(symbol));
 const socialCount=value=>Number.isSafeInteger(value)&&value>=0?value:'—';
 const lunarPost=item=>item.provider_id==='lunarcrush-v4';
 const curatedScope=coverage=>coverage?.scope==='LUNARCRUSH_KOL_TOPICS';
 const lunarScope=coverage=>curatedScope(coverage)||coverage?.scope==='LUNARCRUSH_TOPICS';
-const lunarCoverageOf=coverage=>coverage?.scope===RECENT_SOCIAL_SCOPE?coverage.lunar:lunarScope(coverage)?coverage:null;
 const visibleItems=snapshot=>curatedScope(snapshot?.coverage)?snapshot.items.filter(item=>item.data.kol&&snapshot.coverage.curation?.checkedTopics.includes(item.data.kol.evidenceSymbol)):snapshot?.items||[];
 const whole=value=>Number.isSafeInteger(value)?value.toLocaleString('en-US'):'—';
 function kolHeading(coverage,count,title=L('精选 KOL','Featured creators')){
@@ -98,8 +90,7 @@ function kolHeading(coverage,count,title=L('精选 KOL','Featured creators')){
 }
 const networkName=value=>value==='News'?L('新闻媒体','News'):value;
 function lunarTopics(coverage){
- coverage=lunarCoverageOf(coverage);
- if(!coverage?.topics?.length)return '';
+ if(!lunarScope(coverage)||!coverage.topics?.length)return '';
  const sampled=coverage.observed_at_ms;
  const sampleTime=Number.isSafeInteger(sampled)&&sampled>0?`<time datetime="${new Date(sampled).toISOString()}">${L('采样','Sampled')} ${feedDateTime.format(sampled).slice(0,16)} UTC+8</time>`:'';
  const metric=(label,value)=>`<div><dt>${label}</dt><dd${Number.isSafeInteger(value)?` title="${value}"`:''}>${value==null?'—':money(value)}</dd></div>`;
@@ -111,19 +102,15 @@ function lunarTopics(coverage){
 const socialContext=item=>{const d=item.data,a=d.author||{};return {...(lunarPost(item)?{interactions_24h:d.interactions_24h,...(d.kol?{kol:d.kol}:{})}:{likes:d.likes,reposts:d.reposts,replies:d.replies}),provider:sourceName(item.provider_id),quality:item.quality,platform:d.platform,instance:d.instance,post_id:d.post_id,url:safePublicURL(d.url),author:{acct:a.acct,display_name:a.display_name,url:safePublicURL(a.url),bot:a.bot},published_at_ms:d.published_at_ms,edited_at_ms:d.edited_at_ms,observed_at_ms:d.observed_at_ms,symbols:socialSymbols(d)};};
 export function publicSocialRecords(items){return items.map(item=>{
  const d=item.data,a=d.author||{},url=safePublicURL(d.url),profile=safePublicURL(a.url),author=esc(a.display_name||a.acct||L('公开账号','Public account'));
- const direct=d.metric_kind==='SOCIAL_ORIGINAL_POST';
- if(lunarPost(item)||direct){
+ if(lunarPost(item)){
   const name=a.display_name||a.acct||d.kol?.creatorId||d.platform;
   const media=socialMediaAttributes(item),creator=safePublicURL(d.kol?.profileUrl)||profile;
-  const handle=media||d.platform==='Bluesky'&&a.acct!==name?`<span class="pd-post-handle">@${esc(a.acct)}</span>`:'';
+  const handle=media?`<span class="pd-post-handle">@${esc(a.acct)}</span>`:'';
   const identity=`<strong>${esc(name)}</strong>${handle}`;
-  const avatar=`<span class="pd-post-avatar" data-social-avatar aria-hidden="true">${esc(d.platform==='Nostr'?'N':Array.from(name.trim())[0]?.toUpperCase()||'·')}</span>`;
+  const avatar=`<span class="pd-post-avatar" data-social-avatar aria-hidden="true">${esc(Array.from(name.trim())[0]?.toUpperCase()||'·')}</span>`;
   const published=feedDateTime.format(d.published_at_ms);
   const time=`<time datetime="${new Date(d.published_at_ms).toISOString()}" title="${published} UTC+8"><span>${published.slice(0,10)}</span> ${published.slice(11,16)}</time>`;
   const byline=d.kol?`<div class="pd-kol-evidence"><span>${whole(d.kol.followers)} ${L('粉丝','followers')}</span><span>${esc(d.kol.evidenceSymbol)} · #${whole(d.kol.topicRank)}</span></div>`:'';
-  const interactions=direct?[[L('赞','Likes'),d.likes],[L('转发','Reposts'),d.reposts],[L('回复','Replies'),d.replies]]
-   .filter(([,count])=>Number.isSafeInteger(count)&&count>0).map(([label,count])=>`<span>${label} <b>${whole(count)}</b></span>`).join('')
-   :`<span>${L('24h 互动','24h interactions')} <b data-social-count="interactions_24h">${whole(d.interactions_24h)}</b></span>`;
   return `<article class="pd-kol-post" data-social-post="${esc(d.post_id)}"${media}>
    <header class="pd-post-byline">
     ${creator?`<a class="pd-avatar-link" href="${esc(creator)}" rel="noopener noreferrer" target="_blank" tabindex="-1" aria-hidden="true">${avatar}</a>`:avatar}
@@ -132,25 +119,15 @@ export function publicSocialRecords(items){return items.map(item=>{
    </header>
    <p class="pd-social-text" data-no-translate>${esc(d.text)}</p>
    <div class="pd-post-media" data-social-photos hidden></div>
-   <footer>${interactions}${socialAssetTags(d)}${direct&&item.quality==='stale'?`<span class="pd-row-quality">${L('上次读取','Last read')}</span>`:''}${url?`<a class="pd-news-source" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${L('原帖','Original post')} ↗</a>`:''}</footer>
+   <footer><span>${L('24h 互动','24h interactions')} <b data-social-count="interactions_24h">${whole(d.interactions_24h)}</b></span>${socialSymbols(d).map(symbol=>go(`${tokenIcon(symbol,{size:16})}<span>${symbol}</span>`,'markets',{asset:symbol},'pd-news-asset')).join('')}${url?`<a class="pd-news-source" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${L('原帖','Original post')} ↗</a>`:''}</footer>
   </article>`;
  }
  return `<article data-social-post="${esc(d.post_id)}"><div class="pd-news-time"><time datetime="${new Date(d.published_at_ms).toISOString()}">${feedDateTime.format(d.published_at_ms)}</time><small>${qualityLabel(item.quality)}</small></div><div><header class="pd-social-author" data-no-translate>${profile?`<a href="${esc(profile)}" target="_blank" rel="noopener noreferrer">${author}</a>`:`<strong>${author}</strong>`}<span>@${esc(a.acct)}</span>${a.bot===true?`<span class="pd-social-bot">${L('自动账号','Automated account')}</span>`:''}</header><p class="pd-social-text" data-no-translate>${esc(d.text)}${d.truncated?`<span class="pd-social-truncated"> · ${L('节选','Excerpt')}</span>`:''}</p><div class="pd-social-counts"><span>${L('赞','Likes')} <b data-social-count="likes">${socialCount(d.likes)}</b></span><span>${L('转发','Reposts')} <b data-social-count="reposts">${socialCount(d.reposts)}</b></span><span>${L('回复','Replies')} <b data-social-count="replies">${socialCount(d.replies)}</b></span></div><footer><span>${esc(sourceName(item.provider_id))}</span>${socialSymbols(d).map(symbol=>go(`${tokenIcon(symbol,{size:16})}<span>${symbol}</span>`,'markets',{asset:symbol},'pd-news-asset')).join('')}${url?`<a class="pd-news-source" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${L('原帖','Original post')} ↗</a>`:''}</footer></div></article>`;
  }).join('');}
 
-// Both data-center entrances share post cards, coverage and separate creator evidence.
-export function publicRecentSocialFilters({symbol,platform},attribute){
- const select=(key,value,label,all,options)=>`<label><select ${attribute}="${key}" aria-label="${esc(label)}"><option value="">${esc(all)}</option>${options.map(option=>`<option value="${esc(option)}"${value===option?' selected':''}>${esc(option)}</option>`).join('')}</select></label>`;
- return `<div class="pd-social-filters" role="group" aria-label="${L('原帖筛选','Post filters')}">${select('social_asset',symbol,L('币种','Asset'),L('全部币种','All assets'),SOCIAL_SYMBOLS)}${select('social_platform',platform,L('平台','Platform'),L('全部平台','All platforms'),SOCIAL_PLATFORMS)}</div>`;
-}
-
+// Both data-center entrances use the same qualified creator cards and evidence.
 export function publicCuratedSocialFeed(snapshot,title){
  const coverage=snapshot?.coverage;
- if(coverage?.feed==='recent'&&(coverage.scope===RECENT_SOCIAL_SCOPE||lunarScope(coverage))){
-  const items=snapshot.items,multi=coverage.scope===RECENT_SOCIAL_SCOPE;
-  const scope=multi?L('近 24 小时 · 按原帖发布时间排序','Last 24 hours · Sorted by publication time'):L('BTC / ETH / SOL + 加密市场 · 近 24h 原帖','BTC / ETH / SOL + crypto market · 24h posts');
-  return `<div class="pd-social-layout"><section class="pd-social-stream"><header class="pd-kol-heading"><h2>${esc(title||L('最近动态','Recent posts'))}</h2><span class="pd-post-caption">${items.length} ${L('条',items.length===1?'post':'posts')}</span></header><p class="pd-social-scope">${scope}</p>${items.length?`<div class="pd-news-list pd-social-list">${publicSocialRecords(items)}</div>`:notice(L('近 24 小时暂无匹配原帖','No matching posts in the last 24 hours'),L('可切换币种或平台。','Try another asset or platform.'))}</section><aside class="pd-social-context">${lunarTopics(coverage)}${publicSourceDetails({snapshot})}</aside></div>`;
- }
  if(!curatedScope(coverage))return notice(L('精选来源暂不可用','Featured creator feed unavailable'),L('请稍后重试。','Try again shortly.'));
  const items=visibleItems(snapshot),unverified=!coverage.curation?.checkedTopics.length,postsFailed=coverage.errors?.some(error=>error.resource==='posts');
  const empty=unverified?notice(L('暂时无法核验 KOL','Creator verification unavailable'),L('作者榜单与原帖均须成功返回。','Both creator rankings and original posts are required.')):postsFailed?notice(L('原帖暂不可用','Posts unavailable'),L('已返回的主题统计仍可查看。','Available topic metrics are shown separately.')):notice(L('本期暂无符合条件的原帖','No qualifying posts this period'),L('仅收录同时满足筛选条件的作者。','Only creators meeting every criterion appear here.'));
@@ -200,11 +177,6 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
  }});
  sentiment=createMarketHubClient({fetchImpl,now,resources:['sentiment'],WebSocketImpl:null,refreshSeconds,onChange(){if(active==='intelligence'){needsPaint=true;paint();}}});
  const param=k=>new URLSearchParams(globalThis.location?.search||'').get(k);
- const socialQuery=()=>{
-  const params=new URLSearchParams(globalThis.location?.search||''),feed=params.get('social_feed');
-  if(feed==='recent')return {feed,...socialFiltersFromLocation(params)};
-  return feed==='featured'?{feed}:{};
- };
  const selected=()=>Object.keys(PUBLIC_ASSETS).find(id=>PUBLIC_ASSETS[id]===param('asset'));
  const read=resource=>({...client.read(resource),offline:globalThis.navigator?.onLine===false});
  const displayedStatuses=new Map();
@@ -225,33 +197,10 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
  const live=page=>page==='intelligence'?param('data')!=='demo':page==='markets'&&param('data')==='live';
  const readSentiment=()=>({...sentiment.read('sentiment'),offline:globalThis.navigator?.onLine===false});
  const states=()=>[...required().map(read),...(active==='intelligence'?[readSentiment()]:[])];
- function preserveNewsReadingPosition(){
-  if(active!=='intelligence'||intelligenceTab!=='news'||!(root.scrollTop>0)||!root.getBoundingClientRect)return;
-  const bounds=root.getBoundingClientRect(),selector='#pd-feed-panel .df-story[data-news-record]';
-  const visible=[];
-  for(const row of root.querySelectorAll(selector)){
-   const rect=row.getBoundingClientRect();
-   if(rect.bottom<=bounds.top)continue;
-   if(rect.top>=bounds.bottom||(!visible.length&&rect.top>bounds.top+Math.min(120,bounds.height/4)))break;
-   visible.push({id:row.dataset.newsRecord,top:rect.top});
-  }
-  if(!visible.length)return;
-  return ()=>{
-   const entries=new Map([...root.querySelectorAll(selector)].map(row=>[row.dataset.newsRecord,row]));
-   for(const previous of visible){
-    const row=entries.get(previous.id);
-    if(!row)continue;
-    const shift=row.getBoundingClientRect().top-previous.top;
-    if(Math.abs(shift)>.5)root.scrollTop+=shift;
-    break;
-   }
-  };
- }
  function paint(explicit=false){
   if(disposed||suspended||globalThis.document?.hidden||!active||!needsPaint||globalThis.document?.querySelector('dialog[open]'))return;
   if(!explicit&&!canAutoRefresh(root)){refreshVisibleBadges();return;}
-  const restore=explicit?null:preserveNewsReadingPosition();
-  needsPaint=false;rerender();restore?.();
+  needsPaint=false;rerender();
   if(refreshReturnFocus&&!states().some(state=>state.pending)){
    if(globalThis.document?.activeElement===globalThis.document?.body)root.querySelector('[data-pd-refresh]:not(:disabled)')?.focus({preventScroll:true});
    refreshReturnFocus=false;
@@ -262,11 +211,11 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
    const tab=param('feed')==='social'?'social':'news';
    if(tab!==intelligenceTab){intelligenceTab=tab;search='';}
   }
-  const next=live(page)?page:null,key=next?JSON.stringify([next,param('asset'),param('chain'),limit,next==='intelligence'?intelligenceTab:null,next==='intelligence'&&intelligenceTab==='social'?socialQuery():null]):'';
+  const next=live(page)?page:null,key=next?JSON.stringify([next,param('asset'),param('chain'),limit,next==='intelligence'?intelligenceTab:null]):'';
   if(key!==identity){refreshReturnFocus=false;displayedStatuses.clear();client.clear();identity=key;selection=(selection+1)%2147483647;}
   active=disposed?null:next;if(active!=='intelligence'){sentiment.setActive(false);contextData.tick(false);}return !!active;
  }
- const query=resource=>({selection_version:selection,...(['markets','assets'].includes(resource)?{asset_ids:selected()?[selected()]:Object.keys(PUBLIC_ASSETS)}:['news','social'].includes(resource)?{limit,...(resource==='social'?socialQuery():{})}:{provider_id:'etherscan',...(Object.hasOwn(PUBLIC_CHAINS,param('chain'))?{chain_id:param('chain')}:{})})});
+ const query=resource=>({selection_version:selection,...(['markets','assets'].includes(resource)?{asset_ids:selected()?[selected()]:Object.keys(PUBLIC_ASSETS)}:['news','social'].includes(resource)?{limit}:{provider_id:'etherscan',...(Object.hasOwn(PUBLIC_CHAINS,param('chain'))?{chain_id:param('chain')}:{})})});
  const required=()=>active==='markets'?param('asset')&&!selected()?[]:['markets','assets',...(Object.hasOwn(PUBLIC_CHAINS,param('chain'))?['capabilities']:[])]:active==='intelligence'?[intelligenceTab]:[];
  function load(force=false){
   const available=!disposed&&!suspended&&!globalThis.document?.hidden&&globalThis.navigator?.onLine!==false;
@@ -291,8 +240,8 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
  function sourceSnapshot(){
   if(!active)return null;
   const s=read(active==='markets'?'markets':intelligenceTab),b=s.snapshot;if(!b)return null;
-  const items=active==='intelligence'&&intelligenceTab==='news'?filterIntelligenceNews(visibleItems(b),newsOptions()):visibleItems(b).filter(item=>active!=='intelligence'||intelligenceSearch(item).toLowerCase().includes(search.trim().toLowerCase()));if(!items.length&&!(active==='intelligence'&&intelligenceTab==='social'&&!search&&lunarCoverageOf(b.coverage)?.topics?.length))return null;
-  return {id:'public:'+JSON.stringify([identity,search,newsSource,newsPublisher,newsDate,b.as_of_ms]),title:active==='markets'?(selected()?PUBLIC_ASSETS[selected()]+' · ':'')+L('只读现货行情','Read-only spot markets'):intelligenceTab==='social'?(b.coverage.scope===RECENT_SOCIAL_SCOPE?L('社媒原帖','Social posts'):lunarScope(b.coverage)?L('LunarCrush 社媒数据','LunarCrush social data'):L('公开社媒样本','Public social sample')):L('新闻快讯','News feed'),href:globalThis.location?.search||'',kind:active==='markets'?'market':intelligenceTab,text:JSON.stringify({mode:b.mode,quality:b.quality,offline:s.offline,error:s.error||null,as_of_ms:b.as_of_ms,coverage:b.coverage,sources:b.sources,items:active==='intelligence'?items.map(intelligenceTab==='social'?socialContext:newsContext):items},null,2)};
+  const items=active==='intelligence'&&intelligenceTab==='news'?filterIntelligenceNews(visibleItems(b),newsOptions()):visibleItems(b).filter(item=>active!=='intelligence'||intelligenceSearch(item).toLowerCase().includes(search.trim().toLowerCase()));if(!items.length&&!(active==='intelligence'&&intelligenceTab==='social'&&!search&&lunarScope(b.coverage)&&b.coverage.topics?.length))return null;
+  return {id:'public:'+JSON.stringify([identity,search,newsSource,newsPublisher,newsDate,b.as_of_ms]),title:active==='markets'?(selected()?PUBLIC_ASSETS[selected()]+' · ':'')+L('只读现货行情','Read-only spot markets'):intelligenceTab==='social'?(lunarScope(b.coverage)?L('LunarCrush 社媒数据','LunarCrush social data'):L('公开社媒样本','Public social sample')):L('新闻快讯','News feed'),href:globalThis.location?.search||'',kind:active==='markets'?'market':intelligenceTab,text:JSON.stringify({mode:b.mode,quality:b.quality,offline:s.offline,error:s.error||null,as_of_ms:b.as_of_ms,coverage:b.coverage,sources:b.sources,items:active==='intelligence'?items.map(intelligenceTab==='social'?socialContext:newsContext):items},null,2)};
  }
  function sourceTools(){
   const s=read(active==='markets'?'markets':intelligenceTab),b=s.snapshot;
@@ -330,10 +279,8 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
   const sample=social&&legacy?`<p class="pd-social-scope"><strong>Mastodon · ${L('公开标签样本','Public hashtag sample')}</strong><span>#bitcoin / #ethereum / #solana · ${L('每标签最多 10 条 · 不是全网舆情','Up to 10 posts per hashtag · Not network-wide sentiment')}</span></p>`:social?lunarTopics(coverage):'';
   const empty=search&&visibleItems(s.snapshot).length?notice(L('没有匹配的内容','No matching posts'),L('试试其他关键词。','Try another keyword.')):social&&curatedScope(coverage)?(!coverage.curation?.checkedTopics.length?notice(L('暂时无法核验 KOL','Creator verification unavailable'),L('作者榜单与原帖均须成功返回。','Both creator rankings and original posts are required.')):coverage.errors?.some(row=>row.resource==='posts')?notice(L('原帖暂不可用','Posts unavailable'),L('已返回的主题统计仍可查看。','Available topic metrics are shown separately.')):notice(L('本期暂无符合条件的原帖','No qualifying posts this period'),L('仅收录同时满足筛选条件的作者。','Only creators meeting every criterion appear here.'))):social&&lunarScope(coverage)&&coverage.errors?.some(row=>row.resource==='posts')?notice(L('原帖暂不可用','Posts unavailable'),L('仍可查看已返回的主题统计。','Available topic metrics are shown separately.')):coveredEmpty?notice(social?L('本次样本暂无公开帖子','No public posts in this sample'):L('本次查询暂无快讯','No news in this query'),L('来源已成功返回，覆盖范围见下方。','The source returned successfully. Query coverage is listed below.')):emptyState(s);
   const {calendar,quotes}=contextData.read();
-  const feedTabs=social?`<div class="pd-feed-tabs" role="group" aria-label="${L('动态筛选','Feed selection')}">${[['recent','最近动态','Recent posts'],['featured','精选作者','Featured creators']].map(([key,zh,en])=>`<button type="button" data-pd-social-feed="${key}" aria-pressed="${(param('social_feed')==='recent'?'recent':'featured')===key}">${L(zh,en)}</button>`).join('')}</div>`:'';
-  const recentFilters=socialQuery().feed==='recent'?publicRecentSocialFilters(socialQuery(),'data-pd-social-filter'):'';
   const timeline=social
-   ? `${sample}<div class="pd-social-toolbar pd-social-toolbar-inline">${feedTabs}${recentFilters}</div>${curatedScope(coverage)?kolHeading(coverage,items.length):(lunarScope(coverage)||coverage?.scope===RECENT_SOCIAL_SCOPE)?`<h2 class="pd-legacy-posts">${coverage.feed==='recent'?L('近 24h 原帖 · 按发布时间排序','24h posts · By publication time'):L('历史热门原帖 · 未经 KOL 筛选','Archived top posts · Not curated')}</h2>`:''}<div class="pd-table-tools"><label class="df-search"><input data-pd-search value="${esc(search)}" placeholder="${L('搜索作者、平台或标的','Search posts, authors or platforms')}" aria-label="${L('搜索当前公开帖子','Search loaded public posts')}"></label><label class="pd-limit">${L('条数','Items')}<select data-pd-limit>${[20,50].map(n=>`<option ${limit===n?'selected':''}>${n}</option>`).join('')}</select></label></div>${items.length?`<div class="pd-news-list pd-social-list">${publicSocialRecords(items)}</div>`:empty}`
+   ? `${sample}${curatedScope(coverage)?kolHeading(coverage,items.length):lunarScope(coverage)?`<h2 class="pd-legacy-posts">${L('历史热门原帖 · 未经 KOL 筛选','Archived top posts · Not curated')}</h2>`:''}<div class="pd-table-tools"><label class="df-search"><input data-pd-search value="${esc(search)}" placeholder="${L('搜索作者、平台或标的','Search posts, authors or platforms')}" aria-label="${L('搜索当前公开帖子','Search loaded public posts')}"></label><label class="pd-limit">${L('条数','Items')}<select data-pd-limit>${[20,50].map(n=>`<option ${limit===n?'selected':''}>${n}</option>`).join('')}</select></label></div>${items.length?`<div class="pd-news-list pd-social-list">${publicSocialRecords(items)}</div>`:empty}`
    : renderIntelligenceNewsFeed(visibleItems(s.snapshot),{...newsOptions(),empty});
   const sidebar=renderIntelligenceNewsAside(social?[]:visibleItems(s.snapshot),renderIntelligenceMarkets(quotes)+publicSentimentCard(readSentiment()),newsOptions());
   return `<div class="df-root df-news">
@@ -349,18 +296,6 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
   if(!active)return;
   const selectFeed=value=>{if(!['news','social'].includes(value)||value===intelligenceTab)return;const url=new URL(location.href);if(value==='social')url.searchParams.set('feed','social');else url.searchParams.delete('feed');history.pushState(history.state,'',url);context(active);load();needsPaint=true;paint(true);};
   for(const button of root.querySelectorAll('[data-pd-feed]')){button.addEventListener('click',()=>selectFeed(button.dataset.pdFeed));button.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const value=event.key==='Home'?'news':event.key==='End'?'social':intelligenceTab==='news'?'social':'news';selectFeed(value);root.querySelector(`[data-pd-feed="${value}"]`)?.focus();});}
-  const navigateSocial=url=>{history.pushState(history.state,'',url);context(active);load();needsPaint=true;paint(true);};
-  for(const button of root.querySelectorAll('[data-pd-social-feed]'))button.addEventListener('click',()=>{
-   const value=button.dataset.pdSocialFeed;if(!['recent','featured'].includes(value)||button.getAttribute?.('aria-pressed')==='true')return;
-   const url=new URL(location.href);url.searchParams.set('social_feed',value);
-   if(value==='featured')for(const key of ['social_asset','social_platform'])url.searchParams.delete(key);
-   navigateSocial(url);
-  });
-  for(const filter of root.querySelectorAll('[data-pd-social-filter]'))filter.addEventListener('change',()=>{
-   const url=new URL(location.href),key=filter.dataset.pdSocialFilter;
-   if(filter.value)url.searchParams.set(key,filter.value);else url.searchParams.delete(key);
-   navigateSocial(url);
-  });
   root.querySelector('[data-pd-refresh]')?.addEventListener('click',()=>{if(states().some(s=>s.pending||s.offline||s.retryIn))return;refreshReturnFocus=globalThis.document?.activeElement===root.querySelector('[data-pd-refresh]');load(true);needsPaint=true;paint(true);});
   root.querySelector('[data-pd-interval]')?.addEventListener('change',event=>{
    const old=refreshSeconds;try{const seconds=parseHubRefreshSeconds(event.target.value);localStorage.setItem('hive.market.refreshSeconds',String(seconds));applyInterval(seconds);window.dispatchEvent(new CustomEvent('hive:market-refresh-interval',{detail:{seconds}}));notify(L('自动刷新：','Auto refresh: ')+seconds+' '+L('秒','seconds'));}
@@ -392,11 +327,7 @@ export function createPublicDataViews({root,rerender,fetchImpl,now=Date.now,noti
   const publisher=root.querySelector('[data-pd-news-publisher]');
   if(publisher)publisher.onchange=()=>{newsPublisher=publisher.value;repaint();};
   const reset=root.querySelector('[data-pd-news-reset]');
-  if(reset)reset.onclick=event=>{
-   const returnToSearch=Boolean(search.trim())&&event.detail===0;
-   search='';newsSource='all';newsPublisher='all';newsDate='all';repaint();
-   root.querySelector(returnToSearch?'[data-pd-search]':'[data-pd-news-source="all"]')?.focus({preventScroll:true});
-  };
+  if(reset)reset.onclick=()=>{search='';newsSource='all';newsPublisher='all';newsDate='all';repaint();};
   const input=root.querySelector('[data-pd-search]');if(input)bindSearchRender(input,value=>{search=value;},()=>{needsPaint=true;paint(true);return root.querySelector('[data-pd-search]');});
   root.querySelector('[data-pd-limit]')?.addEventListener('change',e=>{limit=Number(e.target.value);context(active);load();needsPaint=true;paint(true);});
   root.querySelector('[data-pd-chain]')?.addEventListener('change',e=>{const u=new URL(location.href);u.searchParams.set('chain',e.target.value);history.pushState(null,'',u);window.dispatchEvent(new PopStateEvent('popstate'));});

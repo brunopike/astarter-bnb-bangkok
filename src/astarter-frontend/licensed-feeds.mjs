@@ -3,11 +3,6 @@ import {createMarketHubRelay} from './market-hub-relay.mjs';
 import {PUBLIC_SCHEMA,PUBLIC_PROJECTION,publicQuery,validatePublicEnvelope} from './public-data-client.mjs';
 import {fetchBlockBeats} from './public-blockbeats.mjs';
 import {fetchLunarCrush} from './public-lunarcrush.mjs';
-import {fetchBlueskyLatest,fetchNostrLatest} from './public-social-latest.mjs';
-import {
- DIRECT_SOCIAL_REFRESH_MS, DIRECT_SOCIAL_VALID_MS, RECENT_SOCIAL_PROVIDERS, RECENT_SOCIAL_SCOPE,
- SOCIAL_POST_WINDOW_MS, detectSocialSymbols
-} from './public-social-scope.mjs';
 import {PUBLIC_NEWS_SOURCE,parsePublicNews,projectPublicNews} from './public-news.mjs';
 
 const hour=3600000;
@@ -30,77 +25,17 @@ function projectNews(parts,query,at){
  return {...base('news',query,at),quality:items.length&&items.every(row=>row.quality==='stale')?'stale':partial?'partial':'fresh',as_of_ms:items[0]?.event_time_ms??Math.max(...sources.map(row=>row.last_success_at_ms||0)),coverage:{scope:'NEWS_FEED',content:'headline links',asset_matching:'headline keywords'},missing_capabilities:['news.ai_analysis'],sources,items};
 }
 
-function lunarSocialItems(posts,observed,at,recent){
- return posts.map(post=>{
-  const id=post.network+':'+post.id,{creatorId,followers,profileUrl,topicRank,creatorInteractions24h,qualifyingPostCount,evidenceSymbol}=post;
-  const evidence=recent?{creator_id:creatorId}:{kol:{creatorId,followers,profileUrl,topicRank,creatorInteractions24h,qualifyingPostCount,evidenceSymbol}};
-  const symbols=recent?[...new Set([...post.symbols,...detectSocialSymbols(post.title)])]:post.symbols;
-  return {record_id:'lunarcrush:'+id,subject_id:id,provider_id:'lunarcrush-v4',quality:at>=observed+hour?'stale':'fresh',event_time_ms:post.publishedAt,received_at_ms:observed,available_at_ms:observed,valid_until_ms:observed+hour,source_revision:null,venue_or_chain:null,data:{metric_kind:'LUNARCRUSH_POST',post_id:post.id,platform:post.network,text:post.title,url:post.url,author:{acct:post.author,display_name:post.author,url:null,bot:null},symbols,published_at_ms:post.publishedAt,observed_at_ms:observed,interactions_24h:post.interactions24h,...evidence}};
- });
-}
-
-function projectFeaturedSocial(snapshot,query,at){
- const observed=snapshot.observedAt,errors=snapshot.errors.filter(row=>row.resource!=='category-posts');
- const items=lunarSocialItems(snapshot.posts.slice(0,query.limit),observed,at,false);
- return {...base('social',query,at),as_of_ms:observed,quality:at>=observed+hour?'stale':errors.length?'partial':'fresh',coverage:{scope:'LUNARCRUSH_KOL_TOPICS',observed_at_ms:observed,topics:snapshot.topics,errors,curation:snapshot.curation},missing_capabilities:['social.full_network','social.real_time_stream','social.individual_engagement_breakdown'],sources:[source('lunarcrush-v4',true,observed)],items};
-}
-
-function directSocialItems(snapshot,providerId,at){
+function projectSocial(snapshot,query,at){
  const observed=snapshot.observedAt;
- return snapshot.posts.map(post=>{
-  const id=providerId+':'+post.creatorId+':'+post.id;
-  const expires=Math.min(post.publishedAt+SOCIAL_POST_WINDOW_MS,observed+DIRECT_SOCIAL_VALID_MS);
-  return {
-   record_id:id,subject_id:id,provider_id:providerId,quality:at>=expires?'stale':'fresh',
-   event_time_ms:post.publishedAt,received_at_ms:observed,available_at_ms:observed,valid_until_ms:expires,
-   source_revision:null,venue_or_chain:null,
-   data:{
-    metric_kind:'SOCIAL_ORIGINAL_POST',post_id:post.id,platform:post.network,text:post.title,url:post.url,
-    author:post.author,creator_id:post.creatorId,symbols:post.symbols,published_at_ms:post.publishedAt,
-    observed_at_ms:observed,likes:post.likes,reposts:post.reposts,replies:post.replies
-   }
-  };
+ const items=snapshot.posts.slice(0,query.limit).map(post=>{
+  const id=post.network+':'+post.id,{creatorId,followers,profileUrl,topicRank,creatorInteractions24h,qualifyingPostCount,evidenceSymbol}=post;
+  const kol={creatorId,followers,profileUrl,topicRank,creatorInteractions24h,qualifyingPostCount,evidenceSymbol};
+  return {record_id:'lunarcrush:'+id,subject_id:id,provider_id:'lunarcrush-v4',quality:at>=observed+hour?'stale':'fresh',event_time_ms:post.publishedAt,received_at_ms:observed,available_at_ms:observed,valid_until_ms:observed+hour,source_revision:null,venue_or_chain:null,data:{metric_kind:'LUNARCRUSH_POST',post_id:post.id,platform:post.network,text:post.title,url:post.url,author:{acct:post.author,display_name:post.author,url:null,bot:null},symbols:post.symbols,published_at_ms:post.publishedAt,observed_at_ms:observed,interactions_24h:post.interactions24h,kol}};
  });
+ return {...base('social',query,at),as_of_ms:observed,quality:at>=observed+hour?'stale':snapshot.errors.length?'partial':'fresh',coverage:{scope:'LUNARCRUSH_KOL_TOPICS',observed_at_ms:observed,topics:snapshot.topics,errors:snapshot.errors,curation:snapshot.curation},missing_capabilities:['social.individual_engagement_breakdown'],sources:[source('lunarcrush-v4',true,observed)],items};
 }
 
-function projectRecentSocial(parts,query,at){
- const [lunar,bluesky,nostr]=parts.map(part=>part.status==='fulfilled'?part.value.data:null);
- const sources=[lunar,bluesky,nostr].map((snapshot,index)=>source(RECENT_SOCIAL_PROVIDERS[index],!!snapshot,snapshot?.observedAt));
- const asOf=Math.max(...sources.map(row=>row.last_success_at_ms||0));
- if(!asOf)throw Error('PUBLIC_SOURCE_UNAVAILABLE');
- const lunarCoverage=lunar?{
-  observed_at_ms:lunar.observedAt,topics:lunar.topics,errors:lunar.errors.filter(row=>row.resource!=='creators'),
-  discovery:lunar.discovery
- }:null;
- const candidates=[
-  ...(lunar?lunarSocialItems(lunar.recentPosts,lunar.observedAt,at,true):[]),
-  ...(bluesky?directSocialItems(bluesky,RECENT_SOCIAL_PROVIDERS[1],at):[]),
-  ...(nostr?directSocialItems(nostr,RECENT_SOCIAL_PROVIDERS[2],at):[])
- ].sort((left,right)=>right.event_time_ms-left.event_time_ms);
- const items=[],urls=new Set(),texts=new Set(),authors=new Map();
- for(const item of candidates){
-  const data=item.data;
-  if(item.quality==='stale'||item.event_time_ms<=at-SOCIAL_POST_WINDOW_MS||
-     query.symbol&&!data.symbols.includes(query.symbol)||query.platform&&data.platform!==query.platform)continue;
-  const text=data.text.normalize('NFKC').toLowerCase().replace(/https?:\/\/\S+/gu,' ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-  const key=item.provider_id+':'+data.creator_id,authorCount=authors.get(key)||0;
-  if(authorCount>=2||urls.has(data.url)||texts.has(text))continue;
-  items.push(item);urls.add(data.url);texts.add(text);authors.set(key,authorCount+1);
-  if(items.length>=query.limit)break;
- }
- const failedSymbols=bluesky?.failedSymbols||[];
- const partial=sources.some(row=>row.status!=='OK')||lunarCoverage?.errors.length||failedSymbols.length;
- return {
-  ...base('social',query,at),as_of_ms:asOf,quality:partial?'partial':'fresh',
-  coverage:{scope:RECENT_SOCIAL_SCOPE,feed:'recent',observed_at_ms:asOf,lunar:lunarCoverage,bluesky_failed_symbols:failedSymbols},
-  missing_capabilities:['social.full_network','social.real_time_stream'],sources,items
- };
-}
-
-export function createLicensedFeeds({
- fetchImpl=globalThis.fetch,env=process.env,now=Date.now,cache=null,blockbeats=fetchBlockBeats,
- lunarcrush=fetchLunarCrush,bluesky=fetchBlueskyLatest,nostr=fetchNostrLatest,coindesk=coinDesk
-}={}){
+export function createLicensedFeeds({fetchImpl=globalThis.fetch,env=process.env,now=Date.now,cache=null,blockbeats=fetchBlockBeats,lunarcrush=fetchLunarCrush,coindesk=coinDesk}={}){
  const market=createMarketHubRelay({fetchImpl,now,cache});
  const slots=new Map();
  async function shared(id,ttl,load){
@@ -126,21 +61,7 @@ export function createLicensedFeeds({
   if(url.searchParams.getAll('resource').length!==1)return send(400,{error:'UNKNOWN_RESOURCE'});
   url.searchParams.delete('resource');let query;try{query=publicQuery(kind,url.searchParams);}catch{return send(400,{error:'UNKNOWN_RESOURCE'});}
   try{
-   if(kind==='social'){
-    const fromLunar=shared('lunarcrush-social-v3',300000,signal=>lunarcrush(fetchImpl,env.LUNARCRUSH_API_KEY,signal));
-    let body;
-    if(query.feed==='recent'){
-     const parts=await Promise.allSettled([
-      fromLunar,
-      shared('bluesky-latest-v1',DIRECT_SOCIAL_REFRESH_MS,signal=>bluesky(fetchImpl,signal,now)),
-      shared('nostr-relay-v1',DIRECT_SOCIAL_REFRESH_MS,signal=>nostr(signal,now))
-     ]);
-     body=projectRecentSocial(parts,query,now());
-    }else{
-     body=projectFeaturedSocial((await fromLunar).data,query,now());
-    }
-    return send(200,validatePublicEnvelope(body,kind,query));
-   }
+   if(kind==='social'){const value=await shared('lunarcrush-kol-v2',hour,signal=>lunarcrush(fetchImpl,env.LUNARCRUSH_API_KEY,signal));return send(200,validatePublicEnvelope(projectSocial(value.data,query,now()),kind,query));}
    const parts=await Promise.allSettled([shared('blockbeats-1',300000,signal=>blockbeats(fetchImpl,env.BLOCKBEATS_API_KEY,signal)),shared('coindesk-1',300000,signal=>coindesk(fetchImpl,signal))]);
    if(parts.every(part=>part.status==='rejected'))throw Error('PUBLIC_SOURCE_UNAVAILABLE');
    return send(200,projectNews(parts,query,now()));

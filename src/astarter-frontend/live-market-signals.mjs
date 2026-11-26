@@ -89,6 +89,26 @@ function analyze(source, envelope, at) {
   });
 }
 
+// Signals already validated on the signals page are available to chat in this tab.
+const readings = new WeakMap();
+function rememberObservation(fetchImpl, row) {
+  let bySymbol = readings.get(fetchImpl);
+  if (!bySymbol) { bySymbol = new Map(); readings.set(fetchImpl, bySymbol); }
+  if ((bySymbol.get(row.symbol)?.receivedAt ?? 0) <= row.receivedAt) bySymbol.set(row.symbol, row);
+}
+
+export async function readLiveSignalObservation(symbol, {fetchImpl = globalThis.fetch, now = Date.now, signal} = {}) {
+  const at = now(), previous = readings.get(fetchImpl)?.get(symbol);
+  if (previous && previous.receivedAt <= at && at < Math.min(previous.validUntil, previous.receivedAt + DAILY_REFRESH)) return previous;
+  const source = sourceFor(symbol);
+  const response = await fetchImpl(source.url, {method: 'GET', credentials: 'omit', cache: 'no-store', redirect: 'error', signal});
+  if (!response.ok) throw Error('PUBLIC_SOURCE_UNAVAILABLE');
+  const row = analyze(source, await response.json(), now());
+  signal?.throwIfAborted();
+  rememberObservation(fetchImpl, row);
+  return row;
+}
+
 const dataErrors = new Set(['STALE_MARKET', 'INSUFFICIENT_BARS', 'INVALID_SOURCE_DATA']);
 
 export function createLiveSignalFeed({
@@ -174,6 +194,7 @@ export function createLiveSignalFeed({
       if (slot.row && (row.sessionDate < slot.row.sessionDate ||
           (!slot.daily && row.closedAt < slot.row.closedAt))) throw Error('STALE_MARKET');
       slot.row = row;
+      rememberObservation(fetchImpl, row);
       slot.error = null;
       slot.failures = 0;
       slot.rateLimitUntil = 0;

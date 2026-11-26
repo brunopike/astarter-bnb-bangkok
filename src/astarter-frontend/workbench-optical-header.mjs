@@ -30,7 +30,7 @@ export function workbenchWalletMetric(snapshot){
  const readAt=Number.isFinite(snapshot.updatedAt)?new Date(snapshot.updatedAt):null;
  const timestamp=readAt&&Number.isFinite(readAt.getTime())?readAt.toISOString():'';
  const readTime=timestamp?L('读取于','Read at')+' '+timestamp.slice(0,10)+' '+timestamp.slice(11,19)+' UTC':L('读取时间未知','Read time unavailable');
- return {label:name+' · BSC'+(timestamp?'\u00a0'+readAt.toTimeString().slice(0,5):''),amount:reading.amount,description:[name,reading.detail,source,readTime].join(' · ')};
+ return {label:name+' · BSC'+(timestamp?' '+readAt.toTimeString().slice(0,5):''),amount:reading.amount,description:[name,reading.detail,source,readTime].join(' · ')};
 }
 
 export function workbenchEquityLabel(account){
@@ -61,7 +61,7 @@ export function opticalHeaderMetrics(tasks=[],trade={}){
   candidates:tasks.filter(t=>t.phase==='complete'&&t.outcome==='candidate').length};
 }
 
-function createHalftoneFace(brand,isWordmark=false){
+export function createHalftoneFace(brand,isWordmark=false){
  const canvas=brand.querySelector('canvas'),ctx=canvas.getContext('2d'),label=brand.querySelector('.dot-text');
  const reduced=matchMedia('(prefers-reduced-motion:reduce)');let word=label.textContent;
  let w=0,h=0,inkWidth=1,dpr=1,dots=new Float32Array(0),raf=0,visible=true,disposed=false,paused=false,hovered=false,focused=false,px=-1e5,py=-1e5,ring={x:0,y:0,at:-1e5},ink='',spectrum=[],sweepAt=-1e5,nextSweepAt=performance.now()+8000;
@@ -106,6 +106,7 @@ function createHalftoneFace(brand,isWordmark=false){
   const mask=document.createElement('canvas');mask.width=w;mask.height=h;const m=mask.getContext('2d',{willReadFrequently:true});
   const face=isWordmark?'900 100px "Arial Black", "Helvetica Neue", Arial, sans-serif':'600 100px "IBM Plex Mono", monospace';m.font=face;
   const size=Math.min(w*.98/m.measureText(word).width*100,h*1.2,isWordmark?64:44);m.font=face.replace('100px',size+'px');
+  label.style?.setProperty('--lw-fitted-size',size+'px');
   const box=m.measureText(word),ascent=box.actualBoundingBoxAscent||size*.72,descent=box.actualBoundingBoxDescent||0;
   inkWidth=Math.max(1,Math.min(w,box.actualBoundingBoxRight||box.width));
   m.fillText(word,0,(h+ascent-descent)/2);
@@ -130,9 +131,18 @@ function createHalftoneFace(brand,isWordmark=false){
  document.addEventListener('visibilitychange',visibility);reduced.addEventListener('change',layout);document.fonts?.ready.then(()=>{if(!disposed)layout();});layout();
  return {setValue(value,isPaused){const changedPause=paused!==isPaused;paused=isPaused;const now=performance.now();if(isWordmark&&visible&&motionAllowed()&&now>=nextSweepAt){sweepAt=now;nextSweepAt=now+8000;wake();}if(changedPause)wake();if(word!==value){word=value;label.textContent=value;layout();if(motionAllowed())ring={x:w*.5,y:h*.5,at:now};wake();}},dispose(){disposed=true;cancelAnimationFrame(raf);ro.disconnect();io.disconnect();theme.disconnect();document.removeEventListener('visibilitychange',visibility);reduced.removeEventListener('change',layout);target.removeEventListener('pointerenter',pointer);target.removeEventListener('pointermove',pointer);target.removeEventListener('pointerleave',leave);target.removeEventListener('pointerdown',down);target.removeEventListener('focus',focus);target.removeEventListener('blur',blur);}};
 }
+export const opticalFace=(value,tag='strong')=>`<${tag} class="lw-dot-face"><span class="dot-text">${value}</span><canvas aria-hidden="true"></canvas></${tag}>`;
+export function mountSweepingTitle(heading){
+ if(!heading)return null;
+ const title=heading.querySelector('.dot-text').textContent;
+ const face=createHalftoneFace(heading,true);
+ // Standalone headings have no data updates to drive the wordmark's sweep.
+ const timer=setInterval(()=>face.setValue(title,false),1000);
+ return ()=>{clearInterval(timer);face.dispose();};
+}
 export function createOpticalHeader(root){
- const face=(value,tag='strong')=>`<${tag} class="lw-dot-face"><span class="dot-text">${value}</span><canvas aria-hidden="true"></canvas></${tag}>`;
- root.innerHTML=`<div class="lw-halftone-brand">${face('LENSWAVE','h1')}</div><div class="lw-header-metrics"><button type="button" data-terminal-action="wallet" aria-haspopup="dialog"><small></small>${face('—')}<span></span></button><div><small></small>${face('—')}<span></span></div><div class="lw-header-candidates"><small></small>${face('—')}<span></span></div></div>`;
+ const wordmark='THINKING LAYER';
+ root.innerHTML=`<div class="lw-halftone-brand" data-no-translate>${opticalFace(wordmark,'h1')}</div><div class="lw-header-metrics"><button type="button" data-terminal-action="wallet" aria-haspopup="dialog"><small></small>${opticalFace('—')}<span></span></button><div><small></small>${opticalFace('—')}<span></span></div><div class="lw-header-candidates"><small></small>${opticalFace('—')}<span></span></div></div>`;
  const fields=[...root.querySelector('.lw-header-metrics').children],surfaces=[...root.querySelectorAll('.lw-dot-face')].map((node,i)=>createHalftoneFace(node,i===0));
  return {update(tasks,balance,paused,scanRows=[]){
   const ready=scanRows.filter(r=>r.state==='ready'),samples=ready.reduce((n,row)=>n+row.bars,0),signals=ready.filter(r=>r.signal&&r.signal!=='balanced').length;
@@ -141,7 +151,7 @@ export function createOpticalHeader(root){
    [L('已扫描 K 线','Candles analysed'),ready.length?samples.toLocaleString('en-US'):'—',`${ready.length} / ${scanRows.length||new Set(tasks.map(task=>task.symbol)).size} ${L('标的 · 日线核验','assets · daily study')}`],
    [L('技术观察','Technical watch'),ready.length?String(signals):'—',paused?L('已暂停','Paused'):L('突破 / RSI 极值','Breakouts / RSI extremes')]
   ];
-  surfaces[0].setValue('LENSWAVE',paused);
+  surfaces[0].setValue(wordmark,paused);
   rows.forEach((values,i)=>{fields[i].firstElementChild.textContent=values[0];fields[i].lastElementChild.textContent=values[2];fields[i].lastElementChild.hidden=true;fields[i].setAttribute('aria-label',i===0?balance.description:values.join(' · '));surfaces[i+1].setValue(values[1],paused);});
   fields[0].title=balance.description;
  },dispose(){surfaces.forEach(surface=>surface.dispose());}};

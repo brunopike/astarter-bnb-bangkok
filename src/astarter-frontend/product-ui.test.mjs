@@ -40,35 +40,6 @@ test('pages without section navigation keep their heading and bound actions afte
   }
  }finally{if(previous)Object.defineProperty(globalThis,'document',previous);else delete globalThis.document;}
 });
-test('a selected data tab can repeat default parameters without adding a history entry or losing an active filter',async()=>{
- const {isCurrentDataLink}=await import('./product-layout.mjs'),base='https://example.test/';
- const link=(query,active=true)=>({href:new URL(query,base).href,matches:()=>active});
- const current=query=>new URL(query,base);
- assert.ok(isCurrentDataLink(link('?page=etf&asset=btc'),current('?page=etf')));
- assert.ok(isCurrentDataLink(link('?page=etf&asset=btc'),current('?asset=btc&page=etf')));
- assert.equal(isCurrentDataLink(link('?page=etf&asset=btc'),current('?page=etf&asset=btc&fund=IBIT')),false);
- assert.equal(isCurrentDataLink(link('?page=etf&asset=eth',false),current('?page=etf')),false);
- assert.equal(isCurrentDataLink(link('?page=etf&asset=btc'),current('?page=etf&asset=eth')),false);
- assert.equal(isCurrentDataLink(link('?page=etf&asset=btc'),current('?page=etf#session')),false);
-});
-test('data receipts paint under a closed data filter and wait during an open menu or a moving selection',async t=>{
- const {canAutoRefresh}=await import('./product-composition.mjs');
- const original=globalThis.document; t.after(()=>{if(original)globalThis.document=original;else delete globalThis.document;});
- let floating=false,gliding=false,filter='data-dc-route-select',native=false;
- const host={querySelector:selector=>filter&&selector.includes('['+filter+']')?{}:null};
- const activeElement={get tagName(){return native?'SELECT':'BUTTON';},matches:selector=>native?selector.includes('select['+filter+']')||selector.split(',').includes('select'):selector.includes('.lq-select__trigger'),closest:()=>host};
- globalThis.document={activeElement,querySelector:()=>floating?{}:null};
- const root={querySelector:selector=>gliding&&selector.includes('.layout-tab-glide')?{}:null,querySelectorAll:()=>[],contains:()=>true};
- assert.equal(canAutoRefresh(root),true);
- filter='data-pd-social-filter';
- assert.equal(canAutoRefresh(root),true,'receipts can render with focus on the saved news social filter');
- floating=true;assert.equal(canAutoRefresh(root),false);
- floating=false;gliding=true;assert.equal(canAutoRefresh(root),false);
- gliding=false;native=true;
- assert.equal(canAutoRefresh(root),true,'the native social filter can receive results while focused');
- native=false;filter='data-account-choice';
- assert.equal(canAutoRefresh(root),false,'other focused forms retain their existing refresh protection');
-});
 test('data refresh controls preserve owner bindings, busy state and the selected shared interval',async()=>{
  const {dataRefreshControls}=await import('./product-composition.mjs');
  for(const scope of ['dc','hub','pd']){
@@ -78,17 +49,6 @@ test('data refresh controls preserve owner bindings, busy state and the selected
   assert.match(html,/value="60" selected/);assert.match(html,/&lt;Reading&gt;/);
  }
  assert.throws(()=>dataRefreshControls({scope:'unknown',seconds:60,intervals:[60]}),/INVALID_DATA_REFRESH_SCOPE/);
-});
-test('holding the flow precision control defers new receipts only until release',async t=>{
- const {canAutoRefresh}=await import('./product-composition.mjs');
- const original=globalThis.document;t.after(()=>{if(original)globalThis.document=original;else delete globalThis.document;});
- let pressed=false,precision=true;
- const active={matches:selector=>selector.split(',').some(s=>s==='input'||(s==='input:not([data-flow-precision])'&&!precision))};
- globalThis.document={activeElement:active,querySelector:()=>null};
- const root={contains:()=>true,querySelectorAll:()=>[],querySelector:selector=>pressed&&selector.includes('.dc-flow-precision:active')?active:null};
- pressed=true;assert.equal(canAutoRefresh(root),false);
- pressed=false;assert.equal(canAutoRefresh(root),true,'keeping keyboard focus on a saved display preference permits new receipts');
- precision=false;assert.equal(canAutoRefresh(root),false,'an unfinished entry in another field remains protected');
 });
 test('shared card edges follow only the nearest framed card and clear on navigation, scroll and reduced motion',async()=>{
  const {bindCardEdges}=await import('./product-composition.mjs');

@@ -42,138 +42,75 @@ export function hubChartOption(kind,model,p){
 }
 
 let library;
-function createPlot(root,node,models,windows,load){
- const kind=node.dataset.hubPlot,events=new AbortController();
- let chart=null,observer=null,themeObserver=null,restore=()=>{};
- function dispose(){
-  events.abort();observer?.disconnect();themeObserver?.disconnect();chart?.dispose();
- }
- async function mount(){
+export function createHubCharts(){
+ let charts=[],observer,themeObserver,revision=0,events;const windows=new Map();
+ function dispose(){revision++;events?.abort();observer?.disconnect();themeObserver?.disconnect();observer=themeObserver=null;for(const chart of charts)chart.dispose();charts=[];}
+ return {dispose,async mount(root,models){
+  dispose();const current=revision,nodes=[...root.querySelectorAll('[data-hub-plot]')];if(!nodes.length)return;
   try{
-   const api=await load();if(events.signal.aborted||!node.isConnected)return;
-   const signal=events.signal,key=models.performance?.window||'7d';
-   let gaugeColors=[],lightColors=[],selected=null;
-   chart=api.init(node,null,{renderer:'svg'});
-   const count=kind==='performance'?models.performance.rows[0].values.length:kind==='sentiment'?Math.min(30,models.sentiment.length):models.shares.length;
-   function sampleRange(zoom=kind==='performance'?windows.get(key):null){
-    const span=count-1;
-    return {first:Math.ceil(span*(zoom?.start??0)/100-1e-9),last:Math.floor(span*(zoom?.end??100)/100+1e-9)};
-   }
-   function visibleSample(index){const {first,last}=sampleRange();return Math.max(first,Math.min(last,index));}
-   function describePerformance(index){
-    const {rows,hidden}=models.performance,offset=rows[0].values[index][0];
-    const sample=offset===0?L('最新样本','Latest sample'):L(Math.abs(offset)+' 小时前的样本','Sample '+Math.abs(offset)+'h earlier');
-    return sample+' · '+rows.filter(row=>!hidden.has(row.symbol)).map(row=>row.symbol+' '+percent(row.values[index][1])).join(', ');
-   }
+   library??=import('./node_modules/echarts/dist/echarts.esm.min.mjs');const api=await library;
+   if(current!==revision||!nodes.every(node=>node.isConnected))return;
+   events=new AbortController();const signal=events.signal,key=models.performance.window||'7d';let gaugeColors=[],lightColors=[];
+   for(const node of nodes)charts.push(api.init(node,null,{renderer:'svg'}));
    let legendIndex=-1;
    function legendAt(index){if(index===legendIndex)return;legendIndex=index;for(const row of models.performance.rows){const value=row.values[index]?.[1],label=root.querySelector('[data-hub-series="'+row.symbol+'"]>span');if(label&&finite(value)){label.textContent=percent(value);label.className=value>=0?'hub-up':'hub-down';}}}
    function zoomLabel(node,zoom){
     node.dataset.zoomStart=zoom.start;node.dataset.zoomEnd=zoom.end;
     const reset=root.querySelector('[data-hub-reset]');if(reset)reset.disabled=zoom.start<.01&&zoom.end>99.99;
-    const {first,last}=sampleRange(zoom),points=models.performance.rows[0].values;
-    const label=root.querySelector('[data-hub-window-label]');if(label)label.textContent=points[first][0]+'h — '+points[last][0]+'h';
-    const out=root.querySelector('[data-hub-zoom="out"]'),inside=root.querySelector('[data-hub-zoom="in"]');if(out)out.disabled=reset.disabled;if(inside)inside.disabled=last-first<=Math.min(7,count-1);
-    legendAt(last);
+    const span=models.performance.rows[0].values.length-1,start=Math.round(span*(zoom.start/100-1)),end=Math.round(span*(zoom.end/100-1));
+    const label=root.querySelector('[data-hub-window-label]');if(label)label.textContent=start+'h — '+end+'h';
+    const out=root.querySelector('[data-hub-zoom="out"]'),inside=root.querySelector('[data-hub-zoom="in"]');if(out)out.disabled=reset.disabled;if(inside)inside.disabled=end-start<=Math.min(7,span);
+    legendAt(Math.round(span*zoom.end/100));
    }
    function paint(){
-    const style=getComputedStyle(node),color=key=>style.getPropertyValue(key).trim();
+    const style=getComputedStyle(nodes[0]),color=key=>style.getPropertyValue(key).trim();
     const palette={ink:color('--b-ink'),muted:color('--b-muted'),line:color('--b-line'),panel:color('--b-panel'),font:style.fontFamily,series:[1,2,3].map(i=>color('--chart-series-'+i)),up:color('--signal-up')||color('--ok'),down:color('--signal-down')||color('--error'),gold:color('--chart-series-4'),spectrum:Array.from({length:7},(_,i)=>color('--s'+(i+1))),dark:document.documentElement.dataset.theme==='dark'};
     gaugeColors=palette.spectrum;
     lightColors=[...palette.series,palette.up,palette.down,palette.gold,...palette.spectrum];
-    const option=hubChartOption(kind,models[kind],palette);
-    if(kind==='performance'){Object.assign(option.dataZoom[0],windows.get(key)||{});zoomLabel(node,option.dataZoom[0]);}
-    chart.setOption(option,{notMerge:true,silent:true});node.dataset.chartReady='true';
+    nodes.forEach((node,i)=>{
+     const option=hubChartOption(node.dataset.hubPlot,models[node.dataset.hubPlot],palette);
+     if(node.dataset.hubPlot==='performance'){Object.assign(option.dataZoom[0],windows.get(key)||{});zoomLabel(node,option.dataZoom[0]);}
+     charts[i].setOption(option,{notMerge:true,silent:true});node.dataset.chartReady='true';
+    });
    }
-   chart.on('rendered',()=>{preserveChartLightBounds(node);applyChartSeriesLight(node,lightColors);if(kind==='sentiment')applyHubGaugeLight(node,gaugeColors);});
-   const inspect=index=>{
-    selected=visibleSample(index);node.dataset.inspectedIndex=selected;
-    chart.dispatchAction({type:'showTip',seriesIndex:kind==='sentiment'?1:0,dataIndex:selected});
-    if(kind==='performance')legendAt(selected);
-    if(kind==='sentiment'){const row=models.sentiment.slice(-30)[selected],label=root.querySelector('[data-hub-sentiment-point]');if(label)label.textContent=new Date(row.at).toISOString().slice(5,10)+' · '+row.value+' / 100';}
-    const announcement=root.querySelector('[data-hub-chart-announcement]');
-    if(announcement)announcement.textContent=kind==='performance'?describePerformance(selected):kind==='sentiment'?new Date(models.sentiment.slice(-30)[selected].at).toISOString().slice(0,10)+' · '+models.sentiment.slice(-30)[selected].value+' / 100':models.shares[selected].name+' '+percent(models.shares[selected].value);
-   };
-   function dismissInspection(){
-    chart.dispatchAction({type:'hideTip'});chart.dispatchAction({type:'updateAxisPointer',currTrigger:'leave'});
-    selected=null;delete node.dataset.inspectedIndex;
-    const announcement=root.querySelector('[data-hub-chart-announcement]');
+   nodes.forEach((node,i)=>{
+    const chart=charts[i],kind=node.dataset.hubPlot;let selected=null;
+    chart.on('rendered',()=>{preserveChartLightBounds(node);applyChartSeriesLight(node,lightColors);if(kind==='sentiment')applyHubGaugeLight(node,gaugeColors);});
+    const count=kind==='performance'?models.performance.rows[0].values.length:kind==='sentiment'?Math.min(30,models.sentiment.length):models.shares.length;
+    const inspect=index=>{
+     const zoom=kind==='performance'?(windows.get(key)||{start:0,end:100}):{start:0,end:100},first=Math.ceil((count-1)*zoom.start/100),last=Math.floor((count-1)*zoom.end/100);
+     selected=Math.max(first,Math.min(last,index));node.dataset.inspectedIndex=selected;
+     chart.dispatchAction({type:'showTip',seriesIndex:kind==='sentiment'?1:0,dataIndex:selected});
+     if(kind==='performance')legendAt(selected);
+     if(kind==='sentiment'){const row=models.sentiment.slice(-30)[selected],label=root.querySelector('[data-hub-sentiment-point]');if(label)label.textContent=new Date(row.at).toISOString().slice(5,10)+' · '+row.value+' / 100';}
+     const announcement=root.querySelector('[data-hub-chart-announcement]');
+     if(announcement)announcement.textContent=kind==='performance'?models.performance.rows.filter(r=>!models.performance.hidden.has(r.symbol)).map(r=>r.symbol+' '+percent(r.values[selected][1])).join(', '):kind==='sentiment'?new Date(models.sentiment.slice(-30)[selected].at).toISOString().slice(0,10)+' · '+models.sentiment.slice(-30)[selected].value+' / 100':models.shares[selected].name+' '+percent(models.shares[selected].value);
+    };
+    function changeZoom(action){const zoom=windows.get(key)||{start:0,end:100},span=action==='0'?100:Math.min(100,Math.max(7/(count-1)*100,(zoom.end-zoom.start)*(action==='-'?1.5:.66))),start=Math.max(0,Math.min(100-span,(zoom.start+zoom.end-span)/2));chart.dispatchAction({type:'dataZoom',dataZoomId:'comparison',start,end:start+span});}
+    node.style.touchAction='pan-y';
+    node.addEventListener('pointerdown',()=>node.dataset.interacting='true',{signal});
+    for(const type of ['pointerup','pointercancel'])document.addEventListener(type,()=>delete node.dataset.interacting,{signal});
+    node.addEventListener('keydown',e=>{
+     if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();inspect(e.key==='Home'?0:e.key==='End'?count-1:(selected??count-1)+(e.key==='ArrowLeft'?-1:1));}
+     else if(e.key==='Escape'){e.preventDefault();chart.dispatchAction({type:'hideTip'});chart.dispatchAction({type:'updateAxisPointer',currTrigger:'leave'});if(kind==='sentiment'){const label=root.querySelector('[data-hub-sentiment-point]');if(label)label.textContent=L('近 30 日情绪','30-day sentiment');}}
+     else if(kind==='performance'&&['+','=','-','0'].includes(e.key)){
+      e.preventDefault();changeZoom(e.key);
+     }
+     else if(kind==='shares'&&e.key==='Enter'){e.preventDefault();root.querySelector('[data-hub-share="'+models.shares[selected??0].name+'"]')?.click();}
+    },{signal});
     if(kind==='performance'){
-     const {last}=sampleRange();legendAt(last);
-     if(announcement)announcement.textContent=describePerformance(last);
-    }else{
-     if(announcement)announcement.textContent='';
-     if(kind==='sentiment'){const label=root.querySelector('[data-hub-sentiment-point]');if(label)label.textContent=L('近 30 日情绪','30-day sentiment');}
+     chart.on('datazoom',()=>{const zoom=chart.getOption().dataZoom[0],value={start:zoom.start,end:zoom.end};windows.set(key,value);zoomLabel(node,value);});
+     chart.on('updateAxisPointer',event=>{const axis=event.axesInfo?.find(a=>a.axisDim==='x');if(axis){selected=Math.max(0,Math.min(count-1,Math.round(count-1+axis.value)));node.dataset.inspectedIndex=selected;legendAt(selected);}});
+     node.addEventListener('pointerleave',()=>legendAt(Math.round((count-1)*(windows.get(key)?.end??100)/100)),{signal});
+     root.querySelector('[data-hub-reset]')?.addEventListener('click',()=>chart.dispatchAction({type:'dataZoom',dataZoomId:'comparison',start:0,end:100}),{signal});
+     root.querySelectorAll('[data-hub-zoom]').forEach(button=>button.addEventListener('click',()=>changeZoom(button.dataset.hubZoom==='in'?'+':'-'),{signal}));
+     node.addEventListener('dblclick',()=>chart.dispatchAction({type:'dataZoom',dataZoomId:'comparison',start:0,end:100}),{signal});
     }
-   }
-   function changeZoom(action){const zoom=windows.get(key)||{start:0,end:100},span=action==='0'?100:Math.min(100,Math.max(7/(count-1)*100,(zoom.end-zoom.start)*(action==='-'?1.5:.66))),start=Math.max(0,Math.min(100-span,(zoom.start+zoom.end-span)/2));chart.dispatchAction({type:'dataZoom',dataZoomId:'comparison',start,end:start+span});}
-   node.style.touchAction='pan-y';
-   node.addEventListener('pointerdown',()=>node.dataset.interacting='true',{signal});
-   for(const type of ['pointerup','pointercancel'])document.addEventListener(type,()=>delete node.dataset.interacting,{signal});
-   node.addEventListener('keydown',e=>{
-    if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();inspect(e.key==='Home'?0:e.key==='End'?count-1:(selected??count-1)+(e.key==='ArrowLeft'?-1:1));}
-    else if(e.key==='Escape'){e.preventDefault();dismissInspection();}
-    else if(kind==='performance'&&['+','=','-','0'].includes(e.key)){
-     e.preventDefault();changeZoom(e.key);
-    }
-    else if(kind==='shares'&&e.key==='Enter'){e.preventDefault();root.querySelector('[data-hub-share="'+models.shares[selected??0].name+'"]')?.click();}
-   },{signal});
-   if(kind==='performance'){
-    chart.on('datazoom',()=>{const zoom=chart.getOption().dataZoom[0],value={start:zoom.start,end:zoom.end};windows.set(key,value);zoomLabel(node,value);});
-    chart.on('updateAxisPointer',event=>{const axis=event.axesInfo?.find(a=>a.axisDim==='x');if(axis){selected=visibleSample(Math.round(count-1+axis.value));node.dataset.inspectedIndex=selected;legendAt(selected);}});
-    node.addEventListener('pointerleave',()=>{
-     if(document.activeElement!==node){selected=null;delete node.dataset.inspectedIndex;}
-     legendAt(sampleRange().last);
-    },{signal});
-    root.addEventListener('click',event=>{
-     const button=event.target.closest?.('[data-hub-reset],[data-hub-zoom]');
-     if(button&&!button.disabled)changeZoom(button.hasAttribute('data-hub-reset')?'0':button.dataset.hubZoom==='in'?'+':'-');
-    },{signal});
-    restore=()=>{legendIndex=-1;zoomLabel(node,windows.get(key)||{start:0,end:100});if(selected!==null)legendAt(selected);};
-    node.addEventListener('dblclick',()=>chart.dispatchAction({type:'dataZoom',dataZoomId:'comparison',start:0,end:100}),{signal});
-   }
-   if(kind==='shares')chart.on('click',item=>root.querySelector('[data-hub-share="'+item.name+'"]')?.click());
-   if(kind==='sentiment'){
-    chart.on('mouseover',item=>{if(item.seriesIndex===1)inspect(item.dataIndex);});
-    restore=()=>{const row=selected===null?null:models.sentiment.slice(-30)[selected],label=root.querySelector('[data-hub-sentiment-point]');if(row&&label)label.textContent=new Date(row.at).toISOString().slice(5,10)+' · '+row.value+' / 100';};
-   }
-   paint();themeObserver=new MutationObserver(paint);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-   observer=new ResizeObserver(entries=>{
-    const box=entries[0]?.contentRect;if(!box)return;
-    const width=Math.round(box.width),height=Math.round(box.height);
-    if(width>0&&height>0&&(width!==chart.getWidth()||height!==chart.getHeight()))chart.resize({width,height});
+    if(kind==='shares')chart.on('click',item=>root.querySelector('[data-hub-share="'+item.name+'"]')?.click());
+    if(kind==='sentiment')chart.on('mouseover',item=>{if(item.seriesIndex===1)inspect(item.dataIndex);});
    });
-   observer.observe(node);
-  }catch{
-   if(events.signal.aborted)return;
-   dispose();if(node.isConnected){node.textContent=L('图表未载入，请刷新重试','Chart unavailable. Refresh to retry.');node.dataset.chartReady='error';}
-  }
- }
- return {node,mount,dispose,restore:()=>restore()};
-}
-
-export function createHubCharts(load=()=>library??=import('./node_modules/echarts/dist/echarts.esm.min.mjs').catch(error=>{library=null;throw error;})){
- const plots=new Map(),windows=new Map();
- function dispose(){for(const plot of plots.values())plot.dispose();plots.clear();}
- function mount(root,models){
-  const nodes=[...root.querySelectorAll('[data-hub-plot]')],retained=new Set(),mounts=[];
-  for(const node of nodes){
-   const kind=node.dataset.hubPlot,model=models[kind];
-   const content=kind==='performance'?[model.rows,model.window,[...model.hidden].sort()]:kind==='sentiment'?model.slice(-30):model;
-   const key=JSON.stringify([node.ownerDocument.documentElement.lang,node.getAttribute('aria-label'),content]);
-   const previous=plots.get(kind);retained.add(kind);
-   if(previous?.key===key&&previous.node.dataset.chartReady!=='error'){
-    if(previous.node!==node){node.replaceWith(previous.node);previous.restore();}
-    mounts.push(previous.ready);continue;
-   }
-   previous?.dispose();
-   const plot=createPlot(root,node,models,windows,load);
-   plot.key=key;
-   plots.set(kind,plot);
-   plot.ready=plot.mount();
-   mounts.push(plot.ready);
-  }
-  for(const [kind,plot] of plots)if(!retained.has(kind)){plot.dispose();plots.delete(kind);}
-  return Promise.all(mounts);
- }
- return {dispose,mount};
+   paint();themeObserver=new MutationObserver(paint);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+   observer=new ResizeObserver(()=>{for(const chart of charts)chart.resize();});for(const node of nodes)observer.observe(node);
+  }catch{library=null;if(current===revision){dispose();for(const node of nodes)if(node.isConnected){node.textContent=L('图表未载入，请刷新重试','Chart unavailable. Refresh to retry.');node.dataset.chartReady='error';}}}
+ }};
 }

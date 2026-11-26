@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {collectionSource,collectionBeam,planNewsCrew,newsReturnPath,newsDepartureDelays,measureSignalFloor,planSignalCrew,signalMeetingRooms,dataPatrolStops,measureDataFloor,planDataCrew,planDataWalk,nextDataPair} from './collection-motion.mjs';
+import {collectionSource,collectionBeam,planNewsCrew,newsReturnPath,newsDepartureDelays,measureSignalFloor,planSignalCrew,signalMeetingRooms,dataPatrolStops,measureDataFloor,planDataCrew} from './collection-motion.mjs';
 const top={key:'chain',zone:'chain'},asset={key:'chain',zone:'asset:ETH',asset:'ETH',intent:'asset',lower:true},flow={key:'chain',zone:'workflow:0:ETH',asset:'ETH',intent:'asset',lower:true,roles:[3,7,8]},strategy={key:'risk',zone:'workflow:2:ETH',asset:'ETH',intent:'strategy',lower:true,roles:[6,9,12]};
 test('a research leader reads its own visible asset or workflow; partners keep collecting independent sources',()=>{
  const job={id:'research-ETH:v1',symbol:'ETH',roles:[3,7,8],source:'chain'},before=JSON.stringify(job);
@@ -137,19 +137,6 @@ test('people following the same aisle leave enough space while independent aisle
  for(let i=1;i<queue.length;i++)assert.ok((queue[i]-queue[i-1])/mobilePace>=36);
 });
 
-test('a fresh patrol gives a runner from an earlier pair enough room on the shared aisle',()=>{
-  const home={x:80,y:340},path=[home,{x:80,y:120},{x:480,y:120}];
-  const other=[home,{x:490,y:340}],pace=3.45;
-  const traffic=[{path,startsIn:30}];
-  const [follows]=newsDepartureDelays([{outbound:path}],pace,traffic);
-  assert.ok((follows-30)/pace>=36);
-  assert.deepEqual(newsDepartureDelays([{outbound:other}],pace,traffic),[50]);
-  assert.deepEqual(newsDepartureDelays([{outbound:path}],pace,[{path,startsIn:-5000}]),[50]);
-  const homeward=[{x:80,y:120},home],otherReturn=[{x:80,y:112},home];
-  const [homeDelay]=newsDepartureDelays([{outbound:otherReturn}],pace,[{path:homeward,startsIn:50}],home);
-  assert.ok(homeDelay>50,'different pairs returning along the same edge leave one another room');
-});
-
 const box=(left,top,right,bottom)=>({left,right,top,bottom,width:right-left,height:bottom-top});
 const record=(id,left,top,right,bottom)=>({id,kind:'signal',rect:box(left,top,right,bottom)});
 
@@ -260,29 +247,6 @@ test('data crews cover different kinds of evidence, honour a selected visible st
   assert.deepEqual(planDataCrew({...floor,obstacles:[box(0,0,1200,900)]},12),[]);
 });
 
-test('a returning pair rotates real records while preserving the other readers and its reserved seats',()=>{
-  const stops=Array.from({length:7},(_,i)=>({...record('row-'+i,48,58+i*105,735,144+i*105),kind:'row'}));
-  const floor={bounds:box(12,48,1030,856),home:{x:984,y:755},compact:false,obstacles:[],stops};
-  const jobs=planDataCrew(floor,6),pair=[0,1],next=nextDataPair(floor,jobs,pair,1);
-  assert.equal(next.length,2);
-  assert.ok(next.some(j=>!jobs.some(original=>original.stop===j.stop)),'read a visible record the first shift missed');
-  for(const [i,job] of next.entries()){
-    const previous=jobs[i],at=job.outbound.at(-1);
-    assert.ok(stops.includes(job.stop));
-    assert.equal(job.meeting.zone,previous.meeting.zone);
-    assert.equal(job.meeting.partner,previous.meeting.partner);
-    assert.deepEqual(job.homeward,previous.homeward);
-    assert.deepEqual(job.meeting.approach[0],at);
-    assert.deepEqual(job.meeting.approach.at(-1),job.homeward[0]);
-    for(const point of jobs.flatMap(j=>[j.outbound.at(-1),j.homeward[0]]))
-      assert.ok(Math.hypot(at.x-point.x,at.y-point.y)>=29);
-    for(const path of [job.outbound,job.meeting.approach,job.homeward])verifyLeg(path,floor);
-  }
-  const waiting={...floor,stops:[],walkAreas:[box(30,80,895,700)]};
-  const walks=planDataWalk(waiting,6),nextWalk=nextDataPair(waiting,walks,pair,2);
-  for(const job of nextWalk){assert.equal(job.stop,null);assert.equal(job.mode,'walk');assert.equal(job.inspectBubble,null);}
-});
-
 test('data stations require published content in the visible scroller and keep stable IDs across quote updates',()=>{
   const style={display:'block',visibility:'visible',opacity:'1',overflowX:'visible',overflowY:'visible'};
   const node=(r,selector,attrs={})=>({dataset:{},childNodes:[],children:[],tagName:'DIV',getBoundingClientRect:()=>r,
@@ -300,7 +264,7 @@ test('data stations require published content in the visible scroller and keep s
   tr.matches=s=>s.startsWith('.dc-table tbody>tr');tr.closest=()=>table;
   const date=node(box(30,350,140,406)),amount=node(box(394,350,509,406)),missing=node(box(160,350,252,406));
   date.textContent='2026-11-19';amount.textContent='275';missing.textContent='—';tr.cells=[date,missing,amount];
-  area.querySelectorAll=s=>s==='.dc-panel'?[]:s==='.dc-table,.dc-section table'?[table]:[visible,partial,outside,empty,tr];
+  area.querySelectorAll=s=>s==='.dc-panel'?[]:s==='.dc-table'?[table]:[visible,partial,outside,empty,tr];
   root.querySelector=()=>area;
   let active;const query={search:'?page=etf'};root.ownerDocument={
     defaultView:{innerWidth:390,innerHeight:844,location:query,getComputedStyle:el=>el.style||style},
@@ -314,49 +278,4 @@ test('data stations require published content in the visible scroller and keep s
   query.search='?page=etf&data=demo';assert.deepEqual(dataPatrolStops(root,pocket),[]);
   assert.equal(visible.dataset.courierSource,undefined);const floor=measureDataFloor(root,pocket);
   assert.ok(floor);assert.deepEqual(floor.stops,[]);assert.deepEqual(floor.home,{x:350,y:748});
-});
-
-
-test('waiting pairs walk through the active view and return home without creating a source or delivery',()=>{
-  const regions=[box(24,88,307,208),box(28,310,303,468)],bar=box(55,225,259,290);
-  const floor={bounds:box(10,54,310,620),home:{x:278,y:578},stops:[],compact:true,obstacles:[bar],ink:[bar],walkAreas:regions};
-  assert.deepEqual(planDataCrew(floor,6),[]);
-  const jobs=planDataWalk(floor,6);
-  assert.equal(jobs.length,6);
-  for(const [i,job] of jobs.entries()){
-    assert.equal(job.mode,'walk');assert.equal(job.stop,null);assert.equal(job.inspectBubble,null);
-    assert.equal(jobs[job.meeting.partner].meeting.partner,i);
-    assert.deepEqual(job.outbound[0],floor.home);assert.deepEqual(job.outbound.at(-1),job.meeting.approach[0]);
-    assert.deepEqual(job.meeting.approach.at(-1),job.homeward[0]);assert.deepEqual(job.homeward.at(-1),floor.home);
-    const at=job.outbound.at(-1);assert.ok(regions.some(r=>at.x>=r.left-20&&at.x<=r.right+20&&at.y>=r.top-22&&at.y<=r.bottom+22));
-    for(const path of [job.outbound,job.meeting.approach,job.homeward])verifyLeg(path,floor);
-  }
-  assert.deepEqual(floor.stops,[]);assert.ok(planDataWalk({...floor,walkAreas:[]},6).every(j=>j.stop===null&&j.mode==='walk'));
-  assert.deepEqual(planDataWalk({...floor,obstacles:[floor.bounds],ink:[floor.bounds]},6),[]);
-});
-
-test('a loading data view keeps its walkable floor and protects the visible area of a third-party widget',()=>{
-  const root={dataset:{renderedPage:'tracking'},querySelector:()=>null,querySelectorAll:()=>[],getBoundingClientRect:()=>box(0,62,390,790),matches:()=>false,childNodes:[]};
-  const widget={nodeType:1,tagName:'IFRAME',matches:s=>s.split(',').includes('iframe'),getBoundingClientRect:()=>box(24,86,365,488),childNodes:[]};
-  const nav={getBoundingClientRect:()=>box(8,784,382,844)},pocket={getBoundingClientRect:()=>box(326,724,374,772)};root.childNodes.push(widget);
-  root.ownerDocument={defaultView:{innerWidth:390,innerHeight:844,getComputedStyle:()=>({display:'block',visibility:'visible',opacity:'1',overflowX:'visible',overflowY:'visible'})},querySelector:()=>nav,createRange:()=>({})};
-  const floor=measureDataFloor(root,pocket);assert.deepEqual(floor.stops,[]);assert.equal(floor.ink.length,1);
-  assert.equal(floor.ink[0].top,86);assert.equal(floor.ink[0].bottom,488);
-  const jobs=planDataWalk(floor,6);assert.equal(jobs.length,6);
-  for(const j of jobs)for(const path of [j.outbound,j.meeting.approach,j.homeward])verifyLeg(path,floor);
-  root.dataset.renderedPage='strategies';assert.equal(measureDataFloor(root,pocket),null);
-});
-
-
-test('skip complete offscreen panels before inspecting a source row or its children',()=>{
-  const getBox=()=>box(0,64,390,792),base={tagName:'DIV',nodeType:1,children:[],childNodes:[],dataset:{},matches:()=>false,getBoundingClientRect:getBox,hasAttribute:()=>false};
-  const root={...base},area={...base,parentElement:root,dataset:{dataCenter:'tracking'},hasAttribute:k=>k==='data-public-data'};
-  const panel={...base,parentElement:area,tagName:'SECTION',matches:s=>s.split(',').includes('section'),getBoundingClientRect:()=>box(16,900,374,1700)};
-  const hiddenRow={...base,parentElement:panel,getBoundingClientRect:()=>assert.fail('a row inside a fully offscreen panel was measured')};
-  root.childNodes=[area];area.childNodes=[panel];panel.childNodes=[hiddenRow];root.querySelector=()=>area;
-  area.querySelectorAll=s=>s==='.dc-panel'||s.startsWith('.dc-panel,')?[panel]:s==='.dc-table,.dc-section table'?[]:[hiddenRow];
-  const style={display:'block',visibility:'visible',opacity:'1',overflowX:'visible',overflowY:'visible'};
-  root.ownerDocument={querySelector:()=>null,createRange:()=>({}),defaultView:{innerWidth:390,innerHeight:844,location:{search:'?page=tracking'},
-    getComputedStyle:el=>{assert.notEqual(el,hiddenRow);return style;}}};
-  const f=measureDataFloor(root,{getBoundingClientRect:()=>box(320,720,368,768)});assert.deepEqual(f.stops,[]);assert.deepEqual(f.ink,[]);
 });
