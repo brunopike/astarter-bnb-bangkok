@@ -45,8 +45,40 @@ jobs:
         id: marketcheck
         continue-on-error: true
         run: |
+          node --test brain-tradfi-archive.test.mjs
           python scripts/mirror-brain-history.py --check-local brain-evidence --group tradfi --path-list "$RUNNER_TEMP/market-paths"
           git add --pathspec-from-file="$RUNNER_TEMP/market-paths" --pathspec-file-nul
+      - name: Summarize verified historical coverage
+        if: >-
+          !cancelled() && (steps.chaincheck.outcome == 'success' || steps.marketcheck.outcome == 'success')
+        env:
+          CHAINS_VALID: ${{ steps.chaincheck.outcome }}
+          MARKETS_VALID: ${{ steps.marketcheck.outcome }}
+        run: |
+          python - <<'PYTHON'
+          import json
+          import os
+          from pathlib import Path
+
+          lines = ["### Verified archive coverage", "", "| Observation | Records |", "| --- | ---: |"]
+          if os.environ["CHAINS_VALID"] == "success":
+              chains = json.loads(Path("brain-evidence/archive/summary.json").read_bytes())
+              lines.append(f"| On-chain block records | {chains['count']:,} |")
+          if os.environ["MARKETS_VALID"] == "success":
+              markets = json.loads(Path("brain-evidence/tradfi/summary.json").read_bytes())
+              for label, key in (
+                  ("All market observations", "count"),
+                  ("Daily price bars", "dailyBars"),
+                  ("Wholesale quotes", "wholesaleQuotes"),
+                  ("Wholesale variety and grade quotes", "wholesaleRangeQuotes"),
+                  ("Weighted market quotes", "weightedMarketQuotes"),
+                  ("Oracle observations", "oracleReads"),
+                  ("Other observations", "otherObservations"),
+              ):
+                  lines.append(f"| {label} | {markets[key]:,} |")
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as report:
+              report.write("\n".join(lines) + "\n")
+          PYTHON
       - name: Publish verified changes
         if: steps.chaincheck.outcome == 'success' || steps.marketcheck.outcome == 'success'
         run: |

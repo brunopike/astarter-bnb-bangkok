@@ -1,4 +1,4 @@
-import {renderPaperCase} from '/paper-replay/view.mjs';
+import {renderPaperCase} from './paper-replay/view.mjs';
 // Present the registered decision first. Historical simulation is loaded on demand.
 import {escapeUI as e} from './product-experience.mjs';
 import {sparkline} from './product-charts.mjs';

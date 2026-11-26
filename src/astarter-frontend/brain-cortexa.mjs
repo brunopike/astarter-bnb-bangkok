@@ -13,6 +13,7 @@ function markup({t,brainLayerTitle,thinkingSection,executionSection,nodeButtons,
         <canvas class="ct-graph-canvas" aria-hidden="true"></canvas>${nodeButtons}
         <header class="ct-heading">
           <h1 id="ct-brain-layer" lang="en" data-no-translate>${opticalFace(brainLayerTitle,'span')}</h1>
+          <div class="ct-archive-counts"></div>
         </header>
         <div class="ct-case"><button type="button" class="ct-scope-button" data-asset-picker aria-haspopup="dialog" aria-expanded="false">
           <i aria-hidden="true">${uiGlyph('layers')}</i><span class="ct-scope-label"><span class="ct-scope-action">${t('研究资产','Research asset')}</span><b>${t('全网资产','All assets')}</b><span data-scope-chain hidden></span></span>${uiGlyph('chevron')}</button></div>

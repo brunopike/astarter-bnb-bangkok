@@ -176,6 +176,9 @@ def build(dest, until):
     for key,group,zh,en,unit,code in SPECS:
         try:
             path=dest/(key+'.json')
+            if code=='TAIEX' and (catalog.get(key,{}).get('fields') or [])[:5]==['date','close','open','high','low']:
+                # The daily OHLC importer owns this upgraded series, including revisions.
+                continue
             old=dict(json.loads(path.read_bytes())['rows']) if path.exists() else {}
             if code=='TAIEX':
                 # Refresh the latest stored month as well, so late corrections reach the archive.

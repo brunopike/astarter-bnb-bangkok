@@ -1,5 +1,7 @@
 """Verify and mirror the public Astarter block and market archives. Standard library only."""
 
+from brain_market_summary import summarize
+
 import argparse
 import concurrent.futures
 import fcntl
@@ -19,7 +21,7 @@ REPOSITORY = "brunopike/astarter-bnb-bangkok"
 API = "https://api.github.com/repos/" + REPOSITORY
 RAW = "https://raw.githubusercontent.com/" + REPOSITORY
 EVIDENCE = "src/astarter-frontend/brain-evidence/"
-INDEX = {"archive": ("manifest.json", "summary.json"), "tradfi": ("catalog.json",)}
+INDEX = {"archive": ("manifest.json", "summary.json"), "tradfi": ("catalog.json", "summary.json")}
 SHA = re.compile("[0-9a-f]{64}")
 GIT_SHA = re.compile("[0-9a-f]{40}")
 
@@ -133,8 +135,16 @@ def referenced(group, indexes):
                 )
                 add(name, s["sha256"])
     elif group == "tradfi":
-        series = json.loads(indexes["catalog.json"])["series"]
+        valid(json.loads(indexes["summary.json"]) == summarize(indexes["catalog.json"]), "Market summary differs from catalog")
+        catalog = json.loads(indexes["catalog.json"])
+        series = catalog["series"]
         valid(isinstance(series, list) and series, "Empty market catalog")
+        files = catalog.get("supportingFiles", {})
+        expected = {s["sourceIndex"] for s in series if s.get("sourceIndex")}
+        valid(isinstance(files, dict) and set(files) == expected and not expected - {"tw-stock-sources.json"},
+              "Invalid market source indexes")
+        for name, digest in files.items():
+            add(name, digest)
         for item in series:
             key = item["id"]
             valid(
@@ -142,6 +152,20 @@ def referenced(group, indexes):
                 "Unsafe series ID: " + str(key),
             )
             add(key + ".json", item["sha256"])
+            if item.get("statistic") in ("wholesaleRange", "wholesaleModal"):
+                shards = item["shards"]
+                valid(shards and sum(shard["count"] for shard in shards) == item["count"], "Market shard totals differ: " + key)
+                months = []
+                for shard in shards:
+                    month = shard["month"]
+                    valid(isinstance(month, str) and re.fullmatch(r"[0-9]{4}-(?:0[1-9]|1[0-2])", month)
+                          and type(shard["count"]) is int and shard["count"] > 0, "Invalid market month")
+                    valid(shard["start"].startswith(month + "-") and shard["end"].startswith(month + "-")
+                          and date.fromisoformat(shard["start"]) <= date.fromisoformat(shard["end"]), "Invalid market coverage")
+                    add(key + "-" + month + ".json", shard["sha256"])
+                    months.append(month)
+                valid(months == sorted(set(months)) and item["start"] == shards[0]["start"]
+                      and item["end"] == shards[-1]["end"], "Market shard coverage differs: " + key)
     else:
         raise ValueError("Unknown history group")
     return result

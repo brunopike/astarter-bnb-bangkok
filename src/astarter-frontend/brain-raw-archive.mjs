@@ -173,6 +173,47 @@ export async function readDay(part,signal,request=fetch){
   return rows;
 }
 
+// Only animate toward a validated archive count. A scope change starts a new series.
+export function archiveCounter(button,format,signal){
+  const caption=button.firstElementChild,doc=button.ownerDocument;
+  let frame=0,current=0,target,identity;
+  signal.addEventListener('abort',()=>cancelAnimationFrame(frame),{once:true});
+  return (total,unit,key)=>{
+    if(total===target && key===identity && caption.dataset.unit===unit)return;
+    cancelAnimationFrame(frame);
+    const changedScope=identity!==undefined && key!==identity;
+    target=total;identity=key;caption.dataset.unit=unit;
+    const label=total===null?unit:format.format(total)+unit;
+    button.setAttribute('aria-label',label);
+    if(total===null){current=0;caption.textContent=label;return;}
+    const start=current;
+    const digits=doc.createElement('b'),value=doc.createElement('i');
+    digits.className='ct-count-value';digits.dataset.total=format.format(total);digits.append(value);
+    caption.replaceChildren(digits,doc.createTextNode(unit));
+    const paint=n=>{current=n;value.textContent=format.format(n);};
+    if(changedScope || total<=start || doc.hidden || matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      doc.documentElement.dataset.reducedMotion==='true'){paint(total);return;}
+    paint(start);
+    let since;
+    function tick(now){
+      if(!doc.body.classList.contains('app-loading')){
+        since??=now;
+        const fraction=Math.min(1,(now-since)/(start?1000:1550));
+        paint(Math.min(total,Math.round(start+(total-start)*(1-(1-fraction)**3))));
+        if(fraction===1)return;
+      }
+      frame=requestAnimationFrame(tick);
+    }
+    frame=requestAnimationFrame(tick);
+  };
+}
+export function followArchive(doc,signal,refresh){
+  const visible=()=>{if(!doc.hidden && !signal.aborted)refresh();};
+  const timer=setInterval(visible,60_000);
+  signal.addEventListener('abort',()=>clearInterval(timer),{once:true});
+  doc.addEventListener('visibilitychange',visible,{signal});visible();
+}
+
 export function mountBlockArchive(root,en){
   const doc=root.ownerDocument,t=(zh,eng)=>en?eng:zh,fmt=new Intl.NumberFormat(en?'en':'zh');
   const make=(tag,copy)=>{const el=doc.createElement(tag);if(copy!==undefined)el.textContent=copy;return el;};
@@ -183,7 +224,7 @@ export function mountBlockArchive(root,en){
     b.append(caption,arrow);return b;
   };
   const heading=entry('heading'),note=entry('note');
-  root.querySelector('.ct-heading').append(heading);
+  (root.querySelector('.ct-archive-counts')??root.querySelector('.ct-heading')).append(heading);
   root.querySelector('[data-note-history]').after(note);
   note.firstElementChild.textContent=t('查看历史区块','Browse historical blocks');
   const dialog=make('dialog');dialog.id='brain-raw-dialog';dialog.dataset.rawDialog='';
@@ -203,6 +244,7 @@ export function mountBlockArchive(root,en){
   const q=s=>dialog.querySelector(s),asset=q('[data-raw-chain]'),date=q('[data-raw-date]'),body=q('[data-raw-body]');
   const pages=q('.br-raw-pages'),scroller=q('.br-raw-scroll'),retry=q('[data-raw-retry]'),pageInput=q('[data-raw-page]');
   const life=new AbortController(),cache=new Map();
+  const setCount=archiveCounter(heading,fmt,life.signal);
   let cutoff=null,reference=null,target=null,focusHeight=null,matchedDay=false,pendingKey=null;
   let fillRevision=0,summary=null,catalog=null,indexRequest=null,request=null,rows=[],page=1,scope='all',node=0,opener=null;
   const available=()=>archiveScopeSeries(catalog??summary,scope,cutoff);
@@ -210,14 +252,14 @@ export function mountBlockArchive(root,en){
   function entries(){
     const applicable=scope==='all'||scope==='eth-merge'||Object.values(chains).some(c=>c.scope===scope);
     const series=available();
-    heading.hidden=!applicable||Boolean((catalog||summary)&&!series.length);
+    const headline=cutoff?series:archiveScopeSeries(summary??catalog,scope,cutoff);
+    heading.hidden=!applicable||Boolean((catalog||summary)&&!headline.length);
     const matched=reference&&series.some(s=>s.asset===reference.asset&&coversDay(s,reference.day));
     note.hidden=heading.hidden||(!matched&&![1,5].includes(node));
     note.firstElementChild.textContent=matched?t('核对区块 #','Inspect block #')+reference.height:t('查看历史区块','Browse historical blocks');
-    const known=series.length>0&&series.every(s=>s.count!==null);
-    const units=series.length&&series.every(sampled)?t(' 个区块样本',' sampled blocks'):t(' 个历史区块',' historical blocks');
-    heading.firstElementChild.textContent=known
-      ?fmt.format(series.reduce((sum,s)=>sum+s.count,0))+units:t('历史区块','Historical blocks');
+    const units=headline.length&&headline.every(sampled)?t(' 个区块样本',' sampled blocks'):t(' 个历史区块',' historical blocks');
+    const count=headline.length && headline.every(s=>s.count!==null)?headline.reduce((n,s)=>n+s.count,0):null;
+    setCount(count,count===null?t('历史区块','Historical blocks'):units,scope+'|'+(cutoff??''));
   }
   function status(text,canRetry=false){
     q('[data-raw-status]').textContent=text;retry.hidden=!canRetry;
@@ -226,21 +268,24 @@ export function mountBlockArchive(root,en){
     if(catalog&&!refresh)return true;
     if(!indexRequest)indexRequest=fetch(archivePath+'manifest.json',{signal:life.signal,cache:'no-cache'})
       .then(r=>{if(!r.ok)throw Error('ARCHIVE_INDEX');return r.json();})
-      .then(data=>{catalog=parseCatalog(data);entries();return true;})
+      .then(data=>{catalog=parseCatalog(data);indexReadAt=Date.now();entries();return true;})
       .catch(()=>false).finally(()=>{indexRequest=null;});
     return indexRequest;
   }
+  let readingSummary=false,indexReadAt=0;
   async function loadSummary(){
+    if(readingSummary)return;
+    readingSummary=true;
     try{
       const response=await fetch(archivePath+'summary.json',{signal:life.signal,cache:'no-cache'});
       if(response.status===404){await index();return;}
       if(!response.ok)return;
       const datasets=parseArchiveSummary(await response.json());
-      if(life.signal.aborted||catalog)return;
+      if(life.signal.aborted)return;
       summary=datasets;entries();
     }catch{
-      // The full index is still available from the dialog when the summary fails.
-    }
+      // Keep the last validated count on a transient error.
+    }finally{readingSummary=false;}
   }
   function paint(){
     const series=chosen(),count=rows.length;
@@ -357,7 +402,7 @@ export function mountBlockArchive(root,en){
   function open(event){
     if(dialog.open)return;opener=event.currentTarget;
     target=opener===note?reference:null;
-    dialog.showModal();fill();
+    dialog.showModal();fill(Boolean(catalog) && Date.now()-indexReadAt>=60_000);
   }
   heading.onclick=note.onclick=open;q('[data-raw-close]').onclick=()=>dialog.close();
   dialog.addEventListener('close',()=>{
@@ -384,7 +429,7 @@ export function mountBlockArchive(root,en){
   const go=()=>{const n=pageInput.valueAsNumber;if(Number.isSafeInteger(n))page=n;paint();};
   pageInput.onchange=go;pageInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go();}};
   retry.onclick=()=>fill(Boolean(catalog));
-  entries();loadSummary();
+  entries();followArchive(doc,life.signal,loadSummary);
   return {
     update(key,n,asOf,fallback){
       if(scope!==key||node!==n)reference=null;

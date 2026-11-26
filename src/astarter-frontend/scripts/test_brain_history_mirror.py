@@ -51,8 +51,9 @@ def release(amount):
     content["archive/manifest.json"] = raw({"count": 1, "datasets": [{**dataset, "shards": [shard]}]})
     content["archive/summary.json"] = raw({"count": 1, "datasets": [dataset]})
     content["tradfi/catalog.json"] = raw(
-        {"series": [{"id": "gold-spot", "sha256": sha("tradfi/" + market_file)}]}
+        {"series": [{"id": "gold-spot", "count": 1, "group": "metals", "start": day, "end": day, "sha256": sha("tradfi/" + market_file)}]}
     )
+    content["tradfi/summary.json"] = raw(mirror.summarize(content["tradfi/catalog.json"]))
     return content
 
 
@@ -136,10 +137,9 @@ class MirrorTests(unittest.TestCase):
                 "archive",
                 {"manifest.json": manifest, "summary.json": raw({"count": 2, "datasets": []})},
             )
-        with self.assertRaises(ValueError):
-            mirror.referenced(
-                "tradfi", {"catalog.json": raw({"series": [{"id": "../private", "sha256": "0" * 64}]})}
-            )
+        invalid = raw({"series": [{"id": "../private", "count": 1, "group": "stock", "start": "2025-01-02", "end": "2025-01-02", "sha256": "0" * 64}]})
+        with self.assertRaisesRegex(ValueError, "Unsafe series ID"):
+            mirror.referenced("tradfi", {"catalog.json": invalid, "summary.json": raw(mirror.summarize(invalid))})
 
 
 if __name__ == "__main__":
