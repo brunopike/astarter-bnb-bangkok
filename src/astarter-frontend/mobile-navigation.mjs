@@ -110,7 +110,7 @@ export function createMobileNavigation(host,{items,onNavigate}){
   try{
    if(!mount){
     // A failed ESM URL can stay failed for the document. Give the single retry its own cache entry.
-    const bundleUrl=attempts===0?'./navigation-ui/mobile-navigation.js':'./navigation-ui/mobile-navigation.js?retry=1';
+    const bundleUrl=attempts===0?'/navigation-ui/mobile-navigation.js':'/navigation-ui/mobile-navigation.js?retry=1';
     attempts++;mount=(await import(bundleUrl)).mountMobileNavigation;
    }
    if(!mobile.matches)return;
