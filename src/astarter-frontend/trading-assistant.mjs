@@ -125,6 +125,8 @@ export function assistantBars(asset,period='1H'){
  const raw=makeBars(asset.series,'1H');if(period!=='4H')return raw;
  const result=[];for(let i=0;i<raw.length;i+=4){const g=raw.slice(i,i+4);if(g.length<4)break;result.push({time:g.at(-1).time,open:g[0].open,close:g.at(-1).close,high:Math.max(...g.map(b=>b.high)),low:Math.min(...g.map(b=>b.low)),volume:g.reduce((s,b)=>s+b.volume,0)});}return result;
 }
+const isSimpleGreeting = question => /^(?:(?:hi|hello|hey)(?:[ ,]+(?:can (?:you|u) help(?: me)?))?|can (?:you|u) help(?: me)?|你好|您好|嗨)[!.?！？。\s]*$/i.test(question.trim());
+
 export function createTradingAssistant({root,account,refresh,go,notify,context,returnTo=()=>null,signalSource=()=>null,getTeamContext=()=>null,getWatchKeys=()=>[]}){
  const team=createAssistantTeam({getContext:getTeamContext});
  let exchangeTools=null,exchangeLoadTicket=0,pickerListeners=null;
@@ -466,7 +468,7 @@ export function createTradingAssistant({root,account,refresh,go,notify,context,r
   if(thread.mode==='technical'&&!thread.providerTask){try{const previous=[...thread.turns].reverse().find(t=>t.mode==='technical'&&t.technical);if(!fromChart&&thread.chartOpen===false&&previous&&!delivered(previous)){notify(L('该次解读尚未交付，请先查看任务状态，或重新选择行情区间。','This analysis is not available yet. Check the task status or choose a new candle window.'));return;}followup=!fromChart&&thread.chartOpen===false&&!!previous;technical=followup?{...previous.technical}:selectedTechnical();evidence=followup?previous.marketContext:technicalContext(technical);}catch(error){notify(error.message==='MARKET_NOT_READY'?L('行情尚未就绪或已中断，请刷新后再分析','Market data is not ready. Refresh before analyzing.'):L('请至少选取 8 根已收盘 K 线','Select at least 8 closed candles'),{tone:'error'});return;}}
   const generatedQuestion=!question;if(!question)question=thread.mode==='technical'?L('解读这段行情，列出重点与风险','Explain this price move, key levels and risks'):report?researchSummary(report.config)+' · '+L(...RESEARCH_OPTIONS.focus[report.config.focus]):L('整理这些资料的重点和待确认内容','Summarize these sources and the missing information');
   const turn={id:crypto.randomUUID(),question,generatedQuestion,topic:questionTopic(translate(question,'en')),mode:thread.mode,providerTask:thread.providerTask||null,sources:thread.sources.map(x=>({...x})),technical,marketContext:evidence,report,followup,context:context()};
-  if(turn.mode==='ask'&&!turn.providerTask&&!generatedQuestion){
+  if(turn.mode==='ask'&&!turn.providerTask&&!generatedQuestion&&(turn.sources.length||!isSimpleGreeting(question))){
    const decision=assistantDecisionContext(question,thread.turns);
    const symbols=decision.quoteSymbols??questionQuoteSymbols(question,turn.topic);
    const wantsQuote=!!decision.quoteSymbols||/现价|市价|价格|报价|多少钱|现在多少|price|quote|how much/i.test(question)||

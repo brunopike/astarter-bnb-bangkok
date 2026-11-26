@@ -7,8 +7,8 @@ import {DIMENSIONS} from './multi-research.mjs';
 import {RESEARCH_BACKGROUND_RESOURCES,HUB_RESOURCES,normalizeHubResource,normalizeResearchBackground,validateResearchBackground} from './market-hub-data.mjs';
 import {normalizeSpotDepth,validateSpotDepthSnapshot,SPOT_DEPTH_CLOCK_SKEW_MS} from './spot-depth-data.mjs';
 import {candleRequest,normalizeKlines,mergeCandle} from './trading-chart-data.mjs';
-import {CROSS_MARKETS,decodeDukascopy,normalizeCrossMarket,validateCrossSnapshot} from './cross-market-data.mjs';
-import {marketScatterSample} from './workbench-market-analysis.mjs';
+import {CROSS_MARKETS,decodeDukascopy,normalizeCrossMarket,subscribeCrossMarket,validateCrossSnapshot} from './cross-market-data.mjs';
+import {createMarketScanner,marketScatterSample} from './workbench-market-analysis.mjs';
 import {createLicensedFeeds} from './licensed-feeds.mjs';
 import {parseBlockBeats} from './public-blockbeats.mjs';
 import {fetchLunarCrush} from './public-lunarcrush.mjs';
@@ -16,7 +16,7 @@ import {parsePublicNews} from './public-news.mjs';
 import {PUBLIC_ASSETS,publicQuery,publicDataURL,currentPublicEnvelope} from './public-data-client.mjs';
 import {pair,initLocale,getLocale} from './locale.mjs';
 
-// Coverage of the live research model at main 7a436fa, published for card R4 step 5.
+// Coverage of the current live research model and its supported historical candle formats.
 // Synthetic inputs only, through the code's own parsers, normalizers, validators, served handler and ingest functions. No network read.
 const coverage=JSON.parse(await readFile(new URL('./test-fixtures/research-coverage-v1.json',import.meta.url)));
 const day=86400,NOW=Date.UTC(2026,10,18,0,1,40)/1000,TODAY=Math.floor(NOW/day)*day,NOW_MS=NOW*1000;
@@ -98,6 +98,11 @@ const failures=[
  ...Object.entries(feeds).flatMap(([resource,feed])=>['null','stale'].map(failedAs=>({name:`the ${resource} read fails (${failedAs})`,options:{publicError:resource,failedAs},source:'public-context',trace:feed.failure_trace,
   cells:Object.entries(feed.failure_trace.cells_after).map(([symbol,after])=>[symbol,pub.dimension,after])})))
 ];
+function failureText(failure,locale){
+ const [zh,en]=failure.trace.text;
+ const text=pair(zh,en,locale);
+ return failure.source==='daily-bars'?fill(text,{provider:daily.per_asset[failure.symbol].provider}):text;
+}
 const situationOf=failure=>failure.options.public===false?'without_public_answers':'all_connected_answer';
 function traceState(r,failure){
  const [holder,field]=failure.trace.state_field.split('.');
@@ -118,7 +123,7 @@ async function upstream(path){
  await handle({url:path,method:'GET'},{writeHead(){},end(){}});return calls;
 }
 async function asked(requested,values){
- const calls=await upstream(fill(requested.relay_path,values)),parts=requested.windows||requested.requests||[{upstream_parameters:requested.upstream_parameters}];
+ const calls=await upstream(fill(requested.relay_path,values)),parts=requested.windows||requested.requests||[requested];
  assert.equal(calls.length,parts.length,requested.relay_path);
  parts.forEach((part,i)=>{
   assert.deepEqual(Object.fromEntries(calls[i].searchParams),Object.fromEntries(Object.entries(part.upstream_parameters).map(([key,value])=>[key,fill(value,values)])),fill(requested.relay_path,values));
@@ -127,8 +132,9 @@ async function asked(requested,values){
  });
 }
 function yahooRaw(symbol,n){
- const spec=CROSS_MARKETS[symbol],last=TODAY-day+52200,quote=value=>Array(n).fill(value);
- return {chart:{error:null,result:[{meta:{symbol:spec.id,instrumentType:'INDEX',exchangeTimezoneName:spec.timezone,regularMarketTime:last+23400,currentTradingPeriod:{regular:{start:last,end:last+23400}}},timestamp:Array.from({length:n},(_,i)=>last-(n-1-i)*day),indicators:{quote:[{open:quote(100),high:quote(101),low:quote(99),close:quote(100),volume:quote(0)}]}}]}};
+ const spec=CROSS_MARKETS[symbol],last=symbol==='XAU'?TODAY-day:TODAY-day+52200,quote=value=>Array(n).fill(value);
+ const identity=symbol==='XAU'?{instrumentType:'FUTURE',currency:'USD',exchangeName:'CMX'}:{instrumentType:'INDEX'};
+ return {chart:{error:null,result:[{meta:{symbol:spec.id,...identity,exchangeTimezoneName:spec.timezone,regularMarketTime:last+23400,currentTradingPeriod:{regular:{start:last,end:last+23400}}},timestamp:Array.from({length:n},(_,i)=>last-(n-1-i)*day),indicators:{quote:[{open:quote(100),high:quote(101),low:quote(99),close:quote(100),volume:quote(0)}]}}]}};
 }
 const gold=(n,start)=>({timestamp:start*1000,shift:day*1000,multiplier:.001,open:100,high:101,low:99,close:100,times:Array.from({length:n},(_,i)=>i?1:0),opens:Array(n).fill(0),highs:Array(n).fill(0),lows:Array(n).fill(0),closes:Array(n).fill(0)});
 function snapshotLimit(body,request,most){
@@ -214,8 +220,10 @@ test('with every connected source answering, coverage is daily bars for eight as
   assert.equal(marketScatterSample(closedBars(minimum.value-1,request.sessionBased),NOW,request).state,minimum.state_below,symbol);assert.equal(sample.state,'ready',symbol);assert.equal(sample.bars,minimum.value);
  }
  // What each source asks the provider for, read from the served handler's own outbound request.
- const year=new Date(NOW_MS).getUTCFullYear(),dates={previous_year:year-1,current_hour_start_ms:Math.floor(NOW_MS/3600000)*3600000};
- for(const symbol of SYMBOLS)await asked(daily.history.per_venue[daily.per_asset[symbol].venue].requested,{SYMBOL:symbol,...dates});
+ for(const symbol of SYMBOLS){
+  const spec=daily.per_asset[symbol];
+  await asked(daily.history.per_venue[spec.venue].requested,{SYMBOL:symbol,encoded_ticker:encodeURIComponent(spec.ticker||symbol)});
+ }
  for(const symbol of depth.assets)await asked(depth.history.requested,{SYMBOL:symbol});
  for(const [,source] of background)await asked(source.history.requested,{resource:source.resource});
  // How much history each daily source accepts and keeps.
@@ -227,15 +235,18 @@ test('with every connected source answering, coverage is daily bars for eight as
  const yahoo=daily.history.per_venue.yahoo;
  for(const symbol of SYMBOLS.filter(symbol=>daily.per_asset[symbol].venue==='yahoo')){
   const most=yahoo.response_maximum_timestamps.value,body=normalizeCrossMarket(yahooRaw(symbol,most),symbol,NOW_MS);
-  assert.equal(body.bars.length,yahoo.kept_maximum_bars.value,symbol);assert.throws(()=>normalizeCrossMarket(yahooRaw(symbol,most+1),symbol,NOW_MS),/INVALID_INDEX_DATA/);
+  assert.equal(body.bars.length,yahoo.kept_maximum_bars.value,symbol);assert.throws(()=>normalizeCrossMarket(yahooRaw(symbol,most+1),symbol,NOW_MS),{message:symbol==='XAU'?'INVALID_GOLD_DATA':'INVALID_INDEX_DATA'});
   snapshotLimit(body,dailyRequest(symbol),yahoo.kept_maximum_bars.value);
  }
  const dukascopy=daily.history.per_venue.dukascopy,days=dukascopy.response_maximum_days_per_window.value;
  assert.equal(decodeDukascopy(gold(days,TODAY-days*day)).length,days);assert.throws(()=>decodeDukascopy(gold(days+1,TODAY-days*day)),/INVALID_GOLD_DATA/);
  const later=dukascopy.kept_maximum_bars.value-days+70,start=TODAY-(days+later)*day,xau=normalizeCrossMarket([gold(days,start),gold(later,start+days*day)],'XAU',NOW_MS);
- assert.equal(xau.bars.length,dukascopy.kept_maximum_bars.value);snapshotLimit(xau,dailyRequest('XAU'),dukascopy.kept_maximum_bars.value);
+ const archivedGoldRequest=candleRequest({market:'XAU',period:'1D',profileId:'public-market',venueId:'dukascopy'});
+ assert.equal(xau.source,'Dukascopy · XAU/USD BID');
+ assert.equal(xau.bars.length,dukascopy.kept_maximum_bars.value);snapshotLimit(xau,archivedGoldRequest,dukascopy.kept_maximum_bars.value);
+ assert.throws(()=>validateCrossSnapshot(xau,dailyRequest('XAU'),NOW_MS),/INVALID_MARKET_SNAPSHOT/);
  // Where the validUntil of a kept daily item comes from: provider bars through the code's normalizer, then the scanner, then the model.
- const providerBars={binance:symbol=>normalizeKlines(klines(300),dailyRequest(symbol)),yahoo:symbol=>normalizeCrossMarket(yahooRaw(symbol,300),symbol,NOW_MS).bars,dukascopy:symbol=>normalizeCrossMarket([gold(days,start),gold(later,start+days*day)],symbol,NOW_MS).bars};
+ const providerBars={binance:symbol=>normalizeKlines(klines(300),dailyRequest(symbol)),yahoo:symbol=>normalizeCrossMarket(yahooRaw(symbol,300),symbol,NOW_MS).bars};
  for(const symbol of SYMBOLS){
   const venue=daily.per_asset[symbol].venue,seconds=daily.evidence_valid_until[venue].seconds_after_sample,bars=providerBars[venue](symbol),sample=marketScatterSample(bars,NOW,dailyRequest(symbol)),probe=model();
   probe.ingestMarket([dailyRow(symbol,{sampleAt:sample.sampleAt,closedAt:sample.closedAt,validUntil:sample.validUntil,bars:sample.bars})]);const row=item(probe,symbol,daily.dimension);
@@ -266,6 +277,41 @@ test('with every connected source answering, coverage is daily bars for eight as
  for(const extra of [chains.data[0],{name:'Other chain',tvl:2000}])assert.throws(()=>validateResearchBackground({...chains,data:[...chains.data,extra]},'chains',NOW_MS),/BACKGROUND_INVALID/,`a chains answer with ${mostRows+1} rows`);
 }));
 
+test('the XAU scanner carries the served futures contract and its closing time into research', {timeout:3000}, async t=>{
+ const upstreamCalls=[];
+ const handle=createLicensedFeeds({now:()=>NOW_MS,fetchImpl:async url=>{
+  upstreamCalls.push(String(url));
+  return Response.json(yahooRaw('XAU',300));
+ }});
+ const {promise:observed,resolve}=Promise.withResolvers();
+ const scanner=createMarketScanner(()=>{
+  const [row]=scanner.rows();
+  if(row?.feedState==='snapshot'||row?.state==='error')resolve(row);
+ },{
+  now:()=>NOW,
+  subscribe:(request,listeners)=>subscribeCrossMarket(request,listeners,{now:()=>NOW_MS,fetchImpl:async path=>{
+   let status,payload;
+   await handle({url:path,method:'GET'},{writeHead(code){status=code;},end(text){payload=text;}});
+   return new Response(payload,{status});
+  }})
+ });
+ t.after(()=>scanner.dispose());
+ scanner.update([{symbol:'XAU',domain:'TradFi'}],true);
+ const row=await observed;
+ assert.deepEqual(upstreamCalls,['https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=2y&interval=1d']);
+ assert.equal(row.state,'ready');
+ assert.equal(row.bars,300);
+ const r=model();
+ r.ingestMarket([row]);
+ const evidence=item(r,'XAU','trend');
+ assert.equal(evidence.status,'retain');
+ assert.equal(evidence.source,'Yahoo Finance · COMEX Gold Futures (GC=F)');
+ assert.equal(evidence.timezone,'America/New_York');
+ assert.equal(evidence.unit,'USD/oz');
+ assert.equal(evidence.closedAt,TODAY);
+ assert.equal(r.handoff('XAU'),null);
+});
+
 test('a provider failure and a part answer each leave their own trace, and every other cell keeps its full status',()=>inLocale('zh',()=>{
  for(const failure of failures){
   const r=answered(failure.options),trace=failure.trace;
@@ -273,7 +319,7 @@ test('a provider failure and a part answer each leave their own trace, and every
   assert.deepEqual(traceState(r,failure),trace.state,failure.name);
   for(const [symbol,key,after] of failure.cells){
    const row=item(r,symbol,key),label=`${failure.name}: ${symbol} ${key}`;assert.equal(row.status,after.status,label);
-   if(after.status==='missing'){assert.equal(trace.status,'missing',label);assert.equal(row.text,shown(trace.text),label);assert.equal(row.source,shown(coverage.no_source_text),label);assert.equal(row.sourceId,null,label);}
+   if(after.status==='missing'){assert.equal(trace.status,'missing',label);assert.equal(row.text,failureText(failure,'zh'),label);assert.equal(row.source,shown(coverage.no_source_text),label);assert.equal(row.sourceId,null,label);}
    else{assert.equal(row.source,after.provider,label);assert.equal(row.sourceId.split(':')[0],after.source,label);}
   }
   assert.deepEqual(r.shared.map(row=>row.decision),r.shared.map(row=>failure.options.contextError&&row.id===sources[failure.source].dimension?'missing':'context'),failure.name);
@@ -313,12 +359,14 @@ test('in the en locale the model shows the English half of each recorded text',a
  await inLocale('en',()=>{
   const fresh=model();for(const symbol of SYMBOLS)for(const row of fresh.task(symbol).evidence)note('no_source_text',row.source);
   for(const all of [answered(),answered({public:false})])for(const symbol of SYMBOLS)for(const row of all.task(symbol).evidence)if(!kept(row.status))note('no_source_text',row.source);
-  for(const failure of failures){const r=answered(failure.options);for(const [symbol,key,after] of failure.cells)if(after.status==='missing'){const row=item(r,symbol,key);note(failure.source,row.text);note('no_source_text',row.source);}}
+  for(const failure of failures){const r=answered(failure.options);for(const [symbol,key,after] of failure.cells)if(after.status==='missing'){const row=item(r,symbol,key);assert.equal(row.text,failureText(failure,'en'),failure.name+' · '+symbol);note(failure.source,row.text);note('no_source_text',row.source);}}
  });
  const english=([zh,en])=>pair(zh,en,'en');
  const traced=failures.filter(failure=>failure.cells.some(([,,after])=>after.status==='missing'));
  assert.deepEqual(new Set(traced.map(failure=>failure.source)),new Set(Object.keys(sources)),'every source leaves a missing trace in some failure');
- assert.deepEqual(Object.fromEntries(Object.entries(seen).map(([kind,texts])=>[kind,[...texts]])),{no_source_text:[english(coverage.no_source_text)],...Object.fromEntries(traced.map(failure=>[failure.source,[english(failure.trace.text)]]))});
+ const expectedTexts={no_source_text:new Set([english(coverage.no_source_text)])};
+ for(const failure of traced)(expectedTexts[failure.source]??=new Set()).add(failureText(failure,'en'));
+ assert.deepEqual(seen,expectedTexts);
 });
 
 test('the public news and social answers reach the model through the served handler and ingestPublic, with the listed assets, requests, row limits and validity windows',()=>inLocale('zh',async()=>{

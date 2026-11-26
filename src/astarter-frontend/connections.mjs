@@ -105,7 +105,7 @@ export function createConnectionCenter({get,onSave,getAccess=()=>null,onRecover=
  let probe=null,probedAt=-Infinity,latency=null,localReady=null;
  function speedLabel(){bar.querySelector('.connection-speed').textContent=localReady===false?L('连接中断','Offline'):latency===null?L('检测连接','Checking'):L('连接 ','Connection ')+latency+' ms';bar.querySelector('.connection-hub').dataset.health=localReady===false?'offline':localReady?'ready':'checking';bar.querySelector('.connection-hub').title=L('当前页面与服务的往返速度，非交易所延迟。','Round-trip time to this application; not exchange latency.');}
  async function measure(){
-  if(probe||document.hidden||!connectionStatusVisible(document.body.dataset.page,window.innerWidth)||performance.now()-probedAt<15000)return;
+  if(probe||document.hidden||document.body.dataset.scene!=='reactor'||!connectionStatusVisible(document.body.dataset.page,window.innerWidth)||performance.now()-probedAt<15000)return;
   const controller=new AbortController();probe=controller;probedAt=performance.now();const timeout=setTimeout(()=>controller.abort(),3000),start=performance.now();
   try{const response=await fetch('/favicon.ico',{method:'HEAD',cache:'no-store',signal:controller.signal});if(!response.ok||response.headers.get('X-App-Mode')!=='simulation-only')throw new Error('Local service unavailable');latency=Math.max(1,Math.round(performance.now()-start));localReady=true;}catch{if(!document.hidden){latency=null;localReady=false;}}finally{clearTimeout(timeout);if(probe===controller)probe=null;speedLabel();}
  }

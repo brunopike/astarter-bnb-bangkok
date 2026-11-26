@@ -1,12 +1,12 @@
 {
   "notice": "Synthetic test inputs only. This file records what the code accepts and shows. It is not a live observation, not connectivity, entitlement or production acceptance, and not a real-model acceptance of the 18 research roles.",
   "schema": "astarter-research-coverage-v1",
-  "description": "Coverage list of the live research model (live-research.mjs, MarketResearch) at main 7a436fa, for card R4 step 5, \"Publish the actual coverage matrix with unknown fields retained.\" For each of the eight assets and six dimensions it records the status before any source answers and when every connected source answers with valid data, including the public news and social answers that reach the model through ingestPublic, the provider name exactly as the code writes it, the time fields and time basis each kept item carries, and the history and freshness bounds the code holds for each source. A provider fact the code does not hold stays null (see unknown_fields). Each text is a pair [zh, en]: research-coverage.test.mjs compares the Chinese half in the zh locale and the English half in the en locale. The test fails when the code changes the model's mode or a source, status, provider name, time field, text or bound recorded here, until this file is updated; the facts listed under by_reading, and the line locations, are recorded by reading and no assertion holds them.",
+  "description": "Coverage list of the live research model (live-research.mjs, MarketResearch), for card R4 step 5, \"Publish the actual coverage matrix with unknown fields retained.\" For each of the eight assets and six dimensions it records the status before any source answers and when every connected source answers with valid data, including the public news and social answers that reach the model through ingestPublic, the provider name exactly as the code writes it, the time fields and time basis each kept item carries, and the history and freshness bounds the code holds for each source. A provider fact the code does not hold stays null (see unknown_fields). Each text is a pair [zh, en]: research-coverage.test.mjs compares the Chinese half in the zh locale and the English half in the en locale. The test fails when the code changes the model's mode or a source, status, provider name, time field, text or bound recorded here, until this file is updated; the facts listed under by_reading, and the line locations, are recorded by reading and no assertion holds them.",
   "code": {
     "main": "7a436fa",
     "read_from": "b308d62",
     "read_from_note": "b308d62 contains main 7a436fa. Every file cited in this list is byte-identical in both commits except public-data-client.mjs, where this branch only adds checks (receipt times required, an empty-answer rule) and keeps a kept answer stale while a failed read is retried; the lines cited from that file are those at 7a436fa",
-    "dukascopy_request_at": "88322db (rule changed in b6ec429); every other entry and location is as read at 7a436fa",
+    "current_routes": "The current daily gold feed is Yahoo Finance COMEX GC=F. The Dukascopy decoder remains available for historical XAU/USD BID snapshots.",
     "locations": "file and line at main 7a436fa",
     "model": "live-research.mjs MarketResearch",
     "mode": "live_readonly",
@@ -75,7 +75,7 @@
       "risk": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null}
     },
     "XAU": {
-      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Dukascopy · XAU/USD BID"},
+      "trend": {"before_any_answer": "missing", "all_connected_answer": "retain", "source": "daily-bars", "provider": "Yahoo Finance · COMEX Gold Futures (GC=F)"},
       "depth": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
       "macro": {"before_any_answer": "missing", "all_connected_answer": "missing", "source": null, "provider": null},
       "social": {"before_any_answer": "missing", "all_connected_answer": "context", "source": "public-context", "provider": "BlockBeats"},
@@ -108,11 +108,11 @@
         "BTC": {"provider": "Binance Spot", "venue": "binance", "timezone": "UTC", "unit": "USDT"},
         "ETH": {"provider": "Binance Spot", "venue": "binance", "timezone": "UTC", "unit": "USDT"},
         "SOL": {"provider": "Binance Spot", "venue": "binance", "timezone": "UTC", "unit": "USDT"},
-        "SPX": {"provider": "Yahoo Finance · S&P 500", "venue": "yahoo", "timezone": "America/New_York", "unit": "index"},
-        "NDX": {"provider": "Yahoo Finance · Nasdaq 100", "venue": "yahoo", "timezone": "America/New_York", "unit": "index"},
-        "XAU": {"provider": "Dukascopy · XAU/USD BID", "venue": "dukascopy", "timezone": "UTC", "unit": "USD/oz"},
-        "DXY": {"provider": "Yahoo Finance · ICE USD Index", "venue": "yahoo", "timezone": "America/New_York", "unit": "index"},
-        "US10Y": {"provider": "Yahoo Finance · US 10Y yield", "venue": "yahoo", "timezone": "America/Chicago", "unit": "%"}
+        "SPX": {"provider": "Yahoo Finance · S&P 500", "venue": "yahoo", "ticker": "^GSPC", "timezone": "America/New_York", "unit": "index"},
+        "NDX": {"provider": "Yahoo Finance · Nasdaq 100", "venue": "yahoo", "ticker": "^NDX", "timezone": "America/New_York", "unit": "index"},
+        "XAU": {"provider": "Yahoo Finance · COMEX Gold Futures (GC=F)", "venue": "yahoo", "ticker": "GC=F", "timezone": "America/New_York", "unit": "USD/oz"},
+        "DXY": {"provider": "Yahoo Finance · ICE USD Index", "venue": "yahoo", "ticker": "DX-Y.NYB", "timezone": "America/New_York", "unit": "index"},
+        "US10Y": {"provider": "Yahoo Finance · US 10Y yield", "venue": "yahoo", "ticker": "^TNX", "timezone": "America/Chicago", "unit": "%"}
       },
       "identity_location": "live-research.mjs L13-L16, L65; cross-market-data.mjs L1-L7; trading-chart-data.mjs L29-L33",
       "period": "1D",
@@ -138,12 +138,12 @@
             "kept_maximum_bars": {"value": 500, "location": "trading-chart-data.mjs L57"}
           },
           "yahoo": {
-            "requested": {"relay_path": "/api/market-hub?resource=cross-candles&symbol=<SYMBOL>", "upstream_parameters": {"range": "2y", "interval": "1d"}, "location": "cross-market-data.mjs L31, L104; market-hub-relay.mjs L41-L43"},
+            "requested": {"relay_path": "/api/market-hub?resource=cross-candles&symbol=<SYMBOL>", "host": "query1.finance.yahoo.com", "path_ends_with": "/v8/finance/chart/<encoded_ticker>", "upstream_parameters": {"range": "2y", "interval": "1d"}, "location": "cross-market-data.mjs crossMarketPolicy"},
             "response_maximum_timestamps": {"value": 800, "location": "cross-market-data.mjs L56"},
             "kept_maximum_bars": {"value": 500, "location": "cross-market-data.mjs L85, L88"}
           },
           "dukascopy": {
-            "requested": {"relay_path": "/api/market-hub?resource=cross-candles&symbol=<SYMBOL>", "windows": [{"path_ends_with": "/<previous_year>", "upstream_parameters": {}}, {"path_ends_with": "/BID", "upstream_parameters": {"from": "<current_hour_start_ms>"}}], "meaning": "the previous calendar year, then the current UTC year, asked with the start of the current hour as from (the code comment: \"The endpoint returns the UTC year's shard. A fixed January URL can retain yesterday's version.\")", "location": "cross-market-data.mjs L32-L34, L120; market-hub-relay.mjs L48-L50 at 88322db (L32-L33, L104 and L41-L43 at 7a436fa)"},
+            "usage": "Decode archived Dukascopy XAU/USD BID snapshots. The live XAU chart requests the Yahoo Finance instrument above.",
             "response_maximum_days_per_window": {"value": 370, "location": "cross-market-data.mjs L38"},
             "kept_maximum_bars": {"value": 500, "location": "cross-market-data.mjs L85, L88"}
           }
@@ -154,7 +154,7 @@
         "yahoo": {"seconds_after_sample": null, "rule": "no fixed window: the kept item has the validUntil of the last closed bar in the provider snapshot, which the scanner passes on; a later value is accepted too", "location": "cross-market-data.mjs L67, L75, L85; workbench-market-analysis.mjs L57, L257; live-research.mjs L66, L68, L70"},
         "dukascopy": {"seconds_after_sample": null, "rule": "no fixed window: the kept item has the validUntil of the last closed bar in the provider snapshot, which the scanner passes on; a later value is accepted too", "location": "cross-market-data.mjs L42, L85; workbench-market-analysis.mjs L57, L257; live-research.mjs L66, L68, L70"}
       },
-      "failure_trace": {"input": "a daily row in state error", "state_field": "observation.state", "state": "error", "status": "missing", "text": ["行情来源暂不可用", "Market source unavailable"], "location": "live-research.mjs L24, L64, L93, L107"}
+      "failure_trace": {"input": "a daily row in state error", "state_field": "observation.state", "state": "error", "status": "missing", "text": ["<provider> · 日线暂不可用", "<provider> · Daily candles unavailable"], "location": "live-research.mjs L24, L64, L93, L107"}
     },
     "spot-depth": {
       "dimension": "depth",
@@ -402,7 +402,7 @@
     "Binance Spot": {"used_by": ["daily-bars", "spot-depth"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
     "Yahoo Finance · S&P 500": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
     "Yahoo Finance · Nasdaq 100": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
-    "Dukascopy · XAU/USD BID": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
+    "Yahoo Finance · COMEX Gold Futures (GC=F)": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
     "Yahoo Finance · ICE USD Index": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
     "Yahoo Finance · US 10Y yield": {"used_by": ["daily-bars"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},
     "Alternative.me": {"used_by": ["background-sentiment"], "display_rights": null, "quota": null, "rate_limit": null, "expiry": null},

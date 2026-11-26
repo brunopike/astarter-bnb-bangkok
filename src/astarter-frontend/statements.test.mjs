@@ -290,9 +290,9 @@ test('compact exceptions keep the unclassified title and return to the original 
  const root={ownerDocument:doc,scrollTop:0,querySelector:()=>null},dialog={ownerDocument:doc,open:false,classList:{add(){},remove(){}},addEventListener(){}};
  const controller=createStatements({root,dialog,desk:{readSnapshot:()=>data,syncStatus:()=>({state:'LIVE',scope:{accountId:'A',environment:'DEMO'}})},show:(heading,body)=>{title=heading;html=body;dialog.open=true;},navigate(){}});
  const toggle=async()=>handlers.click({target:{closest:selector=>selector==='[data-statements]'?null:{dataset:{stAction:'exceptions'},closest:()=>({})}},preventDefault(){}});
- controller.open({owner:'AI_SPECTRUM',day:'2026-11-09'});assert.ok(title.endsWith('AI 星谱'));assert.ok(html.includes('历史盈亏待核对'));
+ controller.open({owner:'AI_SPECTRUM',day:'2026-11-09'});assert.ok(title.endsWith('AI 交易'));assert.ok(html.includes('历史盈亏待核对'));
  await toggle();assert.ok(title.endsWith('归属待核对'));assert.ok(html.includes(' · 归属待核对</p>'));assert.ok(html.includes('data-st-detail="spectrum:F-X"'));assert.ok(html.includes('2026-11-09'));
- await toggle();assert.ok(title.endsWith('AI 星谱'));assert.ok(html.includes('历史盈亏待核对'));assert.ok(html.includes('data-st-detail="spectrum:F-S"'));assert.ok(html.includes('2026-11-09'));
+ await toggle();assert.ok(title.endsWith('AI 交易'));assert.ok(html.includes('历史盈亏待核对'));assert.ok(html.includes('data-st-detail="spectrum:F-S"'));assert.ok(html.includes('2026-11-09'));
 });
 
 test('date filters keep the disclosure open before restoring input focus, then dismiss without closing records',t=>{

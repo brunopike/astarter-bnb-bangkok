@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {MultiResearch} from './multi-research.mjs';
 import {MarketResearch} from './live-research.mjs';
 import {normalizeSpotDepth} from './spot-depth-data.mjs';
@@ -569,18 +570,18 @@ test('explicit demo mode retains fixture values, simulation origins and executio
 });
 
 test('the optical view reuses Landing components without a triangle or central asset label',()=>{
- const landing=readFileSync(new URL('./landing/photonic-source/behavior.js',import.meta.url),'utf8');
- const workbench=readFileSync(new URL('./photonic-workbench.mjs',import.meta.url),'utf8');
+ const workbench=readFileSync(new URL('./photonic-workbench.mjs',import.meta.url),'utf8').replaceAll('\r\n','\n');
  const marker='/* LANDING_NATIVE_BLOCK_RUNTIME:';
  const authored=workbench.split(marker)[0];
- const start=landing.indexOf('  function N() {',landing.indexOf('function Dt()'));
- const end=landing.indexOf('  let Ee =',start);
- assert.ok(start>0&&end>start);
- const original=landing.slice(start,end),conflictStart='    if (v.globalCompositeOperation = T.globalCompositeOperation = "source-over", l.fail >= 0) {',conflictEnd='\n  }\n  function Ze()';
- const originalStart=original.indexOf(conflictStart),originalEnd=original.indexOf(conflictEnd,originalStart),paintStart=authored.indexOf(conflictStart),paintEnd=authored.indexOf(conflictEnd,paintStart);
- assert.ok(originalStart>0&&originalEnd>originalStart&&paintStart>0&&paintEnd>paintStart);
- const adaptedTail=original.slice(originalEnd).replace('r.setTransform(1, 0, 0, 1, L * 130 * D % H, 0)', 'F.setTransform(new DOMMatrix([1, 0, 0, 1, L * 130 * D % H, 0]))').replace('r.fillRect(K - L * 130 * D % H, _, O, ne)', 'r.fillRect(K, _, O, ne)');
- assert.ok(authored.includes(original.slice(0,originalStart))&&authored.includes(adaptedTail),'Keep the multistrand drawing and the existing texture-only translation');
+ const start=authored.indexOf('  function N() {',authored.indexOf('function createLandingPhotonicBeam('));
+ const paintStart=authored.indexOf('    if (v.globalCompositeOperation = T.globalCompositeOperation = "source-over", l.fail >= 0) {',start);
+ const paintEnd=authored.indexOf('\n  }\n  function Ze()',paintStart);
+ const end=authored.indexOf('\n // Workbench adaptation of the Landing geometry',paintEnd);
+ assert.ok(start>0&&paintStart>start&&paintEnd>paintStart&&end>paintEnd);
+ // Pin the original beam geometry and its texture-only translation without distributing the separate Landing source.
+ const digest=value=>createHash('sha256').update(value).digest('hex');
+ assert.equal(digest(authored.slice(start,paintStart)),'030ce86f20eca67aefb7b92f517161d9d2a7a6fa6a9363310e82c65bd1ec385e','Preserve the original multistrand drawing');
+ assert.equal(digest(authored.slice(paintEnd,end)),'3b6dbcb8f6f50d5336102281aaaa47eaad246891e83c2479db961f777503feae','Preserve the clipped beam and its texture-only translation');
  const calls=[],ctx={beginPath(){},setLineDash(value){calls.push(['dash',...value]);},stroke(){calls.push(['stroke']);},fillRect(){calls.push(['marker']);},moveTo(){calls.push(['marker']);},lineTo(){calls.push(['marker']);}};
  const paintConflict=Function('v','T','l','B','te','r','d',authored.slice(paintStart,paintEnd));
  paintConflict(ctx,{}, {fail:2},(_ctx,_shape,lane)=>calls.push(['lane',lane]),()=>10,{xa:0,x1:100},1);
@@ -909,14 +910,24 @@ test('explicit demo keeps its original stage labels even if a real job context i
 test('the actual prism canvas draws the new job word immediately when its presentation clock is paused',()=>{
  const source=readFileSync(new URL('./photonic-workbench.mjs',import.meta.url),'utf8'),body=source.match(/ function paintLensBackdrop\(\)\{([\s\S]*?)\n \}/)?.[1];
  assert.ok(body,'exercise the actual backdrop painter rather than its DOM status');
- for(const [moving,reducedMotion,elapsed,expected]of [[false,false,12,'Watch'],[false,true,12,'Watch'],[true,false,12,'Analyze'],[true,false,300,'Watch']]){
+ function draw(moving,reducedMotion,elapsed,locale){
   const drawn=[],ctx={globalAlpha:1,setTransform(){},fillRect(){},drawImage(){},measureText:text=>({width:text.length*20}),fillText(text){if(this.globalAlpha>.01)drawn.push(text);}};
-  Function('backdropCtx','moving','reducedMotion','elapsedMs','prismLabelSize','L',`
+  Function('backdropCtx','moving','reducedMotion','elapsedMs','prismLabelSize','L','getLocale',`
    const lensLayout={left:0,top:0,width:200,height:300},backdrop={width:200,height:300},canvas={width:200,height:300,tagName:'CANVAS'},width=200,height=300,dark=false;
-   const lensFont='sans-serif',lensMono='monospace',lens={word:'Watch',previous:'Analyze',index:'Read-only',changed:1000},performance={now:()=>1000+elapsedMs},projection=null;
+   const lensFont='sans-serif',lensMono='monospace',lens={word:L('观察','Watch'),previous:L('分析','Analyze'),index:'Read-only',changed:1000},performance={now:()=>1000+elapsedMs},projection=null;
    ${body}
-  `)(ctx,moving,reducedMotion,elapsed,prismLabelSize,(_zh,en)=>en);
-  assert.ok(drawn.includes(expected),`moving=${moving}, reduced=${reducedMotion}, elapsed=${elapsed}: ${drawn}`);
-  assert.ok(!drawn.includes(expected==='Watch'?'Analyze':'Watch'));
+  `)(ctx,moving,reducedMotion,elapsed,prismLabelSize,(zh,en)=>locale==='zh'?zh:en,()=>locale);
+  return drawn;
+ }
+ for(const locale of ['en','zh']){
+  const current=locale==='zh'?'观察':'Watch',previous=locale==='zh'?'分析':'Analyze';
+  const brand=locale==='zh'?'AI 交易':'LENSWAVE';
+  const frames=[[false,false,12,current],[false,true,12,current],[true,false,12,previous],[true,false,300,current]];
+  for(const [moving,reducedMotion,elapsed,expected] of frames){
+   const drawn=draw(moving,reducedMotion,elapsed,locale);
+   assert.ok(drawn.includes(brand));
+   assert.ok(drawn.includes(expected),`moving=${moving}, reduced=${reducedMotion}, elapsed=${elapsed}: ${drawn}`);
+   assert.ok(!drawn.includes(expected===current?previous:current));
+  }
  }
 });

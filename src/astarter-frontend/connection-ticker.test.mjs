@@ -14,7 +14,7 @@ test('ticker loads only public quotes, formats both signs, preserves delayed fac
  const old=globalThis.document;let now=at,calls=0;
  const viewport={innerHTML:'',setAttribute(){},addEventListener(){}},label={},source={querySelector:()=>label},bar={dataset:{},querySelector:s=>s==='.connection-ticker'?viewport:source};
  try{
-  globalThis.document={hidden:false,body:{dataset:{page:'workbench'}}};
+  globalThis.document={hidden:false,body:{dataset:{page:'workbench',scene:'reactor'}}};
   const ticker=createConnectionTicker(bar,{now:()=>now,fetchImpl:async(url,init)=>{calls++;assert.equal(url,HUB_RESOURCES.tickers.url);assert.equal(init.credentials,'omit');return calls===1?new Response(JSON.stringify([quote('BTC',101,100),quote('ETH',98,100)])):new Response('{}',{status:503});}});
   ticker.refresh();await new Promise(resolve=>setTimeout(resolve,5));
   assert.equal(calls,1);assert.match(viewport.innerHTML,/data-up="true">\+1.00%/);assert.match(viewport.innerHTML,/data-up="false">-2.00%/);assert.match(source.title,/UTC/);
@@ -27,13 +27,27 @@ test('ticker loads only public quotes, formats both signs, preserves delayed fac
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 function productTicker(t,page,fetchImpl,now){
  const old=globalThis.document;
- globalThis.document={hidden:false,body:{dataset:{page}}};
+ globalThis.document={hidden:false,body:{dataset:{page,scene:'reactor'}}};
  const viewport={innerHTML:'',setAttribute(){},addEventListener(){}},label={},source={querySelector:()=>label};
  const bar={dataset:{},querySelector:selector=>selector==='.connection-ticker'?viewport:source};
  const ticker=createConnectionTicker(bar,{fetchImpl,now});
  t.after(()=>{ticker.dispose();globalThis.document=old;});
  return {ticker,bar,viewport,label};
 }
+test('the setup page loads quotes only while its ticker is displayed in the reactor scene',async t=>{
+ let reads=0;
+ const {ticker,bar}=productTicker(t,'setup',()=>{reads++;return Response.json([quote('BTC',101,100)]);},()=>at);
+ delete document.body.dataset.scene;
+ ticker.refresh();await settle();
+ assert.equal(bar.dataset.tickerActive,'false');assert.equal(reads,0);
+ document.body.dataset.scene='reactor';
+ ticker.refresh();await settle();
+ assert.equal(bar.dataset.tickerActive,'true');assert.equal(reads,1);
+ document.body.dataset.scene='field';
+ ticker.refresh();await settle();
+ assert.equal(bar.dataset.tickerActive,'false');assert.equal(reads,1);
+});
+
 test('every product route shares the same visible footer and distinguishes a delayed instrument from fresh quotes',async t=>{
  let now=at,calls=0;const older=6*86400_000;
  const read=async()=>{calls++;return Response.json([quote('BTC',101,100),{...quote('ETH',98,100),closeTime:at-older}]);};
