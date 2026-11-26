@@ -3,15 +3,15 @@ export const HUB_ASSET_IDS={BTC:'bitcoin',ETH:'ethereum',SOL:'solana',BNB:'binan
 export const HUB_SYMBOLS=Object.keys(HUB_ASSET_IDS);
 export const HUB_CATEGORIES=[['layer-1','Layer 1'],['decentralized-finance-defi','DeFi'],['real-world-assets-rwa','RWA'],['artificial-intelligence','AI'],['meme-token','Meme']];
 export const HUB_RESOURCES={
- global:{url:'https://api.coingecko.com/api/v3/global',provider:'CoinMarketCap',interval:60000,stale:300000,maxBytes:30000},
- assets:{url:'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true&price_change_percentage=24h,7d',provider:'CoinMarketCap',interval:60000,stale:300000,maxBytes:800000},
+ global:{url:'https://api.coingecko.com/api/v3/global',provider:'CoinGecko',source:'coingecko',interval:60000,stale:300000,maxBytes:30000},
+ assets:{url:'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true&price_change_percentage=24h,7d',provider:'CoinGecko',source:'coingecko',interval:60000,stale:300000,maxBytes:800000},
  tickers:{url:'https://data-api.binance.vision/api/v3/ticker/24hr?symbols='+encodeURIComponent(JSON.stringify(HUB_SYMBOLS.map(s=>s+'USDT'))),provider:'Binance Spot',interval:20000,stale:30000,maxBytes:60000},
- categories:{url:'https://api.coingecko.com/api/v3/coins/categories',provider:'CoinMarketCap',interval:300000,stale:900000,maxBytes:1000000},
+ categories:{url:'https://api.coingecko.com/api/v3/coins/categories',provider:'CoinGecko',source:'coingecko',interval:300000,stale:900000,maxBytes:1000000},
  exchanges:{url:'https://api.coingecko.com/api/v3/exchanges?per_page=8&page=1',provider:'CoinGecko',interval:300000,stale:900000,maxBytes:50000},
  chains:{url:'https://api.llama.fi/v2/chains',provider:'DefiLlama',interval:300000,stale:900000,maxBytes:200000},
  stablecoins:{url:'https://stablecoins.llama.fi/stablecoincharts/all',provider:'DefiLlama',interval:600000,stale:129600000,maxBytes:2500000},
  tvl:{url:'https://api.llama.fi/v2/historicalChainTvl',provider:'DefiLlama',interval:600000,stale:129600000,maxBytes:400000},
- sentiment:{url:'https://api.alternative.me/fng/?limit=90&format=json',provider:'CoinMarketCap',interval:600000,stale:129600000,maxBytes:30000}
+ sentiment:{url:'https://api.alternative.me/fng/?limit=90&format=json',provider:'Alternative.me',source:'alternative.me',interval:600000,stale:129600000,maxBytes:30000}
 };
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const number=v=>typeof v==='string'&&/^-?\d+(?:\.\d+)?$/.test(v)?Number(v):v;
@@ -31,14 +31,22 @@ function series(rows,value){
 }
 // A missing point must not turn a two-hour move into a one-hour move.
 export const hourlySeries=values=>Array.isArray(values)&&values.every(v=>finite(v)&&v>0)?values.slice(-168):[];
-export function normalizeHubResource(key,body,receivedAt=Date.now()){
+function hubProvider(key,source){
+ const policy=HUB_RESOURCES[key];
+ if(source===null)return '—';
+ if(policy?.source&&source==='coinmarketcap')return 'CoinMarketCap';
+ valid(policy&&source===policy.source);
+ return policy.provider;
+}
+export function normalizeHubResource(key,body,receivedAt=Date.now(),source=HUB_RESOURCES[key]?.source){
  let data,asOf=null;
  if(key==='global'){
   const d=body?.data;valid(d&&finite(d.total_market_cap?.usd)&&d.total_market_cap.usd>0&&finite(d.total_volume?.usd)&&finite(d.market_cap_percentage?.btc)&&finite(d.market_cap_change_percentage_24h_usd));
   data={cap:d.total_market_cap.usd,volume:d.total_volume.usd,btcShare:d.market_cap_percentage.btc,ethShare:finite(d.market_cap_percentage.eth)?d.market_cap_percentage.eth:null,change:d.market_cap_change_percentage_24h_usd,volumeChange:finite(d.volume_change_percentage_24h_usd)?d.volume_change_percentage_24h_usd:null,active:d.active_cryptocurrencies,venues:d.markets};asOf=Number(d.updated_at)*1000;
  }else if(key==='assets'){
   valid(Array.isArray(body)&&body.length>0&&body.length<=250);
-  data=body.filter(a=>label(a.id)&&typeof a.symbol==='string'&&/^[a-z0-9._-]{1,20}$/i.test(a.symbol)&&label(a.name)&&finite(a.current_price)&&a.current_price>0&&finite(a.market_cap)&&a.market_cap>=0&&finite(time(a.last_updated))&&time(a.last_updated)<=receivedAt+300000).map(a=>({id:a.id,symbol:a.symbol.toUpperCase(),name:a.name,price:a.current_price,cap:a.market_cap,volume:finite(a.total_volume)?a.total_volume:null,change:finite(a.price_change_percentage_24h)?a.price_change_percentage_24h:null,change7d:finite(a.price_change_percentage_7d_in_currency)?a.price_change_percentage_7d_in_currency:null,rank:a.market_cap_rank,high:a.high_24h,low:a.low_24h,image:a.image,asOf:time(a.last_updated),series:hourlySeries(a.sparkline_in_7d?.price)}));
+  const provider=hubProvider(key,source);
+  data=body.filter(a=>label(a.id)&&typeof a.symbol==='string'&&/^[a-z0-9._-]{1,20}$/i.test(a.symbol)&&label(a.name)&&finite(a.current_price)&&a.current_price>0&&finite(a.market_cap)&&a.market_cap>=0&&finite(time(a.last_updated))&&time(a.last_updated)<=receivedAt+300000).map(a=>({id:a.id,provider,symbol:a.symbol.toUpperCase(),name:a.name,price:a.current_price,cap:a.market_cap,volume:finite(a.total_volume)?a.total_volume:null,change:finite(a.price_change_percentage_24h)?a.price_change_percentage_24h:null,change7d:finite(a.price_change_percentage_7d_in_currency)?a.price_change_percentage_7d_in_currency:null,rank:a.market_cap_rank,high:a.high_24h,low:a.low_24h,image:a.image,asOf:time(a.last_updated),series:hourlySeries(a.sparkline_in_7d?.price)}));
   valid(data.length>0&&new Set(data.map(a=>a.id)).size===data.length);asOf=Math.min(...data.map(a=>a.asOf));
  }else if(key==='tickers'){
   valid(Array.isArray(body)&&body.length<=HUB_SYMBOLS.length);
@@ -59,7 +67,7 @@ export function normalizeHubResource(key,body,receivedAt=Date.now()){
   data=body.data.map(row=>({at:Number(row.timestamp)*1000,value:number(row.value)})).filter(row=>Number.isSafeInteger(row.at)&&row.at>0&&Number.isInteger(row.value)&&row.value>=0&&row.value<=100).sort((a,b)=>a.at-b.at);valid(data.length>0);asOf=data.at(-1).at;
  }else throw new Error('UNKNOWN_RESOURCE');
  valid(asOf===null||Number.isFinite(asOf)&&asOf>0&&asOf<=receivedAt+300000);
- return {data,asOf,receivedAt};
+ return {data,asOf,receivedAt,...(HUB_RESOURCES[key].source?{source,provider:hubProvider(key,source)}:{})};
 }
 export function normalizeHubTicker(raw,now=Date.now()){
  if(!raw||typeof raw.symbol!=='string'&&typeof raw.s!=='string')return null;
@@ -96,7 +104,7 @@ export function createMarketHubClient({fetchImpl=globalThis.fetch,WebSocketImpl=
  const slot=key=>{
   if(!slots.has(key)){
    const policy=HUB_RESOURCES[key],s={snapshot:null,pending:false,error:null,detail:null,nextAt:0,retryAt:0,failures:0,controller:null,fromCache:false};
-   try{const text=storage?.getItem(cacheKey(key));if(text&&text.length<=policy.maxBytes+300){const cached=JSON.parse(text);valid(cached.schema===1&&cached.url===policy.url&&finite(cached.receivedAt)&&cached.receivedAt<=now()+300000&&now()-cached.receivedAt<=Math.max(7200000,policy.stale*2));s.snapshot=normalizeHubResource(key,cached.body,cached.receivedAt);s.fromCache=true;if(key==='tickers')s.snapshot.data.forEach(q=>acceptQuote(q,false));}}catch{}
+   try{const text=storage?.getItem(cacheKey(key));if(text&&text.length<=policy.maxBytes+300){const cached=JSON.parse(text);valid(cached.schema===1&&cached.url===policy.url&&finite(cached.receivedAt)&&cached.receivedAt<=now()+300000&&now()-cached.receivedAt<=Math.max(7200000,policy.stale*2));s.snapshot=normalizeHubResource(key,cached.body,cached.receivedAt,cached.source??null);s.fromCache=true;if(key==='tickers')s.snapshot.data.forEach(q=>acceptQuote(q,false));}}catch{}
    slots.set(key,s);
   }return slots.get(key);
  };
@@ -132,11 +140,11 @@ export function createMarketHubClient({fetchImpl=globalThis.fetch,WebSocketImpl=
    if(!response.ok){try{void response.body?.cancel().catch(()=>{});}catch{}s.detail='HTTP '+response.status;throw new Error(response.status===429?'RATE_LIMIT':response.status===402?'AUTH_REQUIRED':'FETCH_FAILED');}
    const text=await response.text();if(text.length>policy.maxBytes)throw new Error('INVALID_DATA');
    let body;try{body=JSON.parse(text);}catch{throw new Error('INVALID_DATA');}
-   let receivedAt=now();if(relay){valid(body?.schema==='public-market-relay-v1'&&body.resource===key&&finite(body.receivedAt)&&body.receivedAt>0&&body.receivedAt<=now()+300000);receivedAt=body.receivedAt;body=body.body;}
-   const snapshot=normalizeHubResource(key,body,receivedAt);if(!active||epoch!==ownEpoch)return;
+   let receivedAt=now(),source=policy.source;if(relay){valid(body?.schema==='public-market-relay-v1'&&body.resource===key&&finite(body.receivedAt)&&body.receivedAt>0&&body.receivedAt<=now()+300000);receivedAt=body.receivedAt;source=body.source??policy.source;body=body.body;}
+   const snapshot=normalizeHubResource(key,body,receivedAt,source);if(!active||epoch!==ownEpoch)return;
    s.snapshot=snapshot;s.fromCache=false;s.error=null;s.detail=null;s.failures=0;s.retryAt=0;s.nextAt=now()+interval;
    const cacheBody=key==='categories'?body.filter(c=>HUB_CATEGORIES.some(([id])=>id===c.id)):['stablecoins','tvl'].includes(key)?body.slice(-366):body;
-   try{storage?.setItem(cacheKey(key),JSON.stringify({schema:1,url:policy.url,receivedAt:snapshot.receivedAt,body:cacheBody}));}catch{}
+   try{storage?.setItem(cacheKey(key),JSON.stringify({schema:1,url:policy.url,receivedAt:snapshot.receivedAt,source:snapshot.source,body:cacheBody}));}catch{}
    if(key==='tickers')snapshot.data.forEach(q=>acceptQuote(q,true));
   }catch(error){
    if(!active||epoch!==ownEpoch)return;
@@ -207,7 +215,7 @@ export function createMarketHubClient({fetchImpl=globalThis.fetch,WebSocketImpl=
    return refreshPromise;
   },
   read(key){const s=slot(key);return {...s,controller:undefined,task:undefined,quality:hubQuality(s.snapshot,HUB_RESOURCES[key],now(),s.error),retryIn:Math.max(0,Math.ceil((s.retryAt-now())/1000))};},
-  quote(asset){const q=quotes.get(asset.symbol);return q&&HUB_ASSET_IDS[asset.symbol]===asset.id&&(active?now():inactiveAt)-q.asOf<=30000?q:{symbol:asset.symbol,price:asset.price,change:asset.change,volume:asset.volume,asOf:asset.asOf??asset.receivedAt,quote:'USD',provider:asset.address?'DEX Screener':'CoinMarketCap'};},
+  quote(asset){const q=quotes.get(asset.symbol);return q&&HUB_ASSET_IDS[asset.symbol]===asset.id&&(active?now():inactiveAt)-q.asOf<=30000?q:{symbol:asset.symbol,price:asset.price,change:asset.change,volume:asset.volume,asOf:asset.asOf??asset.receivedAt,quote:'USD',provider:asset.address?'DEX Screener':asset.provider||HUB_RESOURCES.assets.provider};},
   get events(){return events.slice();},get stream(){return stream;},get lastMessage(){return lastMessage;},get active(){return active;},
   dispose(){setActive(false);if(sharedTickerReaders.get(fetchImpl)===sharedRead)sharedTickerReaders.delete(fetchImpl);}
  };
@@ -221,7 +229,7 @@ const backgroundSchema='research-background-v1',backgroundSkew=1000;
 const backgroundError=code=>Object.assign(Error(code),{code});
 const exactBackground=(value,keys)=>value&&Object.getPrototypeOf(value)===Object.prototype&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
 export function validateResearchBackground(value,resource,at=Date.now()){
- if(!RESEARCH_BACKGROUND_RESOURCES.includes(resource)||!Number.isSafeInteger(at)||at<0||!exactBackground(value,['schema','resource','provider','asOf','receivedAt','validUntil','data'])||value.schema!==backgroundSchema||value.resource!==resource||value.provider!==HUB_RESOURCES[resource].provider)throw backgroundError('BACKGROUND_INVALID');
+ if(!RESEARCH_BACKGROUND_RESOURCES.includes(resource)||!Number.isSafeInteger(at)||at<0||!exactBackground(value,['schema','resource','provider','asOf','receivedAt','validUntil','data'])||value.schema!==backgroundSchema||value.resource!==resource||(value.provider!==HUB_RESOURCES[resource].provider&&!(resource==='sentiment'&&value.provider==='CoinMarketCap')))throw backgroundError('BACKGROUND_INVALID');
  const policy=HUB_RESOURCES[resource],daily=resource!=='chains';
  if(!Number.isSafeInteger(value.receivedAt)||value.receivedAt<0||value.receivedAt>at+backgroundSkew||(daily?(!Number.isSafeInteger(value.asOf)||value.asOf<0||value.asOf%86400000!==0||value.asOf>value.receivedAt+backgroundSkew):value.asOf!==null))throw backgroundError('BACKGROUND_INVALID');
  if(value.validUntil!==(daily?value.asOf:value.receivedAt)+policy.stale)throw backgroundError('BACKGROUND_INVALID');
@@ -234,12 +242,14 @@ export function validateResearchBackground(value,resource,at=Date.now()){
  return structuredClone(value);
 }
 export function normalizeResearchBackground(envelope,resource,at=Date.now()){
- if(!RESEARCH_BACKGROUND_RESOURCES.includes(resource)||!exactBackground(envelope,['schema','resource','receivedAt','body'])||envelope.schema!=='public-market-relay-v1'||envelope.resource!==resource)throw backgroundError('BACKGROUND_INVALID');
- let observed;try{observed=normalizeHubResource(resource,envelope.body,envelope.receivedAt);}catch{throw backgroundError('BACKGROUND_INVALID');}
+ const fields=['schema','resource','receivedAt','body'];
+ if(resource==='sentiment'&&envelope&&Object.hasOwn(envelope,'source'))fields.push('source');
+ if(!RESEARCH_BACKGROUND_RESOURCES.includes(resource)||!exactBackground(envelope,fields)||envelope.schema!=='public-market-relay-v1'||envelope.resource!==resource)throw backgroundError('BACKGROUND_INVALID');
+ let observed;try{observed=normalizeHubResource(resource,envelope.body,envelope.receivedAt,envelope.source);}catch{throw backgroundError('BACKGROUND_INVALID');}
  const last=observed.data.at(-1),data=resource==='sentiment'?{value:last.value}:resource==='stablecoins'?{totalUsd:last.value}:observed.data.filter(row=>['Ethereum','Solana'].includes(row.name)).map(({name,tvl})=>({name,tvl})).sort((a,b)=>a.name.localeCompare(b.name));
  if(resource==='sentiment'&&observed.data.some((row,i)=>i&&row.at<=observed.data[i-1].at))throw backgroundError('BACKGROUND_INVALID');
  if(resource==='chains'&&new Set(data.map(row=>row.name)).size!==data.length)throw backgroundError('BACKGROUND_INVALID');
- return validateResearchBackground({schema:backgroundSchema,resource,provider:HUB_RESOURCES[resource].provider,asOf:observed.asOf,receivedAt:observed.receivedAt,validUntil:(observed.asOf??observed.receivedAt)+HUB_RESOURCES[resource].stale,data},resource,at);
+ return validateResearchBackground({schema:backgroundSchema,resource,provider:observed.provider??HUB_RESOURCES[resource].provider,asOf:observed.asOf,receivedAt:observed.receivedAt,validUntil:(observed.asOf??observed.receivedAt)+HUB_RESOURCES[resource].stale,data},resource,at);
 }
 
 // Shared per-workbench slots coalesce all assets; construction performs no I/O.

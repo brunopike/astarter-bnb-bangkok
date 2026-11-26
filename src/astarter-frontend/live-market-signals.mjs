@@ -1,4 +1,4 @@
-import {CROSS_MARKETS, validateCrossSnapshot} from './cross-market-data.mjs';
+import {CROSS_MARKETS, crossMarketSource, validateCrossSnapshot} from './cross-market-data.mjs';
 import {HUB_SYMBOLS, hubRetryDelay, parseHubRefreshSeconds} from './market-hub-data.mjs';
 import {candleRequest, normalizeKlines} from './trading-chart-data.mjs';
 import {exponentialAverage, wilderSeries} from './workbench-market-analysis.mjs';
@@ -24,8 +24,9 @@ function sourceFor(symbol) {
 }
 
 function analyze(source, envelope, at, allowExpiredCloses = false) {
-  const {symbol, request, daily, resource} = source;
+  const {symbol, daily, resource} = source;
   const {receivedAt, body} = envelope || {};
+  const request = daily ? {...source.request, ...crossMarketSource(symbol, body?.source)} : source.request;
   if (envelope?.schema !== 'public-market-relay-v1' || envelope.resource !== resource ||
       !Number.isSafeInteger(receivedAt) || receivedAt <= 0 || receivedAt > at + 5_000) throw Error('INVALID_SOURCE_DATA');
   if (at - receivedAt > (daily ? 2 * MINUTE : 30_000)) throw Error('STALE_MARKET');
@@ -35,7 +36,7 @@ function analyze(source, envelope, at, allowExpiredCloses = false) {
   if (daily) {
     if (body?.receivedAt !== receivedAt) throw Error('INVALID_SOURCE_DATA');
     validateCrossSnapshot(body, request, cutoff);
-    const gold = request.venueId === 'dukascopy';
+    const gold = symbol === 'XAU';
     if (body.asOfKind !== (gold ? 'bar-close' : 'quote') ||
         (gold !== (body.closeTimeBasis === 'source-daily-bound')) ||
         (gold && (body.quoteAsOf !== body.closedAt || body.session !== 'last-close')) ||

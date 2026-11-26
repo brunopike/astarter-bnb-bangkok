@@ -59,7 +59,7 @@ function resolveRequest(url,now){
  if(ALLOWED.has(key)&&url.searchParams.size===1){
   const cmc=coinMarketCapRequest(key);
   const base={key,resource:key,policy:cmc?{...HUB_RESOURCES[key],maxBytes:cmc.maxBytes}:HUB_RESOURCES[key],validate:(body,at)=>normalizeHubResource(key,body,at)};
-  return cmc?{...base,source:cmc.source,collect:cmc.collect}:base;
+  return cmc?{...base,collectSnapshot:cmc.collectSnapshot}:base;
  }
  if(url.searchParams.size!==2)return null;
  if(key==='search'){
@@ -154,7 +154,7 @@ export function createMarketHubRelay({fetchImpl=globalThis.fetch,now=Date.now,se
     const age=now()-saved?.receivedAt;
     if(saved?.schema==='public-market-relay-v1'&&saved.resource===resource&&saved.body&&age>=0&&age<policy.interval){record(saved);return;}
    }
-   const hold=request.collect?null:providerHold(scope,policy,now());
+   const hold=request.collect||request.collectSnapshot?null:providerHold(scope,policy,now());
    if(hold){s.status=hold.status;s.retryAt=hold.until;return;}
    const controller=new AbortController(),signal=controller.signal;
    let timer;const timeout=new Promise((_,reject)=>{signal.addEventListener('abort',()=>reject(Error('SOURCE_TIMEOUT')),{once:true});timer=setTimer(()=>controller.abort(),policy.timeoutMs??8000);});
@@ -193,18 +193,19 @@ export function createMarketHubRelay({fetchImpl=globalThis.fetch,now=Date.now,se
       return null;
      }
     }
-    let body;
-    if(request.collect)body=await request.collect(load,now);
+    let body,source=request.source??policy.source;
+    if(request.collectSnapshot)({body,source}=await request.collectSnapshot(load));
+    else if(request.collect)body=await request.collect(load,now);
     else if(policy.parallel)await Promise.all(sources.map(load));
     else for(const [index,source] of sources.entries())await load(source,index);
     let receivedAt=now();
-    if(!request.collect)body=request.decode?request.decode(parts,receivedAt,requestStartedAt,headers):parts[0];
+    if(!request.collect&&!request.collectSnapshot)body=request.decode?request.decode(parts,receivedAt,requestStartedAt,headers):parts[0];
     if(resource==='macro'){
      await request.readArchives(body,load,receivedAt);
      receivedAt=now();
     }
     request.validate?.(body,receivedAt);
-    record({schema:'public-market-relay-v1',resource,receivedAt,body,...(request.source?{source:request.source}:{})});
+    record({schema:'public-market-relay-v1',resource,receivedAt,body,...(source?{source}:{})});
     if(cacheKey)await cache.set(cacheKey,s.snapshot,{ttl:policy.interval/1000}).catch(()=>{});
    }catch{
     s.status=s.status===429?429:502;s.failures++;s.retryAt=Math.max(s.retryAt,now()+Math.min(300000,15000*2**Math.min(4,s.failures-1)));

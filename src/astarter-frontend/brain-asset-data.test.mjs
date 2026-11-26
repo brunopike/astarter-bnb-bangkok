@@ -1,6 +1,7 @@
 import test from 'node:test';
+import ranking from './brain-evidence/market-cap-top20.json' with {type:'json'};
 import assert from 'node:assert/strict';
-import {brainAssetKey,brainCatalog,canonicalBrainScope,filterBrainCatalog,readSavedBrainAsset,preferBrainEvidence,loadBrainCatalog,refreshBrainAsset,refreshBrainCatalog,searchBrainAssets} from './brain-asset-data.mjs';
+import {brainAssetKey,brainCatalog,fetchBrainRanking,canonicalBrainScope,filterBrainCatalog,readSavedBrainAsset,preferBrainEvidence,loadBrainCatalog,refreshBrainAsset,refreshBrainCatalog,searchBrainAssets} from './brain-asset-data.mjs';
 
 const response = value => ({ok:true,text:async()=>JSON.stringify(value)});
 const unavailable = async()=>{throw new Error('offline');};
@@ -232,4 +233,13 @@ test('selecting a quote-side token or older cached listing keeps its last verifi
   assert.equal(preferBrainEvidence(previous,{...previous,chain:'different',receivedAt:later}),previous);
   const updated={...previous,receivedAt:later,price:previous.price+1};
   assert.equal(preferBrainEvidence(previous,updated),updated);
+});
+
+test('the live asset ranking and a recalled asset both identify the provider that answered',async()=>{
+ const envelope={schema:'public-market-relay-v1',resource:'assets',source:'coinmarketcap',receivedAt:ranking.receivedAt,body:ranking.body};
+ const result=await fetchBrainRanking({fetchImpl:async()=>({ok:true,json:async()=>envelope})});
+ const asset=result.rows[0];
+ assert.equal(asset.provider,'CoinMarketCap');
+ assert.equal(new URL(asset.sourceUrl).hostname,'coinmarketcap.com');
+ assert.equal(readSavedBrainAsset(asset).provider,'CoinMarketCap');
 });

@@ -22,7 +22,7 @@ const number=n=>!Number.isFinite(n)?'—':n.toLocaleString('en-US',n!==0&&Math.a
 let statsModule,statsLoadAttempt=0;
 function loadStats(){
  if(!statsModule){
-  const url=new URL('./signal-ui/advanced-stats.js',import.meta.url);
+  const url=new URL('/signal-ui/advanced-stats.js',location.origin);
   // A failed module URL can remain in the browser's module map until navigation.
   if(statsLoadAttempt)url.searchParams.set('retry',String(statsLoadAttempt));
   statsModule=import(url.href).catch(error=>{statsModule=null;statsLoadAttempt++;throw error;});

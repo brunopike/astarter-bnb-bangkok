@@ -8,19 +8,17 @@ node paper-replay/verify.mjs
 node paper-replay/cli.mjs serve --port 4317
 ```
 
-Open [the paper trade review](http://127.0.0.1:4317/). The built-in HTTP server also exposes the read-only [proof API](http://127.0.0.1:4317/api/brain/proof?example=btc-pullback). The demo, independent verifier, memory and web server work offline without an account or package installation. The CLI prints the memory ID, chosen strategy, position limit, execution receipt, fees and net P&L.
+Open [the paper trade review](http://127.0.0.1:4317/). The built-in HTTP server also exposes the read-only [proof API](http://127.0.0.1:4317/api/brain/proof). The demo, independent verifier, memory and web server work offline without an account or package installation. The CLI prints the memory ID, chosen strategy, position limit, execution receipt, fees and net P&L.
 
-## Reproduce the featured trade
+## Data and verification
 
-The bundled BTC/USDT market contains 182 completed daily bars (warm-up plus 90 sessions). The example picks the latest modeled fill without filtering for a profit. November 5, 2026 triggered a pullback, a 616.04 USDT position and a stop. The modeled net loss was 24.8936 USDT. Of the 90 sessions, five filled and two made money. The historical reconstruction uses a simulated decision clock. Daily prices establish that the low crossed the stop. Available liquidity at the modeled execution price is unknown.
-
-The verifier checks the decision and receipt fingerprints, compares the independent Binance response for 93 candles, rebuilds 60 calibration sessions, sizes the position and reconciles the entry, stop, modeled exit, slippage, fees and account movement. It changes only the unseen target-day low and close and repeats the engine. The original choice stays fixed and settlement changes. The reference memory bytes and the archived model input have the same SHA-256. The archived Chinese answer and labeled English summary are available without a paid call.
+The CLI reads the market archive at runtime. Pass your own archive and asset key to inspect another market. The verifier checks the fingerprints, decision cutoffs, frozen price windows, candidate selection, position ceiling, simulated costs and balance changes from those inputs.
 
 ## Run your own session
 
 ```sh
 node paper-replay/cli.mjs demo --archive brain-evidence/daily-markets.json --asset coin:ethereum --days 90 --store ./paper-memory
-node paper-replay/cli.mjs demo --session 2026-11-25 --store ./paper-memory
+node paper-replay/verify.mjs --archive brain-evidence/daily-markets.json --asset coin:ethereum
 node paper-replay/cli.mjs recall MEMORY_ID --store ./paper-memory
 ```
 

@@ -100,15 +100,15 @@ export class CommerceStore{
   };}
  purchaseQuote(s,p){
   this.admin(s);let price,product,kind=p.kind;
-  const method=p.paymentMethod??'simulation';if(method!=='simulation')fail('payment-method',400);
+  const method=p.paymentMethod??'simulation';if(!['simulation','ast'].includes(method))fail('payment-method',400);
   if(p.id){const o=this.get('SELECT * FROM orders WHERE id=? AND scope=?',p.id,s.id);if(!o)fail('not-found',404);kind=o.kind;product=o.product;price={interval:o.billing_interval,months:BILLING_INTERVALS[o.billing_interval]?.months||1,baseCents:o.base_cents||o.cents,cents:o.cents,credits:o.credits};}
   else if(kind==='topup'){if(p.interval!==undefined)fail('billing-interval',400);if(!integer(p.dollars,10,1000))fail('topup-range',400);product=String(p.dollars);price={interval:'legacy',months:0,baseCents:p.dollars*100,cents:p.dollars*100,credits:p.dollars*1000};}
   else if(kind==='plan'&&Object.hasOwn(PLANS,p.product)&&p.product!=='free'){
    product=p.product;if((product==='team')!==(s.type==='team'))fail('workspace-plan-mismatch');
    if(p.interval===undefined)price={interval:'legacy',months:1,baseCents:PLANS[product].priceCents,cents:PLANS[product].priceCents,credits:PLANS[product].included_credits};else price=subscriptionPrice(product,p.interval);
   }else fail('invalid-product',400);
-  const start=kind==='plan'?Math.max(this.now(),s.until_at):null,end=kind==='plan'?this.planEnd({billing_interval:price.interval},start):null;
-  return {...price,kind,product,discountCents:price.baseCents-price.cents,paymentMethod:method,paymentAvailable:method==='simulation',planUntil:s.until_at,start_at:start,end_at:end};
+  const start=kind==='plan'?Math.max(this.now(),s.until_at):null,end=kind==='plan'?this.planEnd({billing_interval:price.interval},start):null,astCents=Math.round(price.cents*80/100);
+  return {...price,kind,product,discountCents:price.baseCents-price.cents,astCents,paymentMethod:method,paymentAvailable:method==='simulation',planUntil:s.until_at,start_at:start,end_at:end};
  }
  command(person,scope,key,action,payload={}){
   if(!payload||typeof payload!=='object'||Array.isArray(payload)||typeof action!=='string')fail('invalid-command',400);

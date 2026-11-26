@@ -88,6 +88,11 @@ function signals(rows){
       pullback:downFromMean < -atrPct*.5 && current[4]>previous[4]},
   };
 }
+export function observedMarketSignals(bars){
+  if(bars.length<FEATURES)fail('INSUFFICIENT_EVIDENCE','Not enough closed bars for market signals');
+  const {close,average10,average30,atrPct,priorHigh,signal}=signals(bars.slice(-FEATURES));
+  return {close,previousClose:bars.at(-2)[4],average10,average30,atrPct,priorHigh,signal};
+}
 // Only the next bar's open is consulted at entry. Its low is used solely
 // to model a resting sell stop after entry; a session carries no position overnight.
 function simulate(amount,stopFraction,bar){
@@ -116,6 +121,11 @@ function rankCandidates(history,features){
   candidates.push({id:'cash',signal:true,eligible:true,reason:'cash_baseline',score:0,sampleCount:CALIBRATION});
   return candidates;
 }
+function selectCandidate(candidates){
+  let selected=candidates.at(-1);
+  for(const item of candidates)if(item.eligible && item.score>selected.score)selected=item;
+  return selected;
+}
 function prepare(bars){
   const features=new Array(bars.length+1),history=new Array(bars.length);
   for(let index=FEATURES;index<=bars.length;index++){
@@ -134,8 +144,7 @@ function makeIntent({asset,bars,index,prepared,state,equity,mode,observedAt,sche
   const snapshotId=digest([asset.key,asset.market,asset.venue,asset.quote,window]);
   const features=prepared.features[index];
   const candidates=rankCandidates(prepared.history.slice(index-CALIBRATION,index),features);
-  let selected=candidates.at(-1);
-  for(const item of candidates)if(item.eligible && item.score>selected.score)selected=item;
+  const selected=selectCandidate(candidates);
   const riskMode=features.atrPct>=.035 || equity<=state.high*(1-PROTECTION_RULES.soft)?'conservative':'normal';
   const policy=protectionConfig('astarter',riskMode);
   const sizing=protectionDecision({policy,state,equity,requested:equity,cap:equity,cash:equity,asset:asset.key,
@@ -225,6 +234,82 @@ export function buildBrainProof(archive,{assetKey='coin:bitcoin',days=90}={}){
   const report={version:PROOF_VERSION,mode:'historical_replay',asset,brain,assumptions,summary,decisions};
   return {runId:digest(report),...report};
 }
+// The receipt can only inform a decision after its settlement candle closed.
+export function nextLearningSession(decisions,record){
+  const close=Date.parse(record.execution.barCloseAt);
+  return decisions.find(row=>row.barOpenAt>record.barOpenAt && Date.parse(row.asOf)>=close);
+}
+export function linksLearningReceipt(before,after){
+  return Boolean(before.execution?.id && after.assetKey===before.assetKey && after.mode===before.mode &&
+    after.previousReceiptId===before.execution.id && after.previousReceiptAt===before.execution.barCloseAt &&
+    Date.parse(after.asOf)>=Date.parse(before.execution.barCloseAt));
+}
+
+function calibrationAt(record,bars,asset){
+  const first=Date.parse(record.evidenceStartAt)/1000,end=(Date.parse(record.asOf)+1)/1000;
+  const window=bars.filter(([at])=>at>=first && at<end);
+  if(window.length!==WARMUP || digest([asset.key,asset.market,asset.venue,asset.quote,window])!==record.snapshotId)
+    fail('INVALID_EVIDENCE','Calibration snapshot mismatch');
+  const prepared=prepare(window),history=prepared.history.slice(-CALIBRATION),features=prepared.features.at(-1);
+  const candidates=rankCandidates(history,features);
+  if(digest(candidates)!==digest(record.candidates) || selectCandidate(candidates).id!==record.selected)
+    fail('INVALID_EVIDENCE','Candidate scores or selection do not reproduce');
+  return {history,features,candidates,firstSession:window.at(-CALIBRATION)[0]};
+}
+
+export function buildLearningRecord(proof,record,archive){
+  const {asset,bars}=validateProofMarket(archive,proof.asset.key);
+  const {execution,id,...intent}=record;
+  const {id:receiptId,...receipt}=execution;
+  const sourceBar=bars.find(([at])=>iso(at)===record.barOpenAt);
+  if(proof.mode!=='historical_replay' || proof.version!==PROOF_VERSION || record.mode!==proof.mode ||
+    record.assetKey!==asset.key || digest(intent)!==id || digest(receipt)!==receiptId ||
+    receipt.decisionId!==id || receipt.snapshotId!==record.snapshotId || !sourceBar ||
+    digest(sourceBar)!==digest(receipt.settlementBar) || receipt.barOpenAt!==record.barOpenAt ||
+    Date.parse(receipt.barCloseAt)!==(sourceBar[0]+DAY)*1000-1)
+    fail('INVALID_EVIDENCE','Settlement does not match the pinned decision and candle');
+  if(receipt.status==='filled'){
+    const model=simulate(receipt.amount,record.risk.stopFraction,sourceBar);
+    if(!(receipt.amount>0) || Object.entries(model).some(([key,value])=>receipt[key]!==value))
+      fail('INVALID_EVIDENCE','Entry, exit, costs or return do not reconcile');
+  }else if(receipt.status!=='skipped' || receipt.netPnl!==0 || receipt.amount!==0 || receipt.fees!==0 || receipt.slippage!==0){
+    fail('INVALID_EVIDENCE','Invalid skipped settlement');
+  }
+  const before=calibrationAt(record,bars,asset);
+  const base={version:'agent-learning-v1',mode:proof.mode,runId:proof.runId,assetKey:asset.key,market:asset.market,quote:asset.quote,
+    decisionId:id,snapshotId:record.snapshotId,asOf:record.asOf,selected:record.selected,
+    outcome:{receiptId,status:receipt.status,reason:receipt.reason,closedAt:receipt.barCloseAt,amount:receipt.amount,
+      stopPrice:receipt.stopPrice,candleLow:sourceBar[3],netPnl:receipt.netPnl,fees:receipt.fees,slippage:receipt.slippage}};
+  const next=nextLearningSession(proof.decisions,record);
+  if(!next)return {...base,status:'window_ended',calibration:null,nextDecision:null};
+  const {execution:nextReceipt,id:nextId,...nextIntent}=next;
+  if(!nextReceipt || digest(nextIntent)!==nextId || !linksLearningReceipt(record,next))fail('INVALID_EVIDENCE','The next observable decision did not consume this receipt');
+  const after=calibrationAt(next,bars,asset);
+  const sampleIndex=(sourceBar[0]-after.firstSession)/DAY;
+  if(!Number.isInteger(sampleIndex) || !after.history[sampleIndex])fail('INVALID_EVIDENCE','Settled session outside calibration');
+  const sample=after.history[sampleIndex];
+  // Keep the same denominator, prices and entry signals. Only this session's
+  // qualifying observations become zero contributions to every strategy.
+  const excluded=rankCandidates(after.history.filter((_,i)=>i!==sampleIndex),after.features);
+  const without=selectCandidate(excluded).id;
+  const rows=before.candidates.map((prior,i)=>{
+    const updated=after.candidates[i],counter=excluded[i];
+    return {id:prior.id,before:prior,after:updated,withoutSession:counter,
+      sessionContribution:updated.score-counter.score,otherWindowChanges:counter.score-prior.score};
+  });
+  const focus=record.selected==='cash'?rows.filter(r=>r.id!=='cash').reduce((a,b)=>b.before.score>a.before.score?b:a):
+    rows.find(r=>r.id===record.selected);
+  const counted=sample.signal[focus.id]&&!sample.gap;
+  if(receipt.status==='filled' && (!counted || Math.abs(sample.unitReturn-receipt.netPnl/receipt.amount)>1e-10))
+    fail('INVALID_EVIDENCE','Realized replay return differs from the calibration sample');
+  return {...base,status:'linked',
+    calibration:{sessions:CALIBRATION,method:'neutralize_one_session_fixed_window',focusId:focus.id,focusBasis:record.selected==='cash'?'highest_prior_alternative':'selected_strategy',
+      sampleIncluded:counted,sampleUnitReturn:counted?sample.unitReturn:null,rows},
+    nextDecision:{id:next.id,snapshotId:next.snapshotId,asOf:next.asOf,barOpenAt:next.barOpenAt,receiptId:next.previousReceiptId,
+      selected:next.selected,reason:next.reason,signalCount:after.candidates.filter(c=>c.id!=='cash' && c.signal).length,
+      withoutSession:without,selectionChanged:without!==next.selected}};
+}
+
 export function buildForwardIntent(archive,{assetKey,observedAt}){
   const now=Date.parse(observedAt);
   if(!Number.isFinite(now))fail('INVALID_CLOCK','A valid observedAt is required');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {buildBrainProof,buildForwardIntent,settleForwardIntent} from './brain-proof-engine.mjs';
+import {buildBrainProof,buildLearningRecord,buildForwardIntent,settleForwardIntent} from './brain-proof-engine.mjs';
 import archive from './brain-evidence/daily-markets.json' with {type:'json'};
 
 const DAY=86400;
@@ -189,4 +189,22 @@ test('settling the registration day later at a loss cannot alter the frozen deci
   assert.ok(after.amount<before.amount);
   assert.equal(after.openRisk.reason,'open_risk_reduced');
   closeTo(after.equityAfter,after.equityBefore+after.netPnl);
+});
+
+test('omitting a settled session can change the next winner, and broken evidence cannot explain it',()=>{
+  const run=buildBrainProof(archive,{assetKey:'coin:ethereum',days:90});
+  const record=run.decisions.find(row=>row.barOpenAt==='2026-08-28T00:00:00.000Z');
+  const proof=buildLearningRecord(run,record,archive);
+  assert.equal(proof.nextDecision.selected,'cash');assert.equal(proof.nextDecision.withoutSession,'trend');
+  assert.equal(proof.nextDecision.selectionChanged,true);
+  const changed=structuredClone(run);
+  const later=changed.decisions.find(d=>d.id===proof.nextDecision.id);
+  later.previousReceiptId=null;
+  assert.throws(()=>buildLearningRecord(changed,record,archive),{code:'INVALID_EVIDENCE'});
+  const altered=structuredClone(record);
+  altered.execution.netPnl+=1;
+  assert.throws(()=>buildLearningRecord(run,altered,archive),{code:'INVALID_EVIDENCE'});
+  const missing=structuredClone(archive),market=missing.assets.find(a=>a.key===run.asset.key);
+  market.bars.find(b=>iso(b[0])===record.barOpenAt)[5]+=1;
+  assert.throws(()=>buildLearningRecord(run,record,missing),{code:'INVALID_EVIDENCE'});
 });

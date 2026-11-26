@@ -11,7 +11,7 @@ const sourceTime=at=>new Date(at).toISOString().slice(0,19).replace('T',' ')+' U
 export function createConnectionTicker(bar,{fetchImpl=globalThis.fetch,now=Date.now}={}){
  const viewport=bar.querySelector('.connection-ticker'),source=bar.querySelector('.connection-ticker-source');
  let stamp='',disposed=false,suspended=false;
- const visible=()=>!disposed&&!suspended&&!document.hidden&&productPages.has(document.body.dataset.page);
+ const visible=()=>!disposed&&!suspended&&!document.hidden&&document.body.dataset.scene==='reactor'&&productPages.has(document.body.dataset.page);
  const client=createMarketHubClient({fetchImpl,now,onChange:paint,resources:['tickers'],WebSocketImpl:null,refreshSeconds:30,shareTickersWhen:visible});
  function paint(){
   const state=client.read('tickers'),rows=state.snapshot?.data||[];
@@ -38,7 +38,7 @@ export function createConnectionTicker(bar,{fetchImpl=globalThis.fetch,now=Date.
  const retry=event=>{if(event.target.closest('[data-ticker-retry]'))void client.refresh();};
  viewport.addEventListener('click',retry);
  const routes=typeof MutationObserver==='function'?new MutationObserver(refresh):null;
- routes?.observe(document.body,{attributes:true,attributeFilter:['data-page']});
+ routes?.observe(document.body,{attributes:true,attributeFilter:['data-page','data-scene']});
  return {refresh,resume(){suspended=false;refresh();},pause(){suspended=true;client.setActive(false);bar.dataset.tickerActive='false';},
   dispose(){disposed=true;routes?.disconnect();viewport.removeEventListener?.('click',retry);client.dispose();}};
 }

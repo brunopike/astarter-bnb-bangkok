@@ -260,7 +260,18 @@ test('every strategy configure screen can submit and view without sending an ord
  const form={reportValidity:()=>true,addEventListener(){}},drawer={innerHTML:'',open:false,dataset:{},classList:{toggle(){}},setAttribute(){},querySelector(s){return s==='#sc-config'&&this.dataset.phase==='configure'?form:null;},querySelectorAll(){return [];},addEventListener(k,v){events[k]=v;},showModal(){this.open=true;},close(){this.open=false;}};
  t.after(()=>{for(const[k,v]of Object.entries(prior)){if(v===undefined)delete globalThis[k];else globalThis[k]=v;}});
  globalThis.document={activeElement:null,body:{append(){}},addEventListener(){},createElement:()=>drawer};globalThis.FormData=class extends Map{constructor(){super(Object.entries(fields));}};globalThis.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});globalThis.IntersectionObserver=class{observe(){}unobserve(){}disconnect(){}};
- let posted=0;globalThis.fetch=()=>{posted++;return Promise.resolve({ok:false,json:async()=>({})});};
+ const requests=[];
+ globalThis.fetch=async(url,options={})=>{
+  requests.push({url,method:options.method||'GET'});
+  return Response.json({rules:[],lessons:[],choices:[]});
+ };
+ const checkRequests=()=>{
+  for(const {url,method} of requests){
+   assert.match(url,/^\/api\/memory\/context\?/);
+   assert.equal(method,'GET');
+  }
+  assert.equal(desk.calls.armed,0);
+ };
  const connections={tradingAccounts:[{id:'binance-spot',kind:'exchange',service:'binance',market:'spot',access:'trade',accountId:'BINANCE-SPOT',label:'Binance',status:'connected'}],preferredTradingConnection:'binance-spot'};
  const w=new WorkspaceSim(),desk=deskStub(w,{connections}),center=createStrategyCenter({w,desk,root:{querySelector(){return null;},querySelectorAll(){return [];}},go(id){pages.push(id);},refresh(){},notify(){}});
  const click=(sc,id='')=>events.click({target:{closest:()=>({type:'button',dataset:{sc,id}})}});
@@ -274,11 +285,12 @@ test('every strategy configure screen can submit and view without sending an ord
  }
  center.openTemplate('S01');if(drawer.dataset.phase==='resume')await click('resume-editor');
  assert.doesNotMatch(drawer.innerHTML,/data-sc="start"/);
- await click('save-plan');assert.equal(posted,0);assert.equal(desk.calls.armed,0);
+ await click('save-plan');checkRequests();
  await click('view-list');assert.deepEqual(pages,['execution']);
  center.openTemplate('S02');if(drawer.dataset.phase!=='configure')await click('configure');
  await click('save-plan');
- assert.equal(posted,0);assert.equal(desk.calls.armed,0);
+ checkRequests();
+ assert.ok(requests.some(request=>request.method==='GET'));
  assert.equal(w.s.drafts.some(d=>d.strategy==='S02'&&d.executionRoute?.accountId==='BINANCE-SPOT')||Object.values(w.s.botEditors).some(e=>e.id==='S02'&&e.executionRoute?.accountId==='BINANCE-SPOT'),true);
 });
 
@@ -374,12 +386,20 @@ test('native setup can size blank entry amounts from allocation without overwrit
 const bindRoute=d=>Object.assign(d,{market:route.market,executionRoute:{...route}});
 const advance=(w,seconds=5)=>{for(let i=0;i<seconds*10;i++)w.tick(.1);};
 test('a connected wallet grid submit keeps the plan when the saved-item cap is full',async()=>{
- const prior={document:globalThis.document,FormData:globalThis.FormData,matchMedia:globalThis.matchMedia,IntersectionObserver:globalThis.IntersectionObserver},events={};
+ const prior={document:globalThis.document,FormData:globalThis.FormData,matchMedia:globalThis.matchMedia,IntersectionObserver:globalThis.IntersectionObserver,fetch:globalThis.fetch},events={};
  const form={reportValidity(){return true;},addEventListener(){}},drawer={innerHTML:'',open:false,dataset:{},classList:{toggle(){}},setAttribute(){},querySelector(s){return s==='#sc-config'?form:null;},querySelectorAll(){return [];},addEventListener(k,v){events[k]=v;},showModal(){this.open=true;},close(){this.open=false;}};
  const address='0x'+'ab'.repeat(20),wallet={profileId:'dex-spot',venueId:'pancakeswap',accountId:address,connectionId:'wallet-bsc',chainId:'56',market:'BTC/USDT'};
  const parameters={lower:58984.47,upper:63899.85,count:4,spacing:'arithmetic'};
   const fields={cap:'25',amount:'6.24',mode:'auto',researchBudget:'200',...Object.fromEntries(Object.entries(parameters).map(([key,value])=>['bot_'+key,String(value)]))};
  try{
+  const writes=[];
+  globalThis.fetch=async(url,options={})=>{
+   if(options.method==='POST'){
+    writes.push({url,body:JSON.parse(options.body)});
+    return Response.json({saved:true,memory:false});
+   }
+   return Response.json({rules:[],lessons:[],choices:[]});
+  };
   globalThis.document={activeElement:null,body:{append(){}},addEventListener(){},createElement:()=>drawer};globalThis.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});globalThis.IntersectionObserver=class{observe(){}unobserve(){}disconnect(){}};
   globalThis.FormData=class extends Map{constructor(){super(Object.entries(fields));}};
   const w=new WorkspaceSim(),ensures=[],notes=[],pages=[];
@@ -392,8 +412,9 @@ test('a connected wallet grid submit keeps the plan when the saved-item cap is f
   await events.click({target:{closest:()=>({type:'button',dataset:{sc:'view-list'}})}});
   assert.deepEqual(pages,['execution']);
   await events.click({target:{closest:()=>({type:'button',dataset:{sc:'save-plan'}})}});
+  assert.deepEqual(writes.map(({url,body})=>[url,body.strategyId,body.cap,body.venue]),[['/api/memory/plan','S01',25,'pancakeswap']]);
   const feedback=drawer.innerHTML.match(/class="sc-feedback"[^>]*>([^<]*)/)?.[1]||'';
-  assert.equal(ensures.length,0);assert.equal(feedback,'');assert.equal(notes.length,1);assert.match(notes[0],/^(方案已保存在当前钱包名下。|Plan saved for this wallet\.)$/);assert.equal(w.s.drafts.some(d=>d.strategy==='S01'&&d.executionRoute?.connectionId==='wallet-bsc'&&d.cap===25),true);
+  assert.equal(ensures.length,0);assert.equal(feedback,'');assert.equal(notes.length,1);assert.match(notes[0],/^(方案已保存在当前钱包名下。 记忆未写入。|Plan saved for this wallet\. Memory was not written\.)$/);assert.equal(w.s.drafts.some(d=>d.strategy==='S01'&&d.executionRoute?.connectionId==='wallet-bsc'&&d.cap===25),true);
  }finally{for(const [key,value]of Object.entries(prior)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
 });
 test('an unrelated save failure is not hidden by an unverified trading connection',async()=>{

@@ -64,7 +64,7 @@ export function createResearchMarketEvidence({fetchImpl=globalThis.fetch,now=Dat
   if(!Number.isSafeInteger(startedAt)||startedAt<0)throw fault('MARKET_CLOCK_INVALID');
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs),budget={bytes:0};
   try{return await Promise.all(symbols.map(async symbol=>{
-   const crypto=assets.get(symbol)==='Crypto',request=candleRequest(crypto?{market:symbol+'/USDT',period:'1D'}:{market:symbol,period:'1D',profileId:'public-market',venueId:symbol==='XAU'?'dukascopy':'yahoo'});
+   const crypto=assets.get(symbol)==='Crypto',request=candleRequest(crypto?{market:symbol+'/USDT',period:'1D'}:{market:symbol,period:'1D',profileId:'public-market',venueId:'yahoo'});
    const identity={symbol,source:request.source||'Binance Spot',timezone:request.timezone||'UTC',unit:request.unit||'USDT',period:'1D',methodVersion:METHOD,paused:false};
    try{
     let bars,meta={};
@@ -73,7 +73,7 @@ export function createResearchMarketEvidence({fetchImpl=globalThis.fetch,now=Dat
      bars=normalizeKlines(await read(url,{},200000,budget,controller.signal),request);
     }else{
      const policy=crossMarketPolicy(symbol,startedAt),payloads=[];
-     // XAU's two official windows are sequential, so eight assets never exceed eight HTTP requests.
+     // Each cross-market asset is one GET, so eight assets stay within eight requests.
      for(const url of policy.urls)payloads.push(await read(url,policy.headers,policy.maxBytes,budget,controller.signal));
      const at=now(),body=normalizeCrossMarket(policy.urls.length===1?payloads[0]:payloads,symbol,at);
      validateCrossSnapshot(body,request,at);

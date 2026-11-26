@@ -44,9 +44,9 @@ test('tracking vocabulary is localized consistently in all eight languages',asyn
  }
 });
 
-test('English product names use LensWave while other locale names stay unchanged',async()=>{
+test('legacy product names resolve to the current trading and signals labels in all eight languages',async()=>{
  const {pair,translate,loadLocale}=await import('./locale.mjs');
- const names={zh:['AI 星谱','智选信号'],en:['LensWave','Smart Signals'],ja:['AI スペクトラム','スマートシグナル'],ko:['AI 스펙트럼','스마트 시그널'],vi:['Phổ AI','Tín hiệu thông minh'],es:['Espectro IA','Señales inteligentes'],fr:['Spectre IA','Signaux intelligents'],ru:['Спектр ИИ','Умные сигналы']};
+ const names={zh:['AI 交易','智选信号'],en:['LensWave','Smart Signals'],ja:['AI スペクトラム','スマートシグナル'],ko:['AI 스펙트럼','스마트 시그널'],vi:['Phổ AI','Tín hiệu thông minh'],es:['Espectro IA','Señales inteligentes'],fr:['Spectre IA','Signaux intelligents'],ru:['Спектр ИИ','Умные сигналы']};
  for(const [locale,expected] of Object.entries(names)){
   await loadLocale(locale);
   assert.equal(pair('AI 战队','AI team',locale),expected[0]);
@@ -74,12 +74,12 @@ test('six-stage titles and live meter labels translate without a research update
  assert.deepEqual(tasks,before);
 });
 
-test('LensWave names the English page, P&L, history and runtime without renaming physical spectrum or Chinese',async()=>{
+test('LensWave and AI 交易 localize product labels while physical spectrum keeps its meaning',async()=>{
  const {pair,translate}=await import('./locale.mjs');
  assert.equal(translate('AI 星谱','en'),'LensWave');assert.equal(pair('AI 星谱','AI Spectrum','en'),'LensWave');
  assert.equal(pair('星谱盈亏','Spectrum P&L','en'),'LensWave P&L');assert.equal(translate('星谱交易记录','en'),'LensWave trade history');assert.equal(pair('运行光谱','Runtime spectrum','en'),'LensWave runtime');
- assert.equal(pair('AI 星谱','LensWave','zh'),'AI 星谱');assert.equal(pair('星谱盈亏','LensWave P&L','zh'),'星谱盈亏');assert.equal(pair('运行光谱','LensWave runtime','zh'),'运行光谱');
- assert.equal(translate('seven spectrum beams','en'),'seven spectrum beams');assert.equal(translate('LENSWAVE','zh'),'LENSWAVE');
+ assert.equal(pair('AI 星谱','LensWave','zh'),'AI 交易');assert.equal(pair('星谱盈亏','LensWave P&L','zh'),'AI 交易盈亏');assert.equal(translate('星谱交易记录','zh'),'AI 交易记录');assert.equal(pair('运行光谱','LensWave runtime','zh'),'运行光谱');
+ assert.equal(translate('seven spectrum beams','en'),'seven spectrum beams');assert.equal(translate('七束光谱','zh'),'七束光谱');assert.equal(translate('LENSWAVE','zh'),'LENSWAVE');
 });
 
 test('data center menu and page headings use the same category names',async()=>{

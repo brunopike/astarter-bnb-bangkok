@@ -10,6 +10,34 @@ const depth={lastUpdateId:123,bids:[['99.99','2'],['99.90','3']],asks:[['100.01'
 async function call(handle,url='/api/market-hub?resource=global',method='GET'){
  const result={};result.handled=await handle({url,method},{writeHead(status,headers){result.status=status;result.headers=headers;},end(text){result.body=JSON.parse(text);}});return result;
 }
+test('a market snapshot keeps the provider that supplied its data through retries and cache hits',async t=>{
+ const previous=process.env.COINMARKETCAP_API_KEY;
+ process.env.COINMARKETCAP_API_KEY='test-only';
+ t.after(()=>{if(previous===undefined)delete process.env.COINMARKETCAP_API_KEY;else process.env.COINMARKETCAP_API_KEY=previous;});
+ const primary={data:{btc_dominance:60,last_updated:new Date(NOW).toISOString(),quote:{USD:{total_market_cap:2000,total_volume_24h:100,total_market_cap_yesterday_percentage_change:1}}}};
+ let at=NOW,available=true;
+ const calls=[];
+ const handle=createMarketHubRelay({now:()=>at,fetchImpl:async(url,options)=>{
+  calls.push(new URL(url).hostname);
+  if(url.startsWith('https://pro-api.coinmarketcap.com/'))return response(available?primary:{},200);
+  assert.equal(options.headers['X-CMC_PRO_API_KEY'],undefined);
+  return response(body);
+ }});
+ const direct=await call(handle);
+ assert.equal(direct.body.source,'coinmarketcap');
+ assert.equal(direct.body.body.data.total_market_cap.usd,2000);
+ assert.deepEqual((await call(handle)).body,direct.body);
+ at+=HUB_RESOURCES.global.interval;
+ available=false;
+ const fallback=await call(handle);
+ assert.equal(fallback.body.source,'coingecko');
+ assert.deepEqual(fallback.body.body,body);
+ assert.deepEqual((await call(handle)).body,fallback.body);
+ assert.deepEqual(calls,['pro-api.coinmarketcap.com','pro-api.coinmarketcap.com','api.coingecko.com']);
+ at+=HUB_RESOURCES.global.interval;
+ available=true;
+ assert.equal((await call(handle)).body.source,'coinmarketcap');
+});
 const newsRSS=`<rss version="2.0"><channel><title>CoinDesk</title><item><title>Bitcoin and Ethereum</title><link>https://www.coindesk.com/markets/story</link><guid>story-1</guid><pubDate>${new Date(NOW-1000).toUTCString()}</pubDate><description>Not for republication</description></item></channel></rss>`;
 test('fresh Ethereum transfer receipts can be shared across relay instances without resetting the clock',async()=>{
  let at=NOW,saved=null,calls=0;

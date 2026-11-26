@@ -129,6 +129,8 @@ test('ipfund.art can read the wallet session and other public hosts stay closed'
  assert.equal((await call(dapp)).status,200);
  assert.equal((await call(dapp,'https://'+dapp)).status,200);
  assert.equal((await call(dapp,'https://ipfund.art')).status,403);
+ assert.equal((await call('demo.astarter.io','https://demo.astarter.io')).status,200);
+ assert.equal((await call('demo.astarter.io','https://ipfund.art')).status,403);
  assert.equal((await call('astarter.imstark.site','https://astarter.imstark.site')).status,200);
  assert.equal((await call('ipfund.art','https://astarter.imstark.site')).status,403);
  assert.equal((await call('astarter.imstark.site','https://ipfund.art')).status,403);

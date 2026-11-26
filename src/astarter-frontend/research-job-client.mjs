@@ -1,3 +1,4 @@
+import {crossMarketSource} from './cross-market-data.mjs';
 import {ASSETS} from './product-data.mjs';
 import {candleRequest} from './trading-chart-data.mjs';
 import {pair as L} from './locale.mjs';
@@ -5,7 +6,7 @@ import {escapeUI as esc} from './product-experience.mjs';
 
 const MODEL='openai/gpt-4.1-mini',MISSING=['depth','macro','social','chain','risk'];
 const REQUEST=/^[A-Za-z0-9:_-]{8,96}$/,PREFIX='/api/research',STORAGE='astarter.research-job.v1:';
-const assets=new Map(ASSETS.map(([symbol,,domain])=>[symbol,{domain,request:candleRequest(domain==='Crypto'?{market:symbol+'/USDT',period:'1D'}:{market:symbol,period:'1D',profileId:'public-market',venueId:symbol==='XAU'?'dukascopy':'yahoo'})}]));
+const assets=new Map(ASSETS.map(([symbol,,domain])=>[symbol,{domain,request:candleRequest(domain==='Crypto'?{market:symbol+'/USDT',period:'1D'}:{market:symbol,period:'1D',profileId:'public-market',venueId:'yahoo'})}]));
 const codes=new Set(['UNCONFIGURED','AUTH_REQUIRED','SCOPE_EXPIRED','REQUEST_INVALID','REQUEST_CONFLICT','REQUEST_NOT_FOUND','BUDGET_EXCEEDED','BUDGET_UNAVAILABLE','EVIDENCE_UNAVAILABLE','EVIDENCE_INVALID','EVIDENCE_EXPIRED','MODEL_UNAVAILABLE','MODEL_INVALID_RESPONSE','MODEL_TIMEOUT','REQUEST_PENDING','OUTCOME_UNKNOWN','BODY_TOO_LARGE','JSON_REQUIRED','ORIGIN_DENIED','METHOD_NOT_ALLOWED','SERVICE_UNAVAILABLE']);
 const integer=value=>Number.isSafeInteger(value)&&value>=0;
 const text=(value,max=160)=>typeof value==='string'&&value.trim().length>0&&value.length<=max&&!/[\u0000-\u001f\u007f]/.test(value);
@@ -46,7 +47,7 @@ export async function validateResearchJob(body,{requestId,symbols,now=Date.now()
  const ids=new Set();
  for(const source of result.sources){
   check(keys(source,['id','symbol','source','timezone','unit','period','methodVersion','sampleAt','closedAt','validUntil','metrics','bars']));
-  const asset=assets.get(source.symbol),request=asset?.request;
+  const asset=assets.get(source.symbol),request=crossMarketSource(source.symbol,source.source)||asset?.request;
   check(selected.includes(source.symbol)&&request&&source.source===(request.source||'Binance Spot')&&source.timezone===(request.timezone||'UTC')&&source.unit===(request.unit||'USDT')&&source.period==='1D'&&source.methodVersion==='ema20-atr14-rsi14-v1');
   check(keys(source.metrics,['close','changePercent','ema20DeviationAtr14','rsi14'])&&Object.values(source.metrics).every(Number.isFinite)&&source.metrics.close>0&&source.metrics.changePercent>-100&&source.metrics.rsi14>=0&&source.metrics.rsi14<=100);
   check(Number.isInteger(source.bars)&&source.bars>=250&&source.bars<=500&&[source.sampleAt,source.closedAt,source.validUntil].every(Number.isFinite)&&source.sampleAt>=0&&source.sampleAt<source.closedAt&&source.closedAt*1000<=now&&source.validUntil>source.closedAt);

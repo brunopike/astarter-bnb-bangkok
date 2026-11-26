@@ -10,7 +10,7 @@ import {mkdtemp,readFile,readdir,rename,rm,writeFile} from 'node:fs/promises';
 import {createBrainProofHandler} from './api/brain-proof.mjs';
 import {createBrainProofService} from './api/brain-proof-service.mjs';
 import {recordForwardProofs,readForwardProof,readForwardRefusal} from './brain-proof-forward.mjs';
-import {readSourceObservation} from './brain-source-observations.mjs';
+import {readSourceObservation,readSourceObservationArtifact} from './brain-source-observations.mjs';
 
 const dataset=JSON.parse(await readFile(new URL('./brain-evidence/daily-markets.json',import.meta.url)));
 const endpoint='/api/brain/proof';
@@ -381,4 +381,91 @@ test('outcome calendars survive delisting, including windows after the last reta
   const unknown=await get('?outcomes=1&asset=coin:unknown&days=7');
   assert.equal(unknown.status,404);
   assert.equal(unknown.body.error.code,'UNSUPPORTED_ASSET');
+});
+
+test('an archived market links a fill to its frozen signal, position, settlement and next decision',async t=>{
+  const f=await fixture(t),get=await f.start();
+  const archived=await get('?asset='+bitcoin.key+'&days=90');
+  assert.equal(archived.status,200);
+  const {runId,decisions}=archived.body;
+  const fill=decisions.slice(0,-2).find(row=>row.status==='filled');
+  assert.ok(fill);
+  const detail=await get('?run='+runId+'&decision='+fill.id);
+  assert.equal(detail.status,200);
+  const d=detail.body.decision,receipt=d.execution;
+  assert.ok(d.candidates.some(row=>row.id===d.selected && row.eligible && row.signal));
+  const evidence=await get('?run='+runId+'&decision='+d.id+'&evidence=1');
+  assert.equal(evidence.body.snapshotId,d.snapshotId);
+  assert.equal(evidence.body.bars.at(-1)[4],d.features.close);
+  assert.equal(receipt.status,'filled');
+  assert.equal(receipt.amount,receipt.openRisk.amount);
+  assert.ok(receipt.amount<=d.risk.amount);
+  const refExit=receipt.reason==='stop_loss'?receipt.stopPrice:receipt.settlementBar[4];
+  const move=receipt.quantity*(refExit-receipt.settlementBar[1]);
+  assert.ok(Math.abs(move-receipt.slippage-receipt.fees-receipt.netPnl)<1e-8);
+  const following=archived.body.decisions.find(row=>row.barOpenAt>d.barOpenAt && row.asOf>=receipt.barCloseAt);
+  const after=await get('?run='+runId+'&decision='+following.id);
+  assert.equal(after.body.decision.previousReceiptId,receipt.id);
+  assert.equal(after.body.decision.previousReceiptAt,receipt.barCloseAt);
+});
+
+test('market evidence uses dated venue records without calling the trading or replay paths',async t=>{
+  const f=await fixture(t),dir=path.join(f.dir,'venue');
+  const now=Date.parse(f.fixture.retrievedAt)+60000,clock=()=>now;
+  const forbidden=()=>assert.fail('Market evidence must be independent of trading and replay');
+  const options={clock,build:forbidden,forward:forbidden,refusal:forbidden,cohort:forbidden,
+    observation:(key,opts)=>readSourceObservation(key,{...opts,dir}),
+    artifactReader:(key,opts)=>readSourceObservationArtifact(key,{...opts,dir})};
+  const get=await f.start(options),query='?marketEvidence=1&asset='+bitcoin.key;
+  assert.equal((await get(query)).body.marketData,null);
+  assert.equal((await get('?marketEvidence=1&asset=unknown')).body.error.code,'UNSUPPORTED_ASSET');
+  assert.equal((await observeTestArchive(f.fixture,{dir,clock})).counts.matched,1);
+  const {body,status}=await get(query);
+  assert.equal(status,200);
+  assert.equal(body.marketData.barCount,91);
+  assert.equal(body.marketData.bars.at(-1)[4],body.marketData.features.close);
+  assert.equal(body.observation.observedAt.slice(0,10),body.date);
+  assert.equal((await get(body.observation.responseUrl)).status,200);
+  assert.doesNotMatch(JSON.stringify(body),/paper|replay|netPnl|riskBudget|receiptId|equityBefore/i);
+  assert.equal((await get(query+'&date=2023-01-01')).body.marketData,null);
+  assert.equal((await get(query+'&date=2099-01-01')).status,400);
+  const conflicting=await f.start({...options,observation:async()=>({...body.observation,status:'conflict'}),artifactReader:forbidden});
+  assert.equal((await conflicting(query)).body.marketData,null);
+});
+
+test('learning attributes a settled loss to its score and tests the next choice without that session',async t=>{
+  const f=await fixture(t),get=await f.start(),peer=await f.start();
+  const {body:run}=await get('?asset=coin:bitcoin&days=90');
+  const decision=run.decisions.find(row=>row.barOpenAt==='2026-11-05T00:00:00.000Z');
+  const query='?run='+run.runId+'&decision='+decision.id+'&learning=1';
+  const detail=await get('?run='+run.runId+'&decision='+decision.id);
+  const [a,b]=await Promise.all([get(detail.body.learningUrl),peer(query)]);
+  assert.equal(a.status,200);assert.equal(a.body.learningId,b.body.learningId);
+  const {learning,recordUrl,learningId}=a.body;
+  const r=learning.calibration.rows.find(row=>row.id==='pullback');
+  assert.equal(learning.status,'linked');assert.equal(learning.mode,'historical_replay');
+  assert.ok(learning.outcome.candleLow<=learning.outcome.stopPrice);
+  assert.equal(learning.outcome.netPnl.toFixed(2),'-24.89');
+  assert.equal(learning.calibration.sampleIncluded,true);
+  assert.ok(Math.abs(learning.calibration.sampleUnitReturn-learning.outcome.netPnl/learning.outcome.amount)<1e-10);
+  assert.deepEqual([r.before.sampleCount,r.after.sampleCount,r.withoutSession.sampleCount],[7,8,7]);
+  assert.equal(r.before.score.toFixed(4),'0.0112');assert.equal(r.after.score.toFixed(4),'-0.0714');
+  assert.equal(r.sessionContribution.toFixed(4),'-0.0826');assert.equal(r.otherWindowChanges,0);
+  assert.equal(learning.nextDecision.receiptId,learning.outcome.receiptId);
+  assert.equal(learning.nextDecision.barOpenAt,'2026-11-07T00:00:00.000Z');
+  assert.equal(learning.nextDecision.signalCount,0);
+  assert.equal(learning.nextDecision.selected,'cash');assert.equal(learning.nextDecision.withoutSession,'cash');
+  assert.equal(learning.nextDecision.selectionChanged,false);
+  assert.equal((await get(query+'&evidence=1')).status,400);
+  assert.equal((await get('?run='+run.runId+'&learning=1')).status,400);
+  assert.equal((await get('?learningId=invalid')).status,400);
+  const final=await get('?run='+run.runId+'&decision='+run.decisions.at(-1).id+'&learning=1');
+  assert.equal(final.body.learning.status,'window_ended');assert.equal(final.body.learning.calibration,null);
+  await rm(f.file);
+  const restart=await f.start(),stored=await restart(recordUrl);
+  assert.equal(sha(stored.raw),learningId);assert.deepEqual(stored.body,learning);
+  assert.equal((await restart(query)).body.learningId,learningId);
+  await writeFile(path.join(f.proofDir,'learning',learningId+'.json.gz'),'damaged');
+  assert.notEqual((await restart(recordUrl)).status,200);
+  assert.notEqual((await restart(query)).status,200);
 });

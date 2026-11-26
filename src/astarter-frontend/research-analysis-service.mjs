@@ -1,3 +1,4 @@
+import {crossMarketSource} from './cross-market-data.mjs';
 import {createHash} from 'node:crypto';
 import {ASSETS} from './product-data.mjs';
 import {candleRequest} from './trading-chart-data.mjs';
@@ -44,7 +45,7 @@ export function validateResearchEvidence(rows,selected,now=Date.now()){
  if(!Array.isArray(rows)||rows.length!==selected.length||new Set(rows.map(row=>row?.symbol)).size!==rows.length||rows.some(row=>!selected.includes(row?.symbol)))throw fault('EVIDENCE_INVALID',502);
  return rows.map(row=>{
   const crypto=symbols.get(row.symbol)==='Crypto';
-  const request=candleRequest(crypto?{market:row.symbol+'/USDT',period:'1D'}:{market:row.symbol,period:'1D',profileId:'public-market',venueId:row.symbol==='XAU'?'dukascopy':'yahoo'});
+  const request=candleRequest(crypto?{market:row.symbol+'/USDT',period:'1D'}:{market:row.symbol,period:'1D',profileId:'public-market',venueId:crossMarketSource(row.symbol,row.source)?.venueId});
   if(!request||row.source!==(request.source||'Binance Spot')||row.timezone!==(request.timezone||'UTC')||row.unit!==(request.unit||'USDT')||row.period!=='1D'||row.methodVersion!=='ema20-atr14-rsi14-v1')throw fault('EVIDENCE_INVALID',502);
   // The source owner marks an outage or timeout with state 'error', its reason and no numbers: unavailable, not invalid evidence.
   if(row.state==='error'&&['SOURCE_UNAVAILABLE','SOURCE_TIMEOUT'].includes(row.reason))throw fault('EVIDENCE_UNAVAILABLE',503);

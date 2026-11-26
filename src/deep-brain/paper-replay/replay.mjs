@@ -4,10 +4,10 @@ import {join} from 'node:path';
 import {buildBrainProof} from '../brain-proof-engine.mjs';
 
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
-export const bundledMarket = new URL('./example/market.json', import.meta.url);
+export const bundledMarket = new URL('../brain-evidence/daily-markets.json', import.meta.url);
 const idPattern = /^[0-9a-f]{64}$/;
 
-export function selectCase(archive, {asset = 'coin:bitcoin', days = 90, session} = {}) {
+export function selectCase(archive, {asset = archive.assets[0]?.key, days = 90, session} = {}) {
   const report = buildBrainProof(archive, {assetKey:asset, days});
   const decision = session ? report.decisions.find(d => d.barOpenAt.slice(0,10) === session)
     : report.decisions.findLast(d => d.execution.status === 'filled') ?? report.decisions.at(-1);
@@ -21,28 +21,6 @@ export function selectCase(archive, {asset = 'coin:bitcoin', days = 90, session}
   return {version:'paper-replay-memory-v1',mode:report.mode,runId:report.runId,asset:report.asset,
     decision,assumptions:report.assumptions,sample:report.summary,selectionMethod:session?'requested_session':'latest_fill_or_latest_session',
     attribution:{referenceMove,slippage:r.slippage,entryFee,exitFee,netPnl:r.netPnl}};
-}
-
-let example;
-async function loadExample() {
-  const [archive,metadata,memory,rawVenue]=await Promise.all([
-    readFile(bundledMarket,'utf8').then(JSON.parse),
-    readFile(new URL('./example/proof.json',import.meta.url),'utf8').then(JSON.parse),
-    readFile(new URL('./example/memory.txt',import.meta.url),'utf8'),
-    readFile(new URL('./example/venue.json',import.meta.url))]);
-  const record=selectCase(archive),d=record.decision,r=d.execution;
-  const rawBars=JSON.parse(rawVenue), bars=rawBars.map(row=>[row[0]/1000,...row.slice(1,6).map(Number)]);
-  const window=archive.assets[0].bars.filter(row=>row[0]>=Date.parse(d.evidenceStartAt)/1000 && row[0]<=r.settlementBar[0]);
-  const memoryHash=sha256(memory), recalled=JSON.parse(memory.split('\n')[1]);
-  if (record.runId!==metadata.runId || d.id!==metadata.decisionId || r.id!==metadata.receiptId || d.snapshotId!==metadata.snapshotId ||
-      sha256(rawVenue)!==metadata.venueSha256 || bars.length!==d.barCount+2 || JSON.stringify(window)!==JSON.stringify(bars) ||
-      recalled.receipt.id!==r.id || Math.abs(recalled.receipt.netPnl-r.netPnl)>1e-8 ||
-      memoryHash!==metadata.memory.contentSha256 || memoryHash!==metadata.explanation.inputContentSha256) throw Error('Featured proof identity mismatch');
-  return {...record,verification:{matchedBars:bars.length,venueUrl:metadata.venueUrl,proofUrl:metadata.proofUrl,
-    memory:metadata.memory,explanation:metadata.explanation}};
-}
-export function featuredCase() {
-  return example ??= loadExample().catch(error=>{example=undefined;throw error;});
 }
 
 export async function readMemory(directory,id) {

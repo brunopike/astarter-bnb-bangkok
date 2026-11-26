@@ -5,7 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {promisify} from 'node:util';
 import {gzip,gunzip} from 'node:zlib';
-import {buildBrainProof} from '../brain-proof-engine.mjs';
+import {buildBrainProof,buildLearningRecord,observedMarketSignals,validateProofMarket} from '../brain-proof-engine.mjs';
 import {buildProofCohort} from '../brain-proof-cohort.mjs';
 import {evaluateDecisionProof} from '../brain-decision-proof.mjs';
 import {forwardDirectory,readForwardProof,readForwardRefusal} from '../brain-proof-forward.mjs';
@@ -205,6 +205,28 @@ export function createBrainProofHandler({
     snapshot.cohorts.set(days,task);
     try{return await task;}catch(error){snapshot.cohorts.delete(days);throw error;}
   }
+  async function marketEvidence(params,reply){
+    assertKeys(params,['marketEvidence','asset','date']);
+    const key=params.get('asset'),now=clock(),today=new Date(now).toISOString().slice(0,10);
+    const date=params.get('date')??today;
+    if(params.get('marketEvidence')!=='1' || !key || key.length>128 || !validDate(date) || date>today)fail('BAD_QUERY');
+    const row=await observation(key,{date,before:Math.min(now,Date.parse(date)+86400000-1)});
+    if(!row && !(await archive()).data.assets.some(asset=>asset.key===key))fail('UNSUPPORTED_ASSET');
+    const result={version:'market-evidence-v1',assetKey:key,date,today,observation:describeObservation(row),marketData:null};
+    if(row?.status==='matched'){
+      const raw=await artifactReader(key,{id:row.id,kind:'archive'});
+      if(!raw || digest(raw)!==row.archiveBytesSha256)fail('INVALID_EVIDENCE');
+      const {asset,bars}=validateProofMarket(JSON.parse(raw),key);
+      const start=Date.parse(row.windowStartAt),end=Date.parse(row.windowEndAt);
+      const closed=bars.filter(([at])=>at*1000>=start && (at+86400)*1000-1<=end);
+      if(asset.market!==row.market || asset.venue!==row.venue || row.assetKey!==key ||
+        row.matchedBars!==row.totalBars || closed.length!==row.totalBars ||
+        closed.at(0)?.[0]*1000!==start || (closed.at(-1)?.[0]+86400)*1000-1!==end)fail('INVALID_EVIDENCE');
+      result.marketData={market:asset.market,venue:asset.venue,quote:asset.quote,asOf:row.windowEndAt,barCount:closed.length,
+        bars:closed,features:observedMarketSignals(closed)};
+    }
+    reply(200,result);
+  }
   async function current(params,reply,brief=false){
     const mode=brief?'brief':'current';
     assertKeys(params,brief?[mode,'asset','date']:[mode,'asset','date','artifact','sha256']);
@@ -278,12 +300,6 @@ export function createBrainProofHandler({
     if(!['GET','HEAD'].includes(req.method)){reply(405,{error:{code:'METHOD_NOT_ALLOWED',message:'Use GET or HEAD.'}},{Allow:'GET, HEAD'});return;}
     try{
       const params=new URL(req.url,'http://localhost').searchParams;
-      if(params.has('example')){
-        assertKeys(params,['example']);
-        if(params.get('example')!=='btc-pullback')fail('PROOF_NOT_FOUND');
-        const {featuredCase}=await import('../paper-replay/replay.mjs');
-        reply(200,await featuredCase());return;
-      }
       if(params.has('tool')){
         assertKeys(params,['tool']);
         if(params.get('tool')!=='1')fail('BAD_QUERY');
@@ -317,6 +333,7 @@ export function createBrainProofHandler({
         if(!bytes)fail('PROOF_NOT_FOUND');
         reply(200,bytes,{ETag:'"'+digest(bytes)+'"'});return;
       }
+      if(params.has('marketEvidence')){await marketEvidence(params,reply);return;}
       if(params.has('current')){await current(params,reply);return;}
       if(params.has('cohortId')){
         assertKeys(params,['cohortId']);
@@ -330,18 +347,36 @@ export function createBrainProofHandler({
         const id=params.get('source'),bytes=await sourceBytes(id);
         reply(200,bytes,{ETag:'"'+id+'"'});return;
       }
+      if(params.has('learningId')){
+        assertKeys(params,['learningId']);
+        const id=params.get('learningId');
+        if(!isHash(id))fail('BAD_QUERY');
+        const bytes=await readPublished(location('learning',id));
+        if(digest(bytes)!==id)fail('INVALID_EVIDENCE');
+        reply(200,bytes,{ETag:'"'+id+'"'});return;
+      }
       if(params.has('run')){
-        assertKeys(params,['run','decision','evidence','report']);
+        assertKeys(params,['run','decision','evidence','report','learning']);
         const decisionId=params.get('decision');
         if(decisionId!==null && !isHash(decisionId))fail('BAD_QUERY');
         if(params.has('report') && (decisionId!==null || params.get('report')!=='1'))fail('BAD_QUERY');
         if(params.has('evidence') && (!decisionId || params.get('evidence')!=='1'))fail('BAD_QUERY');
+        if(params.has('learning') && (!decisionId || params.get('learning')!=='1' || params.has('evidence') || params.has('report')))fail('BAD_QUERY');
         const record=await loadRun(params.get('run'));
         if(params.has('report')){reply(200,record.proof,{ETag:'"'+record.resultSha+'"'});return;}
         if(!decisionId){reply(200,index(record));return;}
         const decision=record.proof.decisions.find(item=>item.id===decisionId);
         if(!decision)fail('PROOF_NOT_FOUND');
         const ref={runId:record.proof.runId,sourceArchive:sourceRef(record.sourceSha)};
+        if(params.has('learning')){
+          const archive=JSON.parse(await sourceBytes(record.sourceSha));
+          const learning={...buildLearningRecord(record.proof,decision,archive),sourceArchive:ref.sourceArchive};
+          const bytes=Buffer.from(JSON.stringify(learning)),learningId=digest(bytes);
+          const file=location('learning',learningId);
+          await publishImmutable(file,bytes);
+          if(digest(await readPublished(file))!==learningId)fail('INVALID_EVIDENCE');
+          reply(200,{learningId,recordUrl:'/api/brain/proof?learningId='+learningId,learning});return;
+        }
         if(params.has('evidence')){
           const {key,market,venue,quote}=record.proof.asset;
           const raw=JSON.parse(await sourceBytes(record.sourceSha)).assets.find(asset=>asset.key===key);
@@ -351,7 +386,8 @@ export function createBrainProofHandler({
           reply(200,{...ref,decisionId,snapshotId:decision.snapshotId,asOf:decision.asOf,market,venue,quote,
             fields:['openTimeUnix','open','high','low','close','baseVolume'],bars});return;
         }
-        reply(200,{...ref,evidenceUrl:'/api/brain/proof?run='+ref.runId+'&decision='+decisionId+'&evidence=1',decision});return;
+        const recordUrl='/api/brain/proof?run='+ref.runId+'&decision='+decisionId;
+        reply(200,{...ref,evidenceUrl:recordUrl+'&evidence=1',learningUrl:recordUrl+'&learning=1',decision});return;
       }
       const key=params.get('asset');
       if(params.has('forward')){

@@ -507,7 +507,7 @@ export function createStrategyCenter({w,desk,root,go:route,refresh,notify,onRese
   const parameters=Object.keys(intent.botParameters||{}).filter(name=>/^[a-z0-9_]{1,40}$/.test(name));
   try{
    const response=await fetch('/api/memory/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({strategyId:context.id,version:String(draft.version),marketType,venue,instrument,amount:intent.amount,cap:intent.cap,parameters,planId:String(context.editorKey||draft.id),changed:`金额 ${intent.amount}；上限 ${intent.cap}；参数 ${parameters.join(', ')}`,why:`保存在 ${marketType} ${venue} ${instrument}`,rejected:'没有发送交易所订单'})});
-   return response.status===202||response.status===204;
+   return response.status===202&&(await response.json()).memory===true;
   }catch{return false;}
  }
  function open(id,draftId=null,resumeConfig=false,options={}){
@@ -802,7 +802,17 @@ export function createStrategyCenter({w,desk,root,go:route,refresh,notify,onRese
   if(d.executionRoute?.connectionId!==intent.executionRoute.connectionId)throw Error(L('接入绑定未保存，暂不能检查或启动。输入已保留。','The connection binding was not saved. Checking and starting are blocked; your inputs are retained.'));
   if(opened!==context){refresh();notify(L('设置已保存，未启动交易。','Settings saved. Trading has not started.'),{tone:'success'});return;}
   acceptEditor();
-  if(!check||liveBinanceSpotRoute(intent.executionRoute,intent.market)||liveWalletSpotRoute(intent.executionRoute,intent.market)){let message=liveBinanceSpotRoute(intent.executionRoute,intent.market)?L('方案已保存在已核对的币安现货账户上。这一步不发单。','Saved on the checked Binance spot account. This step does not send an order.'):liveWalletSpotRoute(intent.executionRoute,intent.market)?L('方案已保存在当前钱包名下。','Plan saved for this wallet.'):L('设置已保存，未扣积分。','Settings saved. No credits used.');if(!check&&!(await writePlanMemory(intent,d,context)))message=L('方案已保存，记忆未写入','Plan saved. Memory was not written.');if(inlineHost){feedback=message;feedbackTone='success';}else{returnToCaller=null;drawer.close();refresh();notify(message,{tone:'success',action:()=>route('execution'),actionLabel:L('查看我的交易','View my trading')});}return;}
+  if(!check||liveBinanceSpotRoute(intent.executionRoute,intent.market)||liveWalletSpotRoute(intent.executionRoute,intent.market)){
+   let message=liveBinanceSpotRoute(intent.executionRoute,intent.market)
+    ?L('方案已保存在已核对的币安现货账户上。这一步不发单。','Saved on the checked Binance spot account. This step does not send an order.')
+    :liveWalletSpotRoute(intent.executionRoute,intent.market)
+     ?L('方案已保存在当前钱包名下。','Plan saved for this wallet.')
+     :L('设置已保存，未扣积分。','Settings saved. No credits used.');
+   if(!check&&!(await writePlanMemory(intent,d,context)))message+=L(' 记忆未写入。',' Memory was not written.');
+   if(inlineHost){feedback=message;feedbackTone='success';}
+   else{returnToCaller=null;drawer.close();refresh();notify(message,{tone:'success',action:()=>route('execution'),actionLabel:L('查看我的交易','View my trading')});}
+   return;
+  }
   if(scope!==JSON.stringify([w.s.setupContext,w.account?.scope])||intent.cap>w.s.risk.cap||!nativeEditor()&&lock()){feedback=L('账户或保护设置已变化，请重新确认。','The account or protection settings changed. Review them again.');renderDrawer();return;}
   if(nativeEditor()){
    const sourceIssue=recommendationIssue(context.source);if(sourceIssue){feedback=sourceIssue;renderDrawer();return;}

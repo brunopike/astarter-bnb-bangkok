@@ -1,6 +1,6 @@
 # Deep Brain paper trading
 
-Run the same decision, risk and execution logic used by the Hackathon demo. The bundled market and recorded model review work offline with Node.js 24 or later. No package installation is required.
+Run the same decision, risk and execution logic used by the Hackathon demo. The market archive and proof engine work offline with Node.js 24 or later. No package installation is required.
 
 ```sh
 git clone https://github.com/brunopike/astarter-bnb-bangkok.git
@@ -11,7 +11,7 @@ npm test
 npm start
 ```
 
-Open [the local review](http://127.0.0.1:4317/). The November 5 BTC/USDT case stopped out for a modeled loss of 24.8936 USDT after fees and slippage. You can inspect each step and choose another session or market.
+Open [the local review](http://127.0.0.1:4317/). Select a market to inspect its decision, risk budget and simulated execution. You can also supply your own archive.
 
 | Layer | What runs | What you can check |
 | --- | --- | --- |

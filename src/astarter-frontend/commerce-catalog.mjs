@@ -95,7 +95,7 @@ export function subscriptionPrice(product,interval='monthly'){
  if(!plan||product==='free')throw Object.assign(Error('invalid-product'),{status:400});
  if(!term)throw Object.assign(Error('billing-interval'),{status:400});
  const baseCents=plan.priceCents*term.months,cents=Math.round(baseCents*term.percent/100);
- return {interval,months:term.months,baseCents,discountCents:baseCents-cents,cents,credits:plan.included_credits};
+ return {interval,months:term.months,baseCents,discountCents:baseCents-cents,cents,astCents:Math.round(cents*80/100),credits:plan.included_credits};
 }
 // Anchor every renewal to the original day in UTC+8, including short months.
 export function addBillingMonths(time,months){
