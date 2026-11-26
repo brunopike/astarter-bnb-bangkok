@@ -2,9 +2,28 @@
 
 **You get one chance to record a trading decision before the market tests it.**
 
+**English** · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [Español](README.es.md) · [Français](README.fr.md) · [Русский](README.ru.md)
+
 Astarter is an AI Trading OS. Before the next UTC session opens, its spot paper trading engine records the market evidence, the strategy it selected and the largest position it will allow. After the session closes, you can check whether it followed that decision and how it did after costs. A decision to hold cash goes on the record too.
 
 [Open Deep Brain](https://dapp.ipfund.art/?page=brain&lang=en) · [Run the proof locally](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
+
+## How the agents research an RWA
+
+The **18 Team agents** divide the research. A05 checks liquidity, A10 looks for evidence against a thesis, and A15 reviews capital at risk. The **18 Strategy agents** define the market, entry, exit and risk rules for individual strategies. The spot paper engine currently evaluates trend, breakout and pullback against cash. **Living Brain** lets a later agent retrieve a saved plan or lesson and trace a receipt back to its source. When asked to explain an outcome, the model receives the verified receipt. Its response records the receipt ID and the hash of the model input.
+
+For a real-world asset (RWA), try the tokenized equity NVDAB. The **Astarter CLI** returns its Atlas USD quote and update time as JSON. In the assistant, the **Binance Agent OS** toolset offers market research and account reads where authorized. In settings, **Binance Agentic Wallet** uses a short-lived BNB Chain signature to prove control of an address. Spending requires separate authority.
+
+[Team agents](src/astarter-frontend/simulation.mjs) · [Strategy agents](https://dapp.ipfund.art/agents) · [Astarter CLI](https://demo.astarter.io/cli/astarter.mjs) · [Agentic Wallet](https://demo.astarter.io/settings#ux-local-agent) · [Binance Agent OS](https://www.binance.com/en-ZA/agent-os) · [Living Brain](src/astarter-frontend/living-brain.mjs)
+
+## BNB Bangkok · Technical evidence
+
+| Track or award | What to inspect |
+| --- | --- |
+| **Developer Track** | Read a tokenized equity quote on BNB Smart Chain, then inspect the evidence, position limit and entry veto for a spot paper decision. Agents can explain why a trade qualified and which risk checks can reduce or veto entry. [On-chain feed](https://atlasoracle.io/feeds/1005) · [Decision brief](https://dapp.ipfund.art/api/brain/proof?brief=1&asset=coin:bitcoin) |
+| **CoinMarketCap × Atlas Challenge** | Market Hub pairs CoinMarketCap market breadth and sentiment with timestamped Atlas quotes. Inspect the NVDAB/USD Pull response (#934) and independently read the BNB Chain Push feed (#1005). [Market Hub](https://dapp.ipfund.art/?page=markets&lang=en) · [CMC response](https://dapp.ipfund.art/api/market-hub?resource=global) · [Atlas response](https://dapp.ipfund.art/api/atlas/prices?symbol=NVDAB) · [One-page technical brief](docs/bnb-bangkok-technical-brief.md) |
+| **ChatAndBuild — Build Memory-Powered Agents with Living Brain** | A later agent can retrieve a prior strategy’s rules, wallet-scoped plan and lessons. The receipt path saves a decision through the Living Brain API and verifies the retrieved content hash before model review. [Memory API](src/astarter-frontend/living-brain.mjs) · [Receipt verification](src/deep-brain/paper-replay/connections.mjs) |
+| **AWS Credits** | We would use credits to run daily observation and reconciliation workers, retain dated evidence in object storage and measure cost per verified session. [Daily worker](src/deep-brain/scripts/brain-proof-forward.mjs) · [Official criteria](https://www.hackquest.io/hackathons/BNB-Bangkok) |
 
 ## What earns a trade?
 
@@ -14,18 +33,7 @@ Astarter is an AI Trading OS. Before the next UTC session opens, its spot paper 
 | **[Thinking Layer](src/deep-brain/brain-strategy-witness.mjs)** | Why this strategy, at this size, today? | Trend, breakout and pullback compete with holding cash. A strategy needs a current signal, enough observations and a positive score after modeled costs and downside risk. The winner gets a position cap and a stop. Elevated volatility or an equity drawdown triggers the conservative risk policy. Keeping the current signal fixed, it omits each of 60 calibration sessions in turn and shows which omissions change the winner. |
 | **[Execution Layer](src/deep-brain/brain-execution-invariants.mjs)** | Did the paper trade respect the decision? | The worker binds the instruction to its decision ID. An opening gap can veto entry, and risk checks can cut the position. After an independently checked candle closes, the verifier reconstructs entry, exit, slippage, fees and ending equity. An unsettled instruction has no reported return. |
 
-```mermaid
-flowchart TD
-    B["Brain · Freeze venue data and cutoff"] --> T["Thinking · Rank eligible strategies and cash"]
-    T --> R["Register the choice and risk cap before the open"]
-    R --> X{"Execution · Entry permitted?"}
-    X -->|Yes| F["Model entry, exit and costs"]
-    X -->|No| S["Record the reason to skip"]
-    F --> V["Verify the receipt after the session closes"]
-    S --> V
-    V --> M["Compare with benchmarks and save the outcome"]
-    M -.->|Available to later decisions| B
-```
+[![Three-layer decision proof. A frozen market snapshot informs the strategy and risk limit. Paper fills and skipped entries produce records for the next decision.](docs/images/decision-proof.drawio.png)](docs/images/decision-proof.drawio.png)
 
 **How would you know whether it helps?** Follow the decisions registered in advance, including the skipped sessions. The engine registers two benchmarks before the open when a comparison is available. One stays in cash. The other puts 10% into the asset from open to close and pays the modeled fees and slippage. Compare the strategy with both over the same sessions, including losses and drawdowns. That measures what the rules earned during that period. The next session is still an open question. [Inspect the current read-only agent brief](https://dapp.ipfund.art/api/brain/proof?brief=1&asset=coin:bitcoin) · [Benchmark calculation](src/deep-brain/brain-forward-comparison.mjs)
 
@@ -100,7 +108,9 @@ cast call 0xf25af12920d408baf6211e9e90eda89df3d8ccda \
 From `src/astarter-frontend`, run the catalog, adapter, memory, and simulated checkout checks.
 
 ```sh
-node --import ./test-locale.mjs --test atlas-feed-master.test.mjs market-source-adapters.test.mjs living-brain.test.mjs commerce.test.mjs
+node --check atlas-feed-master.mjs
+node --check market-source-adapters.mjs
+node --import ./test-locale.mjs --test living-brain.test.mjs commerce.test.mjs
 ```
 
 The earlier [v0.1.0 release](https://github.com/brunopike/astarter-bnb-bangkok/releases/tag/v0.1.0) contains the combined frontend and backend source snapshot.
