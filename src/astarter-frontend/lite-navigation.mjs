@@ -51,7 +51,7 @@ if (versionSwitch) {
     if (!panel || !root || panel.hidden) return setSection(false);
     const viewport = root.getBoundingClientRect();
     const nearTop = panel.getBoundingClientRect().top <= viewport.top + viewport.height * .4;
-    const atEnd = root.scrollTop > 0 && root.scrollTop + root.clientHeight >= root.scrollHeight - 2;
+    const atEnd = root.scrollTop > 0 && root.scrollTop + root.clientHeight >= root.scrollHeight - 12;
     setSection(nearTop || atEnd);
   }
   let frame = 0;
