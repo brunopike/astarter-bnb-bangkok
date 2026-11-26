@@ -103,9 +103,24 @@
     letter-spacing: -0.035em;
   }
   & #lite-deck-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
     margin-top: 6px;
     font: 500 12px/1.4 var(--sans);
     color: var(--b-muted);
+  }
+  & .lite-summary-asset {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--b-ink);
+  }
+  & .lite-summary-period {
+    border-inline-start: 1px solid var(--b-line);
+    padding-inline-start: 10px;
+    white-space: nowrap;
   }
   & #lite-deck-summary:empty { display: none; }
   & #lite-crew { min-width: 0; }
@@ -825,7 +840,9 @@
     margin-bottom: 8px;
   }
   .lite-main .lite-command-group { grid-column: 2; grid-row: 1; }
-  .lite-main #lite-crew { grid-column: 1 / -1; grid-row: 2; }
+  .lite-main .lite-heading { display: contents; }
+  .lite-main #lite-deck-summary { grid-column: 1 / -1; grid-row: 2; margin-top: 2px; }
+  .lite-main #lite-crew { grid-column: 1 / -1; grid-row: 3; }
   .lite-main .lite-command-group,
   .lite-main .market-tools {
     gap: 3px;

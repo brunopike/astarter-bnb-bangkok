@@ -224,12 +224,20 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
     });
     el('inspect').hidden = !current || Boolean(receipt);
   }
+  let displayedAssets = '';
   function updateDeckSummary(visibleSymbols) {
     const count = visibleSymbols.length;
-    crew.setSymbols(visibleSymbols);
-    el('deck-summary').textContent = count
-      ? t(count + ' 张策略卡 · 1 分钟收盘', count + (count === 1 ? ' strategy card' : ' strategy cards') + ' · 1 min close')
-      : '';
+    const assetsKey = visibleSymbols.join(',');
+    if (assetsKey !== displayedAssets) {
+      displayedAssets = assetsKey;
+      crew.setActive(count > 0);
+      const pairs = visibleSymbols.map((symbol) =>
+        `<span class="lite-summary-asset">${tokenIcon(symbol, { size: 14 })}${esc(symbol)}</span>`
+      );
+      el('deck-summary').innerHTML = count
+        ? pairs.join('') + `<span class="lite-summary-period">${t('1 分钟 K 线', '1m candles')}</span>`
+        : '';
+    }
     scheduleDeckLayout();
     const empty = el('empty');
     empty.hidden = count > 0;
@@ -842,7 +850,7 @@ export function mountLiteWorkspace(host, { lang: locale = 'zh' } = {}) {
         break;
     }
   }
-  const crew = mountLiteCrew(el('crew'), { lang, symbols: [] });
+  const crew = mountLiteCrew(el('crew'), { lang });
   const rail = el('strategy-host');
   const deckNav = el('deck-nav');
   const [previousCard, nextCard] = deckNav.querySelectorAll('button');

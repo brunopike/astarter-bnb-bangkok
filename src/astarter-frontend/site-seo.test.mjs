@@ -55,15 +55,16 @@ test('shared assistant links use the chat path and keep the conversation in the 
 });
 
 
-test('Lite renders in the product shell and shares only an asset, live observation and locale with Full',async()=>{
+test('edition switches open each home with only the chosen locale',async()=>{
  const page=await request('/lite?lang=zh');
  assert.equal(page.status,200);assert.match(page.body,/class="topbar"/);assert.match(page.body,/src="\/app\.js(?:\?|")/);
  assert.equal(routePage(routeSearch(new URL("/lite?mode=practice",SITE_ORIGIN))),"lite");
  assert.equal((await request('/?page=lite&mode=practice')).headers.Location,'/lite?mode=practice');
  const context={asset:'eth',signalId:'ETH:1m:1795000000000',lang:'zh',mode:'practice',wallet:'private'};
  const full=new URL(fullHrefFromLite(context),SITE_ORIGIN);
- assert.equal(full.pathname,'/signals');assert.deepEqual(Object.fromEntries(full.searchParams),{asset:'ETH',signalId:context.signalId,data:'live',lang:'zh'});
+ assert.equal(full.pathname,'/');assert.equal(routePage(routeSearch(full)),'brain');
+ assert.deepEqual(Object.fromEntries(full.searchParams),{lang:'zh'});
  const lite=new URL(liteHrefFromFull(context),SITE_ORIGIN);
- assert.equal(lite.pathname,'/lite');assert.deepEqual(Object.fromEntries(lite.searchParams),{asset:'ETH',signalId:context.signalId,lang:'zh'});
- assert.equal(fullHrefFromLite({...context,signalId:'practice:ETH:123'}),'/signals?data=live&asset=ETH&lang=zh');
+ assert.equal(lite.pathname,'/lite');assert.deepEqual(Object.fromEntries(lite.searchParams),{lang:'zh'});
+ assert.equal(fullHrefFromLite({...context,signalId:'practice:ETH:123'}),'/?lang=zh');
 });

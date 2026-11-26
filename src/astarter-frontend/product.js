@@ -259,7 +259,8 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   dialog.close();if(!context.restore&&id!=='assistant')business.resetFilter();helpDialog.close();if(id!==page&&!context.restore){feedFilter='全部';query='';}
   const moveChannel=id!==page&&DATA_PAGES.includes(page)&&DATA_PAGES.includes(id)?captureDataChannel(root):null;
   page=id;const u=new URL(location.href);
-  if(context.search){const retired=wealthRoute(context.search);u.search=restoreNavigationSearch(retired||context.search,u.search);}
+  if(context.editionHome){u.search=context.search;u.hash='';}
+  else if(context.search){const retired=wealthRoute(context.search);u.search=restoreNavigationSearch(retired||context.search,u.search);}
   else{
    u.searchParams.set('page',id);u.searchParams.delete('scene');if(root.dataset.renderedPage==='lite'){u.searchParams.delete('mode');u.searchParams.delete('signalId');}for(const key of ['strategy','asset','coin','metric','story','trader','view','scope','fund','exchange','chain','task','run','runId','ref','create','editor','privateDraft','sourceRequestId','researchSymbol'])u.searchParams.delete(key);
    if(id==='strategies'&&CATALOG.some(item=>item.id===context.create)){u.searchParams.set('create',context.create);if(typeof context.editor==='string'&&context.editor.length<=4096&&(context.editor===context.create||context.editor.startsWith(context.create+':')))u.searchParams.set('editor',context.editor);}
@@ -725,10 +726,10 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
  });
  document.addEventListener('astarter:experience-navigate',event=>{
   const url=new URL(event.detail.href,location.href);
-  if(url.origin!==location.origin||!['/lite','/signals'].includes(url.pathname))return;
+  if(url.origin!==location.origin||!['/lite','/'].includes(url.pathname))return;
   event.preventDefault();
   const search=routeSearch(url);
-  go(routePage(search),{search});
+  go(routePage(search),{search,editionHome:true});
  });
  document.addEventListener('hive:navigate',e=>{if(PAGES.some(p=>p[0]===e.detail))go(e.detail);});
  document.addEventListener('hive:configure-strategy',event=>{if(!workspace.draft()){go('advisor');return;}business.openSelectedStrategy(event.detail?.mode);});
