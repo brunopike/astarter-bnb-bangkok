@@ -1,4 +1,4 @@
-// Local simulation companion. Source: Astarter_策略与风控整合计划_v0.1,
+// Local simulation companion. Source: Astarter Strategy and Risk Integration Plan v0.1,
 // AST-R02–09. This does not implement or approve live H5 execution.
 export const PROTECTION_VERSION='astarter-research-v0.1/sim-2';
 export const PROTECTION_RULES=Object.freeze({episode:.0025,notional:.10,portfolio:.01,asset:.005,group:.006,event:.005,daily:.02,epoch:.05,soft:.03,hard:.08,reserve:.20});

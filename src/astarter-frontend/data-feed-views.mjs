@@ -3,12 +3,12 @@ import {L} from './execution-views.mjs';
 import {SOCIAL_POSTS,socialRows,socialAssetThreads,socialAvatar} from './social-trading.mjs';
 import {uiGlyph} from './product-composition.mjs';
 export const SOCIAL_VIEWS=['动态','发现交易员','发现资产','排行榜'];
-// The live leaderboard's preset link (data-live-views.mjs pageParams) sends 排行榜; `rank`, the leaderboard's live view
+// The live leaderboard's preset link (data-live-views.mjs pageParams) sends the preset leaderboard label; `rank`, its live view
 // name, is kept for addresses that name it with data=demo. Other live views drop `view` (a trader address page keeps it)
 // and open the timeline.
 const LIVE_SOCIAL_VIEWS=new Map([['rank','排行榜']]);
 // Trader profile tabs by address key. Looked up only among its own keys, so a name such as `constructor` falls back to
-// the tab chosen before, then 持仓, as when no view is given.
+// the previously selected tab, then Positions, just as it does when no view is specified.
 const TRADER_TABS={positions:'持仓',trades:'交易记录',history:'历史动态',performance:'表现分析'};
 
 // All added records are deterministic local scenarios, never fetched market/account data.

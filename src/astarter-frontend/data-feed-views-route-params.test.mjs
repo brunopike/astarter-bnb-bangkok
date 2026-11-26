@@ -26,8 +26,8 @@ const renderAt=search=>{
  }finally{if(old)globalThis.location=old;else delete globalThis.location;}
 };
 
-// Each page has one link to the other data path: 预设 (preset) on the live page, which carries the address, and
-// 社媒动向 → (social trends) on the preset page, which opens the live page with data=live only. URLSearchParams encodes
+// Each page links to the other data view. The live page's "Preset" link carries the address, and
+// the preset page's "Social trends" link opens the live page with data=live only. URLSearchParams encodes
 // every markup character in a carried href, so the copy there is inert. Address text may appear nowhere else on the page.
 const SWITCH=/<a class="dc-button" data-dc-link href="\?([^"]*)">(?:预设|社媒动向 →)<\/a>/g;
 function modeSwitch(html){
@@ -160,7 +160,7 @@ test('asset found only in the market list is still applied',()=>{
 
 test('the live leaderboard shows a public address only after the relay check accepts it',async()=>{
  // The leaderboard writes the address as given, so the response check is what keeps outside text out. Trader
- // rankings have their own tab (view=rank); its switch opens the preset 排行榜.
+ // rankings have their own tab (view=rank); its switch opens the preset leaderboard.
  const shown=await renderLive('&view=rank',query=>query.resource==='traders'?leaderboard():null);
  assert.deepEqual(shown.requests,[{resource:'traders'}]);
  assert.match(shown.html,LIVE_BODY.traders);
@@ -185,9 +185,9 @@ test('accepted social views are exactly the views the page navigation links to',
   const link=(renderAt('&view='+encodeURIComponent(p.get('view'))+DEMO).match(DEMO_NAV)?.[1]??'').match(/<a class="selected" data-dc-link href="\?([^"]*)">/);
   return link?new URLSearchParams(link[1]).get('view'):null;
  };
- // The view each link means on its target path. The live leaderboard is the preset 排行榜, and the live path opens it
- // for 排行榜 and 发现交易员 too; the preset path has one timeline for the live trends page and the old Mastodon
- // address. The live path has no asset discovery page, so 发现资产 opens its default page, the social trends.
+ // The live leaderboard maps to the preset leaderboard. Both the preset leaderboard and trader discovery
+ // link back to the live leaderboard. The preset timeline handles live trends and the old Mastodon
+ // address. Asset discovery opens the live social trends page, the default destination.
  const PRESET={...Object.fromEntries(SOCIAL_VIEWS.map(view=>[view,view])),rank:'排行榜',posts:'动态','全部动态':'动态',mastodon:'动态'};
  const meant=p=>p.get('data')==='demo'?PRESET[p.get('view')]:LIVE_KIND[p.get('view')]??'social';
  const demoNav=renderAt(DEMO).match(DEMO_NAV);

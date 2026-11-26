@@ -458,7 +458,7 @@ async function selectAppLanguage(id){
 
 test('the remove button of a saved data source puts the provider name where each language puts it, unchanged and outside the page translator',async()=>{
   const before=getLocale();
-  // Japanese and Korean put the object before the verb ("CoinGlassを削除", "CoinGlass 제거"); the other languages put the verb first.
+  // Japanese and Korean place the provider before the removal verb. The other supported languages put the verb first.
   const expected={zh:['移除 ',''],en:['Remove ',''],ja:['','を削除'],ko:['',' 제거'],vi:['Gỡ ',''],es:['Quitar ',''],fr:['Retirer ',''],ru:['Убрать ','']};
   try{
     for(const [id,[lead,tail]]of Object.entries(expected)){

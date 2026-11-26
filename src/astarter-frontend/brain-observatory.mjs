@@ -327,7 +327,7 @@ class AstarterBrain extends HTMLElement {
         graph.setState(selected,playing);
       }
       const reviewing=phase===4;
-      // The replay publishes on “显示信号” and files only after “归档复盘”.
+      // Replay publishes at "Show signal" and saves the review at "Archive review".
       const published=phase>3 || (phase===3 && step>=4);
       const filed=reviewing && step>=8;
       const status=filed?'filed':reviewing?'review':published?'published':phase===3?'ready':'pending';

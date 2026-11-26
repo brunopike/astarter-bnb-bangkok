@@ -91,7 +91,7 @@ test('connection setting notes and inbox refresh states use each selected langua
    if(id!=='ja')assert.doesNotMatch(rendered,/[㐀-鿿]/,id+': '+en);
   }
   assert.doesNotMatch(pair('自动刷新：','Auto refresh: ',id)+'60 '+pair('秒','seconds',id),/Auto refresh|seconds/,id);
-  // The short unit keeps its own wording: "seconds" must not replace the existing "sec" message for 秒.
+  // Keep the short time unit "sec" separate from "seconds".
   assert.equal(translate('秒',id),pack.sec,id+': 秒');
  }
  assert.equal(translate('秒','en'),'sec');
@@ -99,7 +99,7 @@ test('connection setting notes and inbox refresh states use each selected langua
 
 test('the market refresh cooldown line and the market source hint names use each selected language, the watch-scope note in the word its scope button shows',async()=>{
  const hints=[['数据来源与时间','Source and time'],['关于我的追踪','About my tracking']];
- // The watch-scope note sits beside the scope button L('自选','Watchlist') in market-hub.mjs, which renders the tracking word "mine" (locale.mjs trackingCopy); the note names that same word.
+ // The scope note uses the same localized tracking label as the Watchlist button in market-hub.mjs (see trackingCopy in locale.mjs).
  const sameWord=id=>{
   const button=pair('自选','Watchlist',id).trim(),note=pair('关于我的追踪','About my tracking',id);
   assert.ok(button&&note.toLocaleLowerCase(id).includes(button.toLocaleLowerCase(id)),id+': '+note+' / '+button);
@@ -110,7 +110,7 @@ test('the market refresh cooldown line and the market source hint names use each
  for(const id of ['ja','ko','vi','es','fr','ru']){
   await loadLocale(id);
   const pack=(await import(`./locales/${id}.mjs`)).default;
-  // The cooldown notice in market-hub.mjs: L('请在','Try again in')+' '+retryIn+' '+L('秒后重试','seconds').
+  // The cooldown notice joins "Try again in", the remaining time, and the localized "seconds" label.
   const line=pair('请在','Try again in',id)+' '+30+' '+pair('秒后重试','seconds',id);
   assert.doesNotMatch(line,/(?<![\p{L}\p{M}])(?:try|again|in|seconds?|sec)(?![\p{L}\p{M}])/iu,id+': '+line);
   if(id!=='ja')assert.doesNotMatch(line,/[㐀-鿿]/,id+': '+line);
@@ -152,18 +152,18 @@ test('account inbox and notification settings texts, the notices tab badge and t
    if(id!=='ja')assert.doesNotMatch(rendered,/[㐀-鿿]/,id+': '+en);
   }
   assert.match(pair('公链 TVL','Chain TVL',id),/(?<![\p{L}])TVL(?![\p{L}])/u,id);
-  // The notices tab badge in workbench-console.mjs: L('通知','Notices')+' · '+L('未读提醒','Unread reminders')+' '+count.
+  // The workbench notices badge joins the tab name, the unread label, and the count.
   const badge=pair('通知','Notices',id)+' · '+pair('未读提醒','Unread reminders',id)+' 2';
   assert.doesNotMatch(badge,/Notices|Unread|reminders/,id+': '+badge);
  }
- // A Chinese source with two English texts keeps one zh lookup (交易平台, 重新读取 and 站内通知 were already in the catalog;
- // 账户通知 and 风险提醒 are added here); the other English text of each is keyed by its English words.
+ // Each Chinese source label keeps its existing lookup when two English variants share it.
+ // Key the alternate English variants separately for venue, reload, in-app notices, account notices, and risk alerts.
  const last=zh=>messages.filter(([source])=>source.trim()===zh).at(-1)?.[1];
  assert.deepEqual(['交易平台','重新读取','站内通知','账户通知','风险提醒'].map(last),['Trading venue','Read again','In-app notifications','Account notifications','Risk alert']);
 });
 
 test('the remove-button name of a saved source follows each language’s word order and leaves the existing remove texts as they were',async()=>{
- // connections.mjs translates L('移除 {name}','Remove {name}') and then puts the escaped provider name into {name}, so the name itself is never translated.
+ // Translate "Remove {name}" before inserting the escaped provider name so that the name stays intact.
  // {name} is not a catalog slot ({p0}, {p1}, ...), so the entry is never used as a pattern for other texts.
  assert.deepEqual(slots('Remove {name}'),[]);
  assert.equal(pair('移除 {name}','Remove {name}','zh'),'移除 {name}');
@@ -215,7 +215,7 @@ test('the remove-button entry changes no other text: every text with Remove, 移
   for(const name of ['BTC',pair('未识别标的','Unidentified asset',id)])same(name+' · '+pair('移除追踪','Remove from watchlist',id),'market-watchlist.mjs L87');
   same(pair('移除资料：','Remove source: ',id)+'BTC 1h','trading-assistant.mjs L74');
  }
- // Strategy texts with 移除 or 删除 (strategy-catalog.mjs L210 and L252).
+ // Strategy copy covers both removal and deletion in strategy-catalog.mjs.
  const {CATALOG}=await import('./strategy-catalog.mjs'),seen=new Set();
  const walk=value=>typeof value==='string'?[value]:value&&typeof value==='object'&&!seen.has(value)?(seen.add(value),Object.values(value).flatMap(walk)):[];
  const strategyTexts=walk(CATALOG).filter(text=>/移除|删除|Remove /.test(text));

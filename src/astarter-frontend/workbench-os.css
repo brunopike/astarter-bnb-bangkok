@@ -710,7 +710,7 @@ body[data-workbench-view=photonic] .pw-core-subject{display:none}
 body[data-workbench-view=photonic] .pw-core-state{top:116px}
 @media(max-width:900px){body[data-workbench-view=photonic] .pw-track-select{display:block!important}body[data-workbench-view=photonic] .pw-prism{width:120px;height:156px}body[data-workbench-view=photonic] .pw-core-state{top:85px}}
 
-/* AI 现场 · Photonic 规范底线：字号层级、触控尺寸、输入字号、单一主按钮、工作动态窄屏排布。只定尺寸与排布，不定颜色与材质（由下方视觉层负责）。 */
+/* Photonic workspace layout: type scale, touch targets, input size, one primary action, and the narrow-screen activity feed. Colors and materials are defined below. */
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-stages>div>span{font-size:12px!important;line-height:19px!important}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-stages b{font-size:14px!important;line-height:20px!important}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-stages small{font-size:12px!important;line-height:18px!important}
@@ -765,7 +765,7 @@ body[data-workbench-view=photonic] .pw-core-state{top:116px}
  :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-research-sources{grid-template-columns:repeat(3,minmax(0,1fr))!important;row-gap:4px!important}
  :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-inputs button>.pw-source-value{font-size:12px!important}
 }
-/* AI 现场 · Photonic 模板视觉层（暗色）。颜色、玻璃面、描边高光、圆角、按钮均取自 landing.css 的 token；只作用于本页。 */
+/* Dark Photonic theme. This workspace uses landing.css tokens for color, glass, edge highlights, corner radii, and buttons. */
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic]{--ph-bg:#050608;--ph-glass-1:#0b0d10;--ph-glass-2:#111419;--ph-ink:#ecebe6;--ph-ink-2:#b9bab6;--ph-ink-3:#8b8f96;--ph-line:#ecebe61f;--ph-line-2:#ecebe638;--ph-edge:var(--optical-rim);--ph-shadow:0 1px 0 #ffffff0a inset,0 8px 24px -12px #0009;--ph-signal:#6fe3ff}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] :is(.network-stage,.console-panel){background:var(--ph-bg)!important;border-color:var(--ph-line)!important;border-radius:16px!important}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] :is(.console-panel,.console-header){background:var(--ph-glass-1)!important}
@@ -781,7 +781,7 @@ body[data-workbench-view=photonic] .pw-core-state{top:116px}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-inputs button[aria-pressed=true]{background:linear-gradient(90deg,color-mix(in srgb,var(--pw-color) 12%,transparent),transparent 80%)!important;border-color:transparent!important;box-shadow:none}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-outputs .pw-output{background:linear-gradient(var(--ph-glass-1),var(--ph-glass-1)) padding-box,var(--ph-edge) border-box!important;border:1px solid transparent!important;border-radius:12px!important}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-outputs .pw-output-filter>b{font-weight:300!important}
-/* 工作动态 · 终端式数据流：时间与类型等宽对齐，类型颜色对应信息来源。 */
+/* Align activity timestamps and types in monospace. Type colors identify the source. */
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-information :is(.desk-feed-row,.desk-research-record){--kind:var(--ph-ink-3);position:relative;margin:0!important;padding:0!important;border:0!important;border-bottom:1px solid var(--ph-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-information .desk-feed-row[data-kind=market]{--kind:#6fe3ff}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-information .desk-feed-row[data-kind=analysis],:root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-information .desk-research-record{--kind:#b48cff}
@@ -811,7 +811,7 @@ body[data-workbench-view=photonic] .pw-core-state{top:116px}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-information .desk-filter-bar{display:flex!important;justify-content:flex-start!important;gap:18px!important;padding:0!important;background:transparent!important;border:0!important;border-bottom:1px solid var(--ph-line)!important;border-radius:0!important}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-information .desk-filter-bar button{flex:0 0 auto!important;min-height:0!important;height:auto!important;padding:9px 0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;font:500 11px/16px var(--mono)!important;letter-spacing:.06em;color:var(--ph-ink-3)!important}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-information .desk-filter-bar button[aria-pressed=true]{color:var(--ph-ink)!important;box-shadow:none!important;font-weight:500!important}
-/* 第一层 · 来源与结果融入光路：无框文字列，色点接在各自光束的起点/终点；光束起止由脚本按两列实际宽度让位。 */
+/* Source and result columns share the light paths. The script uses their measured widths to align each beam with its endpoint dot. */
 @media(min-width:901px){
  :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-optics{height:340px!important}
  :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-inputs{top:18%!important;bottom:18%!important;width:150px!important;gap:0!important;justify-content:stretch!important}
@@ -829,7 +829,7 @@ body[data-workbench-view=photonic] .pw-core-state{top:116px}
  :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-outputs .pw-output[data-selected=true] .pw-output-filter>b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:6px}
  :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-outputs .pw-output[data-empty=true] .pw-output-filter>b{opacity:.45}
 }
-/* 第二层 · 两件原 SVG 按真实阶段运动。研究芯片：收集时分层展开 → 比对时矩阵扫描 → 判断时光纤输出 → 完成后静止。策略网络：只有关联执行才流动。 */
+/* Animate both SVGs by stage. The research chip unfolds during collection, scans during comparison, emits a pulse on assessment, and settles on completion. The strategy network moves during linked execution. */
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-operation .px-l{transition:transform .9s cubic-bezier(.2,.7,.1,1),opacity .6s}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-operation .px-plate{fill:#0f1318;stroke:#ecebe666}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-operation .px-die{fill:#141a21}
@@ -891,7 +891,7 @@ path.pw-micro-base{fill:none;stroke:currentColor;stroke-width:1}
 }
 @media(min-width:1201px){:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-operation-art{height:320px}}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .pw-operation-art::before{content:"";position:absolute;inset:6% 14%;border-radius:50%;background:radial-gradient(closest-side,#6fe3ff17,#6fe3ff06 55%,transparent);pointer-events:none}
-/* 第三层 · 四图取模板色板：图表引擎从这些变量读色，数值与接口不变。 */
+/* All four charts read their palette from these variables. Their values and data interfaces stay the same. */
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] :is(.terminal-market-chart,.terminal-equity-chart,.terminal-evidence-chart,.terminal-distribution-chart){--b-ink:#ecebe6;--b-muted:#8b8f96;--b-line:#ecebe61c;--b-panel:#0b0d10;--chart-accent:#6fe3ff;--chart-series-2:#4a6bff;--chart-series-4:#ffd84d;--chart-series-5:#5fe08a;--chart-series-7:#ff7a6b}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] :is(.terminal-market-readout,.terminal-equity-readout) strong{font-weight:300!important;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 :root[data-theme=dark] body[data-page=workbench][data-workbench-view=photonic] .terminal-book-level{font-family:var(--mono);font-variant-numeric:tabular-nums}
@@ -903,14 +903,14 @@ path.pw-micro-base{fill:none;stroke:currentColor;stroke-width:1}
  :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-outputs .pw-output-filter>b{font-size:24px!important}
 }
 @media(max-width:420px){:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-prism{width:124px!important;height:164px!important}}
-/* 浅色质感：取官网浅色 token（#e9ecef 底、白色玻璃面、#0b0d10 字、白色描边高光），只作用于本页。 */
+/* Workspace light theme: a #e9ecef background, white glass, #0b0d10 text, and white edge highlights. */
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic]{--ph-bg:#f4f6f8;--ph-glass-1:#fff;--ph-ink:#0b0d10;--ph-ink-2:#363b42;--ph-ink-3:#555b64;--ph-line:#0b0d101f;--ph-line-2:#0b0d1033;--ph-edge:var(--optical-rim);--ph-shadow:0 1px 0 #fff inset,0 10px 28px -18px #14181e40}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] :is(.network-stage,.console-panel){background:var(--ph-bg)!important;border-color:var(--ph-line)!important;border-radius:16px!important}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] :is(.pw-task,.pw-operation,.terminal-market-chart,.terminal-equity-chart,.terminal-evidence-chart,.terminal-distribution-chart,.pw-information){background:linear-gradient(var(--ph-glass-1),var(--ph-glass-1)) padding-box,var(--ph-edge) border-box!important;border:1px solid transparent!important;border-radius:16px!important;box-shadow:var(--ph-shadow)!important}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] :is(.network-stage,.console-panel) :is(h2,h3){font-weight:400!important;color:var(--ph-ink)!important}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] :is(.ops-primary,.apply-button,.button.primary,.p-primary,.trade-discovery .button):not(dialog *){background:linear-gradient(180deg,#22262c,#0b0d10)!important;color:#f4f6f8!important;border:0!important;border-radius:999px!important;font-weight:500!important;box-shadow:0 1px 0 #ffffff24 inset,0 10px 24px -14px #0b0d1099!important}
 
-/* 顶部追踪条：范围是文字标签（下划线标当前），标的是胶囊（当前为玻璃面），两组之间发丝线分隔。 */
+/* Underline the selected scope in the tracking bar. Render assets as pills, highlight the active one with glass, and separate the two groups with a hairline. */
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-trackbar{display:flex!important;align-items:center!important;gap:14px!important;min-height:40px}
 /* Segmented scope control adapted from the Stats Band registry; selection carries the surface. */
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-track-filters{display:flex!important;gap:2px!important;padding:3px!important;margin-right:12px;background:var(--b-soft)!important;border:1px solid var(--b-line)!important;border-radius:8px!important;box-shadow:none!important}
@@ -935,7 +935,7 @@ body[data-page=workbench][data-workbench-view=photonic] .pw-track-select option:
 @media(max-width:900px){:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-track-filters{display:none!important}}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic]{--ph-node:#f7fafe;--ph-node-on:#cdeefa}
 @media(max-width:900px){:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-target-chips{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;min-width:0;flex:1 1 auto}}
-/* 浅色下两件线稿：墨色发丝线与信号蓝芯片，连线整体压暗以在白底上保持七色可辨；各状态透明度高于深色。 */
+/* Light-theme diagrams use ink outlines and a signal-blue chip. Darker connectors keep all seven colors distinct on white; states use higher opacity than in the dark theme. */
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] .pw-operation .px-plate{fill:#f4f6f8;stroke:#0b0d1061}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] .pw-operation .px-die{fill:#e6eaee}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] .pw-operation .px-chip{fill:#eaf5fa;stroke:#0090c2}
@@ -953,12 +953,12 @@ body[data-page=workbench][data-workbench-view=photonic] .pw-track-select option:
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench:is([data-execution=running],[data-execution=position]) .pw-strategy-operation .px-links path{opacity:1}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench:is([data-execution=paused],[data-execution=blocked]) .pw-strategy-operation .px-links path{opacity:.45}
 :root[data-theme=light] body[data-page=workbench][data-workbench-view=photonic] .photonic-workbench:is([data-execution=paused],[data-execution=blocked]) .pw-strategy-operation .px-chip{stroke:#8a5a00}
-/* 线稿按 600 宽设计，小屏缩到约 0.47 倍时 1px 描边会变成半像素；板面、边线、节点与连线保持屏幕上的实际线宽。 */
+/* At narrow widths the 600-unit diagram scales to about 47%. Keep panels, edges, nodes, and connectors at a consistent screen-space stroke width. */
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-operation :is(.px-plate,.px-edge,.px-chip,.px-die,.px-ring,.px-node,.px-rplate,.px-trace,.px-links path){vector-effect:non-scaling-stroke}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-strategy-operation .px-links path{stroke-width:1.2px}
 @media(max-width:600px){:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-strategy-operation .px-links path{stroke-dasharray:4 5}}
 @media(max-width:420px){:root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-operation-art>svg{transform:scale(1.12);transform-origin:50% 55%}}
-/* 长文案（法语、俄语等）：标题行可换行，按钮组整体下移；顶部账户与运行卡标签可折行；六阶段在窄卡片中排成三列两行。 */
+/* Long translations can wrap the heading and move the action group to the next line. Account and run labels wrap too. On narrow cards the six stages form two rows of three. */
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .network-stage>.workbench-header{flex-wrap:wrap!important;row-gap:10px!important;flex-shrink:0!important;height:auto!important;max-height:none!important}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .workbench-header>.stage-heading{flex:1 0 auto!important;min-width:auto!important}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .workbench-header>.stage-controls{margin-left:auto!important}
@@ -976,7 +976,7 @@ body[data-page=workbench][data-workbench-view=photonic] .pw-track-select option:
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .terminal-ribbon{height:auto!important;max-height:none!important;align-items:center!important}
 @media(min-width:901px){:root[data-theme] body[data-page=workbench][data-workbench-view=photonic][data-live-terminal=true] .workspace{grid-template-rows:minmax(58px,auto) minmax(0,1fr)!important}}
 
-/* 第一层两侧 · 仪器面板（参考视频 Matrix Engines / 右侧负载栏）：左侧每路来源 = 序号·名称·状态 / 数值·迷你柱 / 接收进度；右侧每个结果 = 名称·数量 / 所含标的的研究进度。 */
+/* Side panels follow the Matrix Engines load display. Each source shows its number, name, status, reading, bars, and intake progress. Each result shows its name, count, and research progress by asset. */
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] :is(.pw-src-index,.pw-src-tag,.pw-src-viz,.pw-src-meter,.pw-out-runs){display:none}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-src-meter{position:relative;height:2px;border-radius:2px;background:color-mix(in srgb,var(--pw-color) 14%,transparent);overflow:hidden}
 :root[data-theme] body[data-page=workbench][data-workbench-view=photonic] .pw-src-meter>i{position:absolute;inset:0 auto 0 0;width:var(--pw-meter,0%);border-radius:inherit;background:linear-gradient(90deg,color-mix(in srgb,var(--pw-color) 55%,transparent),var(--pw-color));box-shadow:0 0 8px var(--pw-color);transition:width .8s cubic-bezier(.2,.7,.1,1)}
@@ -1067,7 +1067,7 @@ body[data-page=workbench][data-workbench-view=photonic] .pw-track-select option:
 :root[data-theme] body[data-paused=false][data-page=workbench][data-workbench-view=photonic] .pw-strategy-operation .px-node{animation:ph-node-light var(--strategy-speed) calc(var(--i)*-150ms) ease-out infinite}
 :root[data-theme] body[data-paused=false][data-page=workbench][data-workbench-view=photonic] .pw-strategy-operation .px-chip{animation:ph-hub 3s ease-in-out infinite}
 }
-/* 第三层 · 行情与判断 / 关键依据 / 资金保护（仅光学视图；经典视图仍用原四图）。判断来自研究快照，K 线来自 Binance 现货只读，二者不在同一坐标系叠加。 */
+/* Optical view shows market assessment, evidence, and capital protection. The classic view retains its four charts. The research assessment and read-only Binance spot candles use separate axes. */
 .terminal-analytics:not([data-insight-view=true])>.terminal-insight{display:none!important}
 body[data-workbench-view=photonic] .terminal-analytics[data-insight-view=true]>article:not(.terminal-insight),body[data-workbench-view=photonic] .terminal-analytics[data-insight-view=true]>.terminal-chart-data{display:none!important}
 body[data-workbench-view=photonic] .terminal-analytics[data-insight-view=true]{display:grid!important;grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr)!important;grid-template-rows:auto 1fr;gap:16px;align-items:stretch;
@@ -1177,7 +1177,7 @@ body[data-workbench-view=photonic] .insight-capital-bar i:after{content:"";posit
  body[data-workbench-view=photonic] .insight-verdict-next{grid-column:1}
  body[data-workbench-view=photonic] .insight-tracks{grid-template-columns:80px minmax(0,1fr) 62px;column-gap:8px}
 }
-/* 第二层补充：研究完成后采集仍低强度流动；有新资料到达时整片短暂加速、矩阵扫一遍。 */
+/* Collection continues at low intensity after research completes. Incoming data briefly speeds up the chip and triggers one matrix sweep. */
 @media(prefers-reduced-motion:no-preference){
  body[data-paused=false][data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-phase=complete] .pw-research-operation .px-trace{opacity:.5;animation:ph-trace 2.8s linear infinite}
  body[data-paused=false][data-page=workbench][data-workbench-view=photonic] .photonic-workbench[data-fresh=true] .pw-research-operation .px-trace{opacity:1;animation:ph-trace .5s linear infinite}
@@ -1200,7 +1200,7 @@ body[data-workbench-view=photonic] .insight-market-slot .trading-chart-toolbar{p
  body[data-workbench-view=photonic] .insight-market-slot .trading-chart[data-study-state] .trading-chart-periods{padding-right:0;min-height:44px;box-sizing:border-box;flex:1 1 80px;width:auto}
 }
 @media(max-width:600px){body[data-workbench-view=photonic] .insight-phase-marks{inset:0 70px 0 88px}}
-/* 依据可点读：来源名与事件点为按钮，详情区常驻显示本轮依据与选中变化。 */
+/* Source names and event markers are buttons. The detail panel stays visible with the current evidence and selected change. */
 body[data-workbench-view=photonic] .insight-track-name{appearance:none;border:0;border-radius:6px;background:none;padding:0 5px;margin:0 -5px;font:inherit;font-size:12px;text-align:left;cursor:pointer;min-height:32px;color:var(--in-ink-2)}
 body[data-workbench-view=photonic] .insight-track[data-selected] .insight-track-name{color:var(--in-ink)}
 body[data-workbench-view=photonic] .insight-track[data-selected] .insight-track-name{color:var(--track);background:color-mix(in srgb,var(--track) 10%,transparent);box-shadow:inset 2px 0 var(--track)}

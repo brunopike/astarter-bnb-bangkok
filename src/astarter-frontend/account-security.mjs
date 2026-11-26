@@ -1,5 +1,5 @@
 // Native adaptation of Efferd Auth Page, uvain OTP Input and Ahmed Mayara Enable 2FA Card.
-// Source URLs and integration boundaries are recorded in the task's 接线与验证规则.md.
+// See the task's integration and verification guide for source URLs and service boundaries.
 import {normalizeOtp,safeAccountReturn} from './account-security-policy.mjs';
 
 export const SECURITY_PAGES=['login','security','account-social','email','two-factor','verify','recovery','sessions'];

@@ -187,8 +187,8 @@ export async function readAssistantMarketContext({question,previousQuestions=[],
     if(plan.news)tasks.push(plan.unknownNews?unavailable('news',zh?'新闻舆情':'News & sentiment',newsHref,zh):newsFacts(plan.symbols,io,zh));
     return (await Promise.all(tasks)).flat();
   }
-  // “BTC 和 ETH 的 ETF” is one topic. “BTC ETF 和 ETH 新闻” is two, with
-  // distinct subjects. An unqualified “以及新闻” shares the preceding subject.
+  // "BTC and ETH ETFs" is one topic. "BTC ETFs and ETH news" has two topics
+  // with different assets. A follow-up such as "and the news" inherits the previous asset.
   const parts=question.split(/\s*(?:以及|还有|另外|同时|和|与|及|[，,；;]|\band\b|\bplus\b)\s*/i).filter(Boolean);
   const hasTopic=text=>dataTopic.test(text)||newsIntent.test(text)||quoteIntent.test(text)||signalIntent.test(text);
   if(parts.length<2 || parts.length>4 || !parts.every(hasTopic))return readTopic(question);

@@ -529,7 +529,7 @@ body #product-page[data-layout=unified] .df-social .df-post-body>p{text-wrap:pre
 .sig-record-filter{font-size:12px}.sig-card-state{color:var(--b-muted);font-size:11px}
 
 @media(max-width:700px){body #product-page .sig-tracking .sig-event-time time{max-width:none;white-space:nowrap}}
-/* 窄屏来源筛选常显，搜索独立一行；浮层仍以整条工具栏为基准。 */
+/* Keep the source filter visible on narrow screens and the search on its own row. Anchor the overlay to the full toolbar. */
 @media(max-width:420px){
  body #product-page .sig-tracking .sig-toolbar-simple{flex-wrap:wrap;align-items:center}
  body #product-page .sig-tracking .sig-toolbar-simple>.as-search{flex:1 0 100%;width:auto;min-width:0}

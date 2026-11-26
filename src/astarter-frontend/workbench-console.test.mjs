@@ -1022,7 +1022,7 @@ test('the private notices tab names its unread reminders in the selected languag
   for(const id of ['ja','ko','vi','es','fr','ru']){
    await selectAppLanguage(id);view.update();
    const pack=(await import(`./locales/${id}.mjs`)).default,label=node('#ops-view-notifications').attrs['aria-label'];
-   // workbench-console.mjs: L('通知','Notices')+' · '+L('未读提醒','Unread reminders')+' '+count.
+   // The badge in workbench-console.mjs joins the notices label, unread label, and count.
    assert.equal(label,pack.Notices+' · '+pack['Unread reminders']+' 2',id);
    assert.doesNotMatch(label,/Notices|Unread|reminders/,id);
   }

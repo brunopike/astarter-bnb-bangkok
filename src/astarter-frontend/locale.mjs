@@ -616,7 +616,7 @@ const productNamePatterns=priorProductNames.map((names,index)=>new RegExp([...ne
 function productCopy(text,locale){
  if(typeof text!=='string')return text;
  const target=normalizeLocale(locale);
- // Localize only known labels. Keep ordinary phrases such as “AI 交易策略” intact.
+ // Localize only known labels. Leave ordinary phrases such as "AI trading strategy" intact.
  if(target==='zh')text=text.replace(/(?:AI\s*)?星谱交易记录/g,'AI 交易记录').replace(/星谱盈亏/g,'AI 交易盈亏').replace(/^星谱$/,'AI 交易');
  const value=productNamePatterns.reduce((value,pattern,index)=>value.replace(pattern,productNames[normalizeLocale(locale)][index]),text);
  return presentationCopy(normalizeLocale(locale)==='en'?value.replace(/Spectrum trade history/g,'LensWave trade history').replace(/Spectrum P&L/g,'LensWave P&L').replace(/Runtime spectrum/g,'LensWave runtime'):value);

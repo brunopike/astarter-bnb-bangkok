@@ -1205,7 +1205,7 @@ export const messages=[
 ["已取消，未保存的更改已放弃；已保存的设置不变。","Cancelled. Unsaved changes were discarded; saved settings are unchanged."],
 ["暂时无法更新，已保留上次数据","Unable to update; previous data retained"],
 ["自动刷新：","Auto refresh: "],
-// Keyed by the English word so that 秒 keeps its short "sec" message.
+// Use the English key here to preserve the short "sec" label.
 ["seconds","seconds"],
 // Market refresh cooldown and market source hint names.
 // "Try again in" is followed by the count and the "seconds" entry; each pack phrases it to read in that order.
@@ -1247,7 +1247,7 @@ export const messages=[
 ["保存当前偏好","Save current preferences"],
 ["云端草稿目录","Cloud draft directory"],
 ["账户偏好已应用；草稿仅同步名称目录。","Account preferences applied; drafts sync as a name directory."],
-// Keyed by the English text: 账户通知, 风险提醒, 重新读取 and 站内通知 keep the English message they already have.
+// Use English keys for these variants to preserve the existing account, risk, reload, and in-app messages.
 ["Account inbox","Account inbox"],
 ["Risk alerts","Risk alerts"],
 ["Reload cloud","Reload cloud"],
@@ -1260,7 +1260,7 @@ export const messages=[
 ["公链 TVL","Chain TVL"],
 ["稳定币","Stablecoins"],
 ["市场情绪","Market sentiment"],
-// Keyed by the English text so that 交易平台 keeps its singular "Trading venue".
+// Use the English key for the plural to preserve the singular "Trading venue" entry.
 ["Trading venues","Trading venues"],
 // Remove-button name of a saved data source. Each pack places {name} where its language puts the object; connections.mjs fills it with the escaped provider name after translation.
 // {name} is plain text to the catalog, not a {p0} slot: a slot would turn every pack value into a pattern that also rewrites other labels starting with the same verb.

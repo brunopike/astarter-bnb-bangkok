@@ -209,7 +209,7 @@ body #product-page .pv-page .p-card .pv-table [data-tone=negative]>b{color:var(-
  .pv-assets .tc-orders .pv-holdings-table td:first-child{grid-column:1/-1;padding-bottom:14px!important;border-bottom:1px solid var(--b-line)!important}
  .pv-assets .pv-holdings-table td:not(:first-child):before{content:attr(data-label);display:block;font-size:12px;color:var(--b-muted);margin-bottom:5px}
 }
-/* 手机首屏：字段名由 select 的 aria-label 提供；权限状态与按钮同排，按钮放不下时换行。 */
+/* On mobile, the select's aria-label names the field. The action stays beside the permission status and wraps when space runs out. */
 @media(max-width:560px){
  body:is([data-page=execution],[data-page=logs],[data-page=assets]) #product-page .contract-scope{padding-top:4px!important}
  body:is([data-page=execution],[data-page=logs],[data-page=assets]) #product-page .contract-scope-main>label{font-size:0;gap:0}

@@ -23,7 +23,7 @@ const renderAt=search=>{
  }finally{if(old)globalThis.location=old;else delete globalThis.location;}
 };
 
-// Each path carries the address on to the other path in one link: 预设 (preset) on the live page, 只读数据 (read-only data)
+// The address travels in one link on each page: "Preset" on the live page and "Read-only data"
 // on the preset page. URLSearchParams encodes every markup character in that href, so the copy there is inert.
 // Address text may appear nowhere else on the page.
 const SWITCH=/<a class="dc-button" data-dc-link href="\?([^"]*)">(?:预设|只读数据)<\/a>/g;

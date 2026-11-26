@@ -1,6 +1,6 @@
 // Complete text-node / accessible-label translations for data-asset-view and
 // its shared helpers. Apply exact entries BEFORE fragment replacement.
-// Do not add short OHLC keys to a substring dictionary: 开 / 高 / 低 / 收 / 量
+// The single-character Chinese labels for open, high, low, close, and volume
 // are intentionally exact-only labels.
 export const assetEnglishCopy={
  '市场行情':'Markets','模拟数据':'Simulated data','模拟':'Simulation',

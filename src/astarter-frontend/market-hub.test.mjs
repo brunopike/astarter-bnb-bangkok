@@ -720,7 +720,7 @@ test('the watchlist note reached through the Watchlist scope button is named Abo
   const hints=[...header.matchAll(/<details class="dc-info[^"]*"><summary aria-label="([^"]*)">i<\/summary><div>([^<]*)<\/div><\/details>/g)];
   assert.equal((header.match(/<details class="dc-info/g)||[]).length,1);assert.equal(hints.length,1);
   assert.match(hints[0][2],/^(?:自选报价来自 CoinGecko \/ Binance；合约资产来自 DEX Screener。点击卡片底部查看来源与时间。|Quotes use CoinGecko \/ Binance; contracts use DEX Screener\. Open a card\u2019s source row for details\.)$/);
-  // The scope button renders L('自选','Watchlist') through the tracking vocabulary; the note's name uses the word the button shows.
+  // The scope note and the Watchlist button must use the same localized tracking label.
   const button=header.match(/data-hub-scope="watch" aria-pressed="true">([^<]*?)\s*<b>/)?.[1]??'';assert.ok(button.trim(),'the pressed Watchlist scope button shows a word');
   assert.ok(hints[0][1].toLowerCase().includes(button.trim().toLowerCase()),hints[0][1]+' names '+button.trim());
   return hints[0][1];
