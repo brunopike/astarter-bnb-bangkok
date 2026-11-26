@@ -81,7 +81,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   const status=document.createElement('div');const showStatus=()=>{status.innerHTML=accessPanel(desk.access(),{compact:true});};showStatus();document.addEventListener('hive:access',showStatus);banner.append(label,status);
  }
  let currentSearch=routeSearch(),assistantReturn='?page=brain',pageAnimation=null,brainModule=null,brainAttempts=0;
- let historyView=readHistoryView(),returningHistory=null;
+ let historyView=readHistoryView(),returningHistory=null,liteMount=null;
  const mobileLabel=item=>item[getLocale()]||item.en;
  const desktopLabel=item=>getLocale()==='en'?({workbench:'LensWave',strategies:'Agents',signals:'Signals',markets:'Data',assistant:'Chat'}[item.home]||item.en):L(item.name,item.en);
  function headerLabel(domain){
@@ -181,6 +181,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
  }
  function updateNavigation(){
   const section=mobileNavSection(page);
+  document.dispatchEvent(new CustomEvent('astarter:experience-page',{detail:page}));
   const hrefFor=id=>id===section&&routeSearch()?routeSearch():restoreNavigationSearch(navigation.target(id),routeSearch());
   brand.href=routeHref(restoreNavigationSearch('?page=brain',routeSearch()));
   for(const link of nav.querySelectorAll('a[data-page]')){
@@ -214,6 +215,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   rememberView();closeInfo();if(page==='assistant'){assistant.capture();assistant.closeSource();}else if(routePage(routeSearch())==='assistant')assistantReturn=currentSearch;
   const nextPage=routePage(routeSearch()),restoreTab=page===nextPage&&DATA_PAGES.includes(page)?captureDataTab(root,location.href):null;
   const moveChannel=page!==nextPage&&DATA_PAGES.includes(page)&&DATA_PAGES.includes(nextPage)?captureDataChannel(root):null;
+  if(page==='lite'&&nextPage==='lite'&&historyView.url!==location.href)unmountLite();
   page=nextPage;restoreView(routeSearch());if(page==='validation')workspace.s.selectedValidation=new URLSearchParams(routeSearch()).get('check')||null;
   render();placeView(routeSearch(),restoreTab);moveChannel?.();if(legacyWatchlist)business.openWatchlist();
  });
@@ -255,7 +257,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   page=id;const u=new URL(location.href);
   if(context.search){const retired=wealthRoute(context.search);u.search=restoreNavigationSearch(retired||context.search,u.search);}
   else{
-   u.searchParams.set('page',id);u.searchParams.delete('scene');for(const key of ['strategy','asset','coin','metric','story','trader','view','scope','fund','exchange','chain','task','run','runId','ref','create','editor','privateDraft','sourceRequestId','researchSymbol'])u.searchParams.delete(key);
+   u.searchParams.set('page',id);u.searchParams.delete('scene');if(root.dataset.renderedPage==='lite'){u.searchParams.delete('mode');u.searchParams.delete('signalId');}for(const key of ['strategy','asset','coin','metric','story','trader','view','scope','fund','exchange','chain','task','run','runId','ref','create','editor','privateDraft','sourceRequestId','researchSymbol'])u.searchParams.delete(key);
    if(id==='strategies'&&CATALOG.some(item=>item.id===context.create)){u.searchParams.set('create',context.create);if(typeof context.editor==='string'&&context.editor.length<=4096&&(context.editor===context.create||context.editor.startsWith(context.create+':')))u.searchParams.set('editor',context.editor);}
    if(id==='strategies'&&typeof context.privateDraft==='string'&&/^[A-Za-z0-9:_-]{1,96}$/.test(context.privateDraft)){u.searchParams.set('privateDraft',context.privateDraft);if(typeof context.sourceRequestId==='string'&&/^[A-Za-z0-9:_-]{8,96}$/.test(context.sourceRequestId)&&['BTC','ETH','SOL'].includes(context.symbol)){u.searchParams.set('sourceRequestId',context.sourceRequestId);u.searchParams.set('researchSymbol',context.symbol);}}
    if(id==='execution'&&typeof context.runId==='string'&&context.runId.length<=128)u.searchParams.set('runId',context.runId);
@@ -460,7 +462,7 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   const onSignals=page==='signals'&&!!root.querySelector('.sig-tracking')||page==='opportunities'&&!!root.querySelector('.biz-op-layout');
   if(!dataPatrol||!newsMotionEnabled||!petEnabled||petContext!==context){newsCourier?.dispose();newsCourier=null;}
   if(!onSignals||!signalMotionEnabled||!petEnabled||petContext!==context){signalCourier?.dispose();signalCourier=null;}
-  if(!petEnabled||page==='workbench'||page==='brain'||page==='strategies'&&new URLSearchParams(routeSearch()).has('privateDraft')){stopBriefFeed();petOpen=false;petMotion?.dispose();petMotion=null;pocket?.remove();return;}
+  if(!petEnabled||page==='workbench'||page==='brain'||page==='lite'||page==='strategies'&&new URLSearchParams(routeSearch()).has('privateDraft')){stopBriefFeed();petOpen=false;petMotion?.dispose();petMotion=null;pocket?.remove();return;}
   if(petContext!==context){stopBriefFeed();petCursor=-1;petContext=context;petOpen=false;petMenuOpen=false;petRendered='';openedStory=null;}
   if(!pocket){
    pocket=document.createElement('div');pocket.id='hive-mascot';pocket.className='mascot-pocket';pocket.setAttribute('data-localized-ui','');
@@ -570,12 +572,37 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   }
  }
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopBriefFeed();else if(petOpen)refreshBrief();});
- window.addEventListener('pagehide',stopBriefFeed);
+ window.addEventListener('pagehide',event=>{stopBriefFeed();if(!event.persisted)unmountLite();});
  window.addEventListener('pageshow',()=>{if(petOpen)refreshBrief();});
  window.addEventListener('resize',ensureMascot,{passive:true});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(petOpen||petMenuOpen))closeCompanion(true);});
  document.addEventListener('pointerdown',e=>{const pocket=document.getElementById('hive-mascot');if((petOpen||petMenuOpen)&&pocket&&!pocket.contains(e.target))closeCompanion();});
  document.addEventListener('input',e=>{if(e.target.closest?.('.chat-composer'))ensureMascot();});
+ function unmountLite(){
+  const current=liteMount;
+  liteMount=null;
+  if(current){current.instance?.destroy();current.host.remove();}
+ }
+ function mountLiteView(lang){
+  if(liteMount?.lang===lang&&liteMount.host.isConnected)return;
+  unmountLite();
+  const host=document.createElement('section'),status=document.createElement('p');
+  host.className='lite-workspace-host';host.dataset.liteHost='';host.setAttribute('data-localized-ui','');
+  status.className='brain-page-status';status.setAttribute('role','status');status.textContent=L('正在加载 Lite…','Loading Lite…');
+  host.append(status);root.replaceChildren(host);
+  const mount={host,lang,instance:null};liteMount=mount;
+  import('./lite.mjs').then(({mountLiteWorkspace})=>{
+   if(liteMount!==mount||!host.isConnected)return;
+   host.replaceChildren();
+   mount.instance=mountLiteWorkspace(host,{lang});
+  }).catch(()=>{
+   if(liteMount!==mount||!host.isConnected)return;
+   host.replaceChildren(status);
+   status.textContent=L('Lite 加载失败。','Lite could not load.');
+   const retry=document.createElement('button');retry.type='button';retry.className='p-button';
+   retry.textContent=L('重新加载','Reload');retry.onclick=()=>location.reload();status.append(retry);
+  });
+ }
  function mountBrainView(locale){
   const view=document.createElement('astarter-brain');
   view.dataset.locale=locale;
@@ -631,10 +658,13 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
    if(helpDialog.open){helpOrigin=null;closeHelp();}
    document.dispatchEvent(new CustomEvent('hive:page-leave',{detail:previousPage}));
    // The workbench uses a separate root. Release the hidden Brain iframe and its quote subscriptions.
+   if(previousPage==='lite')unmountLite();
    if(previousPage==='brain'&&page==='workbench')root.querySelector('astarter-brain')?.remove();
   }
   const retainedTabs=page===previousPage&&DATA_PAGES.includes(page)&&currentSearch===routeSearch()?readDataTabScroll(root):null;
-  historyView=readHistoryView();const samePage=previousPage===page,restoreFocus=samePage?captureProductFocus(root):()=>{};root.dataset.renderedPage=page;const openSections=new Set(samePage?[...root.querySelectorAll("details[open]")].map(el=>el.dataset.persistKey||el.querySelector("summary")?.textContent):[]);disposeLayerTitle?.();disposeLayerTitle=null;disposeActivity();disposeCharts();document.body.dataset.page=page;document.body.toggleAttribute('data-agent-creation',page==='strategies'&&CATALOG.some(item=>item.id===new URLSearchParams(routeSearch()).get('create')));const dataBadge=document.querySelector('.simulation-badge');if(dataBadge){const readOnlyData=page==='workbench'&&document.body.dataset.researchMode==='live_readonly'||hubOwnsRoute(page,routeSearch())||!!liveDataRoute(page,routeSearch())||(page==='intelligence'&&new URLSearchParams(routeSearch()).get('data')!=='demo')||(page==='markets'&&new URLSearchParams(routeSearch()).get('data')==='live'),description=readOnlyData?L('模拟交易','Simulated trading')+' · '+L('只读数据与交易隔离','Read-only data stays separate'):L('演示数据','Demo data')+' · '+L('仅供界面体验','UI preview only');dataBadge.innerHTML='<i></i><b data-no-translate>'+ (readOnlyData?'SIM':'DEMO')+'</b>';dataBadge.setAttribute('title',description);dataBadge.setAttribute('aria-label',description);}shell.render(page);const section=DOMAINS.find(d=>d.pages.includes(page));settingsButton.setAttribute('aria-pressed',String(['profile','logs','settings','plans','topup','usage','billing'].includes(page)));for(const a of nav.children)a.setAttribute('aria-current',a.dataset.page===section?.home?'page':'false');updateNavigation();currentSearch=routeSearch();const work=page==='workbench';document.querySelector('.workspace').hidden=!work;root.hidden=work;syncSiteMeta(page,getLocale(),routeSearch());if(page==='brain'){
+  historyView=readHistoryView();const samePage=previousPage===page,restoreFocus=samePage?captureProductFocus(root):()=>{};root.dataset.renderedPage=page;const openSections=new Set(samePage?[...root.querySelectorAll("details[open]")].map(el=>el.dataset.persistKey||el.querySelector("summary")?.textContent):[]);disposeLayerTitle?.();disposeLayerTitle=null;disposeActivity();disposeCharts();document.body.dataset.page=page;document.body.toggleAttribute('data-agent-creation',page==='strategies'&&CATALOG.some(item=>item.id===new URLSearchParams(routeSearch()).get('create')));const dataBadge=document.querySelector('.simulation-badge');if(dataBadge){const readOnlyData=page==='lite'||page==='workbench'&&document.body.dataset.researchMode==='live_readonly'||hubOwnsRoute(page,routeSearch())||!!liveDataRoute(page,routeSearch())||(page==='intelligence'&&new URLSearchParams(routeSearch()).get('data')!=='demo')||(page==='markets'&&new URLSearchParams(routeSearch()).get('data')==='live'),description=readOnlyData?L('模拟交易','Simulated trading')+' · '+L('只读数据与交易隔离','Read-only data stays separate'):L('演示数据','Demo data')+' · '+L('仅供界面体验','UI preview only');dataBadge.innerHTML='<i></i><b data-no-translate>'+ (readOnlyData?'SIM':'DEMO')+'</b>';dataBadge.setAttribute('title',description);dataBadge.setAttribute('aria-label',description);}shell.render(page);const section=DOMAINS.find(d=>d.pages.includes(page));settingsButton.setAttribute('aria-pressed',String(['profile','logs','settings','plans','topup','usage','billing'].includes(page)));for(const a of nav.children)a.setAttribute('aria-current',a.dataset.page===section?.home?'page':'false');updateNavigation();currentSearch=routeSearch();const work=page==='workbench';document.querySelector('.workspace').hidden=!work;root.hidden=work;syncSiteMeta(page,getLocale(),routeSearch());
+  if(page==='lite'){root.dataset.layout='unified';mountLiteView(getLocale());ensureMascot();return;}
+  if(page==='brain'){
    delete root.dataset.layout;
    const locale=getLocale();
    if(!root.querySelector('astarter-brain')||root.firstElementChild.dataset.locale!==locale)mountBrainView(locale);
@@ -688,6 +718,13 @@ export function createProduct({getTeamContext=()=>null,desk,model,research,resiz
   if(destination==='brain')go(destination,{search:brainEntrySearch()});
   else if(link.closest('astarter-brain[data-view=cortexa]'))go(destination,{brainReturn:brainEntrySearch(routeSearch())});
   else go(destination);
+ });
+ document.addEventListener('astarter:experience-navigate',event=>{
+  const url=new URL(event.detail.href,location.href);
+  if(url.origin!==location.origin||!['/lite','/signals'].includes(url.pathname))return;
+  event.preventDefault();
+  const search=routeSearch(url);
+  go(routePage(search),{search});
  });
  document.addEventListener('hive:navigate',e=>{if(PAGES.some(p=>p[0]===e.detail))go(e.detail);});
  document.addEventListener('hive:configure-strategy',event=>{if(!workspace.draft()){go('advisor');return;}business.openSelectedStrategy(event.detail?.mode);});

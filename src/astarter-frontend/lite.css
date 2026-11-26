@@ -1,0 +1,941 @@
+[data-lite-host] {
+  display: block;
+  min-width: 0;
+}
+.lite-main {
+  position: relative;
+  --body: var(--sans);
+  --lite-pad: clamp(14px, 1.4vw, 22px);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1344px;
+  margin-inline: auto;
+  padding: clamp(14px, 2vw, 28px) 0 22px;
+  color: var(--b-ink, var(--ink));
+  font-family: var(--sans);
+  font-variant-numeric: tabular-nums;
+
+  & [hidden] {
+    display: none !important;
+  }
+  & :is(summary, button) {
+    cursor: pointer;
+  }
+  & button:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+  & :is(button, summary, input):focus-visible {
+    outline: 2px solid var(--b-accent-ink, currentColor);
+    outline-offset: 2px;
+  }
+  & :is(h1, h2, h3, p, fieldset) {
+    margin: 0;
+  }
+  & :is(button, input) {
+    font-family: inherit;
+  }
+  & summary {
+    list-style: none;
+  }
+  & summary::-webkit-details-marker {
+    display: none;
+  }
+  & :is(.lite-text, .market-tools button, .lite-chat button, .account-holdings button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 0;
+    background: transparent;
+    color: var(--b-muted);
+    padding: 4px 6px;
+    font: 500 13px/1.4 var(--sans);
+  }
+  & :is(.lite-text, .market-tools button, .lite-chat button, .account-holdings button):hover {
+    color: var(--b-ink);
+  }
+  &
+    :is(
+      .lite-command,
+      .lite-command-group,
+      .market-tools,
+      .order-instrument,
+      .dock-title,
+      .inline-heading,
+      .lite-menu summary,
+      .lite-history summary,
+      .history-end,
+      .lite-chat-head
+    ) {
+    display: flex;
+    align-items: center;
+  }
+  & .lite-workspace {
+    display: grid;
+    align-items: start;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) clamp(292px, 23.2vw, 350px);
+  }
+  & .order-dock {
+    min-width: 0;
+    border: 1px solid var(--b-line);
+    background: var(--b-panel);
+    border-radius: var(--b-panel-radius, 14px);
+  }
+  & #lite-ticket {
+    min-width: 0;
+  }
+  & .lite-command {
+    position: relative;
+    z-index: 3;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    min-height: 38px;
+  }
+  & .lite-command h1 {
+    color: var(--b-ink);
+    font-size: clamp(21px, 2vw, 28px);
+    line-height: 1.25;
+    font-weight: 550;
+    letter-spacing: -0.035em;
+  }
+  & .lite-empty {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    min-height: 170px;
+    border: 1px solid var(--b-line);
+    border-radius: 12px;
+    color: var(--b-muted);
+    font-size: 14px;
+  }
+  & .lite-command-group {
+    gap: 8px;
+    min-width: 0;
+  }
+  & .lite-menu {
+    position: relative;
+  }
+  & .lite-menu summary {
+    min-height: 36px;
+    gap: 6px;
+    color: var(--b-muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  & .lite-menu summary:hover {
+    color: var(--b-ink);
+  }
+  & #lite-settings-menu summary {
+    justify-content: center;
+    gap: 10px;
+    padding-inline: 11px;
+    border: 1px solid var(--b-line);
+    border-radius: var(--b-control-radius, 8px);
+    background: var(--b-panel);
+  }
+  & #lite-settings-menu summary:hover {
+    background: var(--b-soft);
+  }
+  & :is(.lite-command, .lite-menu, .history-end) svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+  & #lite-feed-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--b-ink);
+    white-space: normal;
+  }
+  & #lite-feed-label i {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--b-muted);
+    flex: none;
+  }
+  & #lite-feed-label i.live {
+    background: var(--b-up);
+  }
+  & #lite-feed-label i.practice {
+    background: var(--b-ink);
+    opacity: 0.66;
+  }
+  & #lite-feed-label i.unavailable {
+    background: var(--b-down);
+  }
+  & #lite-mode-button {
+    font-size: 12px;
+  }
+  & #lite-inspect svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+  & #lite-inspect {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid var(--b-line);
+    padding-block: 2px;
+  }
+  & #lite-inspect button {
+    white-space: nowrap;
+    flex: none;
+    min-height: 38px;
+  }
+  & #lite-inspect [aria-expanded='true'] {
+    color: var(--b-ink);
+    background: var(--b-soft);
+    border-radius: 6px;
+  }
+  & .lite-queue {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    justify-content: space-between;
+    min-height: 43px;
+    padding: 0 0 4px;
+    color: var(--b-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  & .lite-queue .lite-text {
+    min-height: 32px;
+    font-size: 12px;
+  }
+  & .lite-queue:empty {
+    display: none;
+  }
+  & .order-dock {
+    padding: 0 16px;
+    scroll-margin-top: 70px;
+  }
+  & .dock-title {
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 56px;
+    border-bottom: 1px solid var(--b-line);
+  }
+  & .dock-title h2 {
+    font-size: 17px;
+    font-weight: 550;
+    line-height: 1.4;
+  }
+  & .dock-title summary svg,
+  & .history-end svg {
+    width: 12px;
+    transform: rotate(90deg);
+  }
+  & #lite-account-menu summary {
+    gap: 5px;
+    min-height: 32px;
+    padding-inline: 8px;
+    border-radius: 6px;
+    background: var(--b-soft);
+  }
+  & details[open] > summary .history-end svg,
+  & .dock-title details[open] summary svg {
+    transform: rotate(-90deg);
+  }
+  & .order-config,
+  & .fill-state {
+    padding: 18px 0 12px;
+  }
+  & .field-label,
+  & .lite-popover small {
+    display: block;
+    color: var(--b-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  & .fill-state h3 {
+    font-size: 18px;
+    font-weight: 550;
+    line-height: 1.45;
+    margin-top: 3px;
+    letter-spacing: -0.015em;
+  }
+  & .order-plan {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 18px;
+  }
+  & .order-plan h3 {
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 550;
+    text-align: end;
+    overflow-wrap: anywhere;
+  }
+  & .order-plan .field-label {
+    flex-shrink: 0;
+  }
+  & .order-instrument {
+    gap: 8px;
+    margin: 0 0 12px;
+    line-height: 1.4;
+  }
+  & .order-instrument strong {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+  }
+  & .order-instrument small {
+    color: var(--b-muted);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  & .order-instrument [data-side] {
+    margin-inline-start: auto;
+    --side-color: var(--b-muted);
+    color: var(--side-color);
+    background: color-mix(in srgb, var(--side-color) 10%, var(--b-panel));
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 550;
+    padding: 4px 8px;
+  }
+  & .order-instrument [data-side='buy'] {
+    --side-color: var(--b-up);
+  }
+  & .order-instrument [data-side='sell'] {
+    --side-color: var(--b-down);
+  }
+  & .order-input,
+  & .sell-amount {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    border: 1px solid var(--b-line);
+    background: var(--b-soft);
+    border-radius: var(--b-control-radius, 8px);
+    padding: 10px 12px;
+    margin: 6px 0;
+  }
+  & .order-input {
+    position: relative;
+  }
+  & .order-input:focus-within {
+    border-color: var(--b-violet);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--b-violet) 12%, transparent);
+  }
+  & .order-input:has([aria-invalid='true']) {
+    border-color: var(--b-down);
+  }
+  & #lite-order-amount {
+    appearance: none;
+    width: 100%;
+    min-width: 0;
+    background: transparent;
+    color: var(--b-ink);
+    border: 0;
+    padding: 0;
+    outline: none;
+    font: 500 26px/1.2 var(--sans);
+    font-variant-numeric: tabular-nums;
+  }
+  & #lite-order-amount:focus-visible {
+    outline: 0;
+  }
+  & .order-input span,
+  & .sell-amount small {
+    color: var(--b-muted);
+    font-size: 13px;
+  }
+  & .amount-presets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    position: relative;
+    isolation: isolate;
+    border-radius: 8px;
+    padding: 3px;
+    margin: 7px 0 16px;
+    background: var(--b-soft);
+  }
+  & .amount-presets::before {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    inset-block: 3px;
+    left: 3px;
+    width: calc((100% - 6px) / 3);
+    border: 1px solid var(--b-control-line);
+    box-sizing: border-box;
+    background: var(--b-panel);
+    border-radius: 6px;
+    box-shadow: var(--b-shadow);
+    opacity: 0;
+    transform: translateX(var(--preset-x, 0%));
+  }
+  & .amount-presets:has([aria-pressed='true'])::before {
+    opacity: 1;
+  }
+  & .amount-presets:has([value='50'][aria-pressed='true']) {
+    --preset-x: 100%;
+  }
+  & .amount-presets:has([value='100'][aria-pressed='true']) {
+    --preset-x: 200%;
+  }
+  & .amount-presets button {
+    position: relative;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    min-height: 31px;
+    border: 0;
+    color: var(--b-muted);
+    border-radius: 6px;
+    background: transparent;
+  }
+  & .amount-presets button[aria-pressed='true'] {
+    color: var(--b-ink);
+  }
+  & .order-values {
+    display: grid;
+    gap: 6px;
+    margin-block: 12px 14px;
+    padding: 9px 10px;
+    background: color-mix(in srgb, var(--b-soft) 70%, var(--b-panel));
+    border-radius: 8px;
+  }
+  & :is(.order-line, .lite-detail-row, .history-item, .account-holdings > div) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  & :is(.order-line, .lite-detail-row) {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  & :is(.order-line, .lite-detail-row) > span {
+    color: var(--b-muted);
+  }
+  & :is(.order-line, .lite-detail-row) > strong {
+    font-weight: 500;
+    text-align: end;
+  }
+  & :is(.order-idle, .risk-copy, .lite-popover p, .trade-note, .history-empty) {
+    color: var(--b-muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  & .order-idle {
+    margin: 10px 0;
+  }
+  & .dock-actions {
+    display: grid;
+    gap: 8px;
+  }
+  & .dock-actions .ops-button {
+    width: 100%;
+    min-height: 44px;
+  }
+  & .dock-actions .lite-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-inline: 15px;
+    gap: 8px;
+  }
+  & .dock-actions .lite-action svg,
+  & .history-label svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+  & .history-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  & .history-label svg {
+    color: var(--b-muted);
+  }
+  /* Tail-end ink reveal adapted from Magic UI's Interactive Hover Button on 21st.dev. */
+  & .dock-actions .lite-submit {
+    padding-inline: 15px 8px;
+  }
+  & .ticket-submit-cap {
+    display: grid;
+    flex: none;
+    position: relative;
+    width: 46px;
+    height: 28px;
+    align-items: center;
+    justify-items: end;
+    color: var(--b-action);
+  }
+  & .ticket-submit-cap::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: var(--ticket-cap-width, 28px);
+    border-radius: 14px;
+    background: var(--b-action-fg);
+  }
+  & .ticket-arrow-window,
+  & .ticket-spinner {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    margin-inline-end: 6px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  & .ticket-arrow-window {
+    transform: translateX(var(--ticket-arrow-shift, 0));
+  }
+  & .ticket-arrow-window svg {
+    position: absolute;
+    inset: 0;
+    transform: translateX(var(--ticket-arrow-travel, 0%));
+  }
+  & .ticket-arrow-window svg + svg {
+    transform: translateX(calc(var(--ticket-arrow-travel, 0%) - 115%));
+  }
+  & .lite-submit:not(:disabled):is(:active, :focus-visible) {
+    --ticket-cap-width: 46px;
+    --ticket-arrow-travel: 115%;
+    --ticket-arrow-shift: -9px;
+  }
+  & .lite-submit[aria-busy='true'] {
+    opacity: 0.85;
+  }
+  & .ticket-spinner {
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 1.5px solid color-mix(in srgb, currentColor 35%, transparent);
+    border-top-color: currentColor;
+    border-inline-start-color: currentColor;
+  }
+  & .trade-note:not(:empty) {
+    margin: 8px 0 0;
+    color: var(--b-down);
+  }
+  & .lite-history {
+    border-top: 1px solid var(--b-line);
+  }
+  & .lite-history summary {
+    justify-content: space-between;
+    min-height: 44px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  & .history-end {
+    gap: 6px;
+    color: var(--b-muted);
+    font-size: 12px;
+  }
+  & .history-empty,
+  & .history-item {
+    padding: 5px 0 12px;
+  }
+  & .history-item {
+    font-size: 12px;
+  }
+  & .history-item small {
+    display: block;
+    color: var(--b-muted);
+    font-size: 11px;
+    margin-top: 3px;
+  }
+  & .history-amount {
+    text-align: end;
+  }
+  & .fill-heading {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  & .fill-heading h3 {
+    margin: 0;
+  }
+  & .fill-check {
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    background: color-mix(in srgb, var(--b-up) 12%, var(--b-panel));
+    color: var(--b-up);
+    position: relative;
+    flex: none;
+  }
+  & .fill-check svg {
+    width: 20px;
+    height: 20px;
+  }
+  & .fill-strategy {
+    color: var(--b-muted);
+    font-size: 13px;
+    margin: 4px 0;
+  }
+  & .fill-size,
+  & .account-number {
+    display: block;
+    font-size: 19px;
+    margin-block: 8px;
+  }
+  & .fill-size {
+    font-size: clamp(20px, 2vw, 25px);
+    font-weight: 550;
+    letter-spacing: -0.035em;
+    margin-block: 14px 10px;
+  }
+  & .lite-popover {
+    position: absolute;
+    z-index: 8;
+    top: calc(100% + 4px);
+    inset-inline-start: 0;
+    width: min(252px, 78vw);
+    padding: 14px;
+    border: 1px solid var(--b-line);
+    border-radius: 10px;
+    background: var(--b-panel);
+    box-shadow: 0 7px 20px #0002;
+  }
+  & #lite-account-info {
+    inset-inline: auto 0;
+  }
+  & .lite-popover :is(h3, legend) {
+    font-size: 14px;
+    font-weight: 550;
+    margin-bottom: 8px;
+  }
+  & .lite-popover fieldset {
+    border: 0;
+    padding: 0;
+  }
+  & .asset-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    font-size: 13px;
+  }
+  & .asset-option input {
+    accent-color: var(--b-action);
+  }
+  & .asset-option small {
+    margin-inline-start: auto;
+  }
+  & .account-holdings {
+    margin: 10px 0;
+    font-size: 12px;
+  }
+  & .lite-inline {
+    padding: 15px var(--lite-pad);
+    border-top: 1px solid var(--b-line);
+  }
+  & .lite-disclosure {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  & .lite-disclosure[inert] {
+    grid-template-rows: 0fr;
+    visibility: hidden;
+  }
+  & .lite-disclosure-clip {
+    min-height: 0;
+    overflow: hidden;
+  }
+  & #lite-evidence-content:empty {
+    padding: 0;
+    border: 0;
+  }
+  & :is(.inline-heading, .lite-chat-head) {
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  & :is(.inline-heading, .lite-chat-head) :is(h3, strong) {
+    font-size: 15px;
+    font-weight: 550;
+  }
+  & .lite-detail-row {
+    padding-block: 4px;
+  }
+  & .risk-copy {
+    margin-top: 8px;
+  }
+  & .lite-chat-source,
+  & .lite-chat-by {
+    font-size: 12px;
+    color: var(--b-muted);
+  }
+  & .lite-chat-log {
+    max-height: 320px;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  & .lite-chat-message {
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  & .lite-chat-question {
+    font-weight: 600;
+  }
+  & .lite-chat-answer {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  & .lite-chat-prompts,
+  & .lite-chat-ask {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  & .lite-chat-prompts button,
+  & .lite-chat button.lite-chat-send {
+    border: 1px solid var(--b-line);
+    border-radius: 6px;
+    min-height: 36px;
+  }
+  & .lite-chat-input {
+    flex: 1;
+    min-width: 96px;
+    min-height: 38px;
+    border: 1px solid var(--b-line);
+    border-radius: 6px;
+    background: var(--b-soft);
+    color: var(--b-ink);
+    padding: 6px 10px;
+  }
+  & .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 860px) {
+  .lite-main {
+    padding: 12px 0 20px;
+  }
+  .lite-main .lite-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .lite-main .order-dock {
+    scroll-margin-top: 65px;
+  }
+}
+@media (max-width: 640px) {
+  .lite-main {
+    --lite-pad: 12px;
+    padding-inline: 0;
+  }
+  .lite-main .lite-command {
+    min-height: 44px;
+    padding: 0;
+    margin-bottom: 8px;
+  }
+  .lite-main .lite-command-group,
+  .lite-main .market-tools {
+    gap: 3px;
+  }
+  .lite-main .market-tools button {
+    min-height: 42px;
+    padding-inline: 4px;
+    font-size: 12px;
+  }
+  .lite-main #lite-mode-button {
+    font-size: 11px;
+    padding-inline: 4px;
+  }
+  .lite-main .lite-queue {
+    min-height: 42px;
+  }
+  .lite-main .amount-presets button,
+  .lite-main .lite-menu summary,
+  .lite-main .lite-history summary {
+    min-height: 44px;
+  }
+  .lite-main .order-dock {
+    padding-inline: 14px;
+  }
+}
+#product-page [data-lite-host] details:is(.lite-menu, .lite-history) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+#product-page [data-lite-host] details.lite-history {
+  border-top: 1px solid var(--b-line);
+}
+#product-page [data-lite-host] #lite-order-amount {
+  height: auto;
+  min-height: 32px;
+  min-width: 0;
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font: 500 26px/1.25 var(--sans);
+}
+#product-page [data-lite-host] #lite-order-amount:focus-visible {
+  outline: none;
+}
+@media (max-width: 860px) {
+  #product-page [data-lite-host] #lite-order-amount {
+    font-size: 26px !important;
+  }
+}
+
+.lite-main #lite-settings-menu .lite-popover {
+  inset-inline: auto 0;
+}
+.lite-main #lite-mode-button {
+  margin-top: 6px;
+  min-height: 36px;
+  width: 100%;
+  border-top: 1px solid var(--b-line);
+  border-radius: 0;
+}
+.lite-main .lite-command-group {
+  flex-wrap: wrap;
+  justify-content: end;
+}
+.lite-main .order-dock .lite-inline {
+  padding-inline: 0;
+}
+.lite-main .lite-queue {
+  min-height: 0;
+}
+
+@keyframes lite-ticket-arrive {
+  from {
+    opacity: 0.75;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes lite-fill-check {
+  from {
+    stroke-dashoffset: 23;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes lite-fill-rim {
+  from { transform: scale(0.75); opacity: 0.55; }
+  to { transform: scale(1.18); opacity: 0; }
+}
+@keyframes lite-quote-checking {
+  to { transform: rotate(1turn); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduced-motion='true']) .lite-main {
+    /* Disclosure timing adapted from 21st.dev/@kuratlielia/components/expandable-card. */
+    & .lite-disclosure {
+      transition: grid-template-rows 240ms cubic-bezier(.22,1,.36,1), visibility 0s;
+    }
+    & .lite-disclosure[inert] {
+      transition-delay: 0s, 240ms;
+    }
+    @supports (interpolate-size: allow-keywords) {
+      & .lite-history::details-content {
+        interpolate-size: allow-keywords;
+        block-size: 0;
+        overflow: clip;
+        transition: block-size 240ms cubic-bezier(.22,1,.36,1), content-visibility 240ms allow-discrete;
+      }
+      & .lite-history[open]::details-content {
+        block-size: auto;
+      }
+    }
+    & .ticket-arrive > :is(.order-instrument, .order-plan),
+    & .fill-arrive .fill-heading,
+    & .lite-menu[open] > .lite-popover {
+      animation: lite-ticket-arrive 180ms ease-out;
+    }
+    & .fill-arrive .fill-check path {
+      stroke-dasharray: 23;
+      animation: lite-fill-check 280ms ease-out both;
+    }
+    & .fill-arrive .fill-check::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid currentColor;
+      border-radius: inherit;
+      pointer-events: none;
+      animation: lite-fill-rim 380ms ease-out both;
+    }
+    & .ticket-submit-cap::before,
+    & .ticket-arrow-window,
+    & .ticket-arrow-window svg {
+      transition: transform 220ms cubic-bezier(.2,.75,.25,1), width 200ms ease-out;
+    }
+    & .ticket-spinner {
+      animation: lite-quote-checking 750ms linear infinite;
+    }
+    & .amount-presets::before {
+      transition:
+        transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 120ms ease-out;
+    }
+    & .order-input {
+      transition:
+        border-color 140ms ease-out,
+        box-shadow 140ms ease-out;
+    }
+    & .dock-actions .ops-button,
+    & .dock-actions svg,
+    & .history-end svg,
+    & #lite-account-menu summary svg {
+      transition: transform 160ms ease-out;
+    }
+    & .dock-actions .ops-button:not(:disabled):active {
+      transform: scale(0.985);
+    }
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .lite-main .lite-submit:not(:disabled):hover {
+    --ticket-cap-width: 46px;
+    --ticket-arrow-travel: 115%;
+    --ticket-arrow-shift: -9px;
+  }
+  .lite-main :is(.amount-presets button, #lite-inspect button):not(:disabled):hover {
+    color: var(--b-ink);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :root:not([data-reduced-motion='true']) .lite-main .dock-actions .lite-action:not(.lite-submit, :disabled):hover svg {
+      transform: translateX(3px);
+    }
+  }
+}
+@media (pointer: coarse) {
+  .lite-main #lite-account-menu summary,
+  .lite-main #lite-inspect button,
+  .lite-main #lite-mode-button,
+  .lite-main .asset-option,
+  .lite-main .amount-presets button {
+    min-height: 44px;
+  }
+}

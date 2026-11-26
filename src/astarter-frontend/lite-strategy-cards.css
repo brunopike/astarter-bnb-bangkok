@@ -1,0 +1,247 @@
+.lite-strategy-deck {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+  container: lite-feed / inline-size;
+}
+.lite-strategy-deck[hidden] { display: none; }
+.lite-strategy-deck > :only-child {
+  grid-column: 1 / -1;
+  width: min(100%, 640px);
+}
+
+body #product-page[data-layout='unified'] .lite-strategy-deck {
+  & .sig-event.sig-live-observation {
+    --lite-card-tone: var(--b-muted);
+    --lite-edge: color-mix(in srgb, var(--b-violet) 76%, var(--b-ink));
+    --chart-accent: var(--lite-card-tone);
+    position: relative;
+    padding: 16px 18px 12px;
+    transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+  }
+  & [data-live-direction='up'].sig-live-observation { --lite-card-tone: var(--b-up); }
+  & [data-live-direction='down'].sig-live-observation { --lite-card-tone: var(--b-down); }
+  & .sig-live-observation.selected {
+    border-color: color-mix(in srgb, var(--lite-edge) 40%, var(--b-line));
+    background: color-mix(in srgb, var(--b-accent-ink) 2%, var(--b-panel));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--b-accent-ink) 12%, transparent);
+  }
+  /* Edge lighting adapted from https://21st.dev/@manuarora700/components/glowing-effect (MIT). */
+  & .sig-event.sig-live-observation::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    z-index: 3;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: 2px;
+    background: radial-gradient(ellipse 215px 125px at var(--lite-edge-x, 14%) var(--lite-edge-y, 0%),
+      var(--lite-edge), color-mix(in srgb, var(--lite-edge) 79%, transparent) 33%, transparent 100%);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+  }
+  & .sig-event.selected::after { opacity: .88; }
+  & .sig-event:has(:focus-visible)::after { opacity: 1; }
+  & .sig-event:active::after { opacity: 1; }
+  & .sig-event-body { height: 100%; }
+  & .sig-event-body > header {
+    display: grid;
+    grid-template: 'asset state' auto 'title title' auto / minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 13px 8px;
+    margin: 0;
+    padding: 0;
+  }
+  & .sig-event-asset { grid-area: asset; gap: 9px; }
+  & .sig-event-asset > span:has(> b) { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 7px; }
+  & .sig-event-asset b { font-weight: 650; }
+  & .sig-event-asset small { margin: 0; font-size: 11px; }
+  & .sig-live-observation[data-live-direction] .sig-event-title {
+    grid-area: title;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: 550;
+    color: var(--b-ink);
+  }
+  & .sig-card-state {
+    grid-area: state;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 550;
+    color: var(--lite-card-tone);
+    background: color-mix(in srgb, var(--lite-card-tone) 10%, var(--b-panel));
+  }
+  & .sig-card-state svg { width: 12px; height: 12px; }
+  & [data-live-direction='up'] .sig-card-state svg { transform: rotate(-45deg); }
+  & [data-live-direction='down'] .sig-card-state svg { transform: rotate(45deg); }
+  & .sig-event-asset .sig-current-marker {
+    position: static;
+    display: inline-grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    margin-inline-start: -3px;
+    border-radius: 50%;
+    background: var(--lite-edge);
+    color: var(--b-panel);
+    font: 650 10px/1 var(--sans);
+  }
+  & .sig-live-market {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    margin: 14px 0 13px;
+  }
+  & .sig-stats-quote strong {
+    margin-top: 3px;
+    color: var(--b-ink);
+  }
+  & .sig-live-chart { max-width: 200px; }
+  & .sig-live-chart svg { height: 42px; }
+  & .sig-live-card-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--b-ink) 4%, var(--b-panel));
+  }
+  & .sig-live-card-metrics > div { display: flex; gap: 2px 7px; align-items: baseline; }
+  & .sig-live-card-metrics dt { font-size: 11px; }
+  & .sig-live-card-metrics dd { font-weight: 550; }
+  & .lite-card-source {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2px 6px;
+    margin: auto 0 0;
+    padding: 11px 0 7px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  & .lite-card-source a { color: inherit; text-decoration: none; }
+  & .lite-card-source a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  & .sig-event-body > footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--b-line);
+  }
+  & .sig-event-body > footer button[data-ls] {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    margin: 0;
+    padding: 4px 0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: normal;
+    transition: color .16s ease, background-color .16s ease;
+  }
+  & .sig-event-body > footer button[data-ls='select'] {
+    padding-inline: 10px;
+    background: var(--b-soft);
+    color: var(--b-ink);
+  }
+  & .selected .sig-event-body > footer button[data-ls='select'] {
+    background: color-mix(in srgb, var(--b-accent-ink) 12%, var(--b-panel));
+    color: var(--b-accent-ink);
+  }
+  & button[data-ls='select'] svg { width: 13px; transition: transform .16s ease; }
+  & :is(button, a):focus-visible { outline: 2px solid var(--b-accent-ink); outline-offset: 2px; }
+}
+@media (hover: hover) and (pointer: fine) {
+  body #product-page[data-layout='unified'] .lite-strategy-deck {
+    & .sig-event:not(.selected):hover { border-color: color-mix(in srgb, var(--b-muted) 55%, var(--b-line)); }
+    & button[data-ls='select']:not(:disabled):hover svg { transform: translateX(2px); }
+    & button[data-ls='evidence']:not(:disabled):hover { text-decoration: underline; text-underline-offset: 3px; }
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduced-motion='true']) body #product-page[data-layout='unified'] .lite-strategy-deck .sig-event[data-pointer]::after {
+    --lite-edge-x: var(--surface-x);
+    --lite-edge-y: var(--surface-y);
+    opacity: 1;
+  }
+}
+@container lite-feed (max-width: 660px) {
+  .lite-strategy-deck > .sig-event { grid-column: 1 / -1; }
+}
+@container lite-feed (max-width: 335px) {
+  body #product-page[data-layout='unified'] .lite-strategy-deck .sig-live-card-metrics > div {
+    display: grid;
+    gap: 2px;
+  }
+}
+@media (max-width: 640px) {
+  body #product-page[data-layout='unified'] .lite-strategy-deck {
+    & .sig-event.sig-live-observation { padding: 14px 14px 10px; }
+    & .sig-event-body > footer button[data-ls] { min-height: 44px; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lite-strategy-deck *, .lite-strategy-deck *::before, .lite-strategy-deck *::after { transition: none !important; }
+}
+html[data-reduced-motion='true'] .lite-strategy-deck *,
+html[data-reduced-motion='true'] .lite-strategy-deck *::before,
+html[data-reduced-motion='true'] .lite-strategy-deck *::after { transition: none !important; }
+
+.lite-strategy-deck .sig-live-chart {
+  position: relative;
+  cursor: crosshair;
+  border-radius: 4px;
+}
+.lite-strategy-deck .sig-live-chart:focus-visible {
+  outline: 2px solid var(--b-accent-ink);
+  outline-offset: 3px;
+}
+.lite-strategy-deck .lite-spark-area { fill: var(--lite-card-tone); opacity: .075; }
+.lite-strategy-deck .lite-spark-cursor,
+.lite-strategy-deck .lite-spark-readout { visibility: hidden; pointer-events: none; }
+.lite-strategy-deck .lite-spark-cursor line {
+  stroke: var(--lite-card-tone);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: .65;
+}
+.lite-strategy-deck .lite-spark-cursor circle {
+  fill: var(--lite-card-tone);
+  stroke: var(--b-panel);
+  stroke-width: 1.5;
+}
+.lite-strategy-deck .lite-spark-readout {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: max-content;
+  max-width: none;
+  padding: 3px 7px;
+  border: 1px solid var(--b-line);
+  border-radius: 5px;
+  background: var(--b-panel);
+  color: var(--b-ink);
+  font: 500 11px/1.45 var(--sans);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lite-strategy-deck .lite-spark-readout time { color: var(--b-muted); font-size: 10px; }
+.lite-strategy-deck [data-inspecting] :is(.lite-spark-cursor, .lite-spark-readout) { visibility: visible; }

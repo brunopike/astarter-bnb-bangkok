@@ -1,0 +1,100 @@
+.topbar > .experience-switch {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  font: 600 12px/1 var(--sans, system-ui);
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 2px;
+}
+.experience-switch :is(a, span, summary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 9px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 5px;
+}
+.experience-switch [aria-current="page"] {
+  background: var(--surface);
+  color: var(--ink, currentColor);
+}
+.experience-switch a:hover {
+  color: var(--ink, currentColor);
+  background: var(--surface);
+}
+.experience-switch :is(a, summary):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.experience-switch details {
+  display: none;
+  position: relative;
+}
+.experience-switch summary {
+  cursor: pointer;
+  gap: 5px;
+  list-style: none;
+}
+.experience-switch summary::-webkit-details-marker {
+  display: none;
+}
+.experience-switch i {
+  width: 5px;
+  height: 5px;
+  border: solid currentColor;
+  border-width: 0 1px 1px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.experience-switch details[open] i {
+  transform: translateY(1px) rotate(225deg);
+}
+.experience-switch details > div {
+  position: absolute;
+  z-index: 80;
+  inset-inline-start: 0;
+  top: calc(100% + 4px);
+  min-width: 92px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.experience-switch details > div > * {
+  min-height: 44px;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 1250px) {
+  .topbar > .experience-switch {
+    padding: 0;
+  }
+  .experience-switch > :is(a, span) {
+    display: none;
+  }
+  .experience-switch details {
+    display: block;
+  }
+  .experience-switch summary {
+    min-height: 34px;
+    padding: 0 7px;
+  }
+}
+@media (max-width: 600px) {
+  body .topbar:has(> .experience-switch) > .brand {
+    margin-inline-end: 0;
+  }
+  .experience-switch summary {
+    min-height: 42px;
+    padding: 0 5px;
+  }
+}
+.experience-switch details a[aria-current="page"]::after {
+  content: '✓';
+  font-size: .9em;
+}

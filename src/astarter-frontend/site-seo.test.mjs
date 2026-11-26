@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import {seoLanguages} from './site-languages.mjs';
 import {routes,byId,routeHref,routeSearch,pageMeta,SITE_ORIGIN} from './site-routes.mjs';
 import {pageHtml,serveSitePage} from './site-seo.mjs';
-import {PAGES} from './product-data.mjs';
+import {PAGES,routePage} from './product-data.mjs';
+import {fullHrefFromLite,liteHrefFromFull} from './lite-navigation.mjs';
 const shell='<!doctype html><html lang="en"><head><title>Astarter</title></head><body class="app-loading"></body></html>';
 test('every product page or legacy alias has a reloadable address',()=>{
  for(const [page] of PAGES){
@@ -45,10 +46,24 @@ test('legacy links redirect once, private state is excluded and assets retain th
  assert.equal((await request('/?page=absent')).status,404);
  assert.equal((await request('/api/assistant/chat')).handled,false);assert.equal((await request('/fonts/foo.woff2')).handled,false);
  assert.equal((await request('/signals','HEAD')).body,undefined);
- assert.match((await request('/robots.txt')).body,/Sitemap: https:\/\/dapp\.ipfund\.art\/sitemap\.xml/);
+ assert.match((await request('/robots.txt')).body,/Sitemap: https:\/\/demo\.astarter\.io\/sitemap\.xml/);
 });
 
 test('shared assistant links use the chat path and keep the conversation in the fragment',()=>{
  const u=new URL(sharedOutputURL(SITE_ORIGIN+'/profile?wallet=ignore','v1.abc','DEMO42'));
  assert.equal(u.pathname,'/chat');assert.equal(u.search,'?ref=DEMO42');assert.equal(u.hash,'#astarter-share=v1.abc');
+});
+
+
+test('Lite renders in the product shell and shares only an asset, live observation and locale with Full',async()=>{
+ const page=await request('/lite?lang=zh');
+ assert.equal(page.status,200);assert.match(page.body,/class="topbar"/);assert.match(page.body,/src="\/app\.js(?:\?|")/);
+ assert.equal(routePage(routeSearch(new URL("/lite?mode=practice",SITE_ORIGIN))),"lite");
+ assert.equal((await request('/?page=lite&mode=practice')).headers.Location,'/lite?mode=practice');
+ const context={asset:'eth',signalId:'ETH:1m:1795000000000',lang:'zh',mode:'practice',wallet:'private'};
+ const full=new URL(fullHrefFromLite(context),SITE_ORIGIN);
+ assert.equal(full.pathname,'/signals');assert.deepEqual(Object.fromEntries(full.searchParams),{asset:'ETH',signalId:context.signalId,data:'live',lang:'zh'});
+ const lite=new URL(liteHrefFromFull(context),SITE_ORIGIN);
+ assert.equal(lite.pathname,'/lite');assert.deepEqual(Object.fromEntries(lite.searchParams),{asset:'ETH',signalId:context.signalId,lang:'zh'});
+ assert.equal(fullHrefFromLite({...context,signalId:'practice:ETH:123'}),'/signals?data=live&asset=ETH&lang=zh');
 });

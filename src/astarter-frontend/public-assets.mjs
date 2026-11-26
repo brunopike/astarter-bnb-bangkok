@@ -75,6 +75,8 @@ allowed.add('research-job-coordinator.mjs');
 for(const file of ['private-ui-data.mjs','private-workspace-client.mjs','private-ui-controller.mjs'])allowed.add(file);
 for(const file of ['wealth-entry.mjs','wealth-entry-catalog.mjs','wealth-entry.css','wealth-strategies.mjs','wealth-fees.mjs','ai-wealth.mjs','ai-wealth.css','wealth-manager-client.mjs','wealth-data.mjs','wealth-account.mjs'])allowed.add(file);
 allowed.add('wealth-market-data.mjs');
+for(const file of ['lite.css','lite.mjs','lite-navigation.mjs','lite-desk-data.mjs','lite-chat.mjs','experience-switch.css'])allowed.add(file);
+for(const file of ['lite-strategy-cards.mjs','lite-strategy-cards.css'])allowed.add(file);
 allowed.add('notification-settings.mjs');
 allowed.add('wallet-balance.mjs');allowed.add('wallet-entry.mjs');allowed.add('wallet-header.css');
 // The account access page and its files are served by the local server; the release build leaves them out.

@@ -1,0 +1,213 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createLiteDesk } from './lite-desk-data.mjs';
+
+const start = Date.UTC(2026, 10, 25, 10, 6, 5);
+function harness() {
+  const accounts = new Map();
+  const state = { time: start, price: 131, quoteTime: start, available: true, candles: 0 };
+  const accountStore = async (mode, change) => {
+    const account = accounts.get(mode) ?? { balance: 10000, receipts: [] };
+    if (!change) return account;
+    const next = change(account);
+    accounts.set(mode, next);
+    return next;
+  };
+  const fetchImpl = async (url) => {
+    if (!state.available) throw Error('UNAVAILABLE');
+    const resource = new URL(url, 'http://localhost').searchParams.get('resource');
+    let body;
+    if (resource === 'tickers') {
+      body = [
+        {
+          symbol: 'ETHUSDT',
+          lastPrice: state.price,
+          openPrice: 125,
+          quoteVolume: 60000,
+          closeTime: state.quoteTime
+        }
+      ];
+    } else {
+      assert.equal(resource, 'candles');
+      state.candles++;
+      const current = Math.floor(state.time / 60000) * 60000;
+      body = Array.from({ length: 33 }, (_, i) => {
+        const at = current + (i - 32) * 60000,
+          close = state.declining ? 160 - i : 100 + i;
+        return [at, close, close + 1, close - 1, close, 10, at + 59999];
+      });
+    }
+    return {
+      ok: true,
+      json: async () => ({ schema: 'public-market-relay-v1', resource, receivedAt: state.time, body })
+    };
+  };
+  return { desk: createLiteDesk({ fetchImpl, now: () => state.time, accountStore }), state, accounts };
+}
+
+test('practice is explicit, begins with ETH and has its own persistent scope', async () => {
+  const { desk, state } = harness();
+  state.available = false;
+  const live = await desk.readSignals({ mode: 'live', symbols: ['BTC', 'ETH'] });
+  assert.equal(live.rows.length, 0);
+  assert.equal(live.failed.length, 2);
+  const { rows } = await desk.readSignals({ mode: 'practice', symbols: ['BTC', 'ETH', 'SOL'] });
+  assert.deepEqual(
+    rows.map((row) => row.symbol),
+    ['ETH', 'BTC', 'SOL']
+  );
+  const results = await Promise.all([
+    desk.buy({ row: rows[0], amount: 50 }),
+    desk.buy({ row: rows[0], amount: 50 })
+  ]);
+  assert.deepEqual(results[0], results[1]);
+  assert.equal(results[0].balance, 9950);
+  const { receipt } = results[0];
+  assert.equal(receipt.source, 'Practice');
+  assert.ok(Math.abs(receipt.quantity * receipt.price + receipt.fee - receipt.amount) < 1e-8);
+  state.time += 900000;
+  assert.deepEqual(await desk.buy({ row: rows[0], amount: 50 }), results[0]);
+  await assert.rejects(desk.buy({ row: rows[1], amount: 50 }), /EXPIRED/);
+  assert.equal((await desk.getAccount('practice')).receipts.length, 1);
+  assert.equal((await desk.getAccount('live')).balance, 10000);
+});
+
+test('live paper rechecks the signal, records a fresh spot reference and recovers the prior fill offline', async () => {
+  const { desk, state } = harness();
+  const {
+    rows: [row]
+  } = await desk.readSignals({ mode: 'live', symbols: ['ETH'] });
+  state.price = 131.1;
+  const filled = await desk.buy({ row, amount: '15.49' });
+  assert.equal(state.candles, 2);
+  assert.equal(filled.receipt.price, 131.1);
+  assert.equal(filled.receipt.source, 'Binance Spot');
+  assert.equal(filled.balance, 9984.51);
+  state.available = false;
+  assert.deepEqual(await desk.buy({ row, amount: '15.49' }), filled);
+});
+
+test('changed signals, mismatched quotes and expired inputs cannot spend', async () => {
+  const { desk, state } = harness();
+  const {
+    rows: [row]
+  } = await desk.readSignals({ symbols: ['ETH'] });
+  await assert.rejects(desk.buy({ row: { ...row, id: 'wrong' }, amount: 10 }), /SIGNAL_CHANGED/);
+  state.price = 140;
+  await assert.rejects(desk.buy({ row, amount: 10 }), /QUOTE_CHANGED/);
+  state.price = 131;
+  state.quoteTime = state.time - 31000;
+  await assert.rejects(desk.buy({ row, amount: 10 }), /UNAVAILABLE/);
+  state.time = row.validUntil;
+  await assert.rejects(desk.buy({ row, amount: 10 }), /EXPIRED/);
+  assert.deepEqual(await desk.getAccount('live'), { balance: 10000, receipts: [], holdings: [] });
+});
+
+test('a practice exit closes the whole held asset once, includes fees and leaves other positions intact', async () => {
+  const { desk, state, accounts } = harness();
+  const {
+    rows: [eth, btc]
+  } = await desk.readSignals({ mode: 'practice', symbols: ['ETH', 'BTC'] });
+  const exit = desk.practiceExit('ETH');
+  assert.notEqual(exit.id, eth.id);
+  assert.equal(exit.direction, 'down');
+  await assert.rejects(desk.sell({ row: exit }), /NO_POSITION/);
+  await assert.rejects(desk.sell({ row: eth }), /SIGNAL_CHANGED/);
+  await desk.buy({ row: eth, amount: 50 });
+  await desk.buy({ row: btc, amount: 25 });
+  // Existing receipts from the first release did not carry an explicit side.
+  delete accounts.get('practice').receipts[1].side;
+  const before = await desk.getAccount('practice');
+  const quantity = before.holdings.find((holding) => holding.symbol === 'ETH').quantity;
+  await assert.rejects(desk.sell({ row: exit, expectedQuantity: quantity / 2 }), /POSITION_CHANGED/);
+  const [first, second] = await Promise.all([
+    desk.sell({ row: exit, expectedQuantity: quantity }),
+    desk.sell({ row: exit })
+  ]);
+  assert.deepEqual(first, second);
+  const grossCents = Math.round(quantity * exit.price * 100);
+  assert.equal(first.receipt.side, 'sell');
+  assert.equal(first.receipt.quantity, quantity);
+  assert.equal(first.receipt.fee, Math.round(grossCents * 0.001) / 100);
+  assert.equal(first.receipt.amount, (grossCents - Math.round(grossCents * 0.001)) / 100);
+  assert.equal(first.balance, (992500 + Math.round(first.receipt.amount * 100)) / 100);
+  const account = await desk.getAccount('practice');
+  assert.deepEqual(
+    account.holdings.map((holding) => holding.symbol),
+    ['BTC']
+  );
+  assert.deepEqual(account.receipts[0], first.receipt);
+  state.time += 900000;
+  assert.deepEqual(await desk.sell({ row: exit }), first);
+  await assert.rejects(desk.sell({ row: desk.practiceExit('ETH') }), /NO_POSITION/);
+  const oldExit = { ...desk.practiceExit('BTC'), validUntil: state.time };
+  await assert.rejects(desk.sell({ row: oldExit }), /EXPIRED/);
+  assert.equal((await desk.getAccount('live')).receipts.length, 0);
+});
+
+test('a live exit requires a new declining signal and a fresh matching execution price', async () => {
+  const { desk, state } = harness();
+  const {
+    rows: [entry]
+  } = await desk.readSignals({ symbols: ['ETH'] });
+  await desk.buy({ row: entry, amount: 100 });
+  state.time += 60000;
+  state.declining = true;
+  const {
+    rows: [exit]
+  } = await desk.readSignals({ symbols: ['ETH'] });
+  assert.equal(exit.direction, 'down');
+  state.price = 129;
+  await assert.rejects(desk.sell({ row: exit }), /UNAVAILABLE/);
+  state.quoteTime = state.time;
+  state.price = 140;
+  await assert.rejects(desk.sell({ row: exit }), /QUOTE_CHANGED/);
+  state.price = 129;
+  await assert.rejects(desk.sell({ row: { ...desk.practiceExit('ETH'), mode: 'live' } }), /SIGNAL_CHANGED/);
+  const sale = await desk.sell({ row: exit });
+  assert.equal(sale.receipt.price, 129);
+  assert.equal(sale.receipt.source, 'Binance Spot');
+  assert.deepEqual((await desk.getAccount()).holdings, []);
+  state.available = false;
+  assert.deepEqual(await desk.sell({ row: exit }), sale);
+});
+
+test('simulated cash, ticket precision and action direction are enforced', async () => {
+  const { desk, state } = harness();
+  const { rows } = await desk.readSignals({ mode: 'practice', symbols: ['ETH', 'SOL'] });
+  for (const amount of [0, 0.05, 10.044, 1000.01, Infinity, '', '1e2', '-20'])
+    await assert.rejects(desk.buy({ row: rows[0], amount }), /INVALID_AMOUNT/);
+  await assert.rejects(desk.buy({ row: rows[1], amount: 10 }), /SIGNAL_CHANGED/);
+  for (let i = 0; i < 10; i++) {
+    const {
+      rows: [row]
+    } = await desk.readSignals({ mode: 'practice', symbols: ['ETH'] });
+    await desk.buy({ row, amount: 1000 });
+    state.time += 900000;
+  }
+  const {
+    rows: [last]
+  } = await desk.readSignals({ mode: 'practice', symbols: ['ETH'] });
+  await assert.rejects(desk.buy({ row: last, amount: 10 }), /INSUFFICIENT_FUNDS/);
+  const account = await desk.getAccount('practice');
+  assert.equal(account.balance, 0);
+  assert.equal(account.receipts.length, 10);
+  assert.ok(account.receipts[0].filledAt > account.receipts[1].filledAt);
+});
+
+test('a selected Signals strategy must match the fill and is recorded on the receipt', async () => {
+  const { desk } = harness();
+  const {
+    rows: [row]
+  } = await desk.readSignals({ mode: 'practice', symbols: ['ETH'] });
+  await assert.rejects(desk.buy({ row, amount: '75', strategyId: 'grid' }), /SIGNAL_CHANGED/);
+  assert.equal((await desk.getAccount('practice')).balance, 10000);
+  const { receipt } = await desk.buy({ row, amount: '75', strategyId: 'signals-spot-momentum-entry' });
+  assert.equal(receipt.strategyId, 'signals-spot-momentum-entry');
+  assert.equal(receipt.signalId, row.id);
+  const { receipt: sale } = await desk.sell({
+    row: desk.practiceExit('ETH'),
+    strategyId: 'signals-spot-momentum-exit'
+  });
+  assert.equal(sale.strategyId, 'signals-spot-momentum-exit');
+});

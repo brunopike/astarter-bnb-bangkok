@@ -178,14 +178,23 @@ function path(points) {
   return points.map(([x, y], index) => `${index ? 'L' : 'M'}${fixed(x)},${fixed(y)}`).join(' ');
 }
 
+// Coordinates are shared by the SVG stroke and point inspectors.
+export function sparklinePoints(data, width, height) {
+  const pad = 3;
+  const [min, max] = domain(data, 0.12);
+  return data.map((value, index) => [
+    data.length === 1 ? width / 2 : pad + index / (data.length - 1) * (width - pad * 2),
+    height - pad - (value - min) / (max - min) * (height - pad * 2)
+  ]);
+}
+
 /** Numeric values; invalid entries are ignored. */
 export function sparkline(values, { width = 240, height = 60, color, fill = true } = {}) {
   width = dimension(width, 240, 40); height = dimension(height, 60, 20);
   const data = Array.isArray(values) ? values.map(numeric).filter(value => value !== null) : [];
   if (!data.length) return empty(width, height, '价格走势', 'sparkline');
   const stroke = paint(color, PALETTE.accent), pad = 3;
-  const [min, max] = domain(data, 0.12);
-  const points = data.map((value, index) => [data.length === 1 ? width / 2 : pad + index / (data.length - 1) * (width - pad * 2), height - pad - (value - min) / (max - min) * (height - pad * 2)]);
+  const points = sparklinePoints(data, width, height);
   const line = path(points), first = points[0], last = points.at(-1);
   const area = fill && data.length > 1 ? `<path d="${line} L${fixed(last[0])},${height - pad} L${fixed(first[0])},${height - pad} Z" fill="${stroke}" fill-opacity="0.09"/>` : '';
   return svg(width, height, `价格走势，${data.length}个数据点，起点${price(data[0])}，终点${price(data.at(-1))}`, `${area}<path class="chart-light-envelope" d="${line}" fill="none" stroke="${stroke}"/><path class="chart-light-line" d="${line}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path class="chart-light-core" d="${line}" fill="none"/><circle class="chart-light-point" cx="${fixed(last[0])}" cy="${fixed(last[1])}" r="2.2" fill="${stroke}" style="--point-light:${stroke}"/>`, 'sparkline');

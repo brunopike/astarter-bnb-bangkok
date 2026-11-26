@@ -6,9 +6,9 @@ import {uiGlyph} from './product-composition.mjs';
 import {escapeUI as esc} from './product-experience.mjs';
 
 const signals={
- up:{title:['上行动量','Upward momentum'],thesis:['三项指标均满足上行条件。','All three indicators meet the upward rule.']},
- down:{title:['下行动量','Downward momentum'],thesis:['三项指标均满足下行条件。','All three indicators meet the downward rule.']},
- neutral:{title:['中性观察','Neutral observation'],thesis:['三项指标尚未同时满足上行或下行条件。','Neither directional rule is fully met.']}
+ up:{tag:['上行','Upward'],title:['上行动量','Upward momentum'],thesis:['三项指标均满足上行条件。','All three indicators meet the upward rule.']},
+ down:{tag:['下行','Downward'],title:['下行动量','Downward momentum'],thesis:['三项指标均满足下行条件。','All three indicators meet the downward rule.']},
+ neutral:{tag:['中性','Neutral'],title:['中性观察','Neutral observation'],thesis:['三项指标尚未同时满足上行或下行条件。','Neither directional rule is fully met.']}
 };
 
 const formatters=new Map();
@@ -24,6 +24,9 @@ function number(value,{price=false,signed=false}={}){
   signDisplay:signed?'exceptZero':'auto'
  }));
  return formatters.get(key).format(value);
+}
+export function signalClosePrice(value){
+ return number(value,{price:true});
 }
 function timestamp(ms){
  if(!Number.isSafeInteger(ms)||ms<=0)return '';
@@ -71,7 +74,7 @@ function miniChart(o){
   <div aria-hidden="true">${sparkline(values,{width:208,height:45,color:'var(--chart-accent)',fill:false})}</div></figure>`;
 }
 function prices(o){return `<div class="sig-stats-quote"><span>${esc(closeLabel(o))}</span>
- <strong>${esc(number(o.price,{price:true}))} <small>${esc(quoteUnit(o))}</small></strong></div>`;}
+ <strong class="dot-number">${esc(signalClosePrice(o.price))} <small>${esc(quoteUnit(o))}</small></strong></div>`;}
 function readings(o){
  const facts=[
   [L('5 根涨跌幅','5-bar change'),number(o.momentumPct,{signed:true})+'%',o.momentumPct,'%'],
@@ -98,24 +101,39 @@ export function liveSignalRow(observation){
  };
 }
 
-export function liveSignalCard(row,{selected=false,watched=false}={}){
- const o=row.live,id=esc(row.id),time=observationClock(o),facts=readings(o),active=selected===true||selected===row.id;
- return `<article class="sig-event sig-live-observation${active?' selected':''}" data-track-record="${id}" data-live-direction="${o.direction}" aria-current="${active}">
-  ${active?'<span class="sig-current-marker" aria-hidden="true">✓</span>':''}
-  <div class="sig-event-body"><header>
-   <span class="sig-event-asset">${tokenIcon(o.symbol,{size:30,className:'sig-coin'})}
-    <span><b>${esc(o.symbol)}</b><small>${esc(instrument(o))}</small></span></span>
-   <button type="button" class="sig-event-title" data-track-open="${id}">${esc(L(...row.track.title))}</button>
-   <span class="sig-card-state">${esc(intervalStatus(o))}</span></header>
-   <div class="sig-live-market">${prices(o)}${miniChart(o)}</div>
-   <dl class="sig-live-card-metrics">${metric(...facts[0])}${metric(...facts[2])}</dl>
-   <footer><div class="sig-event-time"><time datetime="${esc(time.datetime)}">${esc(time.text)}</time></div>
-    ${star(o.symbol,watched)}
-    <button type="button" data-track-open="${id}" data-track-read>${esc(L('查看依据','View evidence'))} ${uiGlyph('arrow')}</button>
-   </footer></div></article>`;
+function liteCardSource(o,time) {
+ const demo=o.mode==='practice',href=demo?'':sourceURL(o);
+ const source=demo?L('本机演练','Local practice'):o.source;
+ const attribution=href?`<a href="${esc(href)}" target="_blank" rel="noopener noreferrer" data-ls="source">${esc(source)} ↗</a>`:esc(source);
+ return `<div class="sig-event-time lite-card-source"><span>${attribution}</span><time datetime="${esc(time.datetime)}">${esc(time.text)}</time></div>`;
 }
 
-export function liveSignalDetail(row,{popup=false,watched=false}={}){
+export function liveSignalCard(row,{selected=false,watched=false,strategy=null,busy=false}={}){
+ const o=row.live,id=esc(row.id),time=observationClock(o),facts=readings(o),active=selected===true||selected===row.id;
+ const disabled=busy?' disabled':'';
+ const title=strategy
+  ? `<h3 class="sig-event-title">${esc(strategy.label)}</h3>`
+  : `<button type="button" class="sig-event-title" data-track-open="${id}">${esc(L(...row.track.title))}</button>`;
+ const state=strategy?uiGlyph('arrow')+esc(L(...signals[o.direction].tag)):esc(intervalStatus(o));
+ const marker=active?'<span class="sig-current-marker" aria-hidden="true">✓</span>':'';
+ const actions=strategy
+  ? `<button type="button" data-ls="evidence" aria-label="${esc(o.symbol+' · '+L('查看依据','View evidence'))}"${disabled}>${L('查看依据','View evidence')}</button>
+     <button type="button" data-ls="select" aria-controls="lite-controls" aria-label="${esc(o.symbol+' · '+strategy.label+' · '+(active?L('查看操作台','View ticket'):L('选择信号','Select signal')))}"${disabled}>${active?L('查看操作台','View ticket'):L('选择信号','Select signal')} ${uiGlyph('arrow')}</button>`
+  : `<div class="sig-event-time"><time datetime="${esc(time.datetime)}">${esc(time.text)}</time></div>
+     ${star(o.symbol,watched)}
+     <button type="button" data-track-open="${id}" data-track-read>${esc(L('查看依据','View evidence'))} ${uiGlyph('arrow')}</button>`;
+ return `<article class="sig-event sig-live-observation${active?' selected':''}" ${strategy?`data-side="${esc(strategy.side)}"`:`data-track-record="${id}"`} data-live-direction="${o.direction}" data-lite-asset="${esc(o.symbol)}" data-lite-id="${esc(o.id || '')}" aria-current="${active}">
+  ${strategy?'':marker}
+  <div class="sig-event-body"><header>
+   <span class="sig-event-asset">${tokenIcon(o.symbol,{size:30,className:'sig-coin'})}
+    <span><b>${esc(o.symbol)}</b><small>${esc(instrument(o))}</small></span>${strategy?marker:''}</span>
+   ${title}<span class="sig-card-state">${state}</span></header>
+   <div class="sig-live-market">${prices(o)}${miniChart(o)}</div>
+   <dl class="sig-live-card-metrics">${metric(...facts[0])}${metric(...facts[2])}</dl>
+   ${strategy?liteCardSource(o,time):''}<footer>${actions}</footer></div></article>`;
+}
+
+export function liveSignalDetail(row,{popup=false,watched=false,previousObservation=false}={}){
  const o=row.live,link=sourceURL(o),time=observationClock(o,true),hId=popup?'sig-dialog-title':'sig-detail-title',facts=readings(o);
  const source=link?`<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(o.source)} ↗</a>`:esc(o.source);
  const method=L('收盘价在 EMA20 上方、5 根涨跌幅为正、RSI14 高于 50 时判为上行。三项均反向时判为下行，其余为中性。','Up requires a close above EMA20, a positive 5-bar change and RSI14 above 50. All three reversed indicate down. Other readings are neutral.');
@@ -125,6 +143,7 @@ export function liveSignalDetail(row,{popup=false,watched=false}={}){
    <div class="sig-record-actions"><button type="button" class="p-button" data-track-copy="${esc(row.id)}">${esc(L('复制信号','Copy signal'))}</button></div></div>
   <div class="sig-reading-hero"><div class="sig-detail-title sig-asset">
    ${tokenIcon(o.symbol,{size:36,className:'sig-coin'})}<div><h2 id="${hId}">${esc(o.symbol)}</h2><small>${esc(instrument(o))}</small></div>${star(o.symbol,watched)}</div>
+   ${previousObservation?`<p class="sig-live-method">${esc(L('原信号已更新，以下是该标的最新观察。','A newer observation is available. This view shows the latest readings for this asset.'))}</p>`:''}
    <section class="sig-reading-lead"><h3>${esc(L(...row.track.title))}</h3><p class="sig-detail-thesis">${esc(L(...row.track.thesis))}</p></section>
    <div class="sig-live-detail-quote">${prices(o)}${miniChart(o)}</div></div>
   <dl class="sig-live-detail-metrics">${facts.map(([key,value])=>metric(key,value)).join('')}</dl><p class="sig-live-method">${esc(method)}</p>

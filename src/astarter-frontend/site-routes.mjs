@@ -1,6 +1,6 @@
 import {seoLanguages,seoLanguage,previews} from './site-languages.mjs';
 // Public URLs and search metadata for the Hackathon web application.
-export const SITE_ORIGIN = 'https://dapp.ipfund.art';
+export const SITE_ORIGIN = 'https://demo.astarter.io';
 const publicPages = [
  ['brain','/','Deep Brain','链上深脑','Explore the Cortexa research graph, follow the evidence behind a market observation and open its research notes.','探索 Cortexa 链上研究图谱，查看市场观察的证据来源与研究笔记。'],
  ['workbench','/lenswave','LensWave','AI 星谱 LensWave','Follow tracked assets through market research, evidence review and technical observations in the LensWave workspace.','在 LensWave 星谱工作台追踪标的，查看行情采集、证据核验和技术观察。'],
@@ -15,6 +15,7 @@ const publicPages = [
  ['etf','/etf-flows','ETF Fund Flows','ETF 资金','Compare Bitcoin and Ethereum ETF flows and review the fund-level data available for each reporting period.','比较比特币与以太坊 ETF 资金流，查看各报告期可用的逐基金数据。'],
 ];
 const workspacePages = [
+ ['lite','/lite','Lite Trading Desk','Lite 交易台'],
  ['assistant','/chat','AI Assistant','AI 助手'],['execution','/my-agents','My Agents','我的 Agent'],
  ['watchlist','/watchlist','Watchlist','我的追踪'],['advisor','/strategy-advisor','Strategy Advisor','策略选择'],
  ['copy-trading','/copy-trading','Copy Trading','聪明钱跟随'],['contributions','/contributions','My Contributions','我的贡献'],

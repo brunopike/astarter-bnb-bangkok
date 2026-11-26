@@ -35,6 +35,8 @@ The [Deep Brain module](src/deep-brain) includes public market collection, strat
 
 ## Frontend packages
 
+[Open Astarter Lite](https://demo.astarter.io/lite) to inspect live market signals, review the evidence behind a close, and try a simulated trade in practice mode.
+
 The default frontend directory follows the deployed `HACKATHON` branch. It opens Deep Brain, where you can select a research asset and explore the evidence behind each graph node. The [hosted demo](https://dapp.ipfund.art/) also includes a licensed particle portrait. The open repository uses the interactive evidence graph as its opening view.
 
 Open **Historical blocks** on the [Hackathon site](https://dapp.ipfund.art/) for Bitcoin and Ethereum from January 2016, BNB Smart Chain from its first non-genesis block, and dated native Solana and HyperCore samples. Complete-day series and sampled series are identified in the viewer. Select a chain and UTC date to inspect archived heights or slots, timestamps and transaction counts. The [summary](src/astarter-frontend/brain-evidence/archive/summary.json) reports current dates and actual counts. The [manifest](src/astarter-frontend/brain-evidence/archive/manifest.json) records source evidence and SHA-256 checksums.
