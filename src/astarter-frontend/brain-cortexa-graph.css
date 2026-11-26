@@ -196,7 +196,7 @@ astarter-brain .br-raw-ranges select {max-width:100%;flex:1}
 }
 
 astarter-brain .ct-archive-counts {
-  --ct-count-chain:var(--ct-ice);--ct-count-market:var(--ct-lilac);
+  --ct-count-rainbow:linear-gradient(90deg,#ff929f,#ffb178,#f3d571,#83dca3,#78cee9,#a2acff,#d3a1ed);
   display:flex;flex-wrap:wrap;align-items:baseline;column-gap:clamp(18px,2vw,36px);margin-top:7px;
 }
 astarter-brain .ct-archive-counts button[data-raw-open] {
@@ -208,15 +208,31 @@ astarter-brain .ct-count-value {display:inline-grid;font:inherit}
 astarter-brain .ct-count-value::after,astarter-brain .ct-count-value i {grid-area:1/1}
 astarter-brain .ct-count-value::after {content:attr(data-total);visibility:hidden}
 astarter-brain .ct-count-value i {font:inherit;text-align:end}
-:root[data-theme=light] astarter-brain .ct-archive-counts {--ct-count-chain:#356c80;--ct-count-market:#695686}
-astarter-brain .ct-archive-counts [data-raw-open=heading] {--ct-count-accent:var(--ct-count-chain)}
-astarter-brain .ct-archive-counts [data-raw-open=tradfi] {--ct-count-accent:var(--ct-count-market)}
-astarter-brain .ct-archive-counts button:is(:focus-visible,:active,[data-count-pressed]) .ct-count-value {color:var(--ct-count-accent)}
-@media (hover:hover) {
-  astarter-brain .ct-archive-counts button:hover .ct-count-value {color:var(--ct-count-accent)}
+:root[data-theme=light] astarter-brain .ct-archive-counts {
+  --ct-count-rainbow:linear-gradient(90deg,#ac334e,#a14b11,#776000,#247144,#146b84,#4c55a6,#833b98);
 }
-@media (hover:hover) and (prefers-reduced-motion:no-preference) {
-  :root:not([data-reduced-motion=true]) astarter-brain .ct-archive-counts .ct-count-value {transition:color 140ms ease-out}
+@supports (background-clip:text) or (-webkit-background-clip:text) {
+  astarter-brain .ct-archive-counts .ct-count-value i {
+    background-image:var(--ct-count-paint,none);background-size:100% 100%;
+    -webkit-background-clip:text;background-clip:text;color:var(--ct-count-fill,inherit);
+  }
+  astarter-brain .ct-archive-counts button:is(:focus-visible,:active,[data-count-pressed]) {
+    --ct-count-paint:var(--ct-count-rainbow);--ct-count-fill:transparent;--ct-count-motion:ct-count-spectrum;
+  }
+  @media (hover:hover) {
+    astarter-brain .ct-archive-counts button:hover {
+      --ct-count-paint:var(--ct-count-rainbow);--ct-count-fill:transparent;--ct-count-motion:ct-count-spectrum;
+    }
+  }
+  @media (hover:hover) and (prefers-reduced-motion:no-preference) {
+    :root:not([data-reduced-motion=true]) astarter-brain .ct-archive-counts .ct-count-value i {
+      animation:var(--ct-count-motion,none) 420ms ease-out both;
+    }
+  }
+  @keyframes ct-count-spectrum {from {background-size:108% 100%;background-position:100% 0} to {background-size:100% 100%;background-position:0 0}}
+}
+@media (forced-colors:active) {
+  astarter-brain .ct-archive-counts .ct-count-value i {background-image:none;color:ButtonText}
 }
 astarter-brain .ct-archive-counts button>span:last-child {font-size:.7em;color:var(--ct-ice)}
 @media(max-width:900px){
