@@ -52,6 +52,13 @@ export function marketGroupCoverage(entries){
   return result;
 }
 
+export function marketCountRows(s){
+  const labels=s.exchangeActivityRecords?{exchangeActivityRecords:['交易所交易统计','Exchange activity'],...countLabels}:countLabels;
+  return Object.entries(labels)
+    .filter(([key])=>key!=='wholesaleQuotes'||s.wholesaleQuotes>0)
+    .map(([key,label])=>[label,key==='otherObservations'?s[key]-(s.exchangeActivityRecords??0):s[key]]);
+}
+
 export function validateSummary(data){
   if(data?.version!==1||!Number.isSafeInteger(data.series)||data.series<1||!Number.isSafeInteger(data.count)||
     data.count<1||!digestPattern.test(data.catalogSha256))throw Error('Invalid market summary');
@@ -275,7 +282,6 @@ export function mountTradfiArchive(root,en){
   const dialog=el('dialog');dialog.id='brain-tradfi-dialog';dialog.dataset.rawDialog='';dialog.setAttribute('aria-labelledby','br-market-title');
   dialog.innerHTML=`<header class="br-raw-head"><h2 id="br-market-title">${t('传统市场历史','Traditional market history')}</h2><button type="button" data-close aria-label="${t('关闭','Close')}">×</button></header>
     <dl class="br-market-counts" data-counts hidden></dl>
-    <p class="br-market-count-detail" data-wholesale-count hidden></p>
     <details class="br-market-coverage" data-category-coverage open hidden>
       <summary>${t('类别覆盖','Coverage by market')} <span data-active-category></span></summary>
       <p>${t('数字为各类别记录数。日期从该类首条观测到最新一条，各标的覆盖期不同。','Counts cover all records per category. Dates run from first to latest across its series. Individual instruments may cover shorter periods.')}</p>
@@ -303,7 +309,8 @@ export function mountTradfiArchive(root,en){
   root.querySelector('.brain-board').append(dialog);
   const q=sel=>dialog.querySelector(sel),instrument=q('[data-instrument]'),year=q('[data-year]'),status=q('[data-status]'),
     info=q('[data-provenance]'),tbody=q('tbody'),paging=q('footer'),retry=q('[data-retry]'),search=q('[data-search]'),
-    group=q('[data-group]'),month=q('[data-month]'),market=q('[data-market]'),placeSearch=q('[data-place-search]');
+    group=q('[data-group]'),month=q('[data-month]'),placeFilters=q('[data-places]'),market=q('[data-market]'),placeSearch=q('[data-place-search]');
+  placeFilters.remove();placeFilters.hidden=false;
   const number=new Intl.NumberFormat(en?'en':'zh',{maximumFractionDigits:8});
   const cache=new Map(),lifetime=new AbortController();
   let series=[],rows=[],page=0,controller,revision=0,searchTimer,placeTimer,shards=[],monthData=null,markets=[],filteredQuotes=[];
@@ -340,16 +347,17 @@ export function mountTradfiArchive(root,en){
       number.format(s.count)+' historical observations across '+number.format(s.series)+' series');
     open.setAttribute('aria-label',open.title+' · '+t('打开传统市场','Open TradFi markets'));
     const counts=q('[data-counts]');counts.hidden=false;
-    const metrics=s.exchangeActivityRecords?{exchangeActivityRecords:['交易所交易统计','Exchange activity'],...countLabels}:countLabels;
-    counts.replaceChildren(...Object.entries(metrics).map(([key,label])=>{
-      const amount=key==='otherObservations'?s[key]-(s.exchangeActivityRecords??0):s[key];
+    counts.replaceChildren(...marketCountRows(s).map(([label,amount])=>{
       const cell=el('div');cell.append(el('dt',t(...label)),el('dd',number.format(amount)));return cell;
     }));
     showCoverage(s.perGroup);
     const detail=q('[data-wholesale-count]');
-    detail.hidden=s.wholesaleRangeQuotes===undefined;
-    if(!detail.hidden)detail.textContent=t('批发报价中，品种／等级报价 '+number.format(s.wholesaleRangeQuotes)+' 条 · 市场加权报价 '+number.format(s.weightedMarketQuotes)+' 条',
-      'Wholesale breakdown · Variety / grade quotes '+number.format(s.wholesaleRangeQuotes)+' · Weighted market quotes '+number.format(s.weightedMarketQuotes));
+    if(s.wholesaleQuotes>0&&s.wholesaleRangeQuotes!==undefined){
+      const note=detail??el('p');note.className='br-market-count-detail';note.dataset.wholesaleCount='';
+      note.textContent=t('批发报价中，品种／等级报价 '+number.format(s.wholesaleRangeQuotes)+' 条 · 市场加权报价 '+number.format(s.weightedMarketQuotes)+' 条',
+        'Wholesale breakdown · Variety / grade quotes '+number.format(s.wholesaleRangeQuotes)+' · Weighted market quotes '+number.format(s.weightedMarketQuotes));
+      if(!detail)counts.after(note);
+    }else detail?.remove();
   }
   function getSummary(force=false){
     if(!force&&summary&&Date.now()-checkedAt<60_000)return Promise.resolve(summary);
@@ -392,8 +400,8 @@ export function mountTradfiArchive(root,en){
     return chosen();
   }
   const clear=()=>{rows=[];linkedBars=new Map();shards=[];monthData=null;filteredQuotes=[];tbody.replaceChildren();q('thead tr').replaceChildren();paging.hidden=true;
-    year.replaceChildren();month.replaceChildren();market.replaceChildren();info.replaceChildren();q('[data-places]').hidden=true;
-    q('[data-equity-search]').hidden=true;q('[data-equity-query]').value='';
+    year.replaceChildren();month.replaceChildren();market.replaceChildren();info.replaceChildren();placeFilters.remove();
+    q('[data-period-label]').textContent='';q('[data-equity-search]').hidden=true;q('[data-equity-query]').value='';
     q('[data-year-wrap]').hidden=false;q('[data-month-wrap]').hidden=true;};
   const remember=(key,value)=>{if(cache.size>=8&&!cache.has(key))cache.delete(cache.keys().next().value);cache.set(key,value);return value;};
   function pages(total){
@@ -606,7 +614,7 @@ export function mountTradfiArchive(root,en){
   async function getMonth(s,signal,id){
     const shard=shards.find(x=>x.month===month.value);if(!shard)throw Error('Market month unavailable');
     monthData=null;markets=[];filteredQuotes=[];tbody.replaceChildren();paging.hidden=true;retry.hidden=true;
-    q('[data-places]').hidden=true;status.textContent=t('正在读取当月报价…','Loading monthly quotes…');
+    placeFilters.remove();status.textContent=t('正在读取当月报价…','Loading monthly quotes…');
     const data=cache.get(shard.sha256)??validateWholesale(s,shard,await checkedFile(s.id+'-'+shard.month,shard.sha256,signal));
     if(id!==revision||signal.aborted)return;
     monthData=remember(shard.sha256,data);
@@ -617,7 +625,7 @@ export function mountTradfiArchive(root,en){
       places.get(key).locations.push(i);
     }
     markets=[...places.values()].sort((a,b)=>a.label.localeCompare(b.label));
-    placeSearch.value='';market.replaceChildren();q('[data-places]').hidden=false;filterPlaces();
+    placeSearch.value='';market.replaceChildren();info.before(placeFilters);filterPlaces();
   }
   function failure(signal){
     if(!signal.aborted){status.textContent=t('未能读取或校验行情。','Could not load or verify this series.');retry.hidden=false;}

@@ -44,7 +44,6 @@ FX = [
     "HKD",
     "IDR",
     "ILS",
-    "INR",
     "KRW",
     "MXN",
     "MYR",

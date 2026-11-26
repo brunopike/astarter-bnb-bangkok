@@ -15,8 +15,6 @@ import brain_tradfi_energy
 import brain_tradfi_futures
 import brain_tradfi_settlements
 import brain_tradfi_stocks_tw
-import brain_tradfi_mandi_live
-import brain_tradfi_mandi_recent
 import brain_tradfi_midas
 import brain_tradfi_tw
 import brain_tradfi_trades
@@ -57,10 +55,9 @@ if __name__ == '__main__':
               brain_tradfi_trades.build,brain_tradfi_daily.build,brain_tradfi_futures.build,
               brain_tradfi_stocks_tw.build,brain_tradfi_settlements.build,brain_tradfi_energy.build,
               brain_tradfi_energy.build_gas,brain_tradfi_energy.build_gold,
-              brain_tradfi_mandi_live.build,brain_tradfi_mandi_recent.build,brain_tradfi_midas.build,brain_tradfi_oracles.build)
+              brain_tradfi_midas.build,brain_tradfi_oracles.build)
     local_sources={brain_tradfi_tw.build:'Asia/Taipei',brain_tradfi_futures.build:'Asia/Taipei',brain_tradfi_stocks_tw.build:'Asia/Taipei',
-                   brain_tradfi_energy.build_gold:'Asia/Taipei',brain_tradfi_mandi_live.build:'Asia/Kolkata',
-                   brain_tradfi_mandi_recent.build:'Asia/Kolkata'}
+                   brain_tradfi_energy.build_gold:'Asia/Taipei'}
     for updater in updaters:
         zone=local_sources.get(updater)
         cutoff=args.until or (now.astimezone(ZoneInfo(zone)).date()-timedelta(days=1) if zone else last_day)
@@ -72,6 +69,8 @@ if __name__ == '__main__':
             print(errors[-1],file=sys.stderr,flush=True)
     catalog_path=args.root/'catalog.json'
     catalog=json.loads(catalog_path.read_bytes())
+    # Older archives can still contain the retired domestic market feeds.
+    catalog['series']=[s for s in catalog['series'] if s['id']!='eurinr' and not s['id'].startswith('mandi-')]
     attach_market_provenance(args.root,catalog)
     brain_tradfi.save(catalog_path,catalog)
     brain_tradfi.save(args.root/'summary.json',summarize(catalog_path.read_bytes()))

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-import {validateSeries,validateRows,validateSummary,validateShards,validateWholesale,validateMarketQuarters,validateMarketTickers,matchingSeries,linkedTaiwanBars,marketGroupCoverage,relatedSeries,settlementReleaseUrl} from './brain-tradfi-archive.mjs';
+import {validateSeries,validateRows,validateSummary,validateShards,validateWholesale,validateMarketQuarters,validateMarketTickers,matchingSeries,marketCountRows,linkedTaiwanBars,marketGroupCoverage,relatedSeries,settlementReleaseUrl} from './brain-tradfi-archive.mjs';
 const read=name=>readFileSync(new URL('./brain-evidence/tradfi/'+name+'.json',import.meta.url));
 const all=validateSeries(JSON.parse(read('catalog')));
 test('published market observations match instrument, units, dates, and checksum',()=>{
@@ -87,6 +87,18 @@ test('every requested asset class includes observations in every calendar year f
     for(let year=2016;year<=Math.max(...years);year++)assert.ok(years.has(year),group+' '+year);
   }
 });
+test('current catalog excludes Indian domestic series and keeps US source coverage',()=>{
+  assert.deepEqual(all.filter(s=>s.id.startsWith('mandi-')||s.id==='eurinr').map(s=>s.id),[]);
+  assert.equal(validateSummary(JSON.parse(read('summary'))).wholesaleQuotes,0);
+  const usda=new Set(all.filter(s=>s.statistic==='wholesaleCutout').map(s=>s.id));
+  for(const name of ['beef-choice','beef-select','pork-carcass','pork-loin','pork-butt','pork-picnic','pork-rib','pork-ham','pork-belly'])
+    assert.ok(usda.has('usda-'+name),name);
+  for(const [id,tickers] of [['sec-midas-equities',['AAPL']],['sec-midas-etp',['SPY','INDA']]]){
+    const quarter=JSON.parse(read(id)).quarters.find(q=>q.quarter==='2026Q3');
+    const reported=new Set(JSON.parse(read(quarter.tickerFile.slice(0,-5))).rows.map(row=>row[1]));
+    for(const ticker of tickers)assert.ok(reported.has(ticker),ticker);
+  }
+});
 test('SEC activity counts original venue records exactly once across the two security classes',()=>{
   const funds=all.find(s=>s.id==='sec-midas-etp'),stocks=all.find(s=>s.id==='sec-midas-equities');
   assert.ok(stocks&&funds);
@@ -153,6 +165,17 @@ test('homepage totals reconcile with independently categorized actual observatio
   const grouped=validateSummary({...sum,wholesaleRangeQuotes:sum.wholesaleQuotes,weightedMarketQuotes:0});
   assert.equal(grouped.wholesaleRangeQuotes,sum.wholesaleQuotes);
 });
+test('rendered counts omit empty wholesale coverage and reconcile the remaining records',()=>{
+  const base={version:1,series:2,catalogSha256:'a'.repeat(64),dailyBars:10,oracleReads:1,otherObservations:31,
+    exchangeActivityRecords:25,wholesaleQuotes:0,wholesaleRangeQuotes:0,weightedMarketQuotes:0,count:42};
+  const values=data=>marketCountRows(validateSummary(data)).map(([[,label],count])=>[label,count]);
+  const current=values(base);
+  assert.deepEqual(current,[['Exchange activity',25],['Daily bars',10],['Oracle reads',1],['Other observations',6]]);
+  assert.equal(current.reduce((sum,[,n])=>sum+n,0),base.count);
+  const older=values({...base,wholesaleQuotes:8,wholesaleRangeQuotes:3,weightedMarketQuotes:5,count:50});
+  assert.ok(older.some(([label,n])=>label==='Wholesale quotes'&&n===8));
+  assert.throws(()=>values({...base,weightedMarketQuotes:1}),/Unbalanced wholesale/);
+});
 test('category overview preserves mixed instruments, actual ranges and bar counts',()=>{
   const meta=validateSummary(JSON.parse(read('summary'))),actual=marketGroupCoverage(all);
   assert.deepEqual(validateSummary({...meta,perGroup:actual}).perGroup,actual);
@@ -172,11 +195,11 @@ test('category overview preserves mixed instruments, actual ranges and bar count
 test('search finds exact tickers beyond the display window and handles aliases and Chinese names',()=>{
   const entries=Array.from({length:3200},(_,i)=>({id:'asset-'+i,group:'stock',en:'Asset '+i,zh:'样本'}));
   entries.push({id:'us-wiki-xyz',symbol:'XYZ',en:'Mint XYZ',zh:'薄荷',group:'stock'});
-  entries.push({id:'mandi-wheat',en:'India wholesale · Wheat',zh:'小麦',group:'commodity'});
+  entries.push({id:'wheat-futures',en:'Wheat futures',zh:'小麦',group:'commodity'});
   assert.equal(matchingSeries(entries,'','').matches.length,75);
   assert.equal(matchingSeries(entries,'','').count,3202);
   assert.equal(matchingSeries(entries,'xyz','stock').matches[0].id,'us-wiki-xyz');
-  assert.equal(matchingSeries(entries,'小麦','commodities').matches[0].id,'mandi-wheat');
+  assert.equal(matchingSeries(entries,'小麦','commodities').matches[0].id,'wheat-futures');
   assert.equal(matchingSeries(entries,'xyz','commodities').count,0);
 });
 test('reject corrupt market-month references and invalid venue sessions',()=>{
