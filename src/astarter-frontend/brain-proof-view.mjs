@@ -104,7 +104,7 @@ export function mountProofView(host,replayHost,en){
   const reason=id=>reasons[id]?.[en?1:0]??residual(id);
   const q=selector=>host.querySelector(selector)??replayHost.querySelector(selector);
   host.innerHTML=`
-    <header class="bp-heading"><h2 id="br-proof-title">${t('决策依据','Decision proof')}</h2>
+    <header class="bp-heading"><h2 id="br-proof-title">${t('决策依据','Decision Proof')}</h2>
       <div class="bp-controls"><label>${t('市场','Market')}<select data-market data-native-select></select></label></div>
     </header>
     <div class="bp-panel bp-current" data-current>
@@ -114,7 +114,7 @@ export function mountProofView(host,replayHost,en){
       <div data-paper-example-body></div></details>
     `;
   replayHost.innerHTML=`
-    <header class="br-layer-head"><div class="br-layer-title"><h2 id="br-backtest-title">${t('回测复盘','Backtest review')}</h2></div>
+    <header class="br-layer-head"><div class="br-layer-title"><h2 id="br-backtest-title">${t('回测复盘','Backtest Review')}</h2></div>
       <div class="bp-controls"><label>${t('市场','Market')}<select data-replay-market data-native-select></select></label>
         <label>${t('回测窗口','Window')}<select data-window data-native-select></select></label></div>
     </header>
@@ -244,7 +244,7 @@ export function mountProofView(host,replayHost,en){
   function renderForward(forward,forwardError,quote){
     const output=q('[data-forward]');
     if(!forward){
-      output.innerHTML=`<div class="bp-forward"><h3>${t('事前登记','Forward record')}</h3><span>${forwardError?t('事前记录暂时无法读取','Forward record unavailable'):t('该市场暂无登记','No registration for this market')}</span></div>`;
+      output.innerHTML=`<div class="bp-forward"><h3>${t('事前登记','Forward Record')}</h3><span>${forwardError?t('事前记录暂时无法读取','Forward record unavailable'):t('该市场暂无登记','No registration for this market')}</span></div>`;
       return;
     }
     const prior=Array.isArray(forward.recent)?forward.recent:[];
@@ -253,7 +253,7 @@ export function mountProofView(host,replayHost,en){
         <th scope="row">${sourceLink(endpoint({forward:1,asset:run.asset.key,date:row.date}),row.date)}</th>
         <td>${e(name(row.selected))}</td><td>${e(row.status==='settled'?reason(row.action)+' · '+amount(row.netPnl,forward.quote??quote):reason(row.status))}</td>
       </tr>`).join('')}</tbody></table></details>`:'';
-    output.innerHTML=`<div class="bp-forward"><h3>${t('事前登记','Forward record')}</h3><strong>${e(reason(forward.status))}</strong>
+    output.innerHTML=`<div class="bp-forward"><h3>${t('事前登记','Forward Record')}</h3><strong>${e(reason(forward.status))}</strong>
     <dl class="bp-facts">${fact(t('登记时间','Recorded at'),stamp(forward.recordedAt))}${fact(t('目标开盘','Target open'),stamp(forward.targetOpenAt))}
     ${fact(t('选定策略','Selected strategy'),name(forward.selected))}${fact(t('风控模式','Risk policy'),reason(forward.riskMode))}
     ${fact(t('模拟损益','Simulated P&L'),forward.receipt && Number.isFinite(forward.receipt.netPnl)?amount(forward.receipt.netPnl,forward.quote??quote):reason(forward.status))}</dl>
@@ -526,7 +526,7 @@ export function mountProofView(host,replayHost,en){
       <small>${e(reason(c.reason))}${Number.isFinite(c.score)?' · '+t('得分 ','Score ')+e(number(c.score,4)):''}${Number.isFinite(c.sampleCount)?' · '+e(number(c.sampleCount,0))+' '+t('个样本','samples'):''}</small></li>`).join('');
     const source=`<div class="bp-sources">${sourceLink(evidenceUrl,t('冻结输入','Frozen inputs'))} ${sourceLink(record.sourceUrl??brain.sourceUrl,t('行情来源','Market source'))}</div>`;
     q('[data-detail]').innerHTML=`<div class="bp-trace">
-      ${stage('Brain Layer',t('锁定行情快照','Market snapshot'),facts([
+      ${stage('Brain Layer',t('锁定行情快照','Market Snapshot'),facts([
         fact(t('可用数据截至','Information cutoff'),stamp(record.asOf)),
         fact(t('研判时间','Decision time'),stamp(record.observedAt)),
         fact(t('交易市场','Instrument'),asset.venue+' · '+asset.market),
