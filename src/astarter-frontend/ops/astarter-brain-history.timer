@@ -1,0 +1,11 @@
+[Unit]
+Description=Check the public Astarter history revision hourly
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5min
+Persistent=true
+Unit=astarter-brain-history.service
+
+[Install]
+WantedBy=timers.target

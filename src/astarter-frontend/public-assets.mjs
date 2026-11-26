@@ -18,11 +18,15 @@ for(const file of ['brain-evidence/ranked-price-history.json','brain-evidence/da
 for(const file of ['brain-reasoning-memory.mjs','brain-evidence/decision-cases.json','brain-evidence/market-reactions.json'])allowed.add(file);
 for(const file of ['brain-evidence-stars.mjs','brain-evidence-nodes.mjs','brain-trader-history.mjs','brain-evidence/trader-gains.json','brain-evidence/trader-losses.json','brain-evidence/trader-positions.json','brain-evidence/perp-exits.json','brain-evidence/market-cap-top20.json'])allowed.add(file);
 for(const file of ['assistant-chat-client.mjs','assistant-market-context.mjs','live-market-signals.mjs','live-signal-view.mjs'])allowed.add(file);
-const blockArchive='brain-evidence/archive/';
-for(const file of await readdir(path.join(root,blockArchive))){
- if(file==='manifest.json' || file==='summary.json' || file==='LICENSE.txt' || /^(?:btc|eth)-\d{4}-\d{2}-\d{2}\.json(?:\.gz)?$/.test(file))allowed.add(blockArchive+file);
+export const isBrainHistoryFile=file=>/^brain-evidence\/(?:archive\/(?:(?:btc|eth|bnb|sol|hype)-\d{4}-\d{2}-\d{2}\.json(?:\.gz)?|(?:summary|manifest)\.json)|tradfi\/[a-z][a-z0-9-]{0,48}\.json)$/.test(file);
+for(const dir of ['brain-evidence/archive','brain-evidence/tradfi']){
+  for(const name of await readdir(path.join(root,dir))){
+    const file=dir+'/'+name;
+    if(isBrainHistoryFile(file)||file==='brain-evidence/archive/LICENSE.txt')allowed.add(file);
+  }
 }
 allowed.add('brain-raw-archive.mjs');
+allowed.add('brain-tradfi-archive.mjs');
 for(const file of ['site-languages.mjs','site-routes.mjs','site-seo-client.mjs','brand/astarter-share.png'])allowed.add(file);
 allowed.add('cross-market-data.mjs');
 allowed.add('public-btc-exchange-flows.mjs');

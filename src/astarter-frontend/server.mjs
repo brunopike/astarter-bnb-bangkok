@@ -13,7 +13,7 @@ import {handlePublicData} from './public-data-proxy.mjs';
 import {handleAssistantExchange} from './assistant-exchange-relay.mjs';
 import {handleMarketHub} from './licensed-feeds.mjs';
 import handleWealthMarket from './api/wealth-market.mjs';
-import {allowed,walletAsset} from './public-assets.mjs';
+import {allowed,walletAsset,isBrainHistoryFile} from './public-assets.mjs';
 import {createLocalSimHandler} from './local-sim-api.mjs';
 import {createTradingConnectionService} from './trading-connection-service.mjs';
 import {handleMemory} from './living-brain.mjs';
@@ -81,9 +81,15 @@ http.createServer(async (req, res) => {
     return;
   }
   const rawFile=req.url.split('?')[0].slice(1);
-  if (rawFile.startsWith('wallet-ui/')?!walletAsset(rawFile):!allowed.has(file)) { res.writeHead(404); res.end('Not found'); return; }
+  if (rawFile.startsWith('wallet-ui/')?!walletAsset(rawFile):!allowed.has(file)&&!isBrainHistoryFile(file)) { res.writeHead(404); res.end('Not found'); return; }
   try {
-    const content = await readFile(path.join(root, file));
+    let content;
+    if(isBrainHistoryFile(file)){
+      const mirror=process.env.ASTARTER_HISTORY_ROOT || path.join(homedir(),'.local','share','astarter','history');
+      try{content=await readFile(path.join(mirror,file.slice('brain-evidence/'.length)));}
+      catch(error){if(error.code!=='ENOENT')throw error;}
+    }
+    content??=await readFile(path.join(root,file));
     res.writeHead(200, { 'Content-Type': path.extname(file)==='.glb'?'model/gltf-binary':types[path.extname(file)] || 'application/octet-stream' });
     res.end(req.method === 'HEAD' ? undefined : content);
   } catch { res.writeHead(404); res.end('Not found'); }

@@ -1,0 +1,16 @@
+[Unit]
+Description=Verify and install public Astarter historical data
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+UMask=0022
+ExecStart=/usr/bin/python3 /var/www/astarter/scripts/mirror-brain-history.py
+TimeoutStartSec=55min
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/home/ubuntu/.local/share/astarter/history

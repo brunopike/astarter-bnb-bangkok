@@ -2,7 +2,10 @@ const archivePath='/brain-evidence/archive/';
 const perPage=12;
 const chains={
   BTC:{scope:'coin:bitcoin',name:'Bitcoin',explorer:'https://mempool.space/block/'},
-  ETH:{scope:'coin:ethereum',name:'Ethereum',explorer:'https://eth.blockscout.com/block/'}
+  ETH:{scope:'coin:ethereum',name:'Ethereum',explorer:'https://eth.blockscout.com/block/'},
+  BNB:{scope:'coin:binancecoin',name:'BNB Smart Chain',explorer:'https://bscscan.com/block/'},
+  SOL:{scope:'coin:solana',name:'Solana',explorer:'https://explorer.solana.com/block/'},
+  HYPE:{scope:'coin:hyperliquid',name:'HyperCore',explorer:'https://app.hyperliquid.xyz/explorer/block/'}
 };
 const isoDay=/^\d{4}-\d{2}-\d{2}$/;
 const number=n=>Number.isSafeInteger(n)&&n>=0;
@@ -13,13 +16,29 @@ function validDay(day){
   return Number.isFinite(at)&&new Date(at).toISOString().slice(0,10)===day;
 }
 
+export function explorerBlockUrl(asset,height){
+  if(!Object.hasOwn(chains,asset)||!/^\d+$/.test(String(height))||!number(Number(height)))return null;
+  return chains[asset].explorer+Number(height);
+}
+
+const sampled=series=>['sampled','daily-sample'].includes(series.coverageMode);
+
+function validSeriesFormat(series){
+  if(!Array.isArray(series.fields))return false;
+  const fields=series.fields.join();
+  if(fields!=='height,timestamp,transactions'&&(series.asset!=='SOL'||fields!=='slot,timestamp,transactions'))return false;
+  if(series.asset==='SOL')return sampled(series)&&series.heightKind==='slot';
+  if(series.asset==='HYPE')return sampled(series)&&series.network==='HyperCore';
+  return !series.coverageMode||series.coverageMode==='full';
+}
+
 export function parseCatalog(data){
   if(data?.schemaVersion!==1 || !Array.isArray(data.datasets) || !data.datasets.length)throw Error('ARCHIVE_INDEX');
   const seen=new Set();
   for(const series of data.datasets){
     if(!Object.hasOwn(chains,series.asset)||seen.has(series.asset)||
       !Array.isArray(series.shards)||!series.shards.length||!number(series.count)||
-      !Array.isArray(series.fields)||series.fields.join()!=='height,timestamp,transactions'||
+      !validSeriesFormat(series)||
       !/^https:\/\//.test(series.sourceUrl)||typeof series.source!=='string')throw Error('ARCHIVE_SERIES');
     seen.add(series.asset);
     let count=0,previous='';
@@ -90,8 +109,10 @@ export function archiveScopeSeries(datasets,scope,cutoff){
 
 export function archiveRecordTarget(record){
   const asset=Object.keys(chains).find(key=>record?.scopeKeys?.includes(chains[key].scope));
-  if(!asset||!number(record?.blockHeight)||!Number.isFinite(Date.parse(record.eventAt)))return null;
-  return {asset,day:new Date(record.eventAt).toISOString().slice(0,10),height:record.blockHeight};
+  if(!asset||!Number.isFinite(Date.parse(record?.eventAt)))return null;
+  if(asset==='HYPE'&&String(record.network??'').toLowerCase()!=='hypercore')return null;
+  const height=asset==='SOL'?(record.slot??(record.heightKind==='slot'?record.blockHeight:undefined)):record.blockHeight;
+  return number(height)?{asset,day:new Date(record.eventAt).toISOString().slice(0,10),height}:null;
 }
 
 export function pageForBlock(rows,height){
@@ -171,8 +192,12 @@ export function mountBlockArchive(root,en){
     <div class="br-raw-filters" hidden><label>${t('网络','Network')}<select data-raw-chain></select></label><label>${t('日期（UTC）','Date (UTC)')}<input data-raw-date type="date" required></label></div>
     <label class="br-raw-ranges" hidden><span>${t('归档时段','Archived periods')}</span><select data-raw-period></select></label>
     <div class="br-raw-provenance" hidden><span data-raw-coverage></span><a data-raw-source target="_blank" rel="noopener noreferrer"></a></div>
+    <details class="br-raw-status" data-raw-inspect hidden><summary data-raw-lookup-title></summary>
+      <form data-raw-lookup-form class="br-raw-filters"><label><span data-raw-lookup-label></span><input data-raw-height type="text" size="12" inputmode="numeric" pattern="[0-9]+" required autocomplete="off"></label><button type="submit">${t('查看区块 ↗','Open explorer ↗')}</button></form>
+      <a data-raw-native-source hidden target="_blank" rel="noopener noreferrer">${t('下载当日原始采样文件 ↗','Download the native sample file ↗')}</a>
+    </details>
     <div class="br-raw-status" role="status" aria-live="polite"><span data-raw-status></span> <button type="button" data-raw-retry hidden>${t('重试','Retry')}</button></div>
-    <div class="br-raw-scroll" hidden><table><thead><tr><th scope="col">${t('区块高度','Block height')}</th><th scope="col">${t('时间（UTC）','Time (UTC)')}</th><th scope="col">${t('交易笔数','Transactions')}</th></tr></thead><tbody data-raw-body></tbody></table></div>
+    <div class="br-raw-scroll" hidden><table><thead><tr><th scope="col" data-raw-height-heading></th><th scope="col">${t('时间（UTC）','Time (UTC)')}</th><th scope="col">${t('交易笔数','Transactions')}</th></tr></thead><tbody data-raw-body></tbody></table></div>
     <footer class="br-raw-pages" hidden><button type="button" data-raw-prev aria-label="${t('上一页','Previous page')}">←</button><label>${t('页码','Page')} <input type="number" min="1" inputmode="numeric" data-raw-page> <span data-raw-pages></span></label><button type="button" data-raw-next aria-label="${t('下一页','Next page')}">→</button></footer>`;
   root.querySelector('.brain-board').append(dialog);
   const q=s=>dialog.querySelector(s),asset=q('[data-raw-chain]'),date=q('[data-raw-date]'),body=q('[data-raw-body]');
@@ -190,8 +215,9 @@ export function mountBlockArchive(root,en){
     note.hidden=heading.hidden||(!matched&&![1,5].includes(node));
     note.firstElementChild.textContent=matched?t('核对区块 #','Inspect block #')+reference.height:t('查看历史区块','Browse historical blocks');
     const known=series.length>0&&series.every(s=>s.count!==null);
+    const units=series.length&&series.every(sampled)?t(' 个区块样本',' sampled blocks'):t(' 个历史区块',' historical blocks');
     heading.firstElementChild.textContent=known
-      ?fmt.format(series.reduce((sum,s)=>sum+s.count,0))+t(' 个历史区块',' historical blocks'):t('历史区块','Historical blocks');
+      ?fmt.format(series.reduce((sum,s)=>sum+s.count,0))+units:t('历史区块','Historical blocks');
   }
   function status(text,canRetry=false){
     q('[data-raw-status]').textContent=text;retry.hidden=!canRetry;
@@ -225,7 +251,7 @@ export function mountBlockArchive(root,en){
       const [height,at,tx]=rows[count-1-i],row=make('tr'),cell=make('td');
       if(height===focusHeight)row.setAttribute('aria-current','true');
       const link=make('a',fmt.format(height)+' ↗');
-      link.href=chains[series.asset].explorer+height;link.target='_blank';link.rel='noopener noreferrer';
+      link.href=explorerBlockUrl(series.asset,height);link.target='_blank';link.rel='noopener noreferrer';
       const iso=new Date(at*1000).toISOString(),time=make('time',iso.slice(11,19));
       time.dateTime=iso;time.title=iso;const timeCell=make('td');timeCell.append(time);
       cell.append(link);row.append(cell,timeCell,make('td',fmt.format(tx)));fragment.append(row);
@@ -233,7 +259,8 @@ export function mountBlockArchive(root,en){
     body.replaceChildren(fragment);scroller.scrollTop=0;scroller.hidden=false;pages.hidden=false;
     pageInput.max=String(max);pageInput.value=String(page);q('[data-raw-pages]').textContent='/ '+fmt.format(max);
     q('[data-raw-prev]').disabled=page===1;q('[data-raw-next]').disabled=page===max;
-    const prefix=cutoff?t('截至回放时间的区块 ','Blocks through replay cutoff: '):t('当日区块 ','Daily blocks: ');
+    const prefix=cutoff?t('截至回放时间的区块 ','Blocks through replay cutoff: '):
+      sampled(series)?t('当日收录样本 ','Archived samples: '):t('当日区块 ','Daily blocks: ');
     const absent=matchedDay&&focusHeight!==null&&pageForBlock(rows,focusHeight)===null;
     status(prefix+fmt.format(count)+(absent?t(' · 未找到所引区块',' · Referenced block unavailable'):''));
   }
@@ -243,6 +270,12 @@ export function mountBlockArchive(root,en){
   async function load(){
     const series=chosen();
     const part=series?.shards.find(s=>s.start===date.value);
+    const original=q('[data-raw-native-source]');
+    const nativeUrl=series?.asset==='HYPE'&&part?.sources?.[0]?.url;
+    original.hidden=true;original.removeAttribute('href');
+    if(typeof nativeUrl==='string'&&nativeUrl.startsWith('https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/hyperliquid/mainnet/explorer_blocks/')){
+      original.href=nativeUrl;original.hidden=false;
+    }
     const cacheKey=part&&part.file+':'+part.sha256;
     if(request&&cacheKey===pendingKey)return;
     clearRows();
@@ -291,8 +324,18 @@ export function mountBlockArchive(root,en){
     period.parentElement.hidden=periods.length<2;markPeriod();
     matchedDay=Boolean(target&&target.asset===series.asset&&date.value===target.day);
     focusHeight=matchedDay?target.height:null;
-    q('[data-raw-coverage]').textContent=fmt.format(series.shards.length)+t(' 个归档日 · UTC',' archived dates · UTC')
-      +(cutoff?' · '+t('回放截至 ','Replay through ')+cutoff.slice(0,16).replace('T',' ')+' UTC':'');
+    const slot=series.asset==='SOL',heightLabel=slot?'Slot':t('区块高度','Block height');
+    q('[data-raw-height-heading]').textContent=heightLabel;
+    q('[data-raw-lookup-title]').textContent=slot?t('按 Slot 查看原始区块','Look up a slot'):t('按高度查看原始区块','Look up a block height');
+    q('[data-raw-lookup-label]').textContent=heightLabel;
+    q('[data-raw-inspect]').hidden=Boolean(cutoff);
+    let metric='';
+    if(series.asset==='SOL')metric=t('每日一个已最终确认的区块，交易笔数含投票及失败交易。','One finalized block per day. Transactions include votes and failed transactions.');
+    if(series.asset==='HYPE')metric=t('每日抽样至多 100 个原生区块，交易笔数按 HyperCore 浏览器展开的动作计数。','Up to 100 native blocks sampled per day. Transactions count individual actions as shown in the HyperCore explorer.');
+    q('[data-raw-coverage]').textContent=(periods.length===1?series.start+' — '+series.end+' UTC · ':'')+
+      fmt.format(series.shards.length)+t(' 个归档日',' archived dates')
+      +(cutoff?' · '+t('回放截至 ','Replay through ')+cutoff.slice(0,16).replace('T',' ')+' UTC':'')
+      +(metric?' · '+metric:'');
     const source=q('[data-raw-source]');source.textContent=series.source+' ↗';source.href=series.sourceUrl;
     load();
   }
@@ -318,11 +361,22 @@ export function mountBlockArchive(root,en){
   }
   heading.onclick=note.onclick=open;q('[data-raw-close]').onclick=()=>dialog.close();
   dialog.addEventListener('close',()=>{
-    fillRevision++;clearRows();q('.br-raw-ranges').hidden=true;q('.br-raw-filters').hidden=true;q('.br-raw-provenance').hidden=true;
+    fillRevision++;clearRows();q('[data-raw-inspect]').hidden=true;q('[data-raw-inspect]').open=false;q('[data-raw-height]').value='';q('.br-raw-ranges').hidden=true;q('.br-raw-filters').hidden=true;q('.br-raw-provenance').hidden=true;
     if(opener?.isConnected&&!opener.hidden)opener.focus({preventScroll:true});
     opener=null;
   });
-  asset.onchange=()=>{target=null;selectSeries(true);};
+  asset.onchange=()=>{target=null;q('[data-raw-height]').value='';selectSeries(true);};
+  const heightInput=q('[data-raw-height]');
+  heightInput.oninput=()=>heightInput.setCustomValidity('');
+  q('[data-raw-lookup-form]').onsubmit=event=>{
+    event.preventDefault();
+    const url=explorerBlockUrl(asset.value,heightInput.value.trim());
+    if(!url){
+      heightInput.setCustomValidity(t('请输入有效的非负整数。','Enter a valid nonnegative integer.'));
+      heightInput.reportValidity();return;
+    }
+    const link=make('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.click();
+  };
   date.onchange=()=>{target=null;matchedDay=false;focusHeight=null;markPeriod();load();};
   q('[data-raw-period]').onchange=event=>{date.value=event.target.value;date.onchange();};
   q('[data-raw-prev]').onclick=()=>{page--;paint();};

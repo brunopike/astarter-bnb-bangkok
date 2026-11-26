@@ -2,7 +2,7 @@ import test from 'node:test';
 import {gzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
-import {parseCatalog,archiveScopeSeries,archiveRecordTarget,pageForBlock,rowsThrough,readDay,parseArchiveSummary} from './brain-raw-archive.mjs';
+import {parseCatalog,archiveScopeSeries,archiveRecordTarget,pageForBlock,rowsThrough,readDay,parseArchiveSummary,explorerBlockUrl} from './brain-raw-archive.mjs';
 
 const sha256='f'.repeat(64);
 const shard=(asset,day,count)=>({file:asset.toLowerCase()+'-'+day+'.json',start:day,end:day,count,sha256});
@@ -109,4 +109,35 @@ test('summary totals respect disjoint periods and never expose future blocks in 
   }
   const gzipDays=sets.map(s=>({...s,shards:s.shards.map(p=>({...p,file:p.file+'.gz'}))}));
   assert.equal(parseCatalog({...catalog,datasets:gzipDays}),gzipDays);
+});
+
+test('the five networks preserve source counts and distinguish Solana slots and HyperCore samples',()=>{
+  const bnb={...dataset('BNB',[[day,20]]),coverageMode:'full',heightKind:'height'};
+  const sol={...dataset('SOL',[[day,1]]),coverageMode:'sampled',heightKind:'slot'};
+  const hype={...dataset('HYPE',[[day,100]]),network:'HyperCore',coverageMode:'sampled'};
+  const all={...catalog,count:153,datasets:[...sets,bnb,sol,hype]};
+  assert.deepEqual(parseCatalog(all),all.datasets);
+  assert.deepEqual(parseCatalog({...all,datasets:[...sets,bnb,{...sol,coverageMode:'daily-sample',
+    fields:['slot','timestamp','transactions']},hype]}).map(s=>s.asset),['ETH','BTC','BNB','SOL','HYPE']);
+  assert.deepEqual(archiveScopeSeries(all.datasets,'coin:binancecoin'),[bnb]);
+  assert.deepEqual(archiveScopeSeries(all.datasets,'coin:solana'),[sol]);
+  assert.deepEqual(archiveScopeSeries(all.datasets,'coin:hyperliquid'),[hype]);
+  assert.throws(()=>parseCatalog({...all,datasets:[...sets,bnb,sol,{...hype,network:'HyperEVM'}]}));
+  assert.throws(()=>parseCatalog({...all,datasets:[...sets,bnb,{...sol,heightKind:'height'},hype]}));
+  const reference={eventAt:day+'T12:00:00Z',blockHeight:99,scopeKeys:['coin:solana']};
+  assert.equal(archiveRecordTarget(reference),null);
+  assert.deepEqual(archiveRecordTarget({...reference,slot:102}),{asset:'SOL',day,height:102});
+  assert.equal(archiveRecordTarget({...reference,scopeKeys:['coin:hyperliquid'],network:'HyperEVM'}),null);
+  assert.deepEqual(archiveRecordTarget({...reference,scopeKeys:['coin:hyperliquid'],network:'HyperCore'}),
+    {asset:'HYPE',day,height:99});
+});
+
+test('native explorers accept exact numeric heights and do not mix networks or open invalid links',()=>{
+  assert.equal(explorerBlockUrl('SOL','000501'),'https://explorer.solana.com/block/501');
+  assert.equal(explorerBlockUrl('BNB',0),'https://bscscan.com/block/0');
+  assert.equal(explorerBlockUrl('HYPE','1200000001'),'https://app.hyperliquid.xyz/explorer/block/1200000001');
+  for(const bad of ['5e5','1/2','-1','9.1','1 000','',null,'9007199254740992']){
+    assert.equal(explorerBlockUrl('ETH',bad),null);
+  }
+  assert.equal(explorerBlockUrl('Other',1),null);
 });

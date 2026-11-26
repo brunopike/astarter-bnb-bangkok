@@ -1,4 +1,5 @@
 import mergeBlockEvidence from './brain-evidence/BLOCK-15537394-AT-MERGE@1.json' with {type:'json'};
+import {mountTradfiArchive} from './brain-tradfi-archive.mjs';
 import {mountBlockArchive} from './brain-raw-archive.mjs';
 import {mountMemory} from './brain-memory.mjs';
 import {notes as mergeNotes,directions,detailEdges} from './brain-case-notes.mjs';
@@ -98,6 +99,13 @@ class AstarterBrain extends HTMLElement {
     let opened=[0];
     let graph;
     const blockArchive=mountBlockArchive(root,en);
+    const disposeMarkets=mountTradfiArchive(root,en);
+    const openLinkedArchive=()=>{
+      const target={'#traditional-markets':'tradfi','#historical-blocks':'heading'}[location.hash];
+      if(target&&root.isConnected&&!root.querySelector('dialog[open]'))root.querySelector('[data-raw-open="'+target+'"]')?.click();
+    };
+    window.addEventListener('hashchange',openLinkedArchive);
+    queueMicrotask(openLinkedArchive);
     const mergeBlock={scopeKeys:['coin:ethereum'],blockHeight:mergeBlockEvidence.block.height,eventAt:mergeBlockEvidence.block.timestamp};
     const blockFallback=()=>!selection.research&&[0,1,5].includes(selected)?mergeBlock:null;
     const replayCutoff=()=>reviewNode()&&lastPhase===4?replay.reviewAsOf:replay.decisionCutoff;
@@ -419,7 +427,7 @@ class AstarterBrain extends HTMLElement {
     const disposeScene=cortexaView.connect(root);
     const disposePicker=cortexaView.bindSelection(root,selection,updateSelection);
     q('[data-return]').onclick=()=>{thinking.seek(4);showMemory(memory.selectReview());};
-    this.controller=()=>{blockArchive.dispose();disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
+    this.controller=()=>{window.removeEventListener('hashchange',openLinkedArchive);disposeMarkets();blockArchive.dispose();disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
     showZoom(1);showNote(0);
     graph.setZoom(2.1);
   }

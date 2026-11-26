@@ -309,6 +309,9 @@ def build(args):
     dest.mkdir(parents=True, exist_ok=True)
     existing = dest/'manifest.json'
     previous = json.loads(args.replay.read_bytes()) if args.replay else json.loads(existing.read_bytes()) if existing.is_file() else None
+    for catalog in [previous, json.loads(existing.read_bytes()) if existing.is_file() else None]:
+        if catalog and any(d['asset'] not in ('BTC','ETH') for d in catalog['datasets']):
+            raise ValueError('Use update-brain-chains.py for a multi-chain archive')
     checkpoints = args.checkpoints
     if checkpoints is None and not args.replay:
         directory_id = sha256(os.fsencode(dest.resolve())).hexdigest()[:16]
