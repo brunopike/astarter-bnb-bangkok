@@ -6,7 +6,7 @@
 
 Astarter は AI トレーディング OS です。現物の模擬取引エンジンは、翌 UTC 取引日の開始前に、市場データ、選んだ戦略、許容する最大ポジションを記録します。取引終了後には、判断どおりに執行したか、コストを差し引いていくら残ったかを照合できます。現金を維持した日も記録に残ります。
 
-[Deep Brain を開く](https://dapp.ipfund.art/?page=brain&lang=ja) · [手元で検証する](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
+[製品デモを見る (2:57)](https://brunopike.github.io/astarter-bnb-bangkok/) · [Deep Brain を開く](https://dapp.ipfund.art/?page=brain&lang=ja) · [手元で検証する](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
 **技術ガイド（英語）**
 

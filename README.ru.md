@@ -6,7 +6,7 @@
 
 Astarter — торговая операционная система с ИИ. До открытия следующей сессии по UTC движок спотовой симуляции записывает доступные рыночные данные, выбранную стратегию и предельный размер позиции. После закрытия можно проверить, соблюдался ли план и какой получилась прибыль или убыток после издержек. Решение остаться в денежных средствах тоже попадает в журнал.
 
-[Открыть Deep Brain](https://dapp.ipfund.art/?page=brain&lang=ru) · [Проверить локально](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
+[Посмотреть демо (2:57)](https://brunopike.github.io/astarter-bnb-bangkok/) · [Открыть Deep Brain](https://dapp.ipfund.art/?page=brain&lang=ru) · [Проверить локально](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
 **Технические материалы на английском**
 

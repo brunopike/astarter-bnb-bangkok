@@ -6,7 +6,7 @@
 
 Astarter là hệ điều hành giao dịch dùng AI. Trước khi phiên UTC tiếp theo mở cửa, hệ thống giao dịch giao ngay mô phỏng ghi lại dữ liệu thị trường, chiến lược đã chọn và quy mô vị thế tối đa. Khi phiên đóng cửa, bạn có thể đối chiếu kết quả với kế hoạch và tính lãi lỗ sau chi phí. Quyết định giữ tiền mặt cũng được ghi nhận.
 
-[Mở Deep Brain](https://dapp.ipfund.art/?page=brain&lang=vi) · [Kiểm chứng trên máy](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
+[Xem demo sản phẩm (2:57)](https://brunopike.github.io/astarter-bnb-bangkok/) · [Mở Deep Brain](https://dapp.ipfund.art/?page=brain&lang=vi) · [Kiểm chứng trên máy](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
 **Tài liệu kỹ thuật bằng tiếng Anh**
 

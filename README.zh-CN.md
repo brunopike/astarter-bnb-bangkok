@@ -6,7 +6,7 @@
 
 Astarter 是一个 AI 交易操作系统。下一个 UTC 交易日开盘前，现货模拟引擎就记录当时的市场证据、选中的策略和允许的最大仓位。收盘后，你可以核对它是否按计划执行，以及扣除成本后赚了多少或亏了多少。选择持现也会留下记录。
 
-[打开 Deep Brain](https://dapp.ipfund.art/?page=brain&lang=zh) · [在本地验证](src/deep-brain) · [BNB Bangkok 黑客松](https://www.hackquest.io/hackathons/BNB-Bangkok)
+[观看产品 Demo 展示 (2:57)](https://brunopike.github.io/astarter-bnb-bangkok/) · [打开 Deep Brain](https://dapp.ipfund.art/?page=brain&lang=zh) · [在本地验证](src/deep-brain) · [BNB Bangkok 黑客松](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
 **技术文档（英文）**
 

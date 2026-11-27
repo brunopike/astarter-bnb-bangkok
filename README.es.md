@@ -6,7 +6,7 @@
 
 Astarter es un sistema operativo de trading con IA. Antes de que abra la siguiente sesión UTC, su motor de simulación al contado registra los datos disponibles, la estrategia elegida y la posición máxima permitida. Al cierre puedes comprobar si respetó la decisión y cuánto ganó o perdió después de costes. También queda constancia de los días en efectivo.
 
-[Abrir Deep Brain](https://dapp.ipfund.art/?page=brain&lang=es) · [Verificar en local](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
+[Ver la demo del producto (2:57)](https://brunopike.github.io/astarter-bnb-bangkok/) · [Abrir Deep Brain](https://dapp.ipfund.art/?page=brain&lang=es) · [Verificar en local](src/deep-brain) · [BNB Bangkok](https://www.hackquest.io/hackathons/BNB-Bangkok)
 
 **Guías técnicas en inglés**
 

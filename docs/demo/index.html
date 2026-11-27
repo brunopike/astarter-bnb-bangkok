@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Astarter · Product demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #090b0e; color: #f3f0e9; font-family: Inter, system-ui, sans-serif; }
+    main { width: min(100%, 75rem); margin: auto; padding: clamp(1rem, 4vw, 3rem); }
+    header, footer { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1.5rem; }
+    h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.65rem); font-weight: 600; letter-spacing: -.035em; }
+    header p, footer { color: #b8bdc6; font-size: .92rem; }
+    header p { margin: 0; }
+    video { display: block; width: 100%; aspect-ratio: 16/9; margin: 1rem 0; background: #030405; border: 1px solid #2b3037; }
+    footer a { color: inherit; text-underline-offset: .22em; padding: .3rem 0; }
+    a:hover, a:focus-visible { color: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Astarter product demo</h1>
+      <p>BNB Bangkok · 2:57</p>
+    </header>
+    <video controls playsinline preload="metadata" poster="./poster.jpg" aria-label="Astarter product demo">
+      <source src="./astarter-demo.mp4" type="video/mp4">
+      <a href="./astarter-demo.mp4">Open the video</a>
+    </video>
+    <footer>
+      <a href="https://dapp.ipfund.art/?page=brain&amp;lang=en">Explore Deep Brain</a>
+      <a href="https://github.com/brunopike/astarter-bnb-bangkok/releases/download/bangkok-demo/Astarter.mp4">Download original video</a>
+    </footer>
+  </main>
+</body>
+</html>
