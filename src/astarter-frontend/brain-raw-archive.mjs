@@ -107,12 +107,24 @@ export function archiveScopeSeries(datasets,scope,cutoff){
   });
 }
 
-export function archiveRecordTarget(record){
-  const asset=Object.keys(chains).find(key=>record?.scopeKeys?.includes(chains[key].scope));
-  if(!asset||!Number.isFinite(Date.parse(record?.eventAt)))return null;
+export function archiveRecordTarget(record,cutoff=null,replayBlock=null){
+  const assets=Object.keys(chains).filter(key=>record?.scopeKeys?.includes(chains[key].scope));
+  const at=Date.parse(record?.eventAt);
+  if(assets.length!==1||!Number.isFinite(at)||(cutoff&&!(at<=Date.parse(cutoff))))return null;
+  const [asset]=assets;
   if(asset==='HYPE'&&String(record.network??'').toLowerCase()!=='hypercore')return null;
-  const height=asset==='SOL'?(record.slot??(record.heightKind==='slot'?record.blockHeight:undefined)):record.blockHeight;
+  let height=asset==='SOL'?(record.slot??(record.heightKind==='slot'?record.blockHeight:undefined)):record.blockHeight;
+  // The Merge note references a pinned evidence file whose height lives in the file itself.
+  if(height===undefined&&asset==='ETH'&&record.scopeKeys.includes('eth-merge')&&
+    replayBlock?.scopeKeys?.includes(chains.ETH.scope)&&at===Date.parse(replayBlock.eventAt)&&
+    record.sourceUrl==='/brain-evidence/BLOCK-'+replayBlock.blockHeight+'-AT-MERGE@1.json')height=replayBlock.blockHeight;
   return number(height)?{asset,day:new Date(record.eventAt).toISOString().slice(0,10),height}:null;
+}
+
+export function archiveEntrySeries(datasets,entry,scope,cutoff,reference){
+  if(entry==='heading')return datasets??[];
+  if(!reference)return [];
+  return archiveScopeSeries(datasets,scope,cutoff).filter(series=>series.asset===reference.asset&&coversDay(series,reference.day));
 }
 
 export function pageForBlock(rows,height){
@@ -253,19 +265,19 @@ export function mountBlockArchive(root,en){
   const setCount=archiveCounter(heading,fmt,life.signal);
   let cutoff=null,reference=null,target=null,focusHeight=null,matchedDay=false,pendingKey=null;
   let fillRevision=0,summary=null,catalog=null,indexRequest=null,request=null,rows=[],page=1,scope='all',node=0,opener=null;
-  const available=()=>archiveScopeSeries(catalog??summary,scope,cutoff);
+  let globalAsset='',globalDay='';
+  const entryKind=()=>opener===note?'note':'heading';
+  const dialogCutoff=()=>opener===note?cutoff:null;
+  const available=()=>archiveEntrySeries(catalog??summary,entryKind(),scope,cutoff,reference);
   const chosen=()=>available().find(series=>series.asset===asset.value);
   function entries(){
-    const applicable=scope==='all'||scope==='eth-merge'||Object.values(chains).some(c=>c.scope===scope);
-    const series=available();
-    const headline=cutoff?series:archiveScopeSeries(summary??catalog,scope,cutoff);
-    heading.hidden=!applicable||Boolean((catalog||summary)&&!headline.length);
-    const matched=reference&&series.some(s=>s.asset===reference.asset&&coversDay(s,reference.day));
-    note.hidden=heading.hidden||(!matched&&![1,5].includes(node));
-    note.firstElementChild.textContent=matched?t('核对区块 #','Inspect block #')+reference.height:t('查看历史区块','Browse historical blocks');
-    const units=headline.length&&headline.every(sampled)?t(' 个区块样本',' sampled blocks'):t(' 个历史区块',' historical blocks');
-    const count=headline.length && headline.every(s=>s.count!==null)?headline.reduce((n,s)=>n+s.count,0):null;
-    setCount(count,count===null?t('历史区块','Historical blocks'):units,scope+'|'+(cutoff??''));
+    const headline=archiveEntrySeries(summary??catalog,'heading');
+    const matched=archiveEntrySeries(catalog??summary,'note',scope,cutoff,reference).length>0;
+    note.hidden=!matched;
+    if(matched)note.firstElementChild.textContent=t('核对区块 #','Inspect block #')+reference.height;
+    const count=headline.length?headline.reduce((n,s)=>n+s.count,0):null;
+    const unit=count===null?t('历史区块','Historical Blocks'):t(' 个历史区块',' Historical Blocks');
+    setCount(count,unit,'all');
   }
   function status(text,canRetry=false){
     q('[data-raw-status]').textContent=text;retry.hidden=!canRetry;
@@ -310,7 +322,7 @@ export function mountBlockArchive(root,en){
     body.replaceChildren(fragment);scroller.scrollTop=0;scroller.hidden=false;pages.hidden=false;
     pageInput.max=String(max);pageInput.value=String(page);q('[data-raw-pages]').textContent='/ '+fmt.format(max);
     q('[data-raw-prev]').disabled=page===1;q('[data-raw-next]').disabled=page===max;
-    const prefix=cutoff?t('截至回放时间的区块 ','Blocks through replay cutoff: '):
+    const prefix=dialogCutoff()?t('截至回放时间的区块 ','Blocks through replay cutoff: '):
       sampled(series)?t('当日收录样本 ','Archived samples: '):t('当日区块 ','Daily blocks: ');
     const absent=matchedDay&&focusHeight!==null&&pageForBlock(rows,focusHeight)===null;
     status(prefix+fmt.format(count)+(absent?t(' · 未找到所引区块',' · Referenced block unavailable'):''));
@@ -344,7 +356,7 @@ export function mountBlockArchive(root,en){
         cache.set(cacheKey,records);
       }
       if(attempt.signal.aborted)return;
-      rows=rowsThrough(records,cutoff);
+      rows=rowsThrough(records,dialogCutoff());
       if(!rows.length){status(t('截至回放时间，此日还没有已收录的区块。','No archived blocks on this date before the replay cutoff.'));return;}
       if(matchedDay)page=pageForBlock(rows,focusHeight)??1;
       paint();
@@ -379,15 +391,17 @@ export function mountBlockArchive(root,en){
     q('[data-raw-height-heading]').textContent=heightLabel;
     q('[data-raw-lookup-title]').textContent=slot?t('按 Slot 查看原始区块','Look up a slot'):t('按高度查看原始区块','Look up a block height');
     q('[data-raw-lookup-label]').textContent=heightLabel;
-    q('[data-raw-inspect]').hidden=Boolean(cutoff);
+    const replayThrough=dialogCutoff();
+    q('[data-raw-inspect]').hidden=Boolean(replayThrough);
     let metric='';
     if(series.asset==='SOL')metric=t('每日一个已最终确认的区块，交易笔数含投票及失败交易。','One finalized block per day. Transactions include votes and failed transactions.');
     if(series.asset==='HYPE')metric=t('每日抽样至多 100 个原生区块，交易笔数按 HyperCore 浏览器展开的动作计数。','Up to 100 native blocks sampled per day. Transactions count individual actions as shown in the HyperCore explorer.');
     q('[data-raw-coverage]').textContent=(periods.length===1?series.start+' — '+series.end+' UTC · ':'')+
       fmt.format(series.shards.length)+t(' 个归档日',' archived dates')
-      +(cutoff?' · '+t('回放截至 ','Replay through ')+cutoff.slice(0,16).replace('T',' ')+' UTC':'')
+      +(replayThrough?' · '+t('回放截至 ','Replay through ')+replayThrough.slice(0,19).replace('T',' ')+' UTC':'')
       +(metric?' · '+metric:'');
     const source=q('[data-raw-source]');source.textContent=series.source+' ↗';source.href=series.sourceUrl;
+    if(opener===heading){globalAsset=series.asset;globalDay=date.value;}
     load();
   }
   async function fill(refresh=false){
@@ -396,17 +410,19 @@ export function mountBlockArchive(root,en){
     const ok=await index(refresh);
     if(revision!==fillRevision||!dialog.open||life.signal.aborted)return;
     if(!ok){status(t('暂时无法读取区块索引。','The block index is unavailable.'),true);return;}
-    const series=available();if(!series.length){status(t('当前研究范围没有区块记录。','No block records for this research scope.'));return;}
-    if(target&&!series.some(s=>s.asset===target.asset&&coversDay(s,target.day)))target=null;
-    const prior=asset.value;
+    const series=available();
+    if(!series.length){clearRows();status(t('归档中没有此证据所引用的区块。','The referenced block is unavailable in the archive.'));return;}
+    const prior=opener===heading?globalAsset:asset.value;
     asset.replaceChildren(...series.map(s=>{const o=make('option',chains[s.asset].name+' · '+s.asset);o.value=s.asset;return o;}));
     asset.value=series.find(s=>s.asset===target?.asset)?.asset??series.find(s=>s.asset===prior)?.asset??series[0].asset;
-    if(target?.asset===asset.value)date.value=target.day;
+    if(opener===heading)date.value=prior===asset.value?globalDay:'';
+    else if(target)date.value=target.day;
     asset.disabled=series.length===1;
     q('.br-raw-filters').hidden=false;q('.br-raw-provenance').hidden=false;selectSeries(Boolean(date.value),refresh&&prior===asset.value);
   }
   function open(event){
     if(dialog.open)return;opener=event.currentTarget;
+    if(opener===note&&note.hidden){opener=null;return;}
     target=opener===note?reference:null;
     dialog.showModal();fill(Boolean(catalog) && Date.now()-indexReadAt>=60_000);
   }
@@ -428,7 +444,7 @@ export function mountBlockArchive(root,en){
     }
     const link=make('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.click();
   };
-  date.onchange=()=>{target=null;matchedDay=false;focusHeight=null;markPeriod();load();};
+  date.onchange=()=>{if(opener===heading)globalDay=date.value;target=null;matchedDay=false;focusHeight=null;markPeriod();load();};
   q('[data-raw-period]').onchange=event=>{date.value=event.target.value;date.onchange();};
   q('[data-raw-prev]').onclick=()=>{page--;paint();};
   q('[data-raw-next]').onclick=()=>{page++;paint();};
@@ -438,14 +454,20 @@ export function mountBlockArchive(root,en){
   entries();followArchive(doc,life.signal,loadSummary);
   return {
     update(key,n,asOf,fallback){
-      if(scope!==key||node!==n)reference=null;
-      const changed=scope!==key||cutoff!==asOf;
+      const changed=scope!==key||node!==n||cutoff!==asOf;
       scope=key;node=n;cutoff=asOf;
-      if(fallback)reference=archiveRecordTarget(fallback);
+      if(changed){
+        reference=archiveRecordTarget(fallback,cutoff);
+        if(dialog.open&&opener===note)dialog.close();
+      }
       entries();
-      if(changed&&dialog.open)dialog.close();
     },
-    record(record,fallback){reference=archiveRecordTarget(record)??archiveRecordTarget(fallback);entries();},
+    record(record,fallback){
+      const next=archiveRecordTarget(record??fallback,cutoff,fallback);
+      if(dialog.open&&opener===note&&
+        (next?.asset!==reference?.asset||next?.height!==reference?.height||next?.day!==reference?.day))dialog.close();
+      reference=next;entries();
+    },
     dispose(){life.abort();clearRows();dialog.remove();heading.remove();note.remove();}
   };
 }

@@ -224,6 +224,42 @@
       "path": "/vendor/brand-assets/exchanges/bitmex.webp",
       "sha256": "1a692c554d3e9e6b0598dac02b7a4d8525466398a1ced6fe92e79b21011d251c",
       "ok": true
+    },
+    {
+      "kind": "coin",
+      "key": "TRX",
+      "source": "https://coin-images.coingecko.com/coins/images/1094/large/photo_2026-04-13_09-59-16.png?1776048311",
+      "retrieved": "2026-11-27",
+      "ok": true,
+      "path": "/vendor/brand-assets/coins/trx.webp",
+      "sha256": "32e7baa1f325b59d17cce5acb43a053882350c6d395ca9f66bf14b066e85c197"
+    },
+    {
+      "kind": "coin",
+      "key": "BCH",
+      "source": "https://coin-images.coingecko.com/coins/images/780/large/bitcoin-cash-circle.png?1696501932",
+      "retrieved": "2026-11-27",
+      "ok": true,
+      "path": "/vendor/brand-assets/coins/bch.webp",
+      "sha256": "aca5c51d1c49c3f0d20da98044e2c5cff52659771d4c03a6afeed74fccd9cd1d"
+    },
+    {
+      "kind": "coin",
+      "key": "LTC",
+      "source": "https://coin-images.coingecko.com/coins/images/2/large/litecoin.png?1696501400",
+      "retrieved": "2026-11-27",
+      "ok": true,
+      "path": "/vendor/brand-assets/coins/ltc.webp",
+      "sha256": "30b078b8ac26378da16b6850db3d42140ac9b176bf7326d4556da68e7fb88210"
+    },
+    {
+      "kind": "coin",
+      "key": "SHIB",
+      "source": "https://coin-images.coingecko.com/coins/images/11939/large/shiba.png?1696511800",
+      "retrieved": "2026-11-27",
+      "ok": true,
+      "path": "/vendor/brand-assets/coins/shib.webp",
+      "sha256": "b5e6928beca4f8407dca251a18faddee1ef400e18c362c209a233d333231256d"
     }
   ]
 }

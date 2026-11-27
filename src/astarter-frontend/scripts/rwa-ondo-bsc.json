@@ -1,0 +1,65 @@
+[
+  {
+    "symbol": "NVDAon",
+    "address": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/nvdaon",
+    "assetClass": "Equity"
+  },
+  {
+    "symbol": "AAPLon",
+    "address": "0x390a684ef9cade28a7ad0dfa61ab1eb3842618c4",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/aaplon",
+    "assetClass": "Equity"
+  },
+  {
+    "symbol": "TSLAon",
+    "address": "0x2494b603319d4d9f9715c9f4496d9e0364b59d93",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/tslaon",
+    "assetClass": "Equity"
+  },
+  {
+    "symbol": "MSFTon",
+    "address": "0x6bfe75d1ad432050ea973c3a3dcd88f02e2444c3",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/msfton",
+    "assetClass": "Equity"
+  },
+  {
+    "symbol": "SPYon",
+    "address": "0x6a708ead771238919d85930b5a0f10454e1c331a",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/spyon",
+    "assetClass": "Equity index ETF"
+  },
+  {
+    "symbol": "QQQon",
+    "address": "0x0cde6936d305d5b34667fc46425e852efd73559a",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/qqqon",
+    "assetClass": "Equity index ETF"
+  },
+  {
+    "symbol": "SLVon",
+    "address": "0x8b872732b07be325a8803cdb480d9d20b6f8d11b",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/slvon",
+    "assetClass": "Silver trust"
+  },
+  {
+    "symbol": "TLTon",
+    "address": "0xf69e40069ac227c11459e3f4e8a446b3401616b6",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/tlton",
+    "assetClass": "Treasury ETF"
+  },
+  {
+    "symbol": "USOon",
+    "address": "0x94174e3d1335db402dd03a092f7aa7ac2cb32be4",
+    "decimals": 18,
+    "issuerUrl": "https://app.ondo.finance/assets/usoon",
+    "assetClass": "Oil fund"
+  }
+]

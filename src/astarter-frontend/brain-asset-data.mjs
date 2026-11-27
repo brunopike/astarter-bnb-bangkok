@@ -4,6 +4,8 @@ import {approvedTokenImageURL} from './brand-icons.mjs';
 import {hourlySeries,normalizeHubResource} from './market-hub-data.mjs';
 import {fetchWatchAssets, searchWatchAssets, watchAssetKey} from './market-watchlist.mjs';
 
+import {getTradfiAsset,refreshTradfiAsset} from './brain-tradfi-assets.mjs';
+
 const DEX = 'https://api.dexscreener.com';
 const nativeChains = new Map(Object.entries({
   bitcoin:'bitcoin', ethereum:'ethereum', binancecoin:'bsc', solana:'solana',
@@ -31,6 +33,7 @@ function addressIdentity(value,chain) {
 
 export function brainAssetKey(asset) {
   if (!asset || typeof asset !== 'object') return '';
+  if (asset.kind==='tradfi')return getTradfiAsset(asset.id)?'tradfi:'+asset.id:'';
   if (asset.address != null) {
     if (!validChain(asset.chain) || !validAddress(asset.address)) return '';
     // A Move type name and a base58/base64 identifier carry case-sensitive identity.
@@ -74,6 +77,7 @@ export async function fetchBrainRanking({signal,fetchImpl=globalThis.fetch}={}) 
 // An earlier visit may be all that is available on an offline reload. Restore
 // only the public quote fields we persist, with the provider's original time.
 export function readSavedBrainAsset(row) {
+  if(row?.kind==='tradfi')return getTradfiAsset(row.id);
   if (!brainAssetKey(row) || !label(row.symbol,40) || !label(row.name,150)) return null;
   const iso=value=>typeof value==='string' && Number.isFinite(Date.parse(value))?new Date(value).toISOString():null;
   const receivedAt=iso(row.receivedAt);
@@ -190,6 +194,7 @@ export async function searchBrainAssets(value,options={}) {
   const query=value.trim();
   if(!query)return [...brainCatalog];
   if(!label(query,500))return [];
+  if(query.startsWith('tradfi:')){const asset=getTradfiAsset(query.slice(7));return asset?[asset]:[];}
   const wanted=searchAddress(query), exactCoin=query.startsWith('coin:')?query.slice(5):null;
   if(/^0x.{10}/i.test(query) && !wanted)return [];
   if((query.startsWith('ca:')&&!wanted)||(exactCoin!==null&&!validId(exactCoin)))return [];
@@ -224,6 +229,10 @@ const evidenceFields=['price','change','volume','liquidity','venue','asOf','prov
 
 export function preferBrainEvidence(previous,next) {
   if (!previous) return next??null;
+  if(previous.kind==='tradfi' && next?.kind==='tradfi' && previous.id===next.id){
+    if(next.archiveStatus==='pending')return previous;
+    return next.archiveEnd===previous.archiveEnd && next.price===previous.price && next.archiveStatus===previous.archiveStatus?previous:next;
+  }
   if (!next || next.price===null || brainAssetKey(previous)!==brainAssetKey(next)) return previous;
   // An upstream cache can answer out of order. A repeated tick keeps its original receipt.
   if (previous.asOf && (!next.asOf || Date.parse(next.asOf)<Date.parse(previous.asOf))) return previous;
@@ -259,6 +268,7 @@ export async function refreshBrainCatalog(rows=brainCatalog,options={}) {
     if(!key)throw new TypeError('INVALID_BRAIN_ASSET');
     if(current.has(key))continue;
     current.set(key,row);
+    if(row.kind==='tradfi')continue;
     if(!row.address){coins.push(row);continue;}
     if(!chains.has(row.chain))chains.set(row.chain,[]);
     chains.get(row.chain).push(row);
@@ -285,6 +295,7 @@ export async function refreshBrainCatalog(rows=brainCatalog,options={}) {
 }
 
 export async function refreshBrainAsset(asset,options={}) {
+  if(asset?.kind==='tradfi')return refreshTradfiAsset(asset,options);
   const [updated]=await refreshBrainCatalog([asset],options);
   return updated;
 }

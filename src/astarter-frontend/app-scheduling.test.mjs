@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -94,6 +95,14 @@ test('hidden research cards stay untouched while an open detail and pause contro
 });
 
 const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+test('returning browsers load matching versions of the navigation and dashboard modules',()=>{
+ const imports=JSON.parse(html.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1]).imports;
+ for(const file of ['mobile-navigation.mjs','market-hub.mjs','market-hub-charts.mjs','brain-observatory.mjs','brain-research-archives.mjs','brain-cortexa.mjs','brain-asset-picker.mjs','brain-asset-data.mjs','brain-tradfi-assets.mjs','brain-research-scope.mjs','brain-proof-view.mjs','brain-thinking.mjs','brain-raw-archive.mjs','brand-icon-data.mjs']){
+  const source=readFileSync(new URL('./'+file,import.meta.url));
+  const revision=createHash('sha1').update('blob '+source.length+'\0').update(source).digest('hex').slice(0,12);
+  assert.equal(imports['/'+file],'/'+file+'?v='+revision,file);
+ }
+});
 const preload=html.match(/<script id="app-preload-controller">([\s\S]*?)<\/script>/)?.[1];
 function loadingFixture({reduced=false,appReduced=false,locale='zh',storageBlocked=false}={}){
  const classes=new Set(),bodyClasses=new Set(['app-loading']),timers=new Map(),events=new Map(),scriptEvents=new Map(),retryEvents=new Map();

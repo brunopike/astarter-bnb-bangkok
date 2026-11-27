@@ -12,7 +12,7 @@ for(const file of ['liquid-select-loader.mjs','liquid-select-ui/liquid-select.js
 for(const file of ['product-number-input.mjs','product-number-input.css'])allowed.add(file);
 for(const file of ['brain-observatory.mjs','brain-case-notes.mjs','brain-memory.mjs','brain-memory.css','brain-thinking.mjs','brain-thinking.css','brain-observatory.css','brain-merge-case.json','brain-evidence/BLOCK-15537394@1.json','brain-evidence/COINBASE-ETH-USD-0644@1.json','brain-evidence/COINBASE-ETH-USD-0649@1.json'])allowed.add(file);
 for(const file of ['brain-cortexa.mjs','brain-cortexa.css','brain-cortexa-graph.mjs','brain-cortexa-graph.css','brain-particle-portrait.mjs','brain-particle-dust.mjs'])allowed.add(file);
-for(const file of ['brain-asset-data.mjs','brain-asset-picker.mjs','brain-research-scope.mjs','brain-evidence/asset-catalog.json'])allowed.add(file);
+for(const file of ['brain-asset-data.mjs','brain-asset-picker.mjs','brain-tradfi-assets.mjs','brain-research-scope.mjs','brain-evidence/asset-catalog.json'])allowed.add(file);
 for(const file of ['brain-history.mjs','brain-history-reader.mjs','brain-evidence/chain-history.json','brain-evidence/ETH-MERGE-STRATEGY@1.json','brain-evidence/BLOCK-15537394-AT-MERGE@1.json','brain-evidence/research-history.json','brain-evidence/market-history.json','brain-evidence/chain-tvl-history.json'])allowed.add(file);
 for(const file of ['brain-evidence/ranked-price-history.json','brain-evidence/daily-markets.json'])allowed.add(file);
 for(const file of ['brain-reasoning-memory.mjs','brain-evidence/decision-cases.json','brain-evidence/market-reactions.json'])allowed.add(file);
@@ -27,6 +27,9 @@ for(const dir of ['brain-evidence/archive','brain-evidence/tradfi']){
 }
 allowed.add('brain-raw-archive.mjs');
 allowed.add('brain-tradfi-archive.mjs');
+allowed.add('brain-research-archives.mjs');
+allowed.add('data/research-archives/whale.json');
+allowed.add('data/research-archives/rwa.json');
 for(const file of ['site-languages.mjs','site-routes.mjs','site-seo-client.mjs','brand/astarter-share.png'])allowed.add(file);
 allowed.add('cross-market-data.mjs');
 allowed.add('public-btc-exchange-flows.mjs');

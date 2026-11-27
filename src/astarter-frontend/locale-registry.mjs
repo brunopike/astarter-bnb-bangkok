@@ -8,7 +8,7 @@ export const LOCALES = Object.freeze([
   {id:'fr',tag:'fr-FR',name:'Français',short:'FR'},
   {id:'ru',tag:'ru-RU',name:'Русский',short:'RU'}
 ]);
-export const normalizeLocale=value=>LOCALES.find(x=>x.id===String(value).toLowerCase().split('-')[0])?.id||'zh';
+export const normalizeLocale=value=>LOCALES.find(x=>x.id===String(value).toLowerCase().split('-')[0])?.id||'en';
 export const localeInfo=value=>LOCALES.find(x=>x.id===normalizeLocale(value));
 
 const escape=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');

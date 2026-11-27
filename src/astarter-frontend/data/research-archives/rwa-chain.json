@@ -1,0 +1,293 @@
+{
+  "schemaVersion": 1,
+  "count": 1123942,
+  "asOf": "2026-11-26T21:15:47Z",
+  "startDate": "2026-08-14",
+  "endDate": "2026-11-26",
+  "chainId": 1,
+  "sourceName": "Ethereum mainnet · BlockPI / SQD Portal",
+  "sourceUrl": "https://portal.sqd.dev/datasets/ethereum-mainnet",
+  "sourceUrls": [
+    "https://ethereum.public.blockpi.network/v1/rpc/public",
+    "https://portal.sqd.dev/datasets/ethereum-mainnet"
+  ],
+  "unit": "ERC-20 Transfer events",
+  "methodology": {
+    "en": "One Ethereum mainnet Transfer log from the listed issuer contracts. Unique by transaction hash and log index. Mint and burn logs are counted once. Zero-value and fee-transfer logs are retained when emitted. A transfer is not evidence of trading, redemption, or off-chain settlement.",
+    "zh": "逐条统计 Ethereum mainnet 上清单列出的官方合约 Transfer 日志，以交易哈希和日志序号去重。铸造和销毁各记一次，保留实际发出的零金额与手续费转移事件。转移数量不代表成交量、实际赎回或链下结算。"
+  },
+  "stats": [
+    {
+      "label": {
+        "en": "PAXG events",
+        "zh": "PAXG 事件"
+      },
+      "value": 502600
+    },
+    {
+      "label": {
+        "en": "XAUT events",
+        "zh": "XAUT 事件"
+      },
+      "value": 612436
+    },
+    {
+      "label": {
+        "en": "USDY events",
+        "zh": "USDY 事件"
+      },
+      "value": 8720
+    },
+    {
+      "label": {
+        "en": "OUSG events",
+        "zh": "OUSG 事件"
+      },
+      "value": 186
+    }
+  ],
+  "fromBlock": 25750000,
+  "toBlock": 26501999,
+  "assetContracts": [
+    {
+      "symbol": "PAXG",
+      "address": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+      "decimals": 18,
+      "issuerUrl": "https://github.com/paxosglobal/paxos-gold-contract",
+      "count": 502600,
+      "eventsByKind": {
+        "transfer": 500946,
+        "mint": 514,
+        "burn": 1140
+      }
+    },
+    {
+      "symbol": "XAUT",
+      "address": "0x68749665ff8d2d112fa859aa293f07a622782f38",
+      "decimals": 6,
+      "issuerUrl": "https://tether.to/en/supported-protocols/",
+      "count": 612436,
+      "eventsByKind": {
+        "transfer": 612435,
+        "mint": 1
+      }
+    },
+    {
+      "symbol": "USDY",
+      "address": "0x96f6ef951840721adbf46ac996b59e0235cb985c",
+      "decimals": 18,
+      "issuerUrl": "https://ondo.finance/usdy",
+      "count": 8720,
+      "eventsByKind": {
+        "mint": 576,
+        "transfer": 7579,
+        "burn": 565
+      }
+    },
+    {
+      "symbol": "OUSG",
+      "address": "0x1b19c19393e2d034d8ff31ff34c81252fcbbee92",
+      "decimals": 18,
+      "issuerUrl": "https://docs.ondo.finance/addresses",
+      "count": 186,
+      "eventsByKind": {
+        "mint": 53,
+        "transfer": 83,
+        "burn": 50
+      }
+    }
+  ],
+  "byToken": {
+    "XAUT": 612436,
+    "PAXG": 502600,
+    "USDY": 8720,
+    "OUSG": 186
+  },
+  "eventCounts": {
+    "transfer": 1121043,
+    "mint": 1144,
+    "burn": 1755
+  },
+  "independentlyReconciledRpcEvents": 513366,
+  "independentChecksBySource": {
+    "https://portal.sqd.dev/datasets/ethereum-mainnet/stream": {
+      "shards": 8,
+      "count": 105337
+    },
+    "https://gateway.tenderly.co/public/mainnet": {
+      "shards": 38,
+      "count": 513366
+    }
+  },
+  "archiveManifestSha256": "742c701cdfad499b8192dd24146f088dab6d1b085a954969b3be4c4d3df9b48c",
+  "samples": [
+    {
+      "id": "1:0x13be79bfe1434ada0f9ed5072ca5613f62bd5206a25db7c47d5ef078ad07a0c0:698",
+      "date": "2026-11-26T21:15:47Z",
+      "label": "PAXG · Transfer",
+      "value": "0.000010101284801072 PAXG",
+      "url": "https://etherscan.io/tx/0x13be79bfe1434ada0f9ed5072ca5613f62bd5206a25db7c47d5ef078ad07a0c0#eventlog",
+      "block": 26501999,
+      "blockHash": "0xb0fc1e7d409bc41272b20d396cccdd727501e065837276d2d92689c67f1ddc03",
+      "logIndex": 698,
+      "contract": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+      "from": "0x426b1da58a82ee41b5b17d02d98d3a5d22a4c7c5",
+      "to": "0x9c4fe5ffd9a9fc5678cfbd93aa2d4fd684b67c4c",
+      "amountRaw": "10101284801072"
+    },
+    {
+      "id": "1:0x13be79bfe1434ada0f9ed5072ca5613f62bd5206a25db7c47d5ef078ad07a0c0:694",
+      "date": "2026-11-26T21:15:47Z",
+      "label": "XAUT · Transfer",
+      "value": "0.84674 XAUT",
+      "url": "https://etherscan.io/tx/0x13be79bfe1434ada0f9ed5072ca5613f62bd5206a25db7c47d5ef078ad07a0c0#eventlog",
+      "block": 26501999,
+      "blockHash": "0xb0fc1e7d409bc41272b20d396cccdd727501e065837276d2d92689c67f1ddc03",
+      "logIndex": 694,
+      "contract": "0x68749665ff8d2d112fa859aa293f07a622782f38",
+      "from": "0x426b1da58a82ee41b5b17d02d98d3a5d22a4c7c5",
+      "to": "0xc756bba710d45647715079ce50aa16aab36ded42",
+      "amountRaw": "846740"
+    },
+    {
+      "id": "1:0x6c1b748fd2929055bf618fa2934d2cd9fc972ff221690819336cd557d4b866df:376",
+      "date": "2026-11-26T21:13:59Z",
+      "label": "USDY · Burn",
+      "value": "13001.299 USDY",
+      "url": "https://etherscan.io/tx/0x6c1b748fd2929055bf618fa2934d2cd9fc972ff221690819336cd557d4b866df#eventlog",
+      "block": 26501990,
+      "blockHash": "0x99b15be337f7728db77fdc410abab57205900c1563d86de2ff6c196ab09e6302",
+      "logIndex": 376,
+      "contract": "0x96f6ef951840721adbf46ac996b59e0235cb985c",
+      "from": "0xa42613c243b67bf6194ac327795b926b4b491f15",
+      "to": "0x0000000000000000000000000000000000000000",
+      "amountRaw": "13001299000000000000000"
+    },
+    {
+      "id": "1:0x6c1b748fd2929055bf618fa2934d2cd9fc972ff221690819336cd557d4b866df:375",
+      "date": "2026-11-26T21:13:59Z",
+      "label": "USDY · Transfer",
+      "value": "13001.299 USDY",
+      "url": "https://etherscan.io/tx/0x6c1b748fd2929055bf618fa2934d2cd9fc972ff221690819336cd557d4b866df#eventlog",
+      "block": 26501990,
+      "blockHash": "0x99b15be337f7728db77fdc410abab57205900c1563d86de2ff6c196ab09e6302",
+      "logIndex": 375,
+      "contract": "0x96f6ef951840721adbf46ac996b59e0235cb985c",
+      "from": "0x9008d19f58aabd9ed0d60971565aa8510560ab41",
+      "to": "0xa42613c243b67bf6194ac327795b926b4b491f15",
+      "amountRaw": "13001299000000000000000"
+    },
+    {
+      "id": "1:0x850f88b7b05546b9907b7da7f28c21f3286b3b6013318508772e9eea9e2ae319:472",
+      "date": "2026-11-26T21:11:35Z",
+      "label": "USDY · Mint",
+      "value": "13001.3 USDY",
+      "url": "https://etherscan.io/tx/0x850f88b7b05546b9907b7da7f28c21f3286b3b6013318508772e9eea9e2ae319#eventlog",
+      "block": 26501978,
+      "blockHash": "0x3335fa958bc82ac0461dbbcd0e4d272d935514c9e4d8d733fba7fd323f38f129",
+      "logIndex": 472,
+      "contract": "0x96f6ef951840721adbf46ac996b59e0235cb985c",
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0x0da4b40b77ce15390641a82964aff7cdb2bb00b0",
+      "amountRaw": "13001300000000000000000"
+    },
+    {
+      "id": "1:0x48a1a811e290e22ee35e6654f6183615431d7afcfa906ef4657280a261367be5:47",
+      "date": "2026-11-26T18:30:11Z",
+      "label": "PAXG · Burn",
+      "value": "1.6 PAXG",
+      "url": "https://etherscan.io/tx/0x48a1a811e290e22ee35e6654f6183615431d7afcfa906ef4657280a261367be5#eventlog",
+      "block": 26501171,
+      "blockHash": "0x76013a224b8aeb54a27cd2ad5977179d069d6b71ef9ea4b5daf293c7756dbe43",
+      "logIndex": 47,
+      "contract": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+      "from": "0xf58e79a7bd26532ff525db5b78456eb2e79076ec",
+      "to": "0x0000000000000000000000000000000000000000",
+      "amountRaw": "1600000000000000000"
+    },
+    {
+      "id": "1:0xc055e1178d26c275330d23963c3068d5b422e318b0a2e4aa08acda6136779e00:40",
+      "date": "2026-11-26T14:07:47Z",
+      "label": "PAXG · Mint",
+      "value": "3.32 PAXG",
+      "url": "https://etherscan.io/tx/0xc055e1178d26c275330d23963c3068d5b422e318b0a2e4aa08acda6136779e00#eventlog",
+      "block": 26499869,
+      "blockHash": "0x3575c2b4e458a6e500c898a1cf83fd259b55362b04955842415355de1f807cf5",
+      "logIndex": 40,
+      "contract": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0xd847a66addd9995116e64ba2430551d60568eea6",
+      "amountRaw": "3320000000000000000"
+    },
+    {
+      "id": "1:0x236ef7530ca155c49f82716386efade031f9ce6566272c24a58a5c9b786d7e87:63",
+      "date": "2026-11-25T15:12:35Z",
+      "label": "OUSG · Transfer",
+      "value": "7831.644231480164258398 OUSG",
+      "url": "https://etherscan.io/tx/0x236ef7530ca155c49f82716386efade031f9ce6566272c24a58a5c9b786d7e87#eventlog",
+      "block": 26493015,
+      "blockHash": "0x3917cb37ef82e19f172a73de11894c0785c08d744ba005f31cb4004a1eef05aa",
+      "logIndex": 63,
+      "contract": "0x1b19c19393e2d034d8ff31ff34c81252fcbbee92",
+      "from": "0x44cea07ff231a66cf3689cf4e4e1cf9f831e3988",
+      "to": "0x391897d4a5fddcb9e66a8cb837cfbfd6e918a437",
+      "amountRaw": "7831644231480164258398"
+    },
+    {
+      "id": "1:0x0aa389a7b780e61c173c53d6d030ed554086f0d0c556444ff057cff7abd5250f:272",
+      "date": "2026-11-25T15:12:11Z",
+      "label": "OUSG · Mint",
+      "value": "7831.644231480164258398 OUSG",
+      "url": "https://etherscan.io/tx/0x0aa389a7b780e61c173c53d6d030ed554086f0d0c556444ff057cff7abd5250f#eventlog",
+      "block": 26493013,
+      "blockHash": "0xfa145d4b57f0d0874e17a547e16a1ac9d6ce6ab3a3cda03bc8eaf220268db1c2",
+      "logIndex": 272,
+      "contract": "0x1b19c19393e2d034d8ff31ff34c81252fcbbee92",
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0x44cea07ff231a66cf3689cf4e4e1cf9f831e3988",
+      "amountRaw": "7831644231480164258398"
+    },
+    {
+      "id": "1:0xb82b8289d42addc5144afb834548fa7e1f5c16cce9cc420624fe5ef87a26ce76:358",
+      "date": "2026-11-23T12:47:23Z",
+      "label": "OUSG · Burn",
+      "value": "8522.243054371910686893 OUSG",
+      "url": "https://etherscan.io/tx/0xb82b8289d42addc5144afb834548fa7e1f5c16cce9cc420624fe5ef87a26ce76#eventlog",
+      "block": 26477930,
+      "blockHash": "0xa098bba10956b484caf42089f029114a8211ad88e578b808c372c28f76916515",
+      "logIndex": 358,
+      "contract": "0x1b19c19393e2d034d8ff31ff34c81252fcbbee92",
+      "from": "0x93358db73b6cd4b98d89c8f5f230e81a95c2643a",
+      "to": "0x0000000000000000000000000000000000000000",
+      "amountRaw": "8522243054371910686893"
+    },
+    {
+      "id": "1:0x589ca1b9e4a2da4976426e0dae2aa5f859197df42ab66deddd6c2edf1754ba9f:1297",
+      "date": "2026-09-28T17:08:47Z",
+      "label": "XAUT · Mint",
+      "value": "119670.541 XAUT",
+      "url": "https://etherscan.io/tx/0x589ca1b9e4a2da4976426e0dae2aa5f859197df42ab66deddd6c2edf1754ba9f#eventlog",
+      "block": 26077348,
+      "blockHash": "0x2db60d5bad212ae53270ef8abe8fa301d67d3b1a62dbfdc3ad6e8f0141d0ec31",
+      "logIndex": 1297,
+      "contract": "0x68749665ff8d2d112fa859aa293f07a622782f38",
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0x5754284f345afc66a98fbb0a0afe71e0f007b949",
+      "amountRaw": "119670541000"
+    },
+    {
+      "id": "1:0x46b08b6ece304ab1bfa3968646316c627057c6172d6bc565f3b5af420846a1ec:204",
+      "date": "2026-08-14T01:30:47Z",
+      "label": "XAUT · Transfer",
+      "value": "31.95 XAUT",
+      "url": "https://etherscan.io/tx/0x46b08b6ece304ab1bfa3968646316c627057c6172d6bc565f3b5af420846a1ec#eventlog",
+      "block": 25750001,
+      "blockHash": "0xa7a2740860334f6e4d9eca43181bc720ae7d0962ddeb38c6e388d694a787deaf",
+      "logIndex": 204,
+      "contract": "0x68749665ff8d2d112fa859aa293f07a622782f38",
+      "from": "0x0052e9288d71e317b6b850ba16fd9d2e6ba2c26c",
+      "to": "0x9c483fa4d84a218940bfa02652fcaf01ee8f44f2",
+      "amountRaw": "31950000"
+    }
+  ]
+}

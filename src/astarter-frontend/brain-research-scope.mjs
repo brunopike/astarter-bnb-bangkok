@@ -1,4 +1,5 @@
 import {notes as archiveNotes} from './brain-case-notes.mjs';
+import {tradfiGroups} from './brain-tradfi-assets.mjs';
 import {watchChain} from './market-watchlist.mjs';
 
 const pair=(zh,en)=>[zh,en];
@@ -15,7 +16,95 @@ const note=(zh,en,body,sourceUrl)=>({title:pair(zh,en),body:Array.isArray(body)?
 const field=(zh,en,value)=>({label:pair(zh,en),value});
 const change=value=>isNumber(value)?(value>0?'+':'')+value.toLocaleString('en-US',{maximumFractionDigits:2})+'%':missing;
 
+const bilingual=value=>pair(value.zh,value.en);
+const nativeValue=new Intl.NumberFormat('en-US',{maximumFractionDigits:8});
+function createTradfiScope(asset){
+  const label=pair(asset.symbol,asset.symbol),name=pair(asset.nameZh,asset.name);
+  const type=bilingual(asset.instrumentType),measurement=bilingual(asset.measurement);
+  const pending=asset.archiveStatus==='unavailable'?pair('归档暂不可用','Archive unavailable'):pair('等待读取归档','Awaiting archive');
+  const ready=asset.archiveStatus==='ready' && isNumber(asset.price);
+  const text=ready?nativeValue.format(asset.price)+(asset.unit==='%'?'%':' '+asset.unit):null;
+  const quote=ready?pair(text,text):pending;
+  const observed=ready?pair(asset.archiveEnd,asset.archiveEnd):pending;
+  const coverage=ready?asset.archiveStart+' — '+asset.archiveEnd:null;
+  const count=ready?nativeValue.format(asset.archiveCount):null;
+  const countLabel=count?pair(count+' 条',count+' observations'):pending;
+  const source=pair(asset.provider,asset.provider),identity=pair(asset.seriesId,asset.seriesId);
+  const metrics=[field('工具类型','Instrument',type),field('数据口径','Measure',measurement),field('来源','Source',source)];
+  let delivery=null;
+  if(asset.type==='indexFuture'){
+    delivery=ready?asset.contractMonth.slice(0,4)+'-'+asset.contractMonth.slice(4):null;
+    metrics.push(field('交割月份','Delivery month',delivery?pair(delivery,delivery):pending));
+  }
+  const archiveRows=[field('观察日','Observation date',observed),field('覆盖区间','Coverage',coverage?pair(coverage,coverage):pending),field('归档观察数','Archived observations',countLabel)];
+  const identityRows=[field('标的','Instrument',name),field('归档序列','Archive series',identity)];
+  const unit=pair(asset.unit,asset.unit);
+  const receipt=pair('当前档案收录来源公布的观察值。','This archive contains observations published by the source.');
+  const phase=(zh,en,rows)=>({title:pair(zh,en),source,rows:rows.map(({label,value})=>[...label,value])});
+  const tape={asOf:ready?asset.archiveEnd:null,label:pair('归档回放','Archive replay'),phases:[
+    phase('确定研究标的','Identify instrument',identityRows),
+    phase('读取归档记录','Read archived observations',[field('归档观察值','Archived observation',quote),...archiveRows.slice(0,1)]),
+    phase('核对报价口径','Check the measure',metrics),
+    phase('核对历史覆盖','Check historical coverage',archiveRows),
+    phase('索引来源','Index source',[...identityRows.slice(1),field('发布方','Publisher',source)])
+  ]};
+  const records=[
+    [name,measurement],[pair('工具类型','Instrument type'),type],[pair('归档行情','Archived Market Data'),quote],
+    [pair('计量口径','Measure'),measurement],[pair('证据索引','Evidence index'),identity],
+    [pair('报价单位','Unit'),unit],[pair('归档观察值','Archived observation'),quote],[pair('观察日','Observation date'),observed],
+    [pair('覆盖区间','Coverage'),coverage?pair(coverage,coverage):pending],[pair('数据来源','Source'),source],
+    [pair('归档观察数','Archived observations'),countLabel],[pair('研究依据','Research evidence'),receipt],
+    delivery?[pair('交割月份','Delivery month'),pair(delivery,delivery)]:[pair('发布方','Publisher'),source],
+    [pair('复盘参照','Review reference'),quote]
+  ];
+  const notes=records.map(([title,body],index)=>({...archiveNotes[index],title,body,sourceUrl:asset.sourceUrl}));
+  return {asset,label,marketLabel:pair(asset.nameZh+' · '+asset.provider,asset.name+' · '+asset.provider),notes,tape,
+    memory:{label,rows:[...identityRows,...metrics,...archiveRows]},rows:[asset],marketRows:ready?[asset]:[],
+    asOf:ready?asset.archiveEnd:null,quote,tradfiMetrics:metrics,change:null,volume:null,liquidity:null,providers:asset.provider};
+}
+
+function createAllCategoriesScope(catalog){
+  const crypto=catalog.filter(asset=>asset.kind!=='tradfi');
+  const tradfi=catalog.filter(asset=>asset.kind==='tradfi');
+  const cryptoScope=createResearchScope(null,crypto);
+  const groups=tradfiGroups.map(group=>({...group,assets:tradfi.filter(asset=>asset.group===group.id)})).filter(group=>group.assets.length);
+  const label=pair('All','All');
+  const counts=pair('加密资产 '+crypto.length+' · 传统金融 '+tradfi.length,'Crypto '+crypto.length+' · TradFi '+tradfi.length);
+  const directory=pair('从资产选择器选择标的，可查看该序列的归档值、单位与观察日。','Select an instrument to see its archived observation, unit and date.');
+  const groupRows=groups.map(group=>field(group.label.zh,group.label.en,join(group.assets.map(asset=>asset.symbol))));
+  const groupLabel=pair(groups.map(group=>group.label.zh).join('、'),groups.map(group=>group.label.en).join(', '));
+  const units=join(tradfi.map(asset=>asset.unit));
+  const cryptoSources=cryptoScope.providers,tradfiSources=join(tradfi.map(asset=>asset.provider));
+  const capture=timestamp(cryptoScope.asOf);
+  const mapped=[
+    note(...label,counts),note('加密资产网络','Crypto networks',join(crypto.map(asset=>brainChainName(asset.chain)))||missing),
+    note('传统金融类别','TradFi categories',groupLabel),note('传统金融归档','TradFi archives',directory),
+    note('来源索引','Source index',join([typeof cryptoSources==='string'?cryptoSources:null,tradfiSources])),
+    note('加密资产来源','Crypto sources',cryptoSources),note('加密资产美元报价','Crypto USD quotes',cryptoScope.notes[6].body),
+    note('加密快照采集时间','Crypto capture time',capture),note('加密资产流动性','Crypto liquidity',cryptoScope.liquidity),
+    note('传统金融来源','TradFi sources',tradfiSources),note('归档计量单位','Archive units',units),
+    note('传统金融标的','TradFi instruments',join(tradfi.map(asset=>asset.symbol))),
+    note('加密资产成交额覆盖','Crypto volume coverage',cryptoScope.volume),
+    note('归档查询','Archive lookup',directory)
+  ];
+  const notes=mapped.map((entry,index)=>({...archiveNotes[index],...entry}));
+  const lines=(zh,en,source,rows)=>({title:pair(zh,en),source,rows:rows.map(({label,value})=>[...label,value])});
+  const tape={asOf:cryptoScope.asOf,timeLabel:pair('加密快照采集时间','Crypto capture time'),label,phases:[
+    lines('研究范围','Research scope',label,[field('加密资产','Crypto assets',String(crypto.length)),field('传统金融标的','TradFi instruments',String(tradfi.length))]),
+    lines('加密资产美元报价','Crypto USD quotes',cryptoSources,cryptoScope.marketRows.slice(0,5).map(row=>field(row.symbol,row.symbol,amount(row.price)))),
+    lines('传统金融标的','TradFi instruments',tradfiSources,groupRows),
+    lines('核对计量口径','Check units',label,[field('加密快照时间','Crypto capture time',capture),field('传统金融单位','TradFi units',units)]),
+    lines('核查来源','Check sources',label,[field('加密资产来源','Crypto sources',cryptoSources),field('传统金融来源','TradFi sources',tradfiSources)])
+  ]};
+  return {asset:null,label,marketLabel:counts,notes,tape,rows:catalog,marketRows:cryptoScope.marketRows,
+    asOf:null,cryptoAsOf:cryptoScope.asOf,tradfiGroups:groups,cryptoCount:crypto.length,tradfiCount:tradfi.length,
+    memory:{label,rows:[field('资产类别','Asset classes',counts),...groupRows,field('加密快照时间','Crypto capture time',capture)]},
+    quote:null,change:null,volume:null,liquidity:null,providers:join([typeof cryptoSources==='string'?cryptoSources:null,tradfiSources])};
+}
+
 export function createResearchScope(asset,catalog) {
+  if(asset?.kind==='tradfi')return createTradfiScope(asset);
+  if(!asset && catalog.some(row=>row.kind==='tradfi'))return createAllCategoriesScope(catalog);
   const rows=asset?[asset]:catalog;
   const sources=join(rows.map(row=>row.provider));
   const chains=[...new Set(rows.map(row=>row.chain).filter(Boolean))];

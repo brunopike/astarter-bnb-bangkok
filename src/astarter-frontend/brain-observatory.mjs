@@ -1,5 +1,6 @@
 import {mountProofView} from './brain-proof-view.mjs';
 import mergeBlockEvidence from './brain-evidence/BLOCK-15537394-AT-MERGE@1.json' with {type:'json'};
+import {mountResearchArchives} from './brain-research-archives.mjs';
 import {mountTradfiArchive} from './brain-tradfi-archive.mjs';
 import {mountBlockArchive} from './brain-raw-archive.mjs';
 import {mountMemory} from './brain-memory.mjs';
@@ -102,8 +103,9 @@ class AstarterBrain extends HTMLElement {
     let graph;
     const blockArchive=mountBlockArchive(root,en);
     const disposeMarkets=mountTradfiArchive(root,en);
+    const disposeResearchArchives=mountResearchArchives(root,en,this.heroReady);
     const openLinkedArchive=()=>{
-      const target={'#traditional-markets':'tradfi','#historical-blocks':'heading'}[location.hash];
+      const target={'#traditional-markets':'tradfi','#historical-blocks':'heading','#whale-records':'whale','#rwa-records':'rwa'}[location.hash];
       if(target&&root.isConnected&&!root.querySelector('dialog[open]'))root.querySelector('[data-raw-open="'+target+'"]')?.click();
     };
     window.addEventListener('hashchange',openLinkedArchive);
@@ -186,7 +188,7 @@ class AstarterBrain extends HTMLElement {
           time.hidden=!stamp;
           if(stamp){
             time.dateTime=stamp;
-            time.textContent=(asset.asOf?t('数据时间','As of'):t('采集时间','Captured'))+' '+stamp.slice(0,16).replace('T',' ')+' UTC';
+            time.textContent=(asset.asOf?t('数据时间','As of'):t('采集时间','Captured'))+' '+stamp.slice(0,16).replace('T',' ')+(stamp.length>10?' UTC':'');
           }
         }
         else source.removeAttribute('href');
@@ -288,20 +290,23 @@ class AstarterBrain extends HTMLElement {
     function renderScopeMarket(scope){
       const asset=scope.asset;
       const isPool=asset?.kind==='contract';
-      const kind=asset?'asset':'network';
+      const isTradfi=asset?.kind==='tradfi';
+      const combined=Boolean(scope.tradfiGroups);
+      const kind=isTradfi?'tradfi':asset?'asset':combined?'combined':'network';
       if(marketSection.dataset.kind!==kind){
         marketSection.dataset.kind=kind;
-        marketSection.innerHTML=`<div class="ops-section-heading"><h3>${t('行情快照','Market Snapshot')}</h3><span></span></div>
+        marketSection.innerHTML=`<div class="ops-section-heading"><h3>${isTradfi?t('归档行情','Archived Market Data'):t('行情快照','Market Snapshot')}</h3><span></span></div>
           ${asset?`<div class="br-quote"><strong data-price></strong><div class="br-price-trend" hidden><span>7D</span><div data-trend-chart></div></div></div><dl class="ct-quote-table"></dl>`:
-          `<table class="br-market-list"><thead><tr><th scope="col">${t('资产','Asset')}</th><th scope="col">${t('价格','Price')}</th><th scope="col">${t('24h 涨跌','24h change')}</th></tr></thead><tbody></tbody></table><p hidden>${t('暂无报价','Quotes unavailable')}</p>`}
-          <div class="br-axis"><span>${t('采集时间','Captured')}</span><time></time></div>`;
+          `<table class="br-market-list"><thead><tr><th scope="col">${t(combined?'加密资产':'资产',combined?'Crypto asset':'Asset')}</th><th scope="col">${t('价格','Price')}</th><th scope="col">${t('24h 涨跌','24h change')}</th></tr></thead><tbody></tbody></table><p hidden>${t('暂无报价','Quotes unavailable')}</p>`}
+          <div class="br-axis"><span>${isTradfi?t('归档日期','Archive date'):combined?t('加密快照采集时间','Crypto capture time'):t('采集时间','Captured')}</span><time></time></div>
+          ${combined?`<details data-tradfi-coverage><summary></summary><dl class="ct-quote-table"></dl></details>`:''}`;
       }
       const write=(node,text)=>{if(node.textContent!==text)node.textContent=text;};
       write(marketSection.querySelector('.ops-section-heading span'),say(scope.marketLabel));
       if(asset){
-        write(marketSection.querySelector('[data-price]'),usd(asset.price));
+        write(marketSection.querySelector('[data-price]'),isTradfi?say(scope.quote):usd(asset.price));
         const trend=marketSection.querySelector('.br-price-trend');
-        const series=Array.isArray(asset.series)?asset.series.filter(value=>Number.isFinite(value) && value>0):[];
+        const series=!isTradfi&&Array.isArray(asset.series)?asset.series.filter(value=>Number.isFinite(value) && value>0):[];
         trend.hidden=series.length<2;
         const seriesKey=series.join(',');
         if(trend.renderedSeries!==seriesKey){
@@ -318,22 +323,41 @@ class AstarterBrain extends HTMLElement {
         }
       }
       if(asset){
-        const metrics=[
+        const metrics=isTradfi?scope.tradfiMetrics.map(({label,value})=>[say(label),say(value)]):[
           [t('24h 涨跌','24h change'),say(scope.change)],
           [isPool?t('池内 24h 成交额','Pool 24h volume'):t('24h 成交额','24h volume'),say(scope.volume)],
           [isPool?t('池内流动性','Pool liquidity'):t('流动性','Liquidity'),say(scope.liquidity)]
         ];
         const table=marketSection.querySelector('dl');
+        while(table.children.length>metrics.length)table.lastElementChild.remove();
         metrics.forEach(([label,value],i)=>{
           let row=table.children[i];
           if(!row){row=document.createElement('div');row.append(document.createElement('dt'),document.createElement('dd'));table.append(row);}
           row.dataset.direction=String(i===0 && Number.isFinite(asset.change)?Math.sign(asset.change):0);
           write(row.firstElementChild,label);write(row.lastElementChild,value);
         });
-      }else renderMarketRows(marketSection.querySelector('table'),scope.marketRows.slice(0,5));
-      const time=marketSection.querySelector('time');
-      write(time,scope.asOf?scope.asOf.slice(0,16).replace('T',' ')+' UTC':'—');
-      if(scope.asOf)time.dateTime=scope.asOf;else time.removeAttribute('datetime');
+      }else{
+        renderMarketRows(marketSection.querySelector('table'),scope.marketRows.slice(0,5));
+        if(combined){
+          const coverage=marketSection.querySelector('[data-tradfi-coverage]');
+          const symbols=scope.tradfiGroups.flatMap(group=>group.assets.map(item=>item.symbol)).join(',');
+          if(coverage.dataset.symbols!==symbols){
+            coverage.dataset.symbols=symbols;
+            const preview=['metals','energy','stock','fx'].map(key=>scope.tradfiGroups.find(group=>group.id===key)?.assets[0]?.symbol).filter(Boolean).join(' · ');
+            write(coverage.querySelector('summary'),t('传统金融 '+scope.tradfiCount+' 项','TradFi · '+scope.tradfiCount+' instruments')+' · '+preview);
+            const grouped=coverage.querySelector('dl');
+            grouped.replaceChildren(...scope.tradfiGroups.map(group=>{
+              const row=document.createElement('div'),term=document.createElement('dt'),value=document.createElement('dd');
+              term.textContent=t(group.label.zh,group.label.en);
+              value.textContent=group.assets.map(item=>item.symbol).join(' · ');
+              row.append(term,value);return row;
+            }));
+          }
+        }
+      }
+      const time=marketSection.querySelector('time'),asOf=combined?scope.cryptoAsOf:scope.asOf;
+      write(time,asOf?(isTradfi?asOf.slice(0,10):asOf.slice(0,16).replace('T',' ')+' UTC'):'—');
+      if(asOf)time.dateTime=asOf;else time.removeAttribute('datetime');
       write(q('[data-signal]'),'');
       write(q('[data-lens]'),'');
       q('[data-feedback]').textContent=t('查看 A18 记忆','Open A18 memory');
@@ -430,7 +454,7 @@ class AstarterBrain extends HTMLElement {
     const disposeScene=cortexaView.connect(root);
     const disposePicker=cortexaView.bindSelection(root,selection,updateSelection);
     q('[data-return]').onclick=()=>{thinking.seek(4);showMemory(memory.selectReview());};
-    this.controller=()=>{window.removeEventListener('hashchange',openLinkedArchive);disposeMarkets();blockArchive.dispose();proof.dispose();disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
+    this.controller=()=>{window.removeEventListener('hashchange',openLinkedArchive);disposeResearchArchives();disposeMarkets();blockArchive.dispose();proof.dispose();disposePicker();disposeScene();thinking.dispose();memory.dispose();graph.dispose();faces.forEach(f=>f.dispose());};
     showZoom(1);showNote(0);
   }
   disconnectedCallback(){this.controller?.();this.controller=null;}

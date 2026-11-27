@@ -242,10 +242,14 @@ dialog.ct-asset-dialog[open] {display:flex;flex-direction:column}
 .ct-asset-dialog .p-dialog-head h2 {font:600 18px/1.3 var(--sans);margin:0}
 .ct-asset-dialog .p-dialog-body {min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:12px;font-family:var(--sans)}
 .ct-asset-query {flex:none;display:flex;align-items:center;gap:9px;border:1px solid var(--b-line-strong);border-radius:9px;padding:0 11px}
-.ct-asset-query:focus-within {border-color:var(--b-muted)}.ct-asset-query svg {width:16px;height:16px;color:var(--b-muted)}
-.ct-asset-dialog .ct-asset-query:focus-within {outline:2px solid var(--b-violet);outline-offset:1px}
-.ct-asset-dialog .ct-asset-query input:focus-visible,.ct-asset-dialog .p-dialog-head h2[tabindex="-1"]:focus {outline:none;box-shadow:none}
-.ct-asset-query input {flex:1;min-width:0;border:0;outline:0;color:var(--b-ink);background:transparent;font:500 14px var(--sans);height:42px}
+.ct-asset-query svg {width:16px;height:16px;color:var(--b-muted)}
+.ct-asset-dialog .ct-asset-query:focus-within {outline:2px solid var(--optical-focus,var(--b-violet));outline-offset:-1px}
+.ct-asset-dialog .p-dialog-head h2[tabindex="-1"]:focus {outline:none;box-shadow:none}
+/* The compound search field draws one keyboard focus ring around both icon and text. */
+.ct-asset-dialog .ct-asset-query input[type=search] {
+  flex:1;min-width:0;height:42px;padding-inline:0;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;outline:none!important;color:var(--b-ink);
+}
 .ct-asset-list {min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;margin-top:8px}
 .ct-asset-option {color:var(--b-ink);width:100%;min-height:46px;display:flex;align-items:center;gap:10px;background:none;border:0;text-align:left;border-radius:8px;padding:7px 9px;cursor:pointer}
 .ct-asset-option:hover,.ct-asset-option:focus-visible,.ct-asset-option[aria-pressed=true] {background:var(--b-soft)}
@@ -270,6 +274,23 @@ dialog.ct-asset-dialog[open] {display:flex;flex-direction:column}
 @media (max-height:450px){dialog.ct-asset-dialog {max-height:95dvh}.ct-asset-dialog .p-dialog-head {padding:7px 14px}.ct-asset-dialog .p-dialog-body{padding:8px}}
 .ct-chain-filter {display:flex;align-items:center;flex:none;margin:8px 0 0}
 .ct-chain-filter select {background:var(--b-soft);border:1px solid var(--b-line);color:var(--b-ink);padding:4px 8px;border-radius:6px;font:500 13px var(--sans);cursor:pointer;max-width:100%}
-astarter-brain .ct-scope-notice {display:flex;gap:6px;align-items:baseline;max-width:210px;margin:5px 0 0 auto;padding:4px 7px;color:var(--b-ink);background:var(--b-panel);font-size:12px}
 
-astarter-brain .ct-scope-notice button {border:0;padding:2px 0;color:var(--b-ink);background:none;font:inherit;text-decoration:underline;cursor:pointer}
+
+
+.ct-asset-dialog .ct-asset-modes {display:grid;grid-template-columns:1fr 1fr;gap:3px;flex:none;margin:0 0 10px;padding:3px;border:1px solid var(--b-line);border-radius:9px;background:var(--b-bg)}
+.ct-asset-modes button {appearance:none;min-height:32px;padding:4px 9px;border:0;border-radius:6px;background:none;color:var(--b-muted);font:550 14px/1.3 var(--sans);cursor:pointer}
+.ct-asset-modes button[aria-pressed=true] {background:var(--b-soft);color:var(--b-ink)}
+.ct-asset-modes button:focus-visible {outline:2px solid var(--b-violet);outline-offset:0}
+.ct-asset-dialog[data-asset-mode=tradfi] .ct-chain-filter {margin-top:10px}
+.ct-asset-dialog[data-asset-mode=tradfi] .ct-asset-mark {border-radius:7px;background:var(--b-soft);color:var(--b-muted)}
+@media(pointer:coarse){.ct-asset-modes button{min-height:40px}}
+.ct-asset-dialog .ct-tradfi-full {display:flex;align-items:center;justify-content:space-between;flex:none;gap:8px;margin-top:6px;border-top:1px solid var(--b-line);padding:9px 5px 3px;color:var(--b-ink);font:500 13px/1.4 var(--sans);text-decoration:none}
+.ct-asset-dialog .ct-tradfi-full:is(:hover,:focus-visible){text-decoration:underline;text-underline-offset:3px}
+.ct-asset-dialog .ct-tradfi-full[hidden]{display:none}
+.ct-asset-dialog .ct-asset-modes {grid-template-columns:repeat(3,minmax(0,1fr))}
+.ct-asset-dialog[data-asset-mode=all] .ct-chain-filter {margin:10px 0 0;min-height:24px}
+.ct-asset-dialog[data-asset-mode=all] .ct-chain-filter :is(select,.liquid-native-host) {display:none}
+.ct-asset-dialog .ct-picked-asset,.ct-asset-dialog .ct-asset-kind {color:var(--b-muted);font:500 11px/1.4 var(--sans)}
+.ct-asset-dialog .ct-asset-kind {flex:none;margin-inline-start:auto}
+.ct-asset-dialog .ct-asset-option[aria-pressed=true] .ct-asset-kind {margin-inline-start:0}
+.ct-asset-dialog[data-asset-mode=all] .ct-chain-filter {flex-wrap:wrap}

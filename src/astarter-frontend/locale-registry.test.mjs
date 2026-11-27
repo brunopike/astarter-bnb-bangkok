@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {LOCALES,normalizeLocale,createMessageCatalog} from './locale-registry.mjs';
 test('all eight product languages have stable IDs and native labels',()=>{
  assert.deepEqual(LOCALES.map(x=>x.id),['zh','en','ja','ko','vi','es','fr','ru']);
- assert.equal(normalizeLocale('ko-KR'),'ko');assert.equal(normalizeLocale('EN-us'),'en');assert.equal(normalizeLocale('invalid'),'zh');
+ assert.equal(normalizeLocale('ko-KR'),'ko');assert.equal(normalizeLocale('EN-us'),'en');assert.equal(normalizeLocale('invalid'),'en');
 });
 test('whole messages preserve amounts and IDs while slots follow native sentence order',()=>{
  const c=createMessageCatalog([['使用 {p0} 积分；释放 {p1}。','Used {p0} credits; released {p1}.'],['等待','Waiting']]);

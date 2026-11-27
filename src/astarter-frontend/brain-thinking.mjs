@@ -91,6 +91,7 @@ function mountThinking(host, {en = false, reduced = false, onPhaseChange, tape, 
   const phases = tape ? (tape.phases ?? []) : replayPhases;
   const events = phases.flatMap((phase,id) => (phase.rows ?? []).map((row,step) => ({phase:id,step,row})));
   const windowSize = 7;
+  const dateOnly = typeof tape?.asOf==='string' && /^\d{4}-\d{2}-\d{2}$/.test(tape.asOf);
   const suppliedTime = tape ? (tape.asOf ? Date.parse(tape.asOf) : NaN) : Date.parse(replay.decisionCutoff);
   const asOf = Number.isFinite(suppliedTime) ? new Date(suppliedTime).toISOString() : null;
   const media = win.matchMedia('(prefers-reduced-motion: reduce)');
@@ -118,7 +119,7 @@ function mountThinking(host, {en = false, reduced = false, onPhaseChange, tape, 
     </div>
     <div class="ast-thinking__columns"><span>${t('核验记录','Evidence checks')}</span><span>${t('结果','Result')}</span></div>
     <div class="ast-thinking__window"><ol class="ast-thinking__list" aria-live="off"></ol></div>
-    <div class="ast-thinking__date"><small>${t('快照时间','Snapshot time')}</small><time></time><span></span></div>`;
+    <div class="ast-thinking__date"><small></small><time></time><span></span></div>`;
   root.prepend(style);
   host.replaceChildren(root);
   const toggle = root.querySelector('.ast-thinking__toggle');
@@ -126,6 +127,7 @@ function mountThinking(host, {en = false, reduced = false, onPhaseChange, tape, 
   const stage = root.querySelector('strong');
   const list = root.querySelector('ol');
   const date = root.querySelector('time');
+  root.querySelector('.ast-thinking__date small').textContent=tape?.timeLabel?localText(tape.timeLabel,en):t('快照时间','Snapshot time');
   const time = root.querySelector('.ast-thinking__date span');
   const count = root.querySelector('.ast-thinking__count b');
   const meter = root.querySelector('.ast-thinking__phases');
@@ -141,9 +143,9 @@ function mountThinking(host, {en = false, reduced = false, onPhaseChange, tape, 
   const marks = Array.from(meter.querySelectorAll('.ast-thinking__checks i'));
   list.setAttribute('aria-label', tape ? t('快照研判，最新在前','Snapshot research, newest first') : t('历史研判事件，最新在前', 'Historical research events, newest first'));
   if(asOf){
-    date.dateTime = tape ? asOf : asOf.slice(0,10);
+    date.dateTime = tape && !dateOnly ? asOf : asOf.slice(0,10);
     date.textContent = asOf.slice(0,10);
-    time.textContent = `${asOf.slice(11,19)} UTC`;
+    if(!dateOnly)time.textContent = `${asOf.slice(11,19)} UTC`;
   } else {
     date.textContent = t('快照时间待确认','Snapshot time unavailable');
   }

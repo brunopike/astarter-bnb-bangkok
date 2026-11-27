@@ -3,8 +3,9 @@ import {mountParticlePortrait} from './brain-particle-portrait.mjs';
 import {uiGlyph} from './product-composition.mjs';
 import {opticalFace} from './workbench-optical-header.mjs';
 import {watchAssetIcon} from './market-watchlist.mjs';
-import {brainCatalog,savedBrainRanking,brainAssetKey,canonicalBrainScope,readSavedBrainAsset,preferBrainEvidence,searchBrainAssets,refreshBrainAsset,refreshBrainCatalog} from './brain-asset-data.mjs';
+import {brainCatalog,savedBrainRanking,brainAssetKey,readSavedBrainAsset,preferBrainEvidence,refreshBrainAsset,refreshBrainCatalog} from './brain-asset-data.mjs';
 import {createResearchScope,brainChainName} from './brain-research-scope.mjs';
+import {searchTradfiAssets} from './brain-tradfi-assets.mjs';
 import {mountAssetPicker,networkScope,archiveScope} from './brain-asset-picker.mjs';
 
 function markup({t,brainLayerTitle,thinkingSection,executionSection,nodeButtons,zoomButtons,noteTabs,reader,legend}) {
@@ -18,7 +19,7 @@ function markup({t,brainLayerTitle,thinkingSection,executionSection,nodeButtons,
           <div class="ct-archive-counts"></div>
         </header>
         <div class="ct-case"><button type="button" class="ct-scope-button" data-asset-picker aria-haspopup="dialog" aria-expanded="false">
-          <i aria-hidden="true">${uiGlyph('layers')}</i><span class="ct-scope-label"><span class="ct-scope-action">${t('研究资产','Research asset')}</span><b>${t('全网资产','All assets')}</b><span data-scope-chain hidden></span></span>${uiGlyph('chevron')}</button></div>
+          <i aria-hidden="true">${uiGlyph('layers')}</i><span class="ct-scope-label"><span class="ct-scope-action">${t('研究资产','Research asset')}</span><b data-no-translate>All</b><span data-scope-chain hidden></span></span>${uiGlyph('chevron')}</button></div>
         <div class="ct-note-panel">${noteTabs}<div class="ct-note-body">${reader}${legend}</div></div>
         <div class="ct-tools">
           <div class="scene-controls"><button type="button" data-lens-toggle>${uiGlyph('compass')}<span></span></button>${zoomButtons}</div>
@@ -141,9 +142,9 @@ function saveRecentAsset(asset,recent){
   try{sessionStorage.setItem(savedAssetsKey,JSON.stringify([...recent.values()].reverse()));}catch{}
 }
 function initialSelection(){
-  const key=canonicalBrainScope(new URL(location.href).searchParams.get('scope'));
+  const key=new URL(location.href).searchParams.get('scope')===archiveScope?archiveScope:networkScope;
   const recent=loadRecentAssets().reverse();
-  const available=new Map(brainCatalog.map(row=>[brainAssetKey(row),row]));
+  const available=new Map([...brainCatalog,...searchTradfiAssets()].map(row=>[brainAssetKey(row),row]));
   for(const item of savedBrainRanking.rows){
     const id=brainAssetKey(item);available.set(id,preferBrainEvidence(available.get(id),item));
   }
@@ -151,9 +152,7 @@ function initialSelection(){
     const id=brainAssetKey(item),old=available.get(id);
     available.set(id,preferBrainEvidence(old,item));
   }
-  const catalog=[...available.values()],asset=available.get(key);
-  const activeKey=key===archiveScope?archiveScope:asset?key:networkScope;
-  return {...selection(activeKey,asset,catalog),available,recent};
+  return {...selection(key,null,[...available.values()]),available,recent};
 }
 function bindSelection(root,initial,onChange){
   const en=!root.dataset.locale?.startsWith('zh'),button=root.querySelector('[data-asset-picker]');
@@ -161,14 +160,14 @@ function bindSelection(root,initial,onChange){
   const recent=new Map(initial.recent.map(item=>[brainAssetKey(item),item]));
   const refreshInterval=60_000;
   const fetched=new Map();
-  let active=initial,request=null,lookup=null,notice=null,timer=0,disposed=false;
+  let active=initial,request=null,timer=0,disposed=false;
   const localCatalog=()=>[...cache.values()];
   function show(value){
     active=value;
     root.dataset.researchScope=value.key;
     const icon=button.querySelector('i');
-    icon.innerHTML=value.asset?watchAssetIcon(value.asset,19):uiGlyph(value.key===archiveScope?'history':'layers');
-    const name=value.asset?.symbol||(value.key===archiveScope?(en?'Ethereum Merge':'以太坊合并'):(en?'All assets':'全网资产'));
+    icon.innerHTML=value.asset?.kind==='tradfi'?uiGlyph('chart'):value.asset?watchAssetIcon(value.asset,19):uiGlyph(value.key===archiveScope?'history':'layers');
+    const name=value.asset?.symbol||(value.key===archiveScope?(en?'Ethereum Merge':'以太坊合并'):'All');
     button.querySelector('b').textContent=name;
     const chain=brainChainName(value.asset?.chain);
     const network=button.querySelector('[data-scope-chain]');
@@ -178,8 +177,8 @@ function bindSelection(root,initial,onChange){
   }
   function storeKey(key){
     const url=new URL(location.href);
-    if(key===networkScope)url.searchParams.delete('scope');
-    else url.searchParams.set('scope',key);
+    if(key===archiveScope)url.searchParams.set('scope',key);
+    else url.searchParams.delete('scope');
     if(url.href!==location.href)history.replaceState(history.state,'',url);
   }
   function cancelRefresh(){
@@ -189,8 +188,9 @@ function bindSelection(root,initial,onChange){
   }
   function schedule(){
     clearTimeout(timer);
-    if(disposed || document.hidden || lookup || active.key===archiveScope)return;
-    const due=(fetched.get(active.key)??0)+refreshInterval;
+    if(disposed || document.hidden || active.key===archiveScope)return;
+    const interval=active.asset?.kind==='tradfi' && active.asset.archiveStatus==='ready'?3600000:refreshInterval;
+    const due=(fetched.get(active.key)??0)+interval;
     timer=setTimeout(refresh,Math.max(0,due-Date.now()));
   }
   async function refresh(){
@@ -219,8 +219,7 @@ function bindSelection(root,initial,onChange){
     }
   }
   function choose(key,asset){
-    lookup?.abort();lookup=null;notice?.remove();notice=null;cancelRefresh();
-    button.removeAttribute('aria-busy');
+    cancelRefresh();
     const cached=cache.get(key);
     const row=preferBrainEvidence(cached,asset);
     if(!row && key!==networkScope && key!==archiveScope){schedule();return;}
@@ -236,39 +235,10 @@ function bindSelection(root,initial,onChange){
   const dispose=mountAssetPicker(button,{getCatalog:localCatalog,en,getKey:()=>active.key,onChoose:choose,
     onOpenChange:open=>root.dispatchEvent(new CustomEvent('cortexa-picker',{detail:open}))});
   show(initial);
-  const linkedKey=new URL(location.href).searchParams.get('scope'),originalKey=canonicalBrainScope(linkedKey);
-  if(originalKey===initial.key && originalKey!==linkedKey)storeKey(initial.key);
-  function restoreLinkedAsset(){
-    if(disposed || lookup)return;
-    notice?.remove();notice=null;cancelRefresh();
-    const controller=lookup=new AbortController();
-    button.setAttribute('aria-busy','true');
-    button.querySelector('b').textContent=en?'Looking up…':'查询标的…';
-    function unavailable(message){
-      if(controller.signal.aborted || !root.isConnected)return;
-      lookup=null;show(initial);
-      // Keep the shared link intact while its source is offline.
-      notice=document.createElement('div');notice.className='ct-scope-notice';
-      const status=document.createElement('span');status.setAttribute('role','status');status.textContent=message;
-      const retry=document.createElement('button');retry.type='button';retry.textContent=en?'Retry':'重试';
-      retry.addEventListener('click',restoreLinkedAsset,{once:true});
-      notice.append(status,retry);button.after(notice);schedule();
-    }
-    searchBrainAssets(originalKey,{signal:controller.signal}).then(rows=>{
-      if(controller.signal.aborted || !root.isConnected)return;
-      const match=rows.find(row=>brainAssetKey(row)===originalKey);
-      if(match)choose(originalKey,match);
-      else unavailable(en?'No matching asset':'未找到该标的');
-    }).catch(()=>unavailable(en?'Asset source unavailable':'标的数据源暂不可用'))
-      .finally(()=>{if(lookup===controller||!lookup)button.removeAttribute('aria-busy');});
-  }
-  function reconnect(){if(notice && !lookup)restoreLinkedAsset();}
-  window.addEventListener('online',reconnect);
-  if(originalKey && originalKey!==initial.key && /^(coin:|ca:)/.test(originalKey) && originalKey.length<=500)restoreLinkedAsset();
-  else schedule();
+  storeKey(initial.key);
+  schedule();
   return ()=>{
-    disposed=true;lookup?.abort();cancelRefresh();document.removeEventListener('visibilitychange',visibility);
-    window.removeEventListener('online',reconnect);notice?.remove();dispose();
+    disposed=true;cancelRefresh();document.removeEventListener('visibilitychange',visibility);dispose();
   };
 }
 export const cortexaView={markup,mountGraph:mountCortexaGraph,connect,initialSelection,bindSelection,minZoom:.75,maxZoom};

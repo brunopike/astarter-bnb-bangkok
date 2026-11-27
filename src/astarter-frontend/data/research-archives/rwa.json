@@ -1,0 +1,506 @@
+{
+  "schemaVersion": 1,
+  "count": 1137067,
+  "startDate": "2026-08-14",
+  "endDate": "2026-11-26",
+  "asOf": "2026-11-26T21:38:33Z",
+  "unit": {
+    "en": "Onchain events",
+    "zh": "链上事件"
+  },
+  "sourceName": "ERC-20 · Transfer",
+  "sourceUrl": "https://eips.ethereum.org/EIPS/eip-20",
+  "sources": [
+    {
+      "name": "Ethereum · BlockPI RPC",
+      "url": "https://docs.blockpi.io"
+    },
+    {
+      "name": "Ethereum · SQD Portal",
+      "url": "https://portal.sqd.dev/datasets/ethereum-mainnet"
+    },
+    {
+      "name": "BNB Chain · SQD Portal",
+      "url": "https://portal.sqd.dev/datasets/binance-mainnet"
+    },
+    {
+      "name": "Paxos · PAXG",
+      "url": "https://www.paxos.com/assets/paxg"
+    },
+    {
+      "name": "Tether Gold · XAUT",
+      "url": "https://gold.tether.to/"
+    },
+    {
+      "name": "Ondo · USDY / OUSG",
+      "url": "https://docs.ondo.finance/addresses"
+    },
+    {
+      "name": "Ondo · Tokenized Stocks & ETFs",
+      "url": "https://ondo.finance/ondo-stocks"
+    }
+  ],
+  "methodology": {
+    "en": "One ERC-20 Transfer log from an issuer-listed contract, identified by chain, transaction hash and log index. Minting and burning are classified by the zero address. Fee and zero-amount transfer events are included. An onchain transfer alone does not establish a sale or an offchain settlement. Ethereum 2026-08-14 – 2026-11-26 · BNB Chain 2026-11-24 – 2026-11-26",
+    "zh": "以链 ID、交易哈希和日志序号识别发行方合约的每条 Transfer 事件。按零地址区分铸造、销毁及普通转移，含手续费及零金额转移事件。仅凭链上转移无法确认是否产生成交或链下结算。各链覆盖区间为 Ethereum 2026-08-14 – 2026-11-26 · BNB Chain 2026-11-24 – 2026-11-26"
+  },
+  "analysis": {
+    "en": "13 active contracts cover gold, Treasuries, tokenized equities and funds. XAUT accounts for 53.9% of the archived events. Shares measure activity within these block ranges.",
+    "zh": "样本涵盖黄金、美债、代币化股票和基金，共 13 个有活动的合约。XAUT 占本批事件的 53.9%。此占比衡量上述区块范围内的活动频次。"
+  },
+  "stats": [
+    {
+      "label": "Ethereum",
+      "value": 1123942
+    },
+    {
+      "label": "BNB Chain",
+      "value": 13125
+    },
+    {
+      "label": {
+        "en": "Address transfers",
+        "zh": "普通转移"
+      },
+      "value": 1132371
+    },
+    {
+      "label": {
+        "en": "Mints",
+        "zh": "铸造"
+      },
+      "value": 2203
+    },
+    {
+      "label": {
+        "en": "Burns",
+        "zh": "销毁"
+      },
+      "value": 2493
+    }
+  ],
+  "networks": [
+    {
+      "chainId": 1,
+      "fromBlock": 25750000,
+      "toBlock": 26501999,
+      "asOf": "2026-11-26T21:15:47Z",
+      "startDate": "2026-08-14",
+      "endDate": "2026-11-26",
+      "count": 1123942,
+      "sourceUrl": "https://portal.sqd.dev/datasets/ethereum-mainnet",
+      "archiveManifestSha256": "742c701cdfad499b8192dd24146f088dab6d1b085a954969b3be4c4d3df9b48c",
+      "sourceUrls": [
+        "https://ethereum.public.blockpi.network/v1/rpc/public",
+        "https://portal.sqd.dev/datasets/ethereum-mainnet"
+      ]
+    },
+    {
+      "chainId": 56,
+      "fromBlock": 135520000,
+      "toBlock": 135919999,
+      "asOf": "2026-11-26T21:38:33Z",
+      "startDate": "2026-11-24",
+      "endDate": "2026-11-26",
+      "count": 13125,
+      "sourceUrl": "https://portal.sqd.dev/datasets/binance-mainnet",
+      "archiveManifestSha256": "3fdaa3856940925eb252aced40d1acb0dc5bd375cc4cb3729907a5f6b7cdaf0b",
+      "sourceUrls": [
+        "https://portal.sqd.dev/datasets/binance-mainnet"
+      ]
+    }
+  ],
+  "assetContracts": [
+    {
+      "chainId": 1,
+      "symbol": "PAXG",
+      "address": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+      "decimals": 18,
+      "issuerUrl": "https://github.com/paxosglobal/paxos-gold-contract",
+      "count": 502600,
+      "eventsByKind": {
+        "transfer": 500946,
+        "mint": 514,
+        "burn": 1140
+      }
+    },
+    {
+      "chainId": 1,
+      "symbol": "XAUT",
+      "address": "0x68749665ff8d2d112fa859aa293f07a622782f38",
+      "decimals": 6,
+      "issuerUrl": "https://tether.to/en/supported-protocols/",
+      "count": 612436,
+      "eventsByKind": {
+        "transfer": 612435,
+        "mint": 1
+      }
+    },
+    {
+      "chainId": 1,
+      "symbol": "USDY",
+      "address": "0x96f6ef951840721adbf46ac996b59e0235cb985c",
+      "decimals": 18,
+      "issuerUrl": "https://ondo.finance/usdy",
+      "count": 8720,
+      "eventsByKind": {
+        "mint": 576,
+        "transfer": 7579,
+        "burn": 565
+      }
+    },
+    {
+      "chainId": 1,
+      "symbol": "OUSG",
+      "address": "0x1b19c19393e2d034d8ff31ff34c81252fcbbee92",
+      "decimals": 18,
+      "issuerUrl": "https://docs.ondo.finance/addresses",
+      "count": 186,
+      "eventsByKind": {
+        "mint": 53,
+        "transfer": 83,
+        "burn": 50
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "NVDAon",
+      "address": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/nvdaon",
+      "count": 5272,
+      "eventsByKind": {
+        "transfer": 4887,
+        "mint": 249,
+        "burn": 136
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "AAPLon",
+      "address": "0x390a684ef9cade28a7ad0dfa61ab1eb3842618c4",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/aaplon",
+      "count": 2580,
+      "eventsByKind": {
+        "mint": 126,
+        "transfer": 2313,
+        "burn": 141
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "TSLAon",
+      "address": "0x2494b603319d4d9f9715c9f4496d9e0364b59d93",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/tslaon",
+      "count": 1234,
+      "eventsByKind": {
+        "transfer": 1103,
+        "burn": 61,
+        "mint": 70
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "MSFTon",
+      "address": "0x6bfe75d1ad432050ea973c3a3dcd88f02e2444c3",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/msfton",
+      "count": 758,
+      "eventsByKind": {
+        "mint": 41,
+        "transfer": 671,
+        "burn": 46
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "SPYon",
+      "address": "0x6a708ead771238919d85930b5a0f10454e1c331a",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/spyon",
+      "count": 815,
+      "eventsByKind": {
+        "transfer": 546,
+        "burn": 132,
+        "mint": 137
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "QQQon",
+      "address": "0x0cde6936d305d5b34667fc46425e852efd73559a",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/qqqon",
+      "count": 904,
+      "eventsByKind": {
+        "transfer": 683,
+        "burn": 108,
+        "mint": 113
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "SLVon",
+      "address": "0x8b872732b07be325a8803cdb480d9d20b6f8d11b",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/slvon",
+      "count": 1178,
+      "eventsByKind": {
+        "transfer": 829,
+        "mint": 290,
+        "burn": 59
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "TLTon",
+      "address": "0xf69e40069ac227c11459e3f4e8a446b3401616b6",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/tlton",
+      "count": 270,
+      "eventsByKind": {
+        "mint": 22,
+        "transfer": 217,
+        "burn": 31
+      }
+    },
+    {
+      "chainId": 56,
+      "symbol": "USOon",
+      "address": "0x94174e3d1335db402dd03a092f7aa7ac2cb32be4",
+      "decimals": 18,
+      "issuerUrl": "https://app.ondo.finance/assets/usoon",
+      "count": 114,
+      "eventsByKind": {
+        "transfer": 79,
+        "burn": 24,
+        "mint": 11
+      }
+    }
+  ],
+  "samples": [
+    {
+      "id": "56:0xac4cd7c2fbdbe3f41d2b13fe5db2241ddaed2819537e89530fccf8f3d0bef2e1:57",
+      "date": "2026-11-26T21:37:52Z",
+      "label": {
+        "en": "BNB Chain · AAPLon · Mint",
+        "zh": "BNB Chain · AAPLon · 铸造"
+      },
+      "value": "0.41648465 AAPLon",
+      "url": "https://bscscan.com/tx/0xac4cd7c2fbdbe3f41d2b13fe5db2241ddaed2819537e89530fccf8f3d0bef2e1#eventlog",
+      "block": 135919907,
+      "blockHash": "0x06cc62da960880acd299a17b6281b30a6048977baaa73c47f8edf910c54b2984",
+      "logIndex": 57,
+      "contract": "0x390a684ef9cade28a7ad0dfa61ab1eb3842618c4",
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0xcecc963675eafcd4eb3e167ea90f324e8a32b80a",
+      "amountRaw": "416484650000000000"
+    },
+    {
+      "id": "56:0x6366a62b661a7b0c15c7563012b849b7234a02cb326c0f3eb76c72f9f2173731:241",
+      "date": "2026-11-26T21:37:48Z",
+      "label": {
+        "en": "BNB Chain · QQQon · Mint",
+        "zh": "BNB Chain · QQQon · 铸造"
+      },
+      "value": "0.00309566 QQQon",
+      "url": "https://bscscan.com/tx/0x6366a62b661a7b0c15c7563012b849b7234a02cb326c0f3eb76c72f9f2173731#eventlog",
+      "block": 135919898,
+      "blockHash": "0x5e515bd6d5088044575bc0df35f8a92984bcc28f3105a7a9a49d3edd5911dc46",
+      "logIndex": 241,
+      "contract": "0x0cde6936d305d5b34667fc46425e852efd73559a",
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0xcecc963675eafcd4eb3e167ea90f324e8a32b80a",
+      "amountRaw": "3095660000000000"
+    },
+    {
+      "id": "56:0x510713be7103c2027d5c9b40600dc37e6b970dbaa0f87d81d4e4ff786cb1e4d0:61",
+      "date": "2026-11-26T21:36:27Z",
+      "label": {
+        "en": "BNB Chain · NVDAon · Transfer",
+        "zh": "BNB Chain · NVDAon · 转移"
+      },
+      "value": "0.008165995262577953 NVDAon",
+      "url": "https://bscscan.com/tx/0x510713be7103c2027d5c9b40600dc37e6b970dbaa0f87d81d4e4ff786cb1e4d0#eventlog",
+      "block": 135919720,
+      "blockHash": "0x88e672b2f1cff163ff3c3b2a0935a3444d64b4d945d050a80023f3829dc01b23",
+      "logIndex": 61,
+      "contract": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+      "from": "0xabcacd2dccd3c9d1dce54cb1477d5704f99dc63c",
+      "to": "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df",
+      "amountRaw": "8165995262577953"
+    },
+    {
+      "id": "56:0xacee42577bf6c571dc4a10a2fb0a81b752ff5f95532e158863b234ec53ae2c95:110",
+      "date": "2026-11-26T21:31:29Z",
+      "label": {
+        "en": "BNB Chain · TLTon · Transfer",
+        "zh": "BNB Chain · TLTon · 转移"
+      },
+      "value": "0.000025861182330095 TLTon",
+      "url": "https://bscscan.com/tx/0xacee42577bf6c571dc4a10a2fb0a81b752ff5f95532e158863b234ec53ae2c95#eventlog",
+      "block": 135919058,
+      "blockHash": "0x9d5c22d371510b50f2898001acac47cd7f268129b2f58aeeef0e7a364dc6cee1",
+      "logIndex": 110,
+      "contract": "0xf69e40069ac227c11459e3f4e8a446b3401616b6",
+      "from": "0x95337791024b5f0480b353fbafd2882b4d8e99c8",
+      "to": "0xe121b110383236fdf5899dc10f1ec93dbf2e801e",
+      "amountRaw": "25861182330095"
+    },
+    {
+      "id": "1:0x13be79bfe1434ada0f9ed5072ca5613f62bd5206a25db7c47d5ef078ad07a0c0:698",
+      "date": "2026-11-26T21:15:47Z",
+      "label": {
+        "en": "Ethereum · PAXG · Transfer",
+        "zh": "Ethereum · PAXG · 转移"
+      },
+      "value": "0.000010101284801072 PAXG",
+      "url": "https://etherscan.io/tx/0x13be79bfe1434ada0f9ed5072ca5613f62bd5206a25db7c47d5ef078ad07a0c0#eventlog",
+      "block": 26501999,
+      "blockHash": "0xb0fc1e7d409bc41272b20d396cccdd727501e065837276d2d92689c67f1ddc03",
+      "logIndex": 698,
+      "contract": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+      "from": "0x426b1da58a82ee41b5b17d02d98d3a5d22a4c7c5",
+      "to": "0x9c4fe5ffd9a9fc5678cfbd93aa2d4fd684b67c4c",
+      "amountRaw": "10101284801072"
+    },
+    {
+      "id": "1:0x13be79bfe1434ada0f9ed5072ca5613f62bd5206a25db7c47d5ef078ad07a0c0:694",
+      "date": "2026-11-26T21:15:47Z",
+      "label": {
+        "en": "Ethereum · XAUT · Transfer",
+        "zh": "Ethereum · XAUT · 转移"
+      },
+      "value": "0.84674 XAUT",
+      "url": "https://etherscan.io/tx/0x13be79bfe1434ada0f9ed5072ca5613f62bd5206a25db7c47d5ef078ad07a0c0#eventlog",
+      "block": 26501999,
+      "blockHash": "0xb0fc1e7d409bc41272b20d396cccdd727501e065837276d2d92689c67f1ddc03",
+      "logIndex": 694,
+      "contract": "0x68749665ff8d2d112fa859aa293f07a622782f38",
+      "from": "0x426b1da58a82ee41b5b17d02d98d3a5d22a4c7c5",
+      "to": "0xc756bba710d45647715079ce50aa16aab36ded42",
+      "amountRaw": "846740"
+    },
+    {
+      "id": "1:0x6c1b748fd2929055bf618fa2934d2cd9fc972ff221690819336cd557d4b866df:376",
+      "date": "2026-11-26T21:13:59Z",
+      "label": {
+        "en": "Ethereum · USDY · Burn",
+        "zh": "Ethereum · USDY · 销毁"
+      },
+      "value": "13001.299 USDY",
+      "url": "https://etherscan.io/tx/0x6c1b748fd2929055bf618fa2934d2cd9fc972ff221690819336cd557d4b866df#eventlog",
+      "block": 26501990,
+      "blockHash": "0x99b15be337f7728db77fdc410abab57205900c1563d86de2ff6c196ab09e6302",
+      "logIndex": 376,
+      "contract": "0x96f6ef951840721adbf46ac996b59e0235cb985c",
+      "from": "0xa42613c243b67bf6194ac327795b926b4b491f15",
+      "to": "0x0000000000000000000000000000000000000000",
+      "amountRaw": "13001299000000000000000"
+    },
+    {
+      "id": "56:0x7bc7c9f8f68bfc6c824b02aaaf39c6c2aa9ed5db1a73e71bba8dc63f5c4d4452:259",
+      "date": "2026-11-26T21:09:09Z",
+      "label": {
+        "en": "BNB Chain · TSLAon · Mint",
+        "zh": "BNB Chain · TSLAon · 铸造"
+      },
+      "value": "0.01037936 TSLAon",
+      "url": "https://bscscan.com/tx/0x7bc7c9f8f68bfc6c824b02aaaf39c6c2aa9ed5db1a73e71bba8dc63f5c4d4452#eventlog",
+      "block": 135916081,
+      "blockHash": "0xa8c2f72cd003cc00d3cca12c30a406a00779badafe4d82ee691bbc4737c4afdd",
+      "logIndex": 259,
+      "contract": "0x2494b603319d4d9f9715c9f4496d9e0364b59d93",
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0xcecc963675eafcd4eb3e167ea90f324e8a32b80a",
+      "amountRaw": "10379360000000000"
+    },
+    {
+      "id": "56:0xe1a928b512f46e7d90e07d25feb4d88d0e628e1227225c28afdeda0d4ab37e32:177",
+      "date": "2026-11-26T21:04:06Z",
+      "label": {
+        "en": "BNB Chain · SLVon · Transfer",
+        "zh": "BNB Chain · SLVon · 转移"
+      },
+      "value": "0.000715355248866789 SLVon",
+      "url": "https://bscscan.com/tx/0xe1a928b512f46e7d90e07d25feb4d88d0e628e1227225c28afdeda0d4ab37e32#eventlog",
+      "block": 135915407,
+      "blockHash": "0x0b8ca9afb191faa0eaacaac534f420f2e5eae622beb807dc032f01473350ceb3",
+      "logIndex": 177,
+      "contract": "0x8b872732b07be325a8803cdb480d9d20b6f8d11b",
+      "from": "0xf3cd829e074f020685146faeb68f95e50d4f28c5",
+      "to": "0xcd4b171f5c5bce6248f81dae43dc9a092c5086f5",
+      "amountRaw": "715355248866789"
+    },
+    {
+      "id": "56:0x24349866ec19b621786828f5ab3c57ed6dcba75ab272d1499dc046523d977792:43",
+      "date": "2026-11-26T20:50:24Z",
+      "label": {
+        "en": "BNB Chain · SPYon · Burn",
+        "zh": "BNB Chain · SPYon · 销毁"
+      },
+      "value": "0.04309405 SPYon",
+      "url": "https://bscscan.com/tx/0x24349866ec19b621786828f5ab3c57ed6dcba75ab272d1499dc046523d977792#eventlog",
+      "block": 135913580,
+      "blockHash": "0x26f27f438838bd02db97824f014bab88c2f256eb834a559e048a4e26e1b37bb6",
+      "logIndex": 43,
+      "contract": "0x6a708ead771238919d85930b5a0f10454e1c331a",
+      "from": "0x91f8aff3738825e8eb16fc6f6b1a7a4647bdb299",
+      "to": "0x0000000000000000000000000000000000000000",
+      "amountRaw": "43094050000000000"
+    },
+    {
+      "id": "56:0x8bf69eadf257fbce993b8141ffd46ca56f6446573baebeea5e4be17a3b2085e7:13",
+      "date": "2026-11-26T18:34:45Z",
+      "label": {
+        "en": "BNB Chain · MSFTon · Transfer",
+        "zh": "BNB Chain · MSFTon · 转移"
+      },
+      "value": "0.000003233926000304 MSFTon",
+      "url": "https://bscscan.com/tx/0x8bf69eadf257fbce993b8141ffd46ca56f6446573baebeea5e4be17a3b2085e7#eventlog",
+      "block": 135895495,
+      "blockHash": "0xfe2537340cee586d158be90d52c928a2dec4f7896ba40fc74a9b292847500c79",
+      "logIndex": 13,
+      "contract": "0x6bfe75d1ad432050ea973c3a3dcd88f02e2444c3",
+      "from": "0xb300000b72deaeb607a12d5f54773d1c19c7028d",
+      "to": "0x08c2ce6e530ca82e26ad2fe73226d2171b9e6f8e",
+      "amountRaw": "3233926000304"
+    },
+    {
+      "id": "56:0x6cf27b7e67788b4b4854f4b8ca8af1d24802f99781af8bba768514e4f2d54333:982",
+      "date": "2026-11-26T10:27:52Z",
+      "label": {
+        "en": "BNB Chain · USOon · Transfer",
+        "zh": "BNB Chain · USOon · 转移"
+      },
+      "value": "0.114519164498681485 USOon",
+      "url": "https://bscscan.com/tx/0x6cf27b7e67788b4b4854f4b8ca8af1d24802f99781af8bba768514e4f2d54333#eventlog",
+      "block": 135830659,
+      "blockHash": "0xba85a790b7ae18865db4ea4aba062478be1d0ce8a8bfaa35f2d4b341056fc0d8",
+      "logIndex": 982,
+      "contract": "0x94174e3d1335db402dd03a092f7aa7ac2cb32be4",
+      "from": "0x1231deb6f5749ef6ce6943a275a1d3e7486f4eae",
+      "to": "0xc6f8e26e5811a4f450ef655263ea5977bc3e1655",
+      "amountRaw": "114519164498681485"
+    },
+    {
+      "id": "1:0x236ef7530ca155c49f82716386efade031f9ce6566272c24a58a5c9b786d7e87:63",
+      "date": "2026-11-25T15:12:35Z",
+      "label": {
+        "en": "Ethereum · OUSG · Transfer",
+        "zh": "Ethereum · OUSG · 转移"
+      },
+      "value": "7831.644231480164258398 OUSG",
+      "url": "https://etherscan.io/tx/0x236ef7530ca155c49f82716386efade031f9ce6566272c24a58a5c9b786d7e87#eventlog",
+      "block": 26493015,
+      "blockHash": "0x3917cb37ef82e19f172a73de11894c0785c08d744ba005f31cb4004a1eef05aa",
+      "logIndex": 63,
+      "contract": "0x1b19c19393e2d034d8ff31ff34c81252fcbbee92",
+      "from": "0x44cea07ff231a66cf3689cf4e4e1cf9f831e3988",
+      "to": "0x391897d4a5fddcb9e66a8cb837cfbfd6e918a437",
+      "amountRaw": "7831644231480164258398"
+    }
+  ]
+}

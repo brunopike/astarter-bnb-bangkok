@@ -2,7 +2,7 @@ import test from 'node:test';
 import {gzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
-import {parseCatalog,archiveScopeSeries,archiveRecordTarget,pageForBlock,rowsThrough,readDay,parseArchiveSummary,explorerBlockUrl} from './brain-raw-archive.mjs';
+import {parseCatalog,archiveScopeSeries,archiveEntrySeries,archiveRecordTarget,pageForBlock,rowsThrough,readDay,parseArchiveSummary,explorerBlockUrl} from './brain-raw-archive.mjs';
 
 const sha256='f'.repeat(64);
 const shard=(asset,day,count)=>({file:asset.toLowerCase()+'-'+day+'.json',start:day,end:day,count,sha256});
@@ -21,6 +21,50 @@ test('an index counts blocks once per chain and day',()=>{
   assert.equal(archiveScopeSeries(sets,'all').length,2);
   assert.deepEqual(archiveScopeSeries(sets,'coin:bitcoin'),[sets[1]]);
   assert.deepEqual(archiveScopeSeries(sets,'ca:ethereum:0x1'),[]);
+});
+
+test('the heading keeps the full verified archive across gold, tokens, native coins and replay',()=>{
+  const replayTime='2022-09-15T06:44:00Z';
+  for(const data of [parseCatalog(catalog),parseArchiveSummary({...catalog,datasets:sets.map(series=>({...series,
+    ranges:series.shards.map(({start,end,count})=>({start,end,count}))}))})]){
+    for(const scope of ['all','tradfi:gold','ca:ethereum:0x1','coin:bitcoin','eth-merge']){
+      const heading=archiveEntrySeries(data,'heading',scope,replayTime,null);
+      assert.deepEqual(heading.map(s=>s.asset),['ETH','BTC']);
+      assert.equal(heading.reduce((n,s)=>n+s.count,0),32);
+      assert.equal(heading[0].end,'2026-11-24');
+      assert.deepEqual(archiveEntrySeries(data,'note',scope,replayTime,null),[]);
+    }
+  }
+  assert.deepEqual(archiveEntrySeries(null,'heading'),[]);
+});
+
+test('only a matching native chain, archived day and permitted event time open a node’s block evidence',()=>{
+  const replayTime='2022-09-15T06:44:00Z';
+  const record={scopeKeys:['coin:ethereum'],blockHeight:15537394,eventAt:'2022-09-15T06:42:59Z'};
+  const target=archiveRecordTarget(record,replayTime);
+  for(const scope of ['coin:bitcoin','tradfi:gold','ca:ethereum:0x1']){
+    assert.deepEqual(archiveEntrySeries(sets,'note',scope,null,target),[]);
+  }
+  assert.deepEqual(archiveEntrySeries(sets,'note','all',null,target),[sets[0]]);
+  assert.deepEqual(archiveEntrySeries(sets,'note','all',null,{...target,day:'2022-09-17'}),[]);
+  const [replay]=archiveEntrySeries(sets,'note','eth-merge',replayTime,target);
+  assert.equal(replay.end,'2022-09-15');
+  assert.equal(replay.count,null);
+  assert.equal(archiveRecordTarget({...record,eventAt:'2022-09-15T06:44:01Z'},replayTime),null);
+  assert.deepEqual(archiveRecordTarget({...record,eventAt:replayTime},replayTime),target);
+  assert.equal(archiveRecordTarget(record,'invalid cutoff'),null);
+  assert.equal(archiveRecordTarget({...record,scopeKeys:['coin:ethereum','coin:bitcoin']}),null);
+});
+
+test('the archived Merge block reference resolves through its pinned file, independently of spot evidence',()=>{
+  const cutoff='2022-09-15T06:44:00Z',eventAt='2022-09-15T06:42:59Z';
+  const canonical={scopeKeys:['coin:ethereum'],blockHeight:15537394,eventAt};
+  const ref={scopeKeys:['eth-merge','coin:ethereum'],eventAt,sourceUrl:'/brain-evidence/BLOCK-15537394-AT-MERGE@1.json'};
+  assert.deepEqual(archiveRecordTarget(ref,cutoff,canonical),{asset:'ETH',day:'2022-09-15',height:15537394});
+  for(const other of [{...ref,sourceUrl:'/brain-evidence/COINBASE-ETH-USD-0644@1.json'}, {...ref,eventAt:cutoff},
+    {...ref,scopeKeys:['tradfi:oracle-gold']},{...ref,sourceUrl:'/brain-evidence/BLOCK-15537395-AT-MERGE@1.json'}]){
+    assert.equal(archiveRecordTarget(other,cutoff,canonical),null);
+  }
 });
 
 test('a historical replay excludes later dates and does not count a partial day as complete',()=>{

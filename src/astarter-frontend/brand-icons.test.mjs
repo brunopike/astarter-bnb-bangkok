@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {TOKEN_ICONS,VENUE_ICONS,tokenLogo,venueLogo,tokenIcon,venueIcon,pairSymbols,pairIcon,approvedTokenImageURL,registerTokenMetadata} from './brand-icons.mjs';
 import {BRAND_FILES} from './brand-icon-data.mjs';
+import {HUB_SYMBOLS} from './market-hub-data.mjs';
 import {MARKET,COIN_ICONS,EXCHANGES} from './data-center-fixtures.mjs';
 import {TRACKING_CASES} from './signal-tracking.mjs';
 
 test('all current market and signal asset identities have local icons',()=>{
  for(const a of MARKET)assert.ok(tokenLogo(a),a.symbol);
  for(const c of TRACKING_CASES)assert.ok(tokenLogo(c.id),c.id);
+ for(const symbol of HUB_SYMBOLS)assert.ok(BRAND_FILES.includes(tokenLogo(symbol)?.slice(1)),symbol);
  for(const symbol of ['USDT','USDC','WBTC','WETH','CAKE','JUP'])assert.ok(TOKEN_ICONS[symbol],symbol);
  assert.equal(COIN_ICONS,TOKEN_ICONS);
 });

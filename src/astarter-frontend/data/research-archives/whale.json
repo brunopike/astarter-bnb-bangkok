@@ -1,0 +1,281 @@
+{
+  "count": 26438940,
+  "asOf": "2026-11-17T23:59:59.828Z",
+  "startDate": "2026-11-08",
+  "endDate": "2026-11-17",
+  "sourceName": "Hydromancer · Hyperliquid Reservoir",
+  "sourceUrl": "https://huggingface.co/datasets/Hydromancer/hyperliquid-reservoir/tree/6b40203b4363771c26d4b1ecfda7dca92263e3d4/fills_perp/hyperliquid",
+  "unit": {
+    "en": "unique matched trades",
+    "zh": "笔去重撮合成交"
+  },
+  "methodology": {
+    "en": "Native USDC perpetuals on Hyperliquid, using both sides of verified matched trades. Labels are frozen at the preceding UTC day-end, with history starting 2026-11-07. Whale wallets had at least 1 million USDC of observed notional. Smart-money wallets had at least 10,000 USDC of observed realized P&L after reported fees, 20 non-zero realized fills and three active days. Wallet classifications may include small individual matches. Each match is counted once even when both parties qualify. Funding, other venues and unrealized P&L are excluded.",
+    "zh": "覆盖 Hyperliquid 原生 USDC 永续合约。从 2026-11-07 起按 UTC 日累计，使用前一日结束时的记录判定。巨鲸为已观察累计名义成交额至少 100 万 USDC 的钱包；聪明钱为已观察扣除成交手续费后的已实现盈亏至少 1 万 USDC、至少 20 笔已实现盈亏非零的成交且至少活跃 3 天的钱包。标签适用于钱包，单笔成交可小于门槛。同一撮合只计一次。盈亏不含资金费、其他场所和未实现浮盈亏。"
+  },
+  "analysis": {
+    "en": "The matched notional was 66,928,059,048.00 USDC. Across trades initiated by smart-money wallets, buys totaled 7,876,849,202.49 USDC (48.9%) and sells 8,235,145,845.44 USDC (51.1%). These are taker-side matched amounts. BTC represented 13.8% of qualifying matches.",
+    "zh": "去重成交的名义金额合计 66,928,059,048.00 USDC。在聪明钱钱包主动成交中，主动买入 7,876,849,202.49 USDC（48.9%），主动卖出 8,235,145,845.44 USDC（51.1%）。占比按主动侧成交额计算。BTC 占全部达标撮合笔数的 13.8%。"
+  },
+  "stats": [
+    {
+      "label": {
+        "en": "Whale-involved trades",
+        "zh": "涉及巨鲸的成交"
+      },
+      "value": 26406175
+    },
+    {
+      "label": {
+        "en": "Smart-money-involved trades",
+        "zh": "涉及聪明钱的成交"
+      },
+      "value": 11548849
+    },
+    {
+      "label": {
+        "en": "Trades meeting both filters",
+        "zh": "同时符合两类的成交"
+      },
+      "value": 11516084
+    },
+    {
+      "label": {
+        "en": "Whale wallets",
+        "zh": "达标巨鲸地址"
+      },
+      "value": 4573
+    },
+    {
+      "label": {
+        "en": "Smart-money wallets",
+        "zh": "达标聪明钱地址"
+      },
+      "value": 1093
+    },
+    {
+      "label": {
+        "en": "Markets",
+        "zh": "永续合约市场"
+      },
+      "value": 179
+    },
+    {
+      "label": {
+        "en": "Matched notional (USDC)",
+        "zh": "成交名义金额（USDC）"
+      },
+      "value": 66928059048.0
+    },
+    {
+      "label": {
+        "en": "Smart-money taker buys (USDC)",
+        "zh": "聪明钱主动买入（USDC）"
+      },
+      "value": 7876849202.49
+    },
+    {
+      "label": {
+        "en": "Smart-money taker sells (USDC)",
+        "zh": "聪明钱主动卖出（USDC）"
+      },
+      "value": 8235145845.44
+    }
+  ],
+  "samples": [
+    {
+      "id": "FET:2026-11-17T23:59:59.357Z:768202460105915",
+      "date": "2026-11-17T23:59:59.357Z",
+      "label": {
+        "en": "FET · Whale and smart-money wallets",
+        "zh": "FET · 巨鲸与聪明钱"
+      },
+      "value": "17.10 USDC",
+      "url": "https://app.hyperliquid.xyz/explorer/tx/0x34d36a913f683dda364d044906be0c0102008276da6b5cacd89c15e3fe6c17c4",
+      "coin": "FET",
+      "tradeId": "768202460105915",
+      "txHash": "0x34d36a913f683dda364d044906be0c0102008276da6b5cacd89c15e3fe6c17c4",
+      "taker": "0x31ca8395cf837de08b24da3f660e77761dfb974b",
+      "maker": "0xd9aecd4df04f0e8bd6320fd3fcb92d9c06dadf94",
+      "takerWhale": true,
+      "takerSmart": false,
+      "makerWhale": true,
+      "makerSmart": true
+    },
+    {
+      "id": "SOL:2026-11-17T23:59:59.078Z:542400226809650",
+      "date": "2026-11-17T23:59:59.078Z",
+      "label": {
+        "en": "SOL · Whale and smart-money wallets",
+        "zh": "SOL · 巨鲸与聪明钱"
+      },
+      "value": "108.23 USDC",
+      "url": "https://app.hyperliquid.xyz/explorer/tx/0xd348077ad84d6defd4c1044906be080201d4006073408cc17710b2cd974147da",
+      "coin": "SOL",
+      "tradeId": "542400226809650",
+      "txHash": "0xd348077ad84d6defd4c1044906be080201d4006073408cc17710b2cd974147da",
+      "taker": "0xde2e3b23c3bd73d4d227f2c72b9b0234237714aa",
+      "maker": "0xe90bf24e807df04f1513d50002d78bfc22ee84d9",
+      "takerWhale": false,
+      "takerSmart": false,
+      "makerWhale": true,
+      "makerSmart": true
+    },
+    {
+      "id": "BTC:2026-11-17T23:59:59.828Z:753707726116228",
+      "date": "2026-11-17T23:59:59.828Z",
+      "label": {
+        "en": "BTC · Whale wallet",
+        "zh": "BTC · 巨鲸钱包"
+      },
+      "value": "16.88 USDC",
+      "url": "https://app.hyperliquid.xyz/explorer/tx/0xbacf5ce112832812bc49044906be130205a100c6ad8646e45e980833d18701fd",
+      "coin": "BTC",
+      "tradeId": "753707726116228",
+      "txHash": "0xbacf5ce112832812bc49044906be130205a100c6ad8646e45e980833d18701fd",
+      "taker": "0x5a2de1f7f5c05d08281bac2ffa46e0dc928fe92d",
+      "maker": "0xfe1fccb7f954050a4b0ca4bea43c8287b190c55a",
+      "takerWhale": false,
+      "takerSmart": false,
+      "makerWhale": true,
+      "makerSmart": false
+    },
+    {
+      "id": "BTC:2026-11-17T23:59:59.828Z:1010341084346319",
+      "date": "2026-11-17T23:59:59.828Z",
+      "label": {
+        "en": "BTC · Whale wallet",
+        "zh": "BTC · 巨鲸钱包"
+      },
+      "value": "1.95 USDC",
+      "url": "https://app.hyperliquid.xyz/explorer/tx/0xbacf5ce112832812bc49044906be130205a100c6ad8646e45e980833d18701fd",
+      "coin": "BTC",
+      "tradeId": "1010341084346319",
+      "txHash": "0xbacf5ce112832812bc49044906be130205a100c6ad8646e45e980833d18701fd",
+      "taker": "0x5a2de1f7f5c05d08281bac2ffa46e0dc928fe92d",
+      "maker": "0xa9904bca2ccd1fe83011561823a4ca18e20d09ad",
+      "takerWhale": false,
+      "takerSmart": false,
+      "makerWhale": true,
+      "makerSmart": false
+    },
+    {
+      "id": "IMX:2026-11-17T23:59:59.828Z:187675848440836",
+      "date": "2026-11-17T23:59:59.828Z",
+      "label": {
+        "en": "IMX · Smart-money wallet",
+        "zh": "IMX · 聪明钱钱包"
+      },
+      "value": "33.05 USDC",
+      "url": "https://app.hyperliquid.xyz/explorer/tx/0x0bb94436f9554cc20d33044906be13020596001c94586b94af81ef89b85926ac",
+      "coin": "IMX",
+      "tradeId": "187675848440836",
+      "txHash": "0x0bb94436f9554cc20d33044906be13020596001c94586b94af81ef89b85926ac",
+      "taker": "0xe1c08667421e480e63edda9b37b8405aa51ed19b",
+      "maker": "0x3e6ed7fe15c7a7fc2dec25412bd8c05f9cc51c08",
+      "takerWhale": false,
+      "takerSmart": true,
+      "makerWhale": false,
+      "makerSmart": false
+    },
+    {
+      "id": "IMX:2026-11-17T23:57:34.546Z:535508650043301",
+      "date": "2026-11-17T23:57:34.546Z",
+      "label": {
+        "en": "IMX · Smart-money wallet",
+        "zh": "IMX · 聪明钱钱包"
+      },
+      "value": "11.18 USDC",
+      "url": "https://app.hyperliquid.xyz/explorer/tx/0x6f3e28f361ac8fd470b7044906b62c02012600d8fcafaea61306d44620a069bf",
+      "coin": "IMX",
+      "tradeId": "535508650043301",
+      "txHash": "0x6f3e28f361ac8fd470b7044906b62c02012600d8fcafaea61306d44620a069bf",
+      "taker": "0xe1c08667421e480e63edda9b37b8405aa51ed19b",
+      "maker": "0xbf0b523d78b19b3a5fa9c2d7ec2794fc21c10d4e",
+      "takerWhale": false,
+      "takerSmart": true,
+      "makerWhale": false,
+      "makerSmart": false
+    }
+  ],
+  "attribution": {
+    "name": "Hydromancer",
+    "url": "https://hydromancer.xyz",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "changes": "Deduplicated, bilateral matching and lagged wallet classification."
+  },
+  "sources": [
+    {
+      "name": "Hydromancer",
+      "url": "https://hydromancer.xyz"
+    },
+    {
+      "name": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "smartTakerNotionalUSDC": {
+    "buy": "7876849202.4867350000",
+    "sell": "8235145845.4448890000",
+    "total": "16111995047.9316240000",
+    "buyShare": "0.4888810590528281505026562479",
+    "sellShare": "0.5111189409471718494973437521"
+  },
+  "historyStart": "2026-11-07",
+  "historyEnd": "2026-11-17",
+  "classification": "wallet-history-prior-utc-day-v1",
+  "qualifyingNotionalUSDC": "66928059048.0026410000",
+  "topMarkets": [
+    {
+      "coin": "BTC",
+      "matches": 3655932,
+      "notionalUSDC": "37146749521.1163150000"
+    },
+    {
+      "coin": "HYPE",
+      "matches": 3134620,
+      "notionalUSDC": "5433289685.8439300000"
+    },
+    {
+      "coin": "ZEC",
+      "matches": 2532309,
+      "notionalUSDC": "4034967415.2085000000"
+    },
+    {
+      "coin": "ETH",
+      "matches": 1731759,
+      "notionalUSDC": "11479834811.5618310000"
+    },
+    {
+      "coin": "SOL",
+      "matches": 1060198,
+      "notionalUSDC": "2914439767.9856800000"
+    },
+    {
+      "coin": "LIT",
+      "matches": 844928,
+      "notionalUSDC": "408273459.2176000000"
+    },
+    {
+      "coin": "XMR",
+      "matches": 827225,
+      "notionalUSDC": "387193462.6221000000"
+    },
+    {
+      "coin": "NEAR",
+      "matches": 770653,
+      "notionalUSDC": "608817257.4224900000"
+    },
+    {
+      "coin": "INIT",
+      "matches": 469960,
+      "notionalUSDC": "76684828.5090930000"
+    },
+    {
+      "coin": "XRP",
+      "matches": 452304,
+      "notionalUSDC": "777933489.5429700000"
+    }
+  ]
+}

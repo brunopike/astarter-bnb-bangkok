@@ -441,8 +441,21 @@ export function mountProofView(host,replayHost,learningHost,en){
   async function load(){
     mainRequest?.abort();currentRequest?.abort();replayRequest?.abort();clearRecord();
     reviewDate='';latestSession='';
-    const controller=mainRequest=new AbortController();
     currentResult.hidden=true;currentResult.replaceChildren();
+    const archiveOnly=scope?.startsWith('tradfi:');
+    period.disabled=archiveOnly;
+    if(archiveOnly){
+      selectedMarket='';
+      for(const el of [market,q('[data-replay-market]')]){
+        setOptions(el,[[scope,scopeLabel]],scope);
+        el.disabled=true;
+      }
+      setOptions(period,[],'');
+      const message=t('该标的可查看历史行情，暂无对应的决策或模拟成交记录。','Historical observations are available for this instrument. No decision or paper trade has been recorded.');
+      notice(currentState,message);notice(q('[data-state]'),message);learningState(message);
+      return;
+    }
+    const controller=mainRequest=new AbortController();
     notice(currentState,t('正在核对市场记录…','Checking market evidence…'));
     try{
       directory??=await request(null,controller.signal);

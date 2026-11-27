@@ -9,4 +9,6 @@ Retrieved 2026-10-29. Cached for brand identification, not financial data or pro
 - The public metadata response for the-open-network currently identified GRAM, so it was not mapped to the TON fixture. No quote or asset identity was changed.
 - The precached subset is served locally through an exact static allowlist. New API metadata uses the normalized image_url field and the two approved CoinGecko image CDNs, with anonymous CORS and no-referrer. Unknown identities are not matched by symbol. No provider credentials or arbitrary logo URLs are accepted.
 
-The local 30-token subset is a fallback cache, not a supported-universe limit. Six additional real public metadata samples (ONDO/WLD/POL/TIA/PENDLE/AR) are stored without prices in test-fixtures/api-logo-samples-20261029.json and tested through the same resolver. API identity metadata, not this static list, supplies new logos. Long-tail metadata lookup remains a separately integrated data capability.
+On 2026-11-27 the local cache added SHIB, LTC, BCH and TRX from CoinGecko metadata for their individual asset IDs. All pairs in the shared Binance ticker have a local logo.
+
+Six additional public metadata samples (ONDO/WLD/POL/TIA/PENDLE/AR) are stored without prices in test-fixtures/api-logo-samples-20261029.json and tested through the same resolver. Long-tail metadata lookup remains a separately integrated data capability.

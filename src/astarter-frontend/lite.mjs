@@ -23,7 +23,7 @@ function save(key, value) {
     localStorage.setItem('astarter.lite.' + key, JSON.stringify(value));
   } catch {}
 }
-export function mountLiteWorkspace(host, { lang: locale = 'zh', mountAssistant } = {}) {
+export function mountLiteWorkspace(host, { lang: locale = 'en', mountAssistant } = {}) {
   const english = !/^zh/i.test(locale);
   const lang = english ? 'en' : 'zh';
   const t = (zh, en) => (english ? en : zh);
